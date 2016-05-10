@@ -6,15 +6,11 @@
  */
 
 /// <reference path="types/angular.d.ts" />
-/// <reference path="keystore.ts" />
 /// <reference path="peerconnection.ts" />
 
-angular.module('saltyrtc.services').factory('DataChannel', [
-    '$log', '$rootScope', '$timeout', 'KeyStore', 'PeerConnection',
-    ($log, $rootScope, $timeout, KeyStore, PeerConnection) => {
-        return new DataChannel($log, $rootScope, $timeout, KeyStore, PeerConnection)
-    }
-]);
+import { KeyStore, Box } from "./keystore";
+import { PeerConnection } from "./peerconnection";
+import { randomString } from "./utils";
 
 /**
  * A message that is sent through the data channel.
@@ -197,7 +193,7 @@ class DataChannelEvents {
     };
 }
 
-class DataChannel {
+export class DataChannel {
     static LABEL: string = 'saltyrtc';
     static HEARTBEAT_ACK_TIMEOUT: number = 10000;
     static MTU: number = 16384;

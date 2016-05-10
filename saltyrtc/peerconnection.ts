@@ -8,13 +8,7 @@
 /// <reference path="types/angular.d.ts" />
 /// <reference path='types/RTCPeerConnection.d.ts' />
 
-angular.module('saltyrtc.services').factory('PeerConnection', [
-    '$log', '$rootScope',
-    ($log, $rootScope) => new PeerConnection($log, $rootScope)
-]);
-
-
-class PeerConnection {
+export class PeerConnection {
 
     private $log: angular.ILogService;
     private $rootScope: angular.IRootScopeService;

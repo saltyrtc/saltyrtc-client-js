@@ -6,20 +6,13 @@
  */
 
 /// <reference path="types/angular.d.ts" />
-/// <reference path="keystore.ts" />
-/// <reference path="session.ts" />
-/// <reference path="signaling.ts" />
-/// <reference path="peerconnection.ts" />
-/// <reference path="datachannel.ts" />
 
-angular.module('saltyrtc.services').factory('Client', [
-    '$log', '$rootScope', '$timeout',
-    'KeyStore', 'Session', 'Signaling', 'PeerConnection', 'DataChannel',
-    ($log, $rootScope, $timeout,
-     KeyStore, Session, Signaling, PeerConnection, DataChannel) => {
-        return new Client($log, $rootScope, $timeout,
-                          KeyStore, Session, Signaling, PeerConnection, DataChannel);
-}]);
+import { KeyStore, Box } from "./keystore";
+import { PeerConnection } from "./peerconnection";
+import { DataChannel } from "./datachannel";
+import { Session } from "./session";
+import { Signaling } from "./signaling";
+import { u8aToHex, hexToU8a } from "./utils";
 
 interface ClientHandler {
     signaling: Object,
@@ -32,7 +25,7 @@ interface State {
     value: string,
 }
 
-class Client {
+export class Client {
     static CONNECT_TIMEOUT: number = 85000;
     static DISCONNECT_TIMEOUT: number = 35000;
 
