@@ -29,6 +29,10 @@ those, simply issue `npm run validate` in your main directory.
 
     $ npm run validate
 
+## Testing
+
+Compile the sources. Then simply open `tests/testsuite.html` in your browser!
+
 ## License
 
 MIT, see `LICENSE.md`.
