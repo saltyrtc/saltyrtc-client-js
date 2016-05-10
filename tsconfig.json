@@ -1,8 +1,6 @@
 {
     "compilerOptions": {
         "target": "ES2015",
-        "removeComments": true,
-        "outDir": "js",
-        "sourceMap": true
+        "noEmit": true
     }
 }
