@@ -6,12 +6,12 @@
  */
 
 /// <reference path="types/angular.d.ts" />
-/// <reference path="utils.ts" />
 
+import { u8aToHex, hexToU8a, randomString } from "./utils";
 
 var nacl: any; // TODO
 
-class Box {
+export class Box {
 
     private _nonce: Uint8Array;
     private _data: any; // TODO
@@ -64,7 +64,7 @@ interface IKeyPair {
 }
 
 
-class KeyStore {
+export class KeyStore {
     // Public key of the recipient
     // TODO: Does this need to be public?
     public otherKey = null;

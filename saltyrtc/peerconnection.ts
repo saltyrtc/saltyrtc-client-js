@@ -8,7 +8,7 @@
 /// <reference path="types/angular.d.ts" />
 /// <reference path='types/RTCPeerConnection.d.ts' />
 
-class PeerConnection {
+export class PeerConnection {
 
     private $log: angular.ILogService;
     private $rootScope: angular.IRootScopeService;

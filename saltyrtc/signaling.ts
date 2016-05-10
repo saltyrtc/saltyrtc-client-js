@@ -7,9 +7,9 @@
 
 /// <reference path="types/angular.d.ts" />
 /// <reference path="types/websocket.d.ts" />
-/// <reference path="keystore.ts" />
-/// <reference path="session.ts" />
 
+import { Session } from "./session";
+import { KeyStore, Box } from "./keystore";
 
 interface CachedSignalingMessage {
     message: SignalingMessage,
@@ -79,7 +79,7 @@ class SignalingEvents {
 }
 
 
-class Signaling {
+export class Signaling {
     static DEFAULT_URL: string = 'ws://example.com:8765/';
     static CONNECT_MAX_RETRIES: number = 10;
     static CONNECT_RETRY_INTERVAL: number = 10000;

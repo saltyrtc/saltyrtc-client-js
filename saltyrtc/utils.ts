@@ -1,4 +1,11 @@
 /**
+ * Copyright (C) 2016 Threema GmbH / SaltyRTC Contributors
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the `LICENSE.md` file for details.
+ */
+
+/**
  * Convert an Uint8Array to a hex string.
  *
  * Example:
@@ -6,7 +13,7 @@
  *   >>> u8aToHex(new Uint8Array([1, 255]))
  *   "01ff"
  */
-function u8aToHex(array: Uint8Array): string {
+export function u8aToHex(array: Uint8Array): string {
     let results: string[] = [];
     array.forEach((arrayByte) => {
         results.push(arrayByte.toString(16).replace(/^([\da-f])$/, '0$1'));
@@ -23,7 +30,7 @@ function u8aToHex(array: Uint8Array): string {
  *   >>> hexToU8a("01ff")
  *   [1, 255]
  */
-function hexToU8a(hexstring: string): Uint8Array {
+export function hexToU8a(hexstring: string): Uint8Array {
     let array, i, j, k, ref;
     j = 0;
     array = new Uint8Array(hexstring.length / 2);
@@ -39,7 +46,7 @@ function hexToU8a(hexstring: string): Uint8Array {
  *
  * Based on http://stackoverflow.com/a/1349426/284318.
  */
-function randomString(length=32, chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'): string {
+export function randomString(length=32, chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'): string {
     let str = '';
     for (let i = 0; i < length; i++) {
         str += chars.charAt(Math.floor(Math.random() * chars.length))
