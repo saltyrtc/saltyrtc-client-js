@@ -4,8 +4,9 @@
   "description": "SaltyRTC JavaScript implementation",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "tsc": "tsc",
-    "rollup": "rollup -c"
+    "validate": "tsc -w",
+    "rollup": "rollup -c",
+    "watch": "watch \"npm run rollup\" saltyrtc/"
   },
   "repository": {
     "type": "git",
@@ -27,6 +28,7 @@
   "devDependencies": {
     "rollup": "^0.26",
     "rollup-plugin-typescript": "^0.7.5",
-    "typescript": "^1.8.0"
+    "typescript": "^1.8.0",
+    "watch": "^0.18.0"
   }
 }

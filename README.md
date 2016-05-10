@@ -19,11 +19,15 @@ To compile the TypeScript sources to a single JavaScript (ES2015) file, run
 
 The resulting file will be located in `dist/saltyrtc.js`.
 
+You can also watch the source code for changes and recompile automatically:
+
+    $ npm run watch
+
 Due to a bug (https://github.com/rollup/rollup-plugin-typescript/issues/43),
 rollup does not currently output non-fatal errors from TypeScript. To see
-those, simply issue `npm run tsc` in your main directory.
+those, simply issue `npm run validate` in your main directory.
 
-    $ npm run tsc
+    $ npm run validate
 
 ## License
 
