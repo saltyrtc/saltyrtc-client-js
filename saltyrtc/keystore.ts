@@ -8,10 +8,6 @@
 /// <reference path="types/angular.d.ts" />
 /// <reference path="utils.ts" />
 
-angular.module('saltyrtc.services').factory('KeyStore', [
-    '$log',
-    ($log) => new KeyStore($log)
-]);
 
 var nacl: any; // TODO
 

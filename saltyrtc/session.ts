@@ -8,9 +8,6 @@
 /// <reference path="types/angular.d.ts" />
 /// <reference path="utils.ts" />
 
-angular.module('saltyrtc.services').factory('Session', [
-    '$log', ($log) => new Session($log)
-]);
 
 class Session {
     private $log: angular.ILogService;

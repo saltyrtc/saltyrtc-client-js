@@ -10,10 +10,6 @@
 /// <reference path="keystore.ts" />
 /// <reference path="session.ts" />
 
-angular.module('saltyrtc.services').factory('Signaling', [
-    '$log', '$rootScope', '$timeout', 'KeyStore', 'Session',
-    ($log, $rootScope, $timeout, KeyStore, Session) => new Signaling($log, $rootScope, $timeout, KeyStore, Session)
-]);
 
 interface CachedSignalingMessage {
     message: SignalingMessage,

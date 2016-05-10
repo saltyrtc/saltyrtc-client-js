@@ -12,14 +12,6 @@
 /// <reference path="peerconnection.ts" />
 /// <reference path="datachannel.ts" />
 
-angular.module('saltyrtc.services').factory('Client', [
-    '$log', '$rootScope', '$timeout',
-    'KeyStore', 'Session', 'Signaling', 'PeerConnection', 'DataChannel',
-    ($log, $rootScope, $timeout,
-     KeyStore, Session, Signaling, PeerConnection, DataChannel) => {
-        return new Client($log, $rootScope, $timeout,
-                          KeyStore, Session, Signaling, PeerConnection, DataChannel);
-}]);
 
 interface ClientHandler {
     signaling: Object,

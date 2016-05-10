@@ -9,12 +9,6 @@
 /// <reference path="keystore.ts" />
 /// <reference path="peerconnection.ts" />
 
-angular.module('saltyrtc.services').factory('DataChannel', [
-    '$log', '$rootScope', '$timeout', 'KeyStore', 'PeerConnection',
-    ($log, $rootScope, $timeout, KeyStore, PeerConnection) => {
-        return new DataChannel($log, $rootScope, $timeout, KeyStore, PeerConnection)
-    }
-]);
 
 /**
  * A message that is sent through the data channel.
