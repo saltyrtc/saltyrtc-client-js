@@ -8,14 +8,18 @@ The development is still ongoing, you can find the current version in the
 
 ## Development
 
-To compile the TypeScript sources to JavaScript (ES2015), install the
-TypeScript compiler and run `tsc` in the main directory.
+Install dependencies with npm (or alternatively install them manually):
 
-    $ tsc
+    $ npm install
+
+To compile the TypeScript sources to JavaScript (ES2015), run `tsc` in the main
+directory.
+
+    $ node_modules/.bin/tsc
 
 You can also watch the files for changes and recompile automatically:
 
-    $ tsc -w
+    $ node_modules/.bin/tsc -w
 
 ## License
 

@@ -1,0 +1,28 @@
+{
+  "name": "saltyrtc",
+  "version": "0.1.0",
+  "description": "SaltyRTC JavaScript implementation",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saltyrtc/saltyrtc-client-js.git"
+  },
+  "keywords": [
+    "saltyrtc",
+    "webrtc",
+    "ortc",
+    "rtc",
+    "nacl"
+  ],
+  "author": "SaltyRTC Contributors",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/saltyrtc/saltyrtc-client-js/issues"
+  },
+  "homepage": "https://github.com/saltyrtc/saltyrtc-client-js#readme",
+  "devDependencies": {
+    "typescript": "^1.8.0"
+  }
+}
