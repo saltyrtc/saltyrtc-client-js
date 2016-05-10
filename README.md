@@ -12,14 +12,18 @@ Install dependencies with npm (or alternatively install them manually):
 
     $ npm install
 
-To compile the TypeScript sources to JavaScript (ES2015), run `tsc` in the main
-directory.
+To compile the TypeScript sources to a single JavaScript (ES2015) file, run
+`rollup` in the main directory.
 
-    $ node_modules/.bin/tsc
+    $ npm run rollup
 
-You can also watch the files for changes and recompile automatically:
+The resulting file will be located in `dist/saltyrtc.js`.
 
-    $ node_modules/.bin/tsc -w
+Due to a bug (https://github.com/rollup/rollup-plugin-typescript/issues/43),
+rollup does not currently output non-fatal errors from TypeScript. To see
+those, simply issue `npm run tsc` in your main directory.
+
+    $ npm run tsc
 
 ## License
 
