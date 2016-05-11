@@ -5,8 +5,6 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-/// <reference path="types/angular.d.ts" />
-
 import { u8aToHex, hexToU8a, randomString } from "./utils";
 
 var nacl: any; // TODO

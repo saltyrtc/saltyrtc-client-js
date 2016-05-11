@@ -56,7 +56,6 @@ export class Client {
     };
 
     private $rootScope: angular.IRootScopeService;
-    private $timeout: angular.ITimeoutService;
     private keyStore: KeyStore;
     private session: Session;
     private signaling: Signaling;
@@ -66,8 +65,8 @@ export class Client {
     private _started: boolean = false;
 
     // Timers
-    private _connectTimer: angular.IPromise<void> = null;
-    private _disconnectTimer: angular.IPromise<void> = null;
+    private _connectTimer: number = null;
+    private _disconnectTimer: number = null;
 
     // States
     public states = {};
@@ -76,14 +75,12 @@ export class Client {
     private _errorHandler: ClientHandler;
 
     constructor($rootScope: angular.IRootScopeService,
-                $timeout: angular.ITimeoutService,
                 keyStore: KeyStore,
                 session: Session,
                 signaling: Signaling,
                 peerConnection: PeerConnection,
                 dataChannel: DataChannel) {
         this.$rootScope = $rootScope;
-        this.$timeout = $timeout;
         this.keyStore = keyStore;
         this.session = session;
         this.signaling = signaling;
@@ -380,7 +377,7 @@ export class Client {
     }
 
     _startConnectTimer(): void {
-        this._connectTimer = this.$timeout(() => {
+        this._connectTimer = setTimeout(() => {
             // Notify that connecting timed out
             console.warn('Data Channel connect timeout');
             this._updateClientState({type: 'danger', value: 'timeout'});
@@ -390,13 +387,13 @@ export class Client {
 
     _cancelConnectTimer(): void {
         if (this._connectTimer !== null) {
-            this.$timeout.cancel(this._connectTimer);
+            clearTimeout(this._connectTimer);
             this._connectTimer = null;
         }
     }
 
     _startDisconnectTimer(): void {
-        this._disconnectTimer = this.$timeout(() => {
+        this._disconnectTimer = setTimeout(() => {
             // Notify that the connection has been lost
             console.warn('Peer Connection lost');
             this._updateClientState({type: 'danger', value: 'lost'});
@@ -406,7 +403,7 @@ export class Client {
 
     _cancelDisconnectTimer(): void {
         if (this._disconnectTimer !== null) {
-            this.$timeout.cancel(this._disconnectTimer);
+            clearTimeout(this._disconnectTimer);
             this._disconnectTimer = null;
         }
     }

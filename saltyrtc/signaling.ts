@@ -83,7 +83,6 @@ export class Signaling {
     static CONNECT_RETRY_INTERVAL: number = 10000;
 
     private $rootScope: angular.IRootScopeService;
-    private $timeout: angular.ITimeoutService;
     private keyStore: KeyStore;
     private session: Session;
     private _state: string = null;
@@ -91,16 +90,14 @@ export class Signaling {
     private url: string = null;
     private _connectTries: number;
     private cached: CachedSignalingMessage[];
-    private _connectTimer: angular.IPromise<void> = null;
+    private _connectTimer: number = null;
     private _events: SignalingEvents = null;
     private ws: WebSocket;
 
     constructor($rootScope: angular.IRootScopeService,
-                $timeout: angular.ITimeoutService,
                 keyStore: KeyStore,
                 session: Session) {
         this.$rootScope = $rootScope;
-        this.$timeout = $timeout;
         this.keyStore = keyStore;
         this.session = session;
         this.reset(true)
@@ -259,7 +256,7 @@ export class Signaling {
     }
 
     _startConnectTimer(delay = Signaling.CONNECT_RETRY_INTERVAL): void {
-        this._connectTimer = this.$timeout(() => {
+        this._connectTimer = setTimeout(() => {
             this._connectTries += 1;
             console.debug('Signaling connect timeout, retry ' + this._connectTries+ '/' + Signaling.CONNECT_MAX_RETRIES);
             this.connect(this.path, this.url);
@@ -273,7 +270,7 @@ export class Signaling {
 
     _cancelConnectTimer(): void {
         if (this._connectTimer !== null) {
-            this.$timeout.cancel(this._connectTimer);
+            clearTimeout(this._connectTimer);
             this._connectTimer = null;
         }
     }

@@ -202,23 +202,20 @@ export class DataChannel {
     }
 
     private $rootScope: angular.IRootScopeService;
-    private $timeout: angular.ITimeoutService;
     private keyStore: KeyStore;
     private peerConnection: PeerConnection;
     private _state: string = null;
     private _heartbeat: string = null;
-    private _heartbeatAckTimer: angular.IPromise<void> = null;
+    private _heartbeatAckTimer: number = null;
     private _options: RTCDataChannelInit;
     private _events: DataChannelEvents = null;
     private _cached: DCMessage[] = [];
     private dc: RTCDataChannel = null;
 
     constructor($rootScope: angular.IRootScopeService,
-                $timeout: angular.ITimeoutService,
                 keyStore: KeyStore,
                 peerConnection: PeerConnection) {
         this.$rootScope = $rootScope;
-        this.$timeout = $timeout;
         this.keyStore = keyStore;
         this.peerConnection = peerConnection;
         this.reset(true);
@@ -246,7 +243,7 @@ export class DataChannel {
         // Open?
         if (state == 'open') {
             // Send heartbeat after 100ms
-            this.$timeout(() => this._sendHeartbeat(), 100);
+            setTimeout(() => this._sendHeartbeat(), 100);
         }
     }
 
@@ -323,7 +320,7 @@ export class DataChannel {
     }
 
     private _startHeartbeatAckTimer(delay: number = DataChannel.HEARTBEAT_ACK_TIMEOUT): void {
-        this._heartbeatAckTimer = this.$timeout(() => {
+        this._heartbeatAckTimer = setTimeout(() => {
             console.error('Data Channel heartbeat ack timeout');
             this.$rootScope.$broadcast('dc:error', 'timeout', 'Heartbeat ack timeout');
             this.dc.close();
@@ -332,7 +329,7 @@ export class DataChannel {
 
     private _cancelHeartbeatAckTimer(): void {
         if (this._heartbeatAckTimer !== null) {
-            this.$timeout.cancel(this._heartbeatAckTimer);
+            clearTimeout(this._heartbeatAckTimer);
             this._heartbeatAckTimer = null;
         }
     }
