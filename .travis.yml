@@ -14,3 +14,6 @@ before_script:
   - sh -e /etc/init.d/xvfb start
   - npm run rollup_tests
   - cat dist/tests.js
+script:
+  - node_modules/.bin/tsc --target ES2015 --noEmit
+  - npm test
