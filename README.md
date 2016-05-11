@@ -1,5 +1,7 @@
 # SaltyRTC JavaScript Client
 
+[![Travis branch](https://img.shields.io/travis/saltyrtc/saltyrtc-client-javascript/develop.svg?maxAge=2592000)](https://travis-ci.org/saltyrtc/saltyrtc-client-javascript)
+
 This is a [SaltyRTC](https://github.com/saltyrtc/saltyrtc-meta) implementation
 for ECMAScript 2015 written in TypeScript 1.7+.
 
