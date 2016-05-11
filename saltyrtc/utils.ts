@@ -15,9 +15,9 @@
  */
 export function u8aToHex(array: Uint8Array): string {
     let results: string[] = [];
-    array.forEach((arrayByte) => {
+    for (let arrayByte of array) {
         results.push(arrayByte.toString(16).replace(/^([\da-f])$/, '0$1'));
-    });
+    }
     return results.join('');
 }
 
