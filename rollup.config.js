@@ -5,6 +5,7 @@ export default {
     dest: 'dist/saltyrtc.js',
     sourceMap: true,
     treeshake: true,
+    useStrict: true,
     plugins: [
         typescript({
             tsconfig: false,

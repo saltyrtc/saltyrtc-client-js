@@ -5,6 +5,7 @@ export default {
     dest: 'dist/tests.js',
     sourceMap: true,
     treeshake: false,
+    useStrict: true,
     plugins: [
         typescript({
             tsconfig: false,
