@@ -25,7 +25,7 @@ interface State {
     value: string,
 }
 
-export class Client {
+export class SaltyRTC {
     static CONNECT_TIMEOUT: number = 85000;
     static DISCONNECT_TIMEOUT: number = 35000;
 
@@ -334,21 +334,21 @@ export class Client {
         let weight = 0;
         for (let key in this.states) {
             let state = this.states[key];
-            weight += Client.STATE_WEIGHT[state.type];
+            weight += SaltyRTC.STATE_WEIGHT[state.type];
         }
 
         // Data channel open and PC at most unstable: Force warning if danger
-        if (weight >= Client.STATE_WEIGHT.danger
+        if (weight >= SaltyRTC.STATE_WEIGHT.danger
             && this.states['dc'].type == 'success'
             && this.states['pc'].type != 'danger') {
-            weight = Client.STATE_WEIGHT.warning;
+            weight = SaltyRTC.STATE_WEIGHT.warning;
         }
 
         // Calculate state type
         let state;
-        if (weight < Client.STATE_WEIGHT.warning) {
+        if (weight < SaltyRTC.STATE_WEIGHT.warning) {
             state = {type: 'success', value: 'connected'};
-        } else if (weight < Client.STATE_WEIGHT.danger) {
+        } else if (weight < SaltyRTC.STATE_WEIGHT.danger) {
             state = {type: 'warning', value: 'unstable'};
         } else {
             state = {type: 'danger', value: 'disconnected'};
@@ -375,7 +375,7 @@ export class Client {
     }
 
     private _getStateType(name: string, value: string): string {
-        let rules = Client.STATE_RULES[name];
+        let rules = SaltyRTC.STATE_RULES[name];
         // Check if the value is in one of the keys
         for (let key in rules) {
             let states = rules[key];
@@ -392,7 +392,7 @@ export class Client {
             console.warn('Data Channel connect timeout');
             this._updateClientState({type: 'danger', value: 'timeout'});
             this._reconnect(true, false);
-        }, Client.CONNECT_TIMEOUT);
+        }, SaltyRTC.CONNECT_TIMEOUT);
     }
 
     _cancelConnectTimer(): void {
@@ -408,7 +408,7 @@ export class Client {
             console.warn('Peer Connection lost');
             this._updateClientState({type: 'danger', value: 'lost'});
             this._reconnect(true, false);
-        }, Client.DISCONNECT_TIMEOUT);
+        }, SaltyRTC.DISCONNECT_TIMEOUT);
     }
 
     _cancelDisconnectTimer(): void {
