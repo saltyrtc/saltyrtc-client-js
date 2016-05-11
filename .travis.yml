@@ -3,7 +3,7 @@ language: node_js
 node_js:
   - "4"
 addons:
-  firefox: "37.0"
+  firefox: latest
 before_script:
   - export CHROME_BIN=chromium-browser
   - export DISPLAY=:99.0
