@@ -33,6 +33,12 @@ export function u8aToHex(array: Uint8Array): string {
 export function hexToU8a(hexstring: string): Uint8Array {
     let array, i, j, k, ref;
     j = 0;
+
+    // If number of characters is odd, add padding
+    if (hexstring.length % 2 == 1) {
+        hexstring = '0' + hexstring;
+    }
+
     array = new Uint8Array(hexstring.length / 2);
     for (i = k = 0, ref = hexstring.length; k <= ref; i = k += 2) {
         array[j++] = parseInt(hexstring.substr(i, 2), 16);

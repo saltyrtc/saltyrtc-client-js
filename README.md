@@ -29,6 +29,19 @@ those, simply issue `npm run validate` in your main directory.
 
     $ npm run validate
 
+## Testing
+
+To compile the test sources, run:
+
+    $ npm run rollup_tests
+
+You can also watch the tests and sources for changes and recompile
+automatically:
+
+    $ npm run watch_tests
+
+Then simply open `tests/testsuite.html` in your browser!
+
 ## License
 
 MIT, see `LICENSE.md`.

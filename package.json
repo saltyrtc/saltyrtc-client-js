@@ -6,7 +6,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "validate": "tsc -w",
     "rollup": "rollup -c",
-    "watch": "watch \"npm run rollup\" saltyrtc/"
+    "rollup_tests": "rollup -c rollup.testing.js",
+    "watch": "watch \"npm run rollup\" saltyrtc/",
+    "watch_tests": "watch \"npm run rollup_tests\" tests/ saltyrtc/"
   },
   "repository": {
     "type": "git",
@@ -26,6 +28,7 @@
   },
   "homepage": "https://github.com/saltyrtc/saltyrtc-client-js#readme",
   "devDependencies": {
+    "jasmine-core": "^2.4",
     "rollup": "^0.26",
     "rollup-plugin-typescript": "^0.7.5",
     "typescript": "^1.8.0",
