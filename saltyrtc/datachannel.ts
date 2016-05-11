@@ -140,12 +140,10 @@ class DataChannelEvents {
     private _dc;
     private _stopped: boolean = false;
     private _unchunkifier: Unchunkifier;
-    private $log: angular.ILogService;
     private $rootScope: angular.IRootScopeService;
 
-    constructor(dc: DataChannel, $log: angular.ILogService, $rootScope: angular.IRootScopeService) {
+    constructor(dc: DataChannel, $rootScope: angular.IRootScopeService) {
         this._dc = dc;
-        this.$log = $log;
         this.$rootScope = $rootScope;
         this._unchunkifier = new Unchunkifier(this);
     }
@@ -163,7 +161,7 @@ class DataChannelEvents {
     onError = (error) => {
         if (this._stopped === false) {
             this.$rootScope.$apply(() => {
-                this.$log.error('General Data Channel error:', error);
+                console.error('General Data Channel error:', error);
                 this.$rootScope.$broadcast('dc:error', 'general', error);
             })
         }
@@ -203,27 +201,21 @@ export class DataChannel {
         ordered: true,
     }
 
-    private $log: angular.ILogService;
     private $rootScope: angular.IRootScopeService;
-    private $timeout: angular.ITimeoutService;
     private keyStore: KeyStore;
     private peerConnection: PeerConnection;
     private _state: string = null;
     private _heartbeat: string = null;
-    private _heartbeatAckTimer: angular.IPromise<void> = null;
+    private _heartbeatAckTimer: number = null;
     private _options: RTCDataChannelInit;
     private _events: DataChannelEvents = null;
     private _cached: DCMessage[] = [];
     private dc: RTCDataChannel = null;
 
-    constructor($log: angular.ILogService,
-                $rootScope: angular.IRootScopeService,
-                $timeout: angular.ITimeoutService,
+    constructor($rootScope: angular.IRootScopeService,
                 keyStore: KeyStore,
                 peerConnection: PeerConnection) {
-        this.$log = $log;
         this.$rootScope = $rootScope;
-        this.$timeout = $timeout;
         this.keyStore = keyStore;
         this.peerConnection = peerConnection;
         this.reset(true);
@@ -240,7 +232,7 @@ export class DataChannel {
     private _setState(state): void {
         // Ignore repeated state changes
         if (state == this._state) {
-            this.$log.debug('Ignoring repeated data channel state:', state);
+            console.debug('Ignoring repeated data channel state:', state);
             return;
         }
 
@@ -251,7 +243,7 @@ export class DataChannel {
         // Open?
         if (state == 'open') {
             // Send heartbeat after 100ms
-            this.$timeout(() => this._sendHeartbeat(), 100);
+            setTimeout(() => this._sendHeartbeat(), 100);
         }
     }
 
@@ -262,7 +254,7 @@ export class DataChannel {
         if (this._events !== null) {
             this._events.stop();
         }
-        this._events = new DataChannelEvents(this, this.$log, this.$rootScope);
+        this._events = new DataChannelEvents(this, this.$rootScope);
 
         // Cancel and reset heartbeat ack timer
         this._cancelHeartbeatAckTimer();
@@ -272,7 +264,7 @@ export class DataChannel {
 
         // Close data channel instance
         if (this.dc !== null) {
-            this.$log.debug('Closing data channel');
+            console.debug('Closing data channel');
             this.dc.close();
             this.dc = null;
         }
@@ -305,7 +297,7 @@ export class DataChannel {
         // Create peer connection
         this.state = 'init';
         this.dc = this.peerConnection.pc.createDataChannel(DataChannel.LABEL, this._options);
-        this.$log.debug('Data Channel created');
+        console.debug('Data Channel created');
 
         // Underlying data transport has been established or re-established
         this.dc.onopen = this._events.onOpen;
@@ -328,8 +320,8 @@ export class DataChannel {
     }
 
     private _startHeartbeatAckTimer(delay: number = DataChannel.HEARTBEAT_ACK_TIMEOUT): void {
-        this._heartbeatAckTimer = this.$timeout(() => {
-            this.$log.error('Data Channel heartbeat ack timeout');
+        this._heartbeatAckTimer = setTimeout(() => {
+            console.error('Data Channel heartbeat ack timeout');
             this.$rootScope.$broadcast('dc:error', 'timeout', 'Heartbeat ack timeout');
             this.dc.close();
         }, delay);
@@ -337,7 +329,7 @@ export class DataChannel {
 
     private _cancelHeartbeatAckTimer(): void {
         if (this._heartbeatAckTimer !== null) {
-            this.$timeout.cancel(this._heartbeatAckTimer);
+            clearTimeout(this._heartbeatAckTimer);
             this._heartbeatAckTimer = null;
         }
     }
@@ -350,12 +342,12 @@ export class DataChannel {
     }
 
     receiveMessage(inner): void {
-        this.$log.debug('Broadcasting data channel message');
+        console.debug('Broadcasting data channel message');
         this.$rootScope.$broadcast('dc:message', inner);
     }
 
     public _sendCached(): void {  // TODO: Can this be private? If not, remove underscore
-        this.$log.debug('Sending ', this._cached.length, ' delayed data channel messages');
+        console.debug('Sending ', this._cached.length, ' delayed data channel messages');
         for (var message of this._cached) {
             this._send(message);
         }
@@ -365,7 +357,7 @@ export class DataChannel {
     // Warning: Do not call this function manually as it will interfere with the
     //          running timers and create timing issues!
     private _sendHeartbeat(content: string = randomString()): void {
-        this.$log.debug('Sending data channel heartbeat');
+        console.debug('Sending data channel heartbeat');
 
         // Store heartbeat
         this._heartbeat = content;
@@ -381,15 +373,15 @@ export class DataChannel {
     _receiveHeartbeatAck(content: string): void {
         // Validate heartbeat ack
         if (this._heartbeat === null) {
-            this.$log.warn('Ignored data channel heartbeat-ack that has not been sent');
+            console.warn('Ignored data channel heartbeat-ack that has not been sent');
             return;
         }
         if (content !== this._heartbeat) {
-            this.$log.error('Data channel heartbeat-ack content does not match, expected:',
+            console.error('Data channel heartbeat-ack content does not match, expected:',
                 this._heartbeat, 'received:', content);
             this.$rootScope.$broadcast('dc:error', 'heartbeat', 'heartbeat-ack content did not match');
         } else {
-            this.$log.debug('Received data channel heartbeat-ack');
+            console.debug('Received data channel heartbeat-ack');
             this._heartbeat = null;
             // Cancel heartbeat ack timer
             this._cancelHeartbeatAckTimer();
@@ -397,12 +389,12 @@ export class DataChannel {
     }
 
     _receiveHeartbeat(content: string): void {
-        this.$log.debug('Received data channel heartbeat');
+        console.debug('Received data channel heartbeat');
         this._sendHeartbeatAck(content);
     }
 
     _sendHeartbeatAck(content): void {
-        this.$log.debug('Sending heartbeat ack');
+        console.debug('Sending heartbeat ack');
         this._send({
             type: 'heartbeat-ack',
             data: content,
@@ -423,14 +415,14 @@ export class DataChannel {
 
             // Send chunks
             let sizeKb = (box.length / 1024).toFixed(2);
-            this.$log.debug('Sending data channel message (size:', sizeKb, 'KB):', message);
+            console.debug('Sending data channel message (size:', sizeKb, 'KB):', message);
             let chunkifier = new Chunkifier(box.toArray(), DataChannel.MTU);
             for (var chunk of chunkifier.chunks) {
                 // Send chunk content
                 this.dc.send(chunk);
             }
         } else {
-            this.$log.debug('Delaying data channel message until channel is open');
+            console.debug('Delaying data channel message until channel is open');
             this._cached.push(message);
         }
     }
@@ -452,7 +444,7 @@ export class DataChannel {
         // Decode data
         let message = JSON.parse(data);
         let typeInfo = message.data.type + '/' + message.data.subType;
-        this.$log.debug('Received data channel message of type ', typeInfo, ' (size:', sizeKb, 'KB):', message);
+        console.debug('Received data channel message of type ', typeInfo, ' (size:', sizeKb, 'KB):', message);
 
         // Dispatch message
         switch (message.type) {
@@ -466,7 +458,7 @@ export class DataChannel {
                 this._receiveHeartbeat(message.data);
                 break;
             default:
-                this.$log.warn('Ignored data channel message:', message);
+                console.warn('Ignored data channel message:', message);
         }
     }
 }

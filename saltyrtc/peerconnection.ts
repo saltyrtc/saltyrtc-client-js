@@ -10,7 +10,6 @@
 
 export class PeerConnection {
 
-    private $log: angular.ILogService;
     private $rootScope: angular.IRootScopeService;
     private _state: string;
     private _options: RTCPeerConnectionConfig;
@@ -41,8 +40,7 @@ export class PeerConnection {
         }
     };
 
-    constructor($log, $rootScope) {
-        this.$log = $log;
+    constructor($rootScope) {
         this.$rootScope = $rootScope;
 
         // Set state property
@@ -53,7 +51,7 @@ export class PeerConnection {
     set state(newState: string) {
         // Ignore repeated state changes
         if (newState == this._state) {
-            this.$log.debug('Ignoring repeated peer connection state:', newState);
+            console.debug('Ignoring repeated peer connection state:', newState);
             return;
         }
 
@@ -69,11 +67,11 @@ export class PeerConnection {
         if (this._events !== null) {
             this._events.stop();
         }
-        this._events = new PeerConnectionEvents(this, this.$log, this.$rootScope);
+        this._events = new PeerConnectionEvents(this, this.$rootScope);
 
         // Close peer connection instance
         if (this.pc !== null) {
-            this.$log.debug('Closing peer connection');
+            console.debug('Closing peer connection');
             this.pc.close();
             this.pc = null;
         }
@@ -96,7 +94,7 @@ export class PeerConnection {
         // Create peer connection
         this.state = 'init';
         this.pc = new RTCPeerConnection(this._options);
-        this.$log.debug('Peer Connection created');
+        console.debug('Peer Connection created');
 
         // Session negotiation needs to be done at some point in the near future
         this.pc.onnegotiationneeded = this._events.onNegotiationNeeded;
@@ -135,12 +133,12 @@ export class PeerConnection {
     sendOffer() {
         // Check if the offer has already been created
         if (this.offerCreated) {
-            this.$log.debug('Offer has already been sent, ignored call');
+            console.debug('Offer has already been sent, ignored call');
             return;
         }
         this.offerCreated = true;
 
-        this.$log.info('Creating offer');
+        console.info('Creating offer');
 
         // Create offer, set local description and send on success
         this.pc.createOffer(
@@ -149,17 +147,17 @@ export class PeerConnection {
                 this.pc.setLocalDescription(
                     description,
                     () => {
-                        this.$log.debug('Local description set');
+                        console.debug('Local description set');
                         this.$rootScope.$broadcast('pc:offer', description);
                     },
                     (error) => {
-                        this.$log.error('Setting local description failed:', error);
+                        console.error('Setting local description failed:', error);
                         this.$rootScope.$broadcast('pc:error', 'local', error);
                     }
                 );
             },
             (error) => {
-                this.$log.error('Creating offer failed:', error);
+                console.error('Creating offer failed:', error);
                 this.$rootScope.$broadcast('pc:error', 'create', error);
             },
             this._constraints
@@ -167,17 +165,17 @@ export class PeerConnection {
     }
 
     receiveAnswer(descriptionInit: RTCSessionDescriptionInit) {
-        this.$log.info('Received answer');
+        console.info('Received answer');
         let description = new RTCSessionDescription(descriptionInit);
         this.pc.setRemoteDescription(
             description,
             () => {
                 // Success: Send cached ICE candidates
-                this.$log.debug('Remote description set');
+                console.debug('Remote description set');
                 this._sendCachedCandidates();
             },
             (error) => {
-                this.$log.error('Setting remote description failed:', error);
+                console.error('Setting remote description failed:', error);
                 this.$rootScope.$broadcast('pc:error', 'remote', error);
             }
         );
@@ -186,7 +184,7 @@ export class PeerConnection {
     sendCandidate(candidate: any) {
         if (this.descriptionsExchanged) {
             // Send candidate
-            this.$log.debug('Broadcasting candidate');
+            console.debug('Broadcasting candidate');
             this.$rootScope.$broadcast('pc:candidate', candidate);
         } else {
             // Cache candidates if no answer has been received yet
@@ -195,13 +193,13 @@ export class PeerConnection {
     }
 
     receiveCandidate(candidate: any) {
-        this.$log.debug('Received candidate');
+        console.debug('Received candidate');
         candidate = new RTCIceCandidate(candidate);
         this.pc.addIceCandidate(
             candidate,
-            () => this.$log.debug('Candidate set'),
+            () => console.debug('Candidate set'),
             (error) => {
-                this.$log.error('Adding candidate failed:', error);
+                console.error('Adding candidate failed:', error);
                 this.$rootScope.$broadcast('pc:error', 'candidate', error);
             }
         )
@@ -209,7 +207,7 @@ export class PeerConnection {
 
     _sendCachedCandidates() {
         this.descriptionsExchanged = true;
-        this.$log.debug('Sending ' + this.candidates.length + ' delayed candidates');
+        console.debug('Sending ' + this.candidates.length + ' delayed candidates');
         // Send cached candidates
         for (var candidate of this.candidates) {
             this.sendCandidate(candidate);
@@ -227,14 +225,12 @@ class PeerConnectionEvents {
 
     private _stopped: boolean;
     private _pc: PeerConnection;
-    private $log: angular.ILogService;
     private $rootScope: angular.IRootScopeService;
 
     constructor(pc: PeerConnection,
-                $log: angular.ILogService, $rootScope: angular.IRootScopeService) {
+                $rootScope: angular.IRootScopeService) {
         this._stopped = false;
         this._pc = pc;
-        this.$log = $log;
         this.$rootScope = $rootScope;
     }
 
@@ -244,7 +240,7 @@ class PeerConnectionEvents {
 
     onNegotiationNeeded = (event: Event) => {
         if (!this._stopped) {
-            this.$log.warn('Ignored peer connection negotiation request');
+            console.warn('Ignored peer connection negotiation request');
         }
     };
 
@@ -261,20 +257,20 @@ class PeerConnectionEvents {
 
     onSignalingStateChange = (event: Event) => {
         if (!this._stopped) {
-            this.$log.debug('Ignored signaling state change to:',
+            console.debug('Ignored signaling state change to:',
                             this._pc.pc.signalingState);
         }
     };
 
     onAddStream = (event: RTCMediaStreamEvent) => {
         if (!this._stopped) {
-            this.$log.warn('Ignored incoming media stream');
+            console.warn('Ignored incoming media stream');
         }
     };
 
     onRemoveStream = (event: RTCMediaStreamEvent) => {
         if (!this._stopped) {
-            this.$log.warn('Ignored media stream removal');
+            console.warn('Ignored media stream removal');
         }
     };
 
@@ -288,7 +284,7 @@ class PeerConnectionEvents {
 
     onDataChannel = (event: Event) => {
         if (!this._stopped) {
-            this.$log.warn('Ignored incoming data channel');
+            console.warn('Ignored incoming data channel');
         }
     };
 
