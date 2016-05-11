@@ -42,6 +42,10 @@ automatically:
 
 Then simply open `tests/testsuite.html` in your browser!
 
+Alternatively, run the tests automatically in Firefox and Chrome:
+
+    $ npm test
+
 ## License
 
 MIT, see `LICENSE.md`.

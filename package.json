@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "SaltyRTC JavaScript implementation",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "karma start --single-run",
     "validate": "tsc -w",
     "rollup": "rollup -c",
     "rollup_tests": "rollup -c rollup.testing.js",
@@ -29,6 +29,10 @@
   "homepage": "https://github.com/saltyrtc/saltyrtc-client-js#readme",
   "devDependencies": {
     "jasmine-core": "^2.4",
+    "karma": "^0.13.22",
+    "karma-chrome-launcher": "^1.0.1",
+    "karma-firefox-launcher": "^1.0.0",
+    "karma-jasmine": "^1.0.2",
     "rollup": "^0.26",
     "rollup-plugin-typescript": "^0.7.5",
     "typescript": "^1.8.0",
