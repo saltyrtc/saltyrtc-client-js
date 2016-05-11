@@ -1,6 +1,6 @@
 /// <reference path="jasmine.d.ts" />
 
-import { u8aToHex, hexToU8a } from "../saltyrtc/utils";
+import { u8aToHex, hexToU8a, randomString } from "../saltyrtc/utils";
 
 export default () => {
 
@@ -28,6 +28,18 @@ export default () => {
 
         it('single-character conversion from hex to Uint8Array works', () => {
             expect(hexToU8a('a')).toEqual(new Uint8Array([0x0a]));
+        });
+
+    });
+
+    describe('randomString()', () => {
+
+        it('generates a 32 character random string', () => {
+            let random1 = randomString();
+            let random2 = randomString();
+            expect(random1 !== random2).toBe(true);
+            expect(random1.length).toEqual(random2.length);
+            expect(random1.length).toEqual(32);
         });
 
     });
