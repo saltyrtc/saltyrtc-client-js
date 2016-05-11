@@ -55,7 +55,6 @@ export class Client {
         success: 1,
     };
 
-    private $log: angular.ILogService;
     private $rootScope: angular.IRootScopeService;
     private $timeout: angular.ITimeoutService;
     private keyStore: KeyStore;
@@ -76,15 +75,13 @@ export class Client {
     private _stateHandler: ClientHandler;
     private _errorHandler: ClientHandler;
 
-    constructor($log: angular.ILogService,
-                $rootScope: angular.IRootScopeService,
+    constructor($rootScope: angular.IRootScopeService,
                 $timeout: angular.ITimeoutService,
                 keyStore: KeyStore,
                 session: Session,
                 signaling: Signaling,
                 peerConnection: PeerConnection,
                 dataChannel: DataChannel) {
-        this.$log = $log;
         this.$rootScope = $rootScope;
         this.$timeout = $timeout;
         this.keyStore = keyStore;
@@ -165,10 +162,10 @@ export class Client {
 
     start(): void {
         if (this._started) {
-            this.$log.warn('Restarting client');
+            console.warn('Restarting client');
             this._reconnect(true, true);
         } else {
-            this.$log.info('Starting client');
+            console.info('Starting client');
             this._started = true;
             this._connect();
         }
@@ -185,29 +182,29 @@ export class Client {
     private _registerEvents(): void {
         // Listen for state changes
         this.$rootScope.$on('signaling:state', (_, state) => {
-            this.$log.debug('Signaling state changed to:', state);
+            console.debug('Signaling state changed to:', state);
             this._updateState('signaling', state);
         });
         this.$rootScope.$on('pc:state', (_, state) => {
-            this.$log.debug('Peer Connection state changed to:', state);
+            console.debug('Peer Connection state changed to:', state);
             this._updateState('pc', state);
         });
         this.$rootScope.$on('dc:state', (_, state) => {
-            this.$log.debug('Data Channel state changed to:', state);
+            console.debug('Data Channel state changed to:', state);
             this._updateState('dc', state);
         });
 
         // Listen for error states
         this.$rootScope.$on('signaling:error', (_, state, error) => {
-            this.$log.error('Signaling error state:', state, ', Message:', error);
+            console.error('Signaling error state:', state, ', Message:', error);
             this._handleError('signaling', state, error);
         });
         this.$rootScope.$on('pc:error', (_, state, error) => {
-            this.$log.error('Peer Connection error state:', state, ', Message:', error);
+            console.error('Peer Connection error state:', state, ', Message:', error);
             this._handleError('pc', state, error);
         });
         this.$rootScope.$on('dc:error', (_, state, error) => {
-            this.$log.error('Data Channel error state:', state, ', Message:', error);
+            console.error('Data Channel error state:', state, ', Message:', error);
             this._handleError('dc', state, error);
         });
 
@@ -224,9 +221,9 @@ export class Client {
 
             // Check if key is different
             if (this.keyStore.otherKey !== null && this.keyStore.otherKey !== binKey) {
-                this.$log.error('Public key already received, ignoring message');
+                console.error('Public key already received, ignoring message');
             } else {
-                this.$log.debug('Received public key:', key);
+                console.debug('Received public key:', key);
                 this.keyStore.otherKey = binKey;
             }
 
@@ -257,7 +254,7 @@ export class Client {
 
         // Force signaling reset if required
         if (signaling) {
-            this.$log.info('Signaling reset');
+            console.info('Signaling reset');
             this.signaling.reset(true);
         } else {
             this.signaling.clear();
@@ -265,9 +262,9 @@ export class Client {
 
         // Force peer connection and data channel reset if required
         if (peerConnection) {
-            this.$log.info('Data Channel reset');
+            console.info('Data Channel reset');
             this.dataChannel.reset(true);
-            this.$log.info('Peer Connection reset');
+            console.info('Peer Connection reset');
             this.peerConnection.reset();
             // Notify that we have done a data channel reset
             this._updateClientState({type: 'danger', value: 'reset'});
@@ -277,7 +274,7 @@ export class Client {
     _connect(): void {
         // Create peer connection and connect to signaling server
         this.session.new();
-        this.$log.info('Connecting');
+        console.info('Connecting');
         this.peerConnection.reset();
         this.peerConnection.create();
         this.dataChannel.create();
@@ -294,7 +291,7 @@ export class Client {
         // Connect again
         // Note: No reconnect timer needed as the signaling service has such a timer
         //       and the signaling service is a requirement for the other services.
-        this.$log.info('Reconnecting');
+        console.info('Reconnecting');
         if (peerConnection) {
             this.peerConnection.create();
             this.dataChannel.create();
@@ -352,7 +349,7 @@ export class Client {
 
         // Call internal state event handler
         if (this._stateHandler[name][value]) {
-            this.$log.debug('Calling handler for state', value, ' of', name);
+            console.debug('Calling handler for state', value, ' of', name);
             this._stateHandler[name][value]();
         }
 
@@ -364,7 +361,7 @@ export class Client {
         // Call state event handler
         if (typeof this._errorHandler[name] !== undefined) {
             if (typeof this._errorHandler[name][value] !== undefined) {
-                this.$log.debug('Calling error state handler for state', value, ' of', name);
+                console.debug('Calling error state handler for state', value, ' of', name);
                 this._errorHandler[name][value]();
             }
         }
@@ -385,7 +382,7 @@ export class Client {
     _startConnectTimer(): void {
         this._connectTimer = this.$timeout(() => {
             // Notify that connecting timed out
-            this.$log.warn('Data Channel connect timeout');
+            console.warn('Data Channel connect timeout');
             this._updateClientState({type: 'danger', value: 'timeout'});
             this._reconnect(true, false);
         }, Client.CONNECT_TIMEOUT);
@@ -401,7 +398,7 @@ export class Client {
     _startDisconnectTimer(): void {
         this._disconnectTimer = this.$timeout(() => {
             // Notify that the connection has been lost
-            this.$log.warn('Peer Connection lost');
+            console.warn('Peer Connection lost');
             this._updateClientState({type: 'danger', value: 'lost'});
             this._reconnect(true, false);
         }, Client.DISCONNECT_TIMEOUT);

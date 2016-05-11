@@ -23,13 +23,11 @@ interface SignalingMessage {
 }
 
 class SignalingEvents {
-    private $log: angular.ILogService;
     private $rootScope: angular.IRootScopeService;
     private _stopped: boolean;
     private _signaling: Signaling;
 
-    constructor(signaling: Signaling, $log: angular.ILogService, $rootScope: angular.IRootScopeService) {
-        this.$log = $log;
+    constructor(signaling: Signaling, $rootScope: angular.IRootScopeService) {
         this.$rootScope = $rootScope;
         this._stopped = false
         this._signaling = signaling
@@ -48,7 +46,7 @@ class SignalingEvents {
     onError = (error) => {
         if (this._stopped === false) {
             this.$rootScope.$apply(() => {
-                this.$log.error('General Web Socket error', error)
+                console.error('General Web Socket error', error)
                 this.$rootScope.$broadcast('signaling:error', 'general', error)
             })
         }
@@ -71,7 +69,7 @@ class SignalingEvents {
                 } else if (data instanceof ArrayBuffer) {
                     this._signaling._receiveBinary(data);
                 } else {
-                    this.$log.warn('Received signaling message with unknown type')
+                    console.warn('Received signaling message with unknown type')
                 }
             })
         }
@@ -84,7 +82,6 @@ export class Signaling {
     static CONNECT_MAX_RETRIES: number = 10;
     static CONNECT_RETRY_INTERVAL: number = 10000;
 
-    private $log: angular.ILogService;
     private $rootScope: angular.IRootScopeService;
     private $timeout: angular.ITimeoutService;
     private keyStore: KeyStore;
@@ -98,12 +95,10 @@ export class Signaling {
     private _events: SignalingEvents = null;
     private ws: WebSocket;
 
-    constructor($log: angular.ILogService,
-                $rootScope: angular.IRootScopeService,
+    constructor($rootScope: angular.IRootScopeService,
                 $timeout: angular.ITimeoutService,
                 keyStore: KeyStore,
                 session: Session) {
-        this.$log = $log;
         this.$rootScope = $rootScope;
         this.$timeout = $timeout;
         this.keyStore = keyStore;
@@ -118,7 +113,7 @@ export class Signaling {
     _setState(state: string): void {
         // Ignore repeated state changes
         if (state === this._state) {
-            this.$log.debug('Ignoring repeated signaling state:', state);
+            console.debug('Ignoring repeated signaling state:', state);
             return;
         }
 
@@ -143,11 +138,11 @@ export class Signaling {
         if (this._events !== null) {
             this._events.stop();
         }
-        this._events = new SignalingEvents(this, this.$log, this.$rootScope);
+        this._events = new SignalingEvents(this, this.$rootScope);
 
         // Close web socket instance
         if (this.ws && state === 'open') {
-            this.$log.debug('Disconnecting Web Socket');
+            console.debug('Disconnecting Web Socket');
             this.ws.close();
         }
         this.ws = null;
@@ -180,7 +175,7 @@ export class Signaling {
         // Give up?
         if (this._connectTries == Signaling.CONNECT_MAX_RETRIES) {
             this._connectTries = 0;
-            this.$log.error('Connecting signaling channel failed');
+            console.error('Connecting signaling channel failed');
             this.state = 'failed';
             return;
         }
@@ -189,7 +184,7 @@ export class Signaling {
         this.reset();
         this.ws = new WebSocket(url + path);
         this.ws.binaryType = 'arraybuffer';
-        this.$log.debug('Created signaling channel, connecting to path:', path);
+        console.debug('Created signaling channel, connecting to path:', path);
         this.state = 'connecting';
 
         // Start connect timer
@@ -211,32 +206,32 @@ export class Signaling {
     }
 
     sendHello(): void {
-        this.$log.debug('Sending hello');
+        console.debug('Sending hello');
         this._send({type: 'hello-client'}, false);
     }
 
     sendReset(): void {
-        this.$log.debug('Sending reset');
+        console.debug('Sending reset');
         this._send({type: 'reset'}, false);
     }
 
     receiveReset(): void {
-        this.$log.debug('Broadcasting reset');
+        console.debug('Broadcasting reset');
         this.$rootScope.$broadcast('signaling:reset');
     }
 
     receiveSendError(): void {
-        this.$log.debug('Broadcasting send error');
+        console.debug('Broadcasting send error');
         this.$rootScope.$broadcast('signaling:sendError');
     }
 
     receiveKey(key): void {
-        this.$log.debug('Broadcasting key');
+        console.debug('Broadcasting key');
         this.$rootScope.$broadcast('signaling:key', key);
     }
 
     sendOffer(offer): void { // TODO: type
-        this.$log.debug('Sending offer');
+        console.debug('Sending offer');
         this._send({
             type: 'offer',
             session: this.session.id,
@@ -245,12 +240,12 @@ export class Signaling {
     }
 
     receiveAnswer(answer): void {
-        this.$log.debug('Broadcasting answer');
+        console.debug('Broadcasting answer');
         this.$rootScope.$broadcast('signaling:answer', answer);
     }
 
     sendCandidate(candidate): void {
-        this.$log.debug('Sending candidate');
+        console.debug('Sending candidate');
         this._send({
             type: 'candidate',
             session: this.session.id,
@@ -259,14 +254,14 @@ export class Signaling {
     }
 
     receiveCandidate(candidate): void {
-        this.$log.debug('Broadcasting candidate');
+        console.debug('Broadcasting candidate');
         this.$rootScope.$broadcast('signaling:candidate', candidate);
     }
 
     _startConnectTimer(delay = Signaling.CONNECT_RETRY_INTERVAL): void {
         this._connectTimer = this.$timeout(() => {
             this._connectTries += 1;
-            this.$log.debug('Signaling connect timeout, retry ' + this._connectTries+ '/' + Signaling.CONNECT_MAX_RETRIES);
+            console.debug('Signaling connect timeout, retry ' + this._connectTries+ '/' + Signaling.CONNECT_MAX_RETRIES);
             this.connect(this.path, this.url);
         }, delay);
     }
@@ -284,7 +279,7 @@ export class Signaling {
     }
 
     _sendCached(): void {
-        this.$log.debug('Sending ' + this.cached.length + ' delayed signaling messages');
+        console.debug('Sending ' + this.cached.length + ' delayed signaling messages');
         this.cached.forEach((item) => this._send(item.message, item.encrypt));
         this.cached = [];
     }
@@ -293,7 +288,7 @@ export class Signaling {
         // Delay sending until connected
         // 0: connecting, 1: open, 2: closing, 3: closed
         if (this.ws.readyState == 1) {
-            this.$log.debug('Sending signaling message (encrypted: ' + encrypt + '):', message);
+            console.debug('Sending signaling message (encrypted: ' + encrypt + '):', message);
             if (encrypt === true) {
                 let box: Box;
                 try {
@@ -307,7 +302,7 @@ export class Signaling {
                 this.ws.send(JSON.stringify(message));
             }
         } else {
-            this.$log.debug('Delaying signaling message until WebSocket is open');
+            console.debug('Delaying signaling message until WebSocket is open');
             this.cached.push({
                 message: message,
                 encrypt: encrypt,
@@ -317,7 +312,7 @@ export class Signaling {
 
     _receiveText(data): void {
         let message = JSON.parse(data);
-        this.$log.debug('Received text signaling message:', message);
+        console.debug('Received text signaling message:', message);
 
         // Dispatch message
         switch (message.type) {
@@ -331,7 +326,7 @@ export class Signaling {
                 this.receiveKey(message.data);
                 break;
             default:
-                this.$log.warn('Ignored signaling message:', message);
+                console.warn('Ignored signaling message:', message);
         }
     }
 
@@ -350,11 +345,11 @@ export class Signaling {
 
         // Decode data
         let message = JSON.parse(decryptedData);
-        this.$log.debug('Received encrypted signaling message:', message);
+        console.debug('Received encrypted signaling message:', message);
 
         // Check session
         if (message.session != this.session.id) {
-            this.$log.warn('Ignored message from another session:', message.session);
+            console.warn('Ignored message from another session:', message.session);
             return;
         }
 
@@ -367,7 +362,7 @@ export class Signaling {
                 this.receiveCandidate(message.data);
                 break;
             default:
-                this.$log.warn('Ignored encrypted signaling message:', message);
+                console.warn('Ignored encrypted signaling message:', message);
         }
     }
 }

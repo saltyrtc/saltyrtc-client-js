@@ -71,17 +71,13 @@ export class KeyStore {
     // The NaCl key pair
     // TODO: Does this need to be public?
     public keyPair: IKeyPair;
-    // Angular logger
-    private $log: angular.ILogService;
 
-    constructor($log: angular.ILogService) {
-        this.$log = $log;
-
+    constructor() {
         // Create new key pair
         // TODO: Try to read from webstorage first and send push message to app
         this.keyPair = nacl.box.keyPair();
-        this.$log.debug('Private key:', u8aToHex(this.keyPair.secretKey));
-        this.$log.debug('Public key:', u8aToHex(this.keyPair.publicKey));
+        console.debug('Private key:', u8aToHex(this.keyPair.secretKey));
+        console.debug('Public key:', u8aToHex(this.keyPair.publicKey));
 
         // Make sure that toHex and toBin work properly
         // TODO: Move to test
