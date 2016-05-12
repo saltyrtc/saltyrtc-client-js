@@ -26,10 +26,16 @@ then
     echo "https://${GHTOKEN}:@github.com" > .git/credentials
     git config credential.helper "store --file=.git/credentials"
 
-    # Commit docs
+    # Add docs
     rm -rf ./*
     cp -r ../docs/* ./.
     git add -A
+
+    # Make sure to turn off Github Jekyll rendering
+    touch .nojekyll
+    git add .nojekyll
+
+    # Commit docs
     git commit -m "autocommit docs"
     git push origin gh-pages
 else
