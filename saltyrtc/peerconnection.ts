@@ -181,7 +181,7 @@ export class PeerConnection {
         });
     }
 
-    receiveAnswer(descriptionInit: RTCSessionDescriptionInit) {
+    public receiveAnswer(descriptionInit: RTCSessionDescriptionInit) {
         console.info('Received answer');
         let description = new RTCSessionDescription(descriptionInit);
         this.pc.setRemoteDescription(

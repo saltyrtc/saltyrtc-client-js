@@ -11,6 +11,7 @@
 
 import { Session } from "./session";
 import { KeyStore, Box } from "./keystore";
+import { SaltyRTC } from "./client";
 
 interface CachedSignalingMessage {
     message: SignalingMessage,
@@ -83,6 +84,7 @@ export class Signaling {
     static CONNECT_MAX_RETRIES: number = 10;
     static CONNECT_RETRY_INTERVAL: number = 10000;
 
+    private saltyrtc: SaltyRTC;
     private $rootScope: angular.IRootScopeService;
     private keyStore: KeyStore;
     private session: Session;
@@ -95,9 +97,11 @@ export class Signaling {
     private _events: SignalingEvents = null;
     private ws: WebSocket;
 
-    constructor($rootScope: angular.IRootScopeService,
+    constructor(saltyrtc: SaltyRTC,
+                $rootScope: angular.IRootScopeService,
                 keyStore: KeyStore,
                 session: Session) {
+        this.saltyrtc = saltyrtc;
         this.$rootScope = $rootScope;
         this.keyStore = keyStore;
         this.session = session;
@@ -237,11 +241,6 @@ export class Signaling {
         });
     }
 
-    public receiveAnswer(answer): void {
-        console.debug('Broadcasting answer');
-        this.$rootScope.$broadcast('signaling:answer', answer);
-    }
-
     sendCandidate(candidate): void {
         console.debug('Sending candidate');
         this._send({
@@ -354,7 +353,7 @@ export class Signaling {
         // Dispatch message
         switch (message.type) {
             case 'answer':
-                this.receiveAnswer(message.data);
+                this.saltyrtc.onReceiveAnswer(message.data);
                 break;
             case 'candidate':
                 this.receiveCandidate(message.data);

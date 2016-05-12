@@ -251,6 +251,13 @@ export class SaltyRTC {
         this.signaling.sendOffer(offerSdp);
     }
 
+    /**
+     * Receive an answer through the signalling channel.
+     */
+    public onReceiveAnswer(answerSdp: RTCSessionDescription) {
+        console.debug('SaltyRTC: Received answer');
+    }
+
     private _reset(peerConnection: boolean, signaling: boolean): void {
         // Cancel timers
         this._cancelConnectTimer();
