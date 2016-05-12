@@ -247,6 +247,16 @@ export class SaltyRTC {
         });
     }
 
+    /**
+     * Send an ICE candidate through the signalling channel.
+     *
+     * TODO: Make sure candidates are buffered for 10ms, according to the
+     * SaltyRTC spec.
+     */
+    public sendCandidate(candidate: RTCIceCandidate) {
+        this.signaling.sendCandidate(candidate);
+    }
+
     private _reset(peerConnection: boolean, signaling: boolean): void {
         // Cancel timers
         this._cancelConnectTimer();
