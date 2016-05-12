@@ -225,7 +225,14 @@ export class Client {
             }
 
             // Send offer
-            this.peerConnection.sendOffer();
+            this.peerConnection.createOffer().then(
+                (offer) => {
+                    this.peerConnection.setLocalDescription(offer); // TODO: Should we handle errors?
+                    this._startConnectTimer();
+                    this.signaling.sendOffer(offer);
+                },
+                (error) => console.error('PeerConnection error:', error)
+            );
         });
         this.$rootScope.$on('signaling:answer', (_, answer) => {
             this.peerConnection.receiveAnswer(answer);
@@ -235,10 +242,6 @@ export class Client {
         });
 
         // Listen for peer connection events and delegate them
-        this.$rootScope.$on('pc:offer', (_, offer) => {
-            this._startConnectTimer();
-            this.signaling.sendOffer(offer);
-        });
         this.$rootScope.$on('pc:candidate', (_, candidate) => {
             this.signaling.sendCandidate(candidate);
         });
@@ -304,7 +307,14 @@ export class Client {
 
         // Resend offer if signaling channel stays open and peer connection was reset
         if (peerConnection && !signaling && !this.keyStore.hasOtherKey()) {
-            this.peerConnection.sendOffer();
+            this.peerConnection.createOffer().then(
+                (offer) => {
+                    this.peerConnection.setLocalDescription(offer); // TODO: Should we handle errors?
+                    this._startConnectTimer();
+                    this.signaling.sendOffer(offer);
+                },
+                (error) => console.error('PeerConnection error:', error)
+            );
         }
     }
 

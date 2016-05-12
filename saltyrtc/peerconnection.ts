@@ -130,38 +130,55 @@ export class PeerConnection {
         this.pc.ondatachannel = this._events.onDataChannel;
     }
 
-    sendOffer() {
+    /**
+     * Create a new SDP offer.
+     *
+     * Returns a Promise that returns an RTCSessionDescription if resolved, or
+     * a DOMError if rejected.
+     */
+    public createOffer(): Promise<RTCSessionDescription> {
         // Check if the offer has already been created
         if (this.offerCreated) {
-            console.debug('Offer has already been sent, ignored call');
-            return;
+            console.debug('Offer has already been created, recreating');
         }
         this.offerCreated = true;
 
         console.info('Creating offer');
+        return new Promise((resolve, reject) => {
+            this.pc.createOffer(
+                (description: RTCSessionDescription) => {
+                    console.debug('Created offer');
+                    resolve(description);
+                },
+                (error: DOMError) => {
+                    console.error('Creating offer failed:', error);
+                    reject(error);
+                },
+                this._constraints
+            );
+        });
+    }
 
-        // Create offer, set local description and send on success
-        this.pc.createOffer(
-            (description) => {
-                // Broadcast after second callback was successful
-                this.pc.setLocalDescription(
-                    description,
-                    () => {
-                        console.debug('Local description set');
-                        this.$rootScope.$broadcast('pc:offer', description);
-                    },
-                    (error) => {
-                        console.error('Setting local description failed:', error);
-                        this.$rootScope.$broadcast('pc:error', 'local', error);
-                    }
-                );
-            },
-            (error) => {
-                console.error('Creating offer failed:', error);
-                this.$rootScope.$broadcast('pc:error', 'create', error);
-            },
-            this._constraints
-        );
+    /**
+     * Set the local description.
+     *
+     * Returns an empty Promise that returns a DOMError if rejected.
+     */
+    public setLocalDescription(description: RTCSessionDescription): Promise<{}> {
+        console.debug('Setting local description');
+        return new Promise((resolve, reject) => {
+            this.pc.setLocalDescription(
+                description,
+                () => {
+                    console.debug('Local description set');
+                    resolve();
+                },
+                (error: DOMError) => {
+                    console.error('Setting local description failed:', error);
+                    reject(error);
+                }
+            );
+        });
     }
 
     receiveAnswer(descriptionInit: RTCSessionDescriptionInit) {
