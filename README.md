@@ -10,6 +10,8 @@ The development is still ongoing, you can find the current version in the
 
 Currently at least Firefox 44 and Chromium 49 are required.
 
+[API Docs](https://saltyrtc.github.io/saltyrtc-client-js/)
+
 ## Development
 
 Install dependencies with npm (or alternatively install them manually):
