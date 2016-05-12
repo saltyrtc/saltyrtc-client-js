@@ -16,7 +16,6 @@ import { u8aToHex, hexToU8a } from "./utils";
 
 interface ClientHandler {
     signaling: Object,
-    pc: Object,
     dc: Object,
 }
 
@@ -35,11 +34,6 @@ export class SaltyRTC {
             danger: ['unknown', 'init', 'failed'],
             warning: ['connecting', 'closing', 'closed'],
             success: ['open'],
-        },
-        pc: {
-            danger: ['unknown', 'init', 'new', 'failed', 'closed'],
-            warning: ['checking', 'disconnected'],
-            success: ['connected', 'completed'],
         },
         dc: {
             danger: ['unknown', 'init', 'closed'],
@@ -66,7 +60,6 @@ export class SaltyRTC {
 
     // Timers
     private _connectTimer: number = null;
-    private _disconnectTimer: number = null;
 
     // States
     public states = {};
@@ -105,16 +98,6 @@ export class SaltyRTC {
                     this.signaling._sendCached();
                 }
             },
-            pc: {
-                // Connecting to peer failed
-                failed: () => this._reconnect(true, false),
-                // Connection to peer closed
-                closed: () => this._reconnect(true, false),
-                // Connection to peer lost
-                disconnected: () => this._startDisconnectTimer(),
-                // Connection to peer established
-                connected: () => this._cancelDisconnectTimer(),
-            },
             dc: {
                 // Channel closed
                 closed: () => this._reconnect(true, false),
@@ -131,7 +114,6 @@ export class SaltyRTC {
         // indirectly handled by the timers.
         this._errorHandler = {
             signaling: null,
-            pc: null,
             dc: {
                 // Message ack timeout
                 timeout: () => this.dataChannel.close(),
@@ -150,7 +132,7 @@ export class SaltyRTC {
             type: 'danger',
             value: 'disconnected',
         };
-        for (var name of ['signaling', 'pc', 'dc']) {
+        for (var name of ['signaling', 'dc']) {
             this.states[name] = {
                 type: 'danger',
                 value: 'unknown',
@@ -260,10 +242,6 @@ export class SaltyRTC {
     }
 
     private _reset(peerConnection: boolean, signaling: boolean): void {
-        // Cancel timers
-        this._cancelConnectTimer();
-        this._cancelDisconnectTimer();
-
         // Force signaling reset if required
         if (signaling) {
             console.info('Signaling reset');
@@ -414,19 +392,4 @@ export class SaltyRTC {
         }
     }
 
-    private _startDisconnectTimer(): void {
-        this._disconnectTimer = setTimeout(() => {
-            // Notify that the connection has been lost
-            console.warn('Peer Connection lost');
-            this._updateClientState({type: 'danger', value: 'lost'});
-            this._reconnect(true, false);
-        }, SaltyRTC.DISCONNECT_TIMEOUT);
-    }
-
-    private _cancelDisconnectTimer(): void {
-        if (this._disconnectTimer !== null) {
-            clearTimeout(this._disconnectTimer);
-            this._disconnectTimer = null;
-        }
-    }
 }
