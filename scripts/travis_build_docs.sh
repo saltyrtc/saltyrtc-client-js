@@ -11,7 +11,7 @@ then
     rm -rf docs/
     npm install https://github.com/TypeStrong/typedoc/archive/2e855cf8c62c7813ac62cb1ef911c9a0c5e034c2.tar.gz
     cd node_modules/typedoc/
-    tsc
+    ../typescript/bin/tsc
     cd ../..
     node_modules/.bin/typedoc --out docs saltyrtc/
 
