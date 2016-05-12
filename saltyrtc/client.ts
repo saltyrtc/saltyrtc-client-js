@@ -53,7 +53,6 @@ export class SaltyRTC {
     private keyStore: KeyStore;
     private session: Session;
     private signaling: Signaling;
-    private peerConnection: PeerConnection;
     private dataChannel: DataChannel;
 
     private _started: boolean = false;
@@ -70,12 +69,10 @@ export class SaltyRTC {
     constructor($rootScope: angular.IRootScopeService,
                 keyStore: KeyStore,
                 session: Session,
-                peerConnection: PeerConnection,
                 dataChannel: DataChannel) {
         this.$rootScope = $rootScope;
         this.keyStore = keyStore;
         this.session = session;
-        this.peerConnection = peerConnection;
         this.dataChannel = dataChannel;
 
         // Initialize signaling class
@@ -200,20 +197,14 @@ export class SaltyRTC {
             }
 
             // Send offer
-            this.peerConnection.createOffer().then(
+            /*this.peerConnection.createOffer().then(
                 (offer) => {
                     this.peerConnection.setLocalDescription(offer); // TODO: Should we handle errors?
                     this._startConnectTimer();
                     this.signaling.sendOffer(offer);
                 },
                 (error) => console.error('PeerConnection error:', error)
-            );
-        });
-        this.$rootScope.$on('signaling:answer', (_, answer) => {
-            this.peerConnection.receiveAnswer(answer);
-        });
-        this.$rootScope.$on('signaling:candidate', (_, candidate) => {
-            this.peerConnection.receiveCandidate(candidate);
+            );*/
         });
     }
 
@@ -241,7 +232,7 @@ export class SaltyRTC {
         console.debug('SaltyRTC: Received answer');
     }
 
-    private _reset(peerConnection: boolean, signaling: boolean): void {
+    private _reset(dataChannel: boolean, signaling: boolean): void {
         // Force signaling reset if required
         if (signaling) {
             console.info('Signaling reset');
@@ -250,12 +241,10 @@ export class SaltyRTC {
             this.signaling.clear();
         }
 
-        // Force peer connection and data channel reset if required
-        if (peerConnection) {
+        // Force data channel reset if required
+        if (dataChannel) {
             console.info('Data Channel reset');
             this.dataChannel.reset(true);
-            console.info('Peer Connection reset');
-            this.peerConnection.reset();
             // Notify that we have done a data channel reset
             this._updateClientState({type: 'danger', value: 'reset'});
         }
@@ -265,15 +254,15 @@ export class SaltyRTC {
         // Create peer connection and connect to signaling server
         this.session.new();
         console.info('Connecting');
-        this.peerConnection.reset();
-        this.peerConnection.create();
+        //this.peerConnection.reset();
+        //this.peerConnection.create();
         this.dataChannel.create();
         this.signaling.connect(u8aToHex(this.keyStore.keyPair.publicKey));
     }
 
-    private _reconnect(peerConnection: boolean, signaling: boolean, silent: boolean = false): void {
+    private _reconnect(dataChannel: boolean, signaling: boolean, silent: boolean = false): void {
         // Reset instances
-        this._reset(peerConnection, signaling);
+        this._reset(dataChannel, signaling);
 
         // Create a new session
         this.session.new();
@@ -282,8 +271,7 @@ export class SaltyRTC {
         // Note: No reconnect timer needed as the signaling service has such a timer
         //       and the signaling service is a requirement for the other services.
         console.info('Reconnecting');
-        if (peerConnection) {
-            this.peerConnection.create();
+        if (dataChannel) {
             this.dataChannel.create();
         }
         if (signaling) {
@@ -293,18 +281,6 @@ export class SaltyRTC {
         // Reset requested?
         if (!silent) {
             this.signaling.sendReset();
-        }
-
-        // Resend offer if signaling channel stays open and peer connection was reset
-        if (peerConnection && !signaling && !this.keyStore.hasOtherKey()) {
-            this.peerConnection.createOffer().then(
-                (offer) => {
-                    this.peerConnection.setLocalDescription(offer); // TODO: Should we handle errors?
-                    this._startConnectTimer();
-                    this.signaling.sendOffer(offer);
-                },
-                (error) => console.error('PeerConnection error:', error)
-            );
         }
     }
 
