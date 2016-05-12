@@ -237,7 +237,7 @@ export class Signaling {
         });
     }
 
-    receiveAnswer(answer): void {
+    public receiveAnswer(answer): void {
         console.debug('Broadcasting answer');
         this.$rootScope.$broadcast('signaling:answer', answer);
     }
@@ -308,7 +308,7 @@ export class Signaling {
         }
     }
 
-    _receiveText(data): void {
+    _receiveText(data: string): void {
         let message = JSON.parse(data);
         console.debug('Received text signaling message:', message);
 
@@ -328,7 +328,7 @@ export class Signaling {
         }
     }
 
-    _receiveBinary(data): void {
+    _receiveBinary(data: ArrayBuffer): void {
         // Convert to Uint8Array
         let box: Box = this.keyStore.boxFromArray(new Uint8Array(data));
 
