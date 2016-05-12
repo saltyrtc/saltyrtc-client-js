@@ -271,7 +271,7 @@ export class SaltyRTC {
         }
     }
 
-    _connect(): void {
+    private _connect(): void {
         // Create peer connection and connect to signaling server
         this.session.new();
         console.info('Connecting');
@@ -281,7 +281,7 @@ export class SaltyRTC {
         this.signaling.connect(u8aToHex(this.keyStore.keyPair.publicKey));
     }
 
-    _reconnect(peerConnection: boolean, signaling: boolean, silent: boolean = false): void {
+    private _reconnect(peerConnection: boolean, signaling: boolean, silent: boolean = false): void {
         // Reset instances
         this._reset(peerConnection, signaling);
 
@@ -318,14 +318,14 @@ export class SaltyRTC {
         }
     }
 
-    _updateClientState(state): void {
+    private _updateClientState(state): void {
         this.state = state;
 
         // Broadcast
         this.$rootScope.$broadcast('webclient:state', this.state);
     }
 
-    _updateState(name, value): void {
+    private _updateState(name, value): void {
         // Update state type and value
         this.states[name].type = this._getStateType(name, value);
         this.states[name].value = value;
@@ -386,7 +386,7 @@ export class SaltyRTC {
         return 'unknown';
     }
 
-    _startConnectTimer(): void {
+    private _startConnectTimer(): void {
         this._connectTimer = setTimeout(() => {
             // Notify that connecting timed out
             console.warn('Data Channel connect timeout');
@@ -395,14 +395,14 @@ export class SaltyRTC {
         }, SaltyRTC.CONNECT_TIMEOUT);
     }
 
-    _cancelConnectTimer(): void {
+    private _cancelConnectTimer(): void {
         if (this._connectTimer !== null) {
             clearTimeout(this._connectTimer);
             this._connectTimer = null;
         }
     }
 
-    _startDisconnectTimer(): void {
+    private _startDisconnectTimer(): void {
         this._disconnectTimer = setTimeout(() => {
             // Notify that the connection has been lost
             console.warn('Peer Connection lost');
@@ -411,7 +411,7 @@ export class SaltyRTC {
         }, SaltyRTC.DISCONNECT_TIMEOUT);
     }
 
-    _cancelDisconnectTimer(): void {
+    private _cancelDisconnectTimer(): void {
         if (this._disconnectTimer !== null) {
             clearTimeout(this._disconnectTimer);
             this._disconnectTimer = null;
