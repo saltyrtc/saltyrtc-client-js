@@ -77,15 +77,16 @@ export class SaltyRTC {
     constructor($rootScope: angular.IRootScopeService,
                 keyStore: KeyStore,
                 session: Session,
-                signaling: Signaling,
                 peerConnection: PeerConnection,
                 dataChannel: DataChannel) {
         this.$rootScope = $rootScope;
         this.keyStore = keyStore;
         this.session = session;
-        this.signaling = signaling;
         this.peerConnection = peerConnection;
         this.dataChannel = dataChannel;
+
+        // Initialize signaling class
+        this.signaling = new Signaling(this, $rootScope, keyStore, session);
 
         // Setup state event handler
         // Note: This handler should only handle states that can't be handled by the
