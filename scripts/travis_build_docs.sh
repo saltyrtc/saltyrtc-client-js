@@ -1,5 +1,7 @@
 #!/bin/bash
 # https://github.com/phosphorjs/phosphor/wiki/TypeDoc-Publishing
+set -e
+
 if [[ $TRAVIS_PULL_REQUEST == false && $TRAVIS_BRANCH == "develop" ]]
 then
     echo "-- will build docs --"
