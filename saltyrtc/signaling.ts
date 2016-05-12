@@ -7,6 +7,7 @@
 
 /// <reference path="types/angular.d.ts" />
 /// <reference path="types/websocket.d.ts" />
+/// <reference path='types/RTCPeerConnection.d.ts' />
 
 import { Session } from "./session";
 import { KeyStore, Box } from "./keystore";
@@ -227,12 +228,12 @@ export class Signaling {
         this.$rootScope.$broadcast('signaling:key', key);
     }
 
-    sendOffer(offer): void { // TODO: type
+    public sendOffer(offerSdp: RTCSessionDescription): void {
         console.debug('Sending offer');
         this._send({
             type: 'offer',
             session: this.session.id,
-            data: offer,
+            data: offerSdp,
         });
     }
 

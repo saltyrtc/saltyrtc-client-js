@@ -182,10 +182,6 @@ export class SaltyRTC {
             console.debug('Signaling state changed to:', state);
             this._updateState('signaling', state);
         });
-        this.$rootScope.$on('pc:state', (_, state) => {
-            console.debug('Peer Connection state changed to:', state);
-            this._updateState('pc', state);
-        });
         this.$rootScope.$on('dc:state', (_, state) => {
             console.debug('Data Channel state changed to:', state);
             this._updateState('dc', state);
@@ -195,10 +191,6 @@ export class SaltyRTC {
         this.$rootScope.$on('signaling:error', (_, state, error) => {
             console.error('Signaling error state:', state, ', Message:', error);
             this._handleError('signaling', state, error);
-        });
-        this.$rootScope.$on('pc:error', (_, state, error) => {
-            console.error('Peer Connection error state:', state, ', Message:', error);
-            this._handleError('pc', state, error);
         });
         this.$rootScope.$on('dc:error', (_, state, error) => {
             console.error('Data Channel error state:', state, ', Message:', error);
@@ -240,11 +232,6 @@ export class SaltyRTC {
         this.$rootScope.$on('signaling:candidate', (_, candidate) => {
             this.peerConnection.receiveCandidate(candidate);
         });
-
-        // Listen for peer connection events and delegate them
-        this.$rootScope.$on('pc:candidate', (_, candidate) => {
-            this.signaling.sendCandidate(candidate);
-        });
     }
 
     /**
@@ -255,6 +242,13 @@ export class SaltyRTC {
      */
     public sendCandidate(candidate: RTCIceCandidate) {
         this.signaling.sendCandidate(candidate);
+    }
+
+    /**
+     * Send an offer through the signalling channel.
+     */
+    public sendOffer(offerSdp: RTCSessionDescription) {
+        this.signaling.sendOffer(offerSdp);
     }
 
     private _reset(peerConnection: boolean, signaling: boolean): void {
