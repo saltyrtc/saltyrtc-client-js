@@ -1,6 +1,7 @@
 // Type definitions for websocket
 // Definitions by: Danilo Bargen <https://github.com/dbrgn>
 // Definitions: https://github.com/DefinitelyTyped/DefinitelyTyped
+// Source: https://www.w3.org/TR/websockets/
 
 declare const enum ReadyState {
     Connecting = 0,
@@ -12,7 +13,7 @@ declare const enum ReadyState {
 declare module "websocket" {
 
     export interface WebSocket {
-        binaryType: string;
+        binaryType: 'blob' | 'arraybuffer';
         bufferedAmount: number; // readonly
         extensions: string;
         onclose: EventListener;
