@@ -99,6 +99,7 @@
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_signaling_.signaling.html#cached" class="tsd-kind-icon">cached</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_signaling_.signaling.html#keystore" class="tsd-kind-icon">key<wbr>Store</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_signaling_.signaling.html#path" class="tsd-kind-icon">path</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_signaling_.signaling.html#saltyrtc" class="tsd-kind-icon">saltyrtc</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_signaling_.signaling.html#session" class="tsd-kind-icon">session</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_signaling_.signaling.html#url" class="tsd-kind-icon">url</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_signaling_.signaling.html#ws" class="tsd-kind-icon">ws</a></li>
@@ -126,7 +127,6 @@
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_signaling_.signaling.html#_startconnecttimer" class="tsd-kind-icon">_start<wbr>Connect<wbr>Timer</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_signaling_.signaling.html#clear" class="tsd-kind-icon">clear</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_signaling_.signaling.html#connect" class="tsd-kind-icon">connect</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_signaling_.signaling.html#receiveanswer" class="tsd-kind-icon">receive<wbr>Answer</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_signaling_.signaling.html#receivecandidate" class="tsd-kind-icon">receive<wbr>Candidate</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_signaling_.signaling.html#receivekey" class="tsd-kind-icon">receive<wbr>Key</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_signaling_.signaling.html#receivereset" class="tsd-kind-icon">receive<wbr>Reset</a></li>
@@ -148,17 +148,20 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Signaling<span class="tsd-signature-symbol">(</span>$rootScope<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">IRootScopeService</span>, keyStore<span class="tsd-signature-symbol">: </span><a href="_keystore_.keystore.html" class="tsd-signature-type">KeyStore</a>, session<span class="tsd-signature-symbol">: </span><a href="_session_.session.html" class="tsd-signature-type">Session</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_signaling_.signaling.html" class="tsd-signature-type">Signaling</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Signaling<span class="tsd-signature-symbol">(</span>saltyrtc<span class="tsd-signature-symbol">: </span><a href="_client_.saltyrtc.html" class="tsd-signature-type">SaltyRTC</a>, $rootScope<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">IRootScopeService</span>, keyStore<span class="tsd-signature-symbol">: </span><a href="_keystore_.keystore.html" class="tsd-signature-type">KeyStore</a>, session<span class="tsd-signature-symbol">: </span><a href="_session_.session.html" class="tsd-signature-type">Session</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_signaling_.signaling.html" class="tsd-signature-type">Signaling</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L95">signaling.ts:95</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L98">signaling.ts:98</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
+								<li>
+									<h5>saltyrtc: <a href="_client_.saltyrtc.html" class="tsd-signature-type">SaltyRTC</a></h5>
+								</li>
 								<li>
 									<h5>$rootScope: <span class="tsd-signature-type">IRootScopeService</span></h5>
 								</li>
@@ -182,7 +185,7 @@
 					<div class="tsd-signature tsd-kind-icon">$root<wbr>Scope<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">IRootScopeService</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L85">signaling.ts:85</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L88">signaling.ts:88</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -192,7 +195,7 @@
 					<div class="tsd-signature tsd-kind-icon">_connect<wbr>Timer<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L93">signaling.ts:93</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L96">signaling.ts:96</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -202,7 +205,7 @@
 					<div class="tsd-signature tsd-kind-icon">_connect<wbr>Tries<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L91">signaling.ts:91</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L94">signaling.ts:94</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -212,7 +215,7 @@
 					<div class="tsd-signature tsd-kind-icon">_events<span class="tsd-signature-symbol">:</span> <a href="_signaling_.signalingevents.html" class="tsd-signature-type">SignalingEvents</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L94">signaling.ts:94</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L97">signaling.ts:97</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -222,7 +225,7 @@
 					<div class="tsd-signature tsd-kind-icon">_state<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L88">signaling.ts:88</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L91">signaling.ts:91</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -232,7 +235,7 @@
 					<div class="tsd-signature tsd-kind-icon">cached<span class="tsd-signature-symbol">:</span> <a href="../interfaces/_signaling_.cachedsignalingmessage.html" class="tsd-signature-type">CachedSignalingMessage</a><span class="tsd-signature-symbol">[]</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L92">signaling.ts:92</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L95">signaling.ts:95</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -242,7 +245,7 @@
 					<div class="tsd-signature tsd-kind-icon">key<wbr>Store<span class="tsd-signature-symbol">:</span> <a href="_keystore_.keystore.html" class="tsd-signature-type">KeyStore</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L86">signaling.ts:86</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L89">signaling.ts:89</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -252,7 +255,17 @@
 					<div class="tsd-signature tsd-kind-icon">path<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L89">signaling.ts:89</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L92">signaling.ts:92</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="saltyrtc" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> saltyrtc</h3>
+					<div class="tsd-signature tsd-kind-icon">saltyrtc<span class="tsd-signature-symbol">:</span> <a href="_client_.saltyrtc.html" class="tsd-signature-type">SaltyRTC</a></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L87">signaling.ts:87</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -262,7 +275,7 @@
 					<div class="tsd-signature tsd-kind-icon">session<span class="tsd-signature-symbol">:</span> <a href="_session_.session.html" class="tsd-signature-type">Session</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L87">signaling.ts:87</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L90">signaling.ts:90</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -272,7 +285,7 @@
 					<div class="tsd-signature tsd-kind-icon">url<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L90">signaling.ts:90</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L93">signaling.ts:93</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -282,7 +295,7 @@
 					<div class="tsd-signature tsd-kind-icon">ws<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">WebSocket</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L95">signaling.ts:95</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L98">signaling.ts:98</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -292,7 +305,7 @@
 					<div class="tsd-signature tsd-kind-icon">CONNECT_<wbr>MAX_<wbr>RETRIES<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L82">signaling.ts:82</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L84">signaling.ts:84</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -302,7 +315,7 @@
 					<div class="tsd-signature tsd-kind-icon">CONNECT_<wbr>RETRY_<wbr>INTERVAL<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L83">signaling.ts:83</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L85">signaling.ts:85</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -312,7 +325,7 @@
 					<div class="tsd-signature tsd-kind-icon">DEFAULT_<wbr>URL<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L81">signaling.ts:81</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L83">signaling.ts:83</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -329,7 +342,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L106">signaling.ts:106</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L111">signaling.ts:111</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -355,7 +368,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L271">signaling.ts:271</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L271">signaling.ts:271</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -366,19 +379,19 @@
 					<a name="_receivebinary" class="tsd-anchor"></a>
 					<h3>_receive<wbr>Binary</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">_receive<wbr>Binary<span class="tsd-signature-symbol">(</span>data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">_receive<wbr>Binary<span class="tsd-signature-symbol">(</span>data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ArrayBuffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L330">signaling.ts:330</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L330">signaling.ts:330</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>data: <span class="tsd-signature-type">any</span></h5>
+									<h5>data: <span class="tsd-signature-type">ArrayBuffer</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -389,19 +402,19 @@
 					<a name="_receivetext" class="tsd-anchor"></a>
 					<h3>_receive<wbr>Text</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">_receive<wbr>Text<span class="tsd-signature-symbol">(</span>data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">_receive<wbr>Text<span class="tsd-signature-symbol">(</span>data<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L310">signaling.ts:310</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L310">signaling.ts:310</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>data: <span class="tsd-signature-type">any</span></h5>
+									<h5>data: <span class="tsd-signature-type">string</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -418,7 +431,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L266">signaling.ts:266</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L266">signaling.ts:266</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -441,7 +454,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L284">signaling.ts:284</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L284">signaling.ts:284</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -467,7 +480,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L278">signaling.ts:278</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L278">signaling.ts:278</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -484,7 +497,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L110">signaling.ts:110</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L115">signaling.ts:115</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -507,7 +520,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L258">signaling.ts:258</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L258">signaling.ts:258</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -530,7 +543,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L163">signaling.ts:163</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L168">signaling.ts:168</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -552,7 +565,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L167">signaling.ts:167</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L172">signaling.ts:172</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -569,29 +582,6 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="receiveanswer" class="tsd-anchor"></a>
-					<h3>receive<wbr>Answer</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">receive<wbr>Answer<span class="tsd-signature-symbol">(</span>answer<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L239">signaling.ts:239</a></li>
-								</ul>
-							</aside>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>answer: <span class="tsd-signature-type">any</span></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
 					<a name="receivecandidate" class="tsd-anchor"></a>
 					<h3>receive<wbr>Candidate</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
@@ -601,7 +591,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L253">signaling.ts:253</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L253">signaling.ts:253</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -624,7 +614,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L225">signaling.ts:225</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L230">signaling.ts:230</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -647,7 +637,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L215">signaling.ts:215</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L220">signaling.ts:220</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -664,7 +654,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L220">signaling.ts:220</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L225">signaling.ts:225</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -681,7 +671,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L201">signaling.ts:201</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L206">signaling.ts:206</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -704,7 +694,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L130">signaling.ts:130</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L135">signaling.ts:135</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -727,7 +717,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L244">signaling.ts:244</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L244">signaling.ts:244</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -750,7 +740,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L205">signaling.ts:205</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L210">signaling.ts:210</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -761,19 +751,19 @@
 					<a name="sendoffer" class="tsd-anchor"></a>
 					<h3>send<wbr>Offer</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">send<wbr>Offer<span class="tsd-signature-symbol">(</span>offer<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">send<wbr>Offer<span class="tsd-signature-symbol">(</span>offerSdp<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">RTCSessionDescription</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L230">signaling.ts:230</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L235">signaling.ts:235</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>offer: <span class="tsd-signature-type">any</span></h5>
+									<h5>offerSdp: <span class="tsd-signature-type">RTCSessionDescription</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -790,7 +780,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/0074d20/saltyrtc/signaling.ts#L210">signaling.ts:210</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/signaling.ts#L215">signaling.ts:215</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -804,6 +794,9 @@
 				<ul>
 					<li class="globals  ">
 						<a href="../globals.html"><em>Globals</em></a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_chunkifier_.html">"chunkifier"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_client_.html">"client"</a>
@@ -866,6 +859,9 @@
 								<a href="_signaling_.signaling.html#path" class="tsd-kind-icon">path</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="_signaling_.signaling.html#saltyrtc" class="tsd-kind-icon">saltyrtc</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
 								<a href="_signaling_.signaling.html#session" class="tsd-kind-icon">session</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
@@ -915,9 +911,6 @@
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="_signaling_.signaling.html#connect" class="tsd-kind-icon">connect</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_signaling_.signaling.html#receiveanswer" class="tsd-kind-icon">receive<wbr>Answer</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
 								<a href="_signaling_.signaling.html#receivecandidate" class="tsd-kind-icon">receive<wbr>Candidate</a>
