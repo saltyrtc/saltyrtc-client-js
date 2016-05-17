@@ -6,7 +6,6 @@
  */
 
 /// <reference path="types/angular.d.ts" />
-/// <reference path="types/websocket.d.ts" />
 /// <reference path='types/RTCPeerConnection.d.ts' />
 
 import { Session } from "./session";

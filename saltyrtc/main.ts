@@ -7,6 +7,4 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 export { SaltyRTC } from "./client";
-export { PeerConnection } from "./peerconnection";
 export { KeyStore, Box } from "./keystore";
-export { DataChannel } from "./datachannel";
