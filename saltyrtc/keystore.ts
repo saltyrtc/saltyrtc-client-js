@@ -64,10 +64,8 @@ interface IKeyPair {
 
 export class KeyStore {
     // Public key of the recipient
-    // TODO: Does this need to be public?
     public otherKey = null;
     // The NaCl key pair
-    // TODO: Does this need to be public?
     public keyPair: IKeyPair;
 
     constructor() {

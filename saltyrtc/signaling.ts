@@ -7,9 +7,11 @@
 
 /// <reference path="types/angular.d.ts" />
 /// <reference path="types/websocket.d.ts" />
+/// <reference path='types/RTCPeerConnection.d.ts' />
 
 import { Session } from "./session";
 import { KeyStore, Box } from "./keystore";
+import { SaltyRTC } from "./client";
 
 interface CachedSignalingMessage {
     message: SignalingMessage,
@@ -82,6 +84,7 @@ export class Signaling {
     static CONNECT_MAX_RETRIES: number = 10;
     static CONNECT_RETRY_INTERVAL: number = 10000;
 
+    private saltyrtc: SaltyRTC;
     private $rootScope: angular.IRootScopeService;
     private keyStore: KeyStore;
     private session: Session;
@@ -94,9 +97,11 @@ export class Signaling {
     private _events: SignalingEvents = null;
     private ws: WebSocket;
 
-    constructor($rootScope: angular.IRootScopeService,
+    constructor(saltyrtc: SaltyRTC,
+                $rootScope: angular.IRootScopeService,
                 keyStore: KeyStore,
                 session: Session) {
+        this.saltyrtc = saltyrtc;
         this.$rootScope = $rootScope;
         this.keyStore = keyStore;
         this.session = session;
@@ -227,18 +232,13 @@ export class Signaling {
         this.$rootScope.$broadcast('signaling:key', key);
     }
 
-    sendOffer(offer): void { // TODO: type
+    public sendOffer(offerSdp: RTCSessionDescription): void {
         console.debug('Sending offer');
         this._send({
             type: 'offer',
             session: this.session.id,
-            data: offer,
+            data: offerSdp,
         });
-    }
-
-    receiveAnswer(answer): void {
-        console.debug('Broadcasting answer');
-        this.$rootScope.$broadcast('signaling:answer', answer);
     }
 
     sendCandidate(candidate): void {
@@ -307,7 +307,7 @@ export class Signaling {
         }
     }
 
-    _receiveText(data): void {
+    _receiveText(data: string): void {
         let message = JSON.parse(data);
         console.debug('Received text signaling message:', message);
 
@@ -327,7 +327,7 @@ export class Signaling {
         }
     }
 
-    _receiveBinary(data): void {
+    _receiveBinary(data: ArrayBuffer): void {
         // Convert to Uint8Array
         let box: Box = this.keyStore.boxFromArray(new Uint8Array(data));
 
@@ -353,7 +353,7 @@ export class Signaling {
         // Dispatch message
         switch (message.type) {
             case 'answer':
-                this.receiveAnswer(message.data);
+                this.saltyrtc.onReceiveAnswer(message.data);
                 break;
             case 'candidate':
                 this.receiveCandidate(message.data);

@@ -16,7 +16,6 @@ import { u8aToHex, hexToU8a } from "./utils";
 
 interface ClientHandler {
     signaling: Object,
-    pc: Object,
     dc: Object,
 }
 
@@ -25,7 +24,7 @@ interface State {
     value: string,
 }
 
-export class Client {
+export class SaltyRTC {
     static CONNECT_TIMEOUT: number = 85000;
     static DISCONNECT_TIMEOUT: number = 35000;
 
@@ -35,11 +34,6 @@ export class Client {
             danger: ['unknown', 'init', 'failed'],
             warning: ['connecting', 'closing', 'closed'],
             success: ['open'],
-        },
-        pc: {
-            danger: ['unknown', 'init', 'new', 'failed', 'closed'],
-            warning: ['checking', 'disconnected'],
-            success: ['connected', 'completed'],
         },
         dc: {
             danger: ['unknown', 'init', 'closed'],
@@ -59,14 +53,12 @@ export class Client {
     private keyStore: KeyStore;
     private session: Session;
     private signaling: Signaling;
-    private peerConnection: PeerConnection;
     private dataChannel: DataChannel;
 
     private _started: boolean = false;
 
     // Timers
     private _connectTimer: number = null;
-    private _disconnectTimer: number = null;
 
     // States
     public states = {};
@@ -77,15 +69,14 @@ export class Client {
     constructor($rootScope: angular.IRootScopeService,
                 keyStore: KeyStore,
                 session: Session,
-                signaling: Signaling,
-                peerConnection: PeerConnection,
                 dataChannel: DataChannel) {
         this.$rootScope = $rootScope;
         this.keyStore = keyStore;
         this.session = session;
-        this.signaling = signaling;
-        this.peerConnection = peerConnection;
         this.dataChannel = dataChannel;
+
+        // Initialize signaling class
+        this.signaling = new Signaling(this, $rootScope, keyStore, session);
 
         // Setup state event handler
         // Note: This handler should only handle states that can't be handled by the
@@ -104,16 +95,6 @@ export class Client {
                     this.signaling._sendCached();
                 }
             },
-            pc: {
-                // Connecting to peer failed
-                failed: () => this._reconnect(true, false),
-                // Connection to peer closed
-                closed: () => this._reconnect(true, false),
-                // Connection to peer lost
-                disconnected: () => this._startDisconnectTimer(),
-                // Connection to peer established
-                connected: () => this._cancelDisconnectTimer(),
-            },
             dc: {
                 // Channel closed
                 closed: () => this._reconnect(true, false),
@@ -130,7 +111,6 @@ export class Client {
         // indirectly handled by the timers.
         this._errorHandler = {
             signaling: null,
-            pc: null,
             dc: {
                 // Message ack timeout
                 timeout: () => this.dataChannel.close(),
@@ -149,7 +129,7 @@ export class Client {
             type: 'danger',
             value: 'disconnected',
         };
-        for (var name of ['signaling', 'pc', 'dc']) {
+        for (var name of ['signaling', 'dc']) {
             this.states[name] = {
                 type: 'danger',
                 value: 'unknown',
@@ -182,10 +162,6 @@ export class Client {
             console.debug('Signaling state changed to:', state);
             this._updateState('signaling', state);
         });
-        this.$rootScope.$on('pc:state', (_, state) => {
-            console.debug('Peer Connection state changed to:', state);
-            this._updateState('pc', state);
-        });
         this.$rootScope.$on('dc:state', (_, state) => {
             console.debug('Data Channel state changed to:', state);
             this._updateState('dc', state);
@@ -195,10 +171,6 @@ export class Client {
         this.$rootScope.$on('signaling:error', (_, state, error) => {
             console.error('Signaling error state:', state, ', Message:', error);
             this._handleError('signaling', state, error);
-        });
-        this.$rootScope.$on('pc:error', (_, state, error) => {
-            console.error('Peer Connection error state:', state, ', Message:', error);
-            this._handleError('pc', state, error);
         });
         this.$rootScope.$on('dc:error', (_, state, error) => {
             console.error('Data Channel error state:', state, ', Message:', error);
@@ -225,33 +197,42 @@ export class Client {
             }
 
             // Send offer
-            this.peerConnection.createOffer().then(
+            /*this.peerConnection.createOffer().then(
                 (offer) => {
                     this.peerConnection.setLocalDescription(offer); // TODO: Should we handle errors?
                     this._startConnectTimer();
                     this.signaling.sendOffer(offer);
                 },
                 (error) => console.error('PeerConnection error:', error)
-            );
-        });
-        this.$rootScope.$on('signaling:answer', (_, answer) => {
-            this.peerConnection.receiveAnswer(answer);
-        });
-        this.$rootScope.$on('signaling:candidate', (_, candidate) => {
-            this.peerConnection.receiveCandidate(candidate);
-        });
-
-        // Listen for peer connection events and delegate them
-        this.$rootScope.$on('pc:candidate', (_, candidate) => {
-            this.signaling.sendCandidate(candidate);
+            );*/
         });
     }
 
-    private _reset(peerConnection: boolean, signaling: boolean): void {
-        // Cancel timers
-        this._cancelConnectTimer();
-        this._cancelDisconnectTimer();
+    /**
+     * Send an ICE candidate through the signalling channel.
+     *
+     * TODO: Make sure candidates are buffered for 10ms, according to the
+     * SaltyRTC spec.
+     */
+    public sendCandidate(candidate: RTCIceCandidate) {
+        this.signaling.sendCandidate(candidate);
+    }
 
+    /**
+     * Send an offer through the signalling channel.
+     */
+    public sendOffer(offerSdp: RTCSessionDescription) {
+        this.signaling.sendOffer(offerSdp);
+    }
+
+    /**
+     * Receive an answer through the signalling channel.
+     */
+    public onReceiveAnswer(answerSdp: RTCSessionDescription) {
+        console.debug('SaltyRTC: Received answer');
+    }
+
+    private _reset(dataChannel: boolean, signaling: boolean): void {
         // Force signaling reset if required
         if (signaling) {
             console.info('Signaling reset');
@@ -260,30 +241,28 @@ export class Client {
             this.signaling.clear();
         }
 
-        // Force peer connection and data channel reset if required
-        if (peerConnection) {
+        // Force data channel reset if required
+        if (dataChannel) {
             console.info('Data Channel reset');
             this.dataChannel.reset(true);
-            console.info('Peer Connection reset');
-            this.peerConnection.reset();
             // Notify that we have done a data channel reset
             this._updateClientState({type: 'danger', value: 'reset'});
         }
     }
 
-    _connect(): void {
+    private _connect(): void {
         // Create peer connection and connect to signaling server
         this.session.new();
         console.info('Connecting');
-        this.peerConnection.reset();
-        this.peerConnection.create();
+        //this.peerConnection.reset();
+        //this.peerConnection.create();
         this.dataChannel.create();
         this.signaling.connect(u8aToHex(this.keyStore.keyPair.publicKey));
     }
 
-    _reconnect(peerConnection: boolean, signaling: boolean, silent: boolean = false): void {
+    private _reconnect(dataChannel: boolean, signaling: boolean, silent: boolean = false): void {
         // Reset instances
-        this._reset(peerConnection, signaling);
+        this._reset(dataChannel, signaling);
 
         // Create a new session
         this.session.new();
@@ -292,8 +271,7 @@ export class Client {
         // Note: No reconnect timer needed as the signaling service has such a timer
         //       and the signaling service is a requirement for the other services.
         console.info('Reconnecting');
-        if (peerConnection) {
-            this.peerConnection.create();
+        if (dataChannel) {
             this.dataChannel.create();
         }
         if (signaling) {
@@ -304,28 +282,16 @@ export class Client {
         if (!silent) {
             this.signaling.sendReset();
         }
-
-        // Resend offer if signaling channel stays open and peer connection was reset
-        if (peerConnection && !signaling && !this.keyStore.hasOtherKey()) {
-            this.peerConnection.createOffer().then(
-                (offer) => {
-                    this.peerConnection.setLocalDescription(offer); // TODO: Should we handle errors?
-                    this._startConnectTimer();
-                    this.signaling.sendOffer(offer);
-                },
-                (error) => console.error('PeerConnection error:', error)
-            );
-        }
     }
 
-    _updateClientState(state): void {
+    private _updateClientState(state): void {
         this.state = state;
 
         // Broadcast
         this.$rootScope.$broadcast('webclient:state', this.state);
     }
 
-    _updateState(name, value): void {
+    private _updateState(name, value): void {
         // Update state type and value
         this.states[name].type = this._getStateType(name, value);
         this.states[name].value = value;
@@ -334,21 +300,21 @@ export class Client {
         let weight = 0;
         for (let key in this.states) {
             let state = this.states[key];
-            weight += Client.STATE_WEIGHT[state.type];
+            weight += SaltyRTC.STATE_WEIGHT[state.type];
         }
 
         // Data channel open and PC at most unstable: Force warning if danger
-        if (weight >= Client.STATE_WEIGHT.danger
+        if (weight >= SaltyRTC.STATE_WEIGHT.danger
             && this.states['dc'].type == 'success'
             && this.states['pc'].type != 'danger') {
-            weight = Client.STATE_WEIGHT.warning;
+            weight = SaltyRTC.STATE_WEIGHT.warning;
         }
 
         // Calculate state type
         let state;
-        if (weight < Client.STATE_WEIGHT.warning) {
+        if (weight < SaltyRTC.STATE_WEIGHT.warning) {
             state = {type: 'success', value: 'connected'};
-        } else if (weight < Client.STATE_WEIGHT.danger) {
+        } else if (weight < SaltyRTC.STATE_WEIGHT.danger) {
             state = {type: 'warning', value: 'unstable'};
         } else {
             state = {type: 'danger', value: 'disconnected'};
@@ -375,7 +341,7 @@ export class Client {
     }
 
     private _getStateType(name: string, value: string): string {
-        let rules = Client.STATE_RULES[name];
+        let rules = SaltyRTC.STATE_RULES[name];
         // Check if the value is in one of the keys
         for (let key in rules) {
             let states = rules[key];
@@ -386,35 +352,20 @@ export class Client {
         return 'unknown';
     }
 
-    _startConnectTimer(): void {
+    private _startConnectTimer(): void {
         this._connectTimer = setTimeout(() => {
             // Notify that connecting timed out
             console.warn('Data Channel connect timeout');
             this._updateClientState({type: 'danger', value: 'timeout'});
             this._reconnect(true, false);
-        }, Client.CONNECT_TIMEOUT);
+        }, SaltyRTC.CONNECT_TIMEOUT);
     }
 
-    _cancelConnectTimer(): void {
+    private _cancelConnectTimer(): void {
         if (this._connectTimer !== null) {
             clearTimeout(this._connectTimer);
             this._connectTimer = null;
         }
     }
 
-    _startDisconnectTimer(): void {
-        this._disconnectTimer = setTimeout(() => {
-            // Notify that the connection has been lost
-            console.warn('Peer Connection lost');
-            this._updateClientState({type: 'danger', value: 'lost'});
-            this._reconnect(true, false);
-        }, Client.DISCONNECT_TIMEOUT);
-    }
-
-    _cancelDisconnectTimer(): void {
-        if (this._disconnectTimer !== null) {
-            clearTimeout(this._disconnectTimer);
-            this._disconnectTimer = null;
-        }
-    }
 }
