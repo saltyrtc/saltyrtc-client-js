@@ -4,10 +4,10 @@
 
 /// <reference path='saltyrtc/types/RTCPeerConnection.d.ts' />
 
-import { SaltyRTC, KeyStore, PeerConnection, DataChannel } from "saltyrtc/main";
+import { SaltyRTC, KeyStore } from "saltyrtc/main";
 
 let ks = new KeyStore();
-let sc = new SaltyRTC(null, ks, null, new DataChannel(null, ks, new PeerConnection(null)));
+let sc = new SaltyRTC(null, ks, null);
 
 async function initiatorFlow(pc: RTCPeerConnection, sc: SaltyRTC) {
     let offer = await pc.createOffer()
