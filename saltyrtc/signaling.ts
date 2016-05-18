@@ -5,12 +5,31 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-/// <reference path="types/angular.d.ts" />
+/// <reference path='messages.d.ts' />
 /// <reference path='types/RTCPeerConnection.d.ts' />
+/// <reference path='types/msgpack-lite.d.ts' />
 
 import { Session } from "./session";
 import { KeyStore, Box } from "./keystore";
 import { SaltyRTC } from "./client";
+
+var nacl: any; // TODO
+
+/**
+ * Possible states for SaltyRTC connection.
+ */
+export const enum State {
+    // Websocket is connecting
+    Connecting = 0,
+    // Websocket is open
+    Open,
+    // Websocket is closing
+    Closing,
+    // Websocket is closed
+    Closed,
+    // Status is unknown
+    Unknown = 99
+}
 
 interface CachedSignalingMessage {
     message: SignalingMessage,
@@ -18,347 +37,294 @@ interface CachedSignalingMessage {
 }
 
 interface SignalingMessage {
-    type: "hello-client" | "reset" | "offer" | "candidate",
+    type: 'hello-client' | 'reset' | 'offer' | 'candidate',
     session?: string,
     data?: any; // TODO: type
 }
 
-class SignalingEvents {
-    private $rootScope: angular.IRootScopeService;
-    private _stopped: boolean;
-    private _signaling: Signaling;
-
-    constructor(signaling: Signaling, $rootScope: angular.IRootScopeService) {
-        this.$rootScope = $rootScope;
-        this._stopped = false
-        this._signaling = signaling
-    }
-
-    stop() {
-        this._stopped = true;
-    }
-
-    onOpen = () => {
-        if (this._stopped === false) {
-            this.$rootScope.$apply(() => this._signaling.state = 'open');
-        }
-    };
-
-    onError = (error) => {
-        if (this._stopped === false) {
-            this.$rootScope.$apply(() => {
-                console.error('General Web Socket error', error)
-                this.$rootScope.$broadcast('signaling:error', 'general', error)
-            })
-        }
-    };
-
-    onClose = () => {
-        if (this._stopped === false) {
-            this.$rootScope.$apply(() => this._signaling.state = 'closed')
-        }
-    };
-
-    onMessage = (event) => {
-        if (this._stopped === false) {
-            let data = event.data;
-            this.$rootScope.$apply(() => {
-                // Dispatch according to type
-                // Note: For some reason literals are not a String instance
-                if (typeof data == 'string') {
-                    this._signaling._receiveText(data);
-                } else if (data instanceof ArrayBuffer) {
-                    this._signaling._receiveBinary(data);
-                } else {
-                    console.warn('Received signaling message with unknown type')
-                }
-            })
-        }
-    };
-}
-
-
 export class Signaling {
-    static DEFAULT_URL: string = 'ws://example.com:8765/';
-    static CONNECT_MAX_RETRIES: number = 10;
-    static CONNECT_RETRY_INTERVAL: number = 10000;
+    static CONNECT_MAX_RETRIES = 10;
+    static CONNECT_RETRY_INTERVAL = 10000;
+    static SALTYRTC_WS_SUBPROTOCOL = 'saltyrtc-1.0';
+
+    private $rootScope: any;
 
     private saltyrtc: SaltyRTC;
-    private $rootScope: angular.IRootScopeService;
     private keyStore: KeyStore;
     private session: Session;
-    private _state: string = null;
+    private host: string;
+    private port: number;
+
+    private state: State = State.Unknown;
     private path: string = null;
     private url: string = null;
-    private _connectTries: number;
     private cached: CachedSignalingMessage[];
-    private _connectTimer: number = null;
-    private _events: SignalingEvents = null;
-    private ws: WebSocket;
 
-    constructor(saltyrtc: SaltyRTC,
-                $rootScope: angular.IRootScopeService,
-                keyStore: KeyStore,
-                session: Session) {
+    private ws: WebSocket = null;
+
+    private responders: number[] = [];
+
+    constructor(saltyrtc: SaltyRTC, host: string, port: number, keyStore: KeyStore, session: Session) {
+        super();
         this.saltyrtc = saltyrtc;
-        this.$rootScope = $rootScope;
         this.keyStore = keyStore;
         this.session = session;
-        this.reset(true)
     }
 
-    set state(newState: string) {
-        this._setState(newState);
+    /**
+     * Open a connection to the signaling server and do the handshake.
+     */
+    public connect(): void {
+        this.resetConnection();
+        this.initWebsocket();
     }
 
-    _setState(state: string): void {
-        // Ignore repeated state changes
-        if (state === this._state) {
-            console.debug('Ignoring repeated signaling state:', state);
-            return;
-        }
+    /**
+     * Open a new WebSocket connection to the signaling server.
+     */
+    private initWebsocket() {
+        let url = 'wss://' + this.host + ':' + this.port + '/';
+        let path = this.keyStore.getPublicKey();
+        let ws = new WebSocket(url + path, Signaling.SALTYRTC_WS_SUBPROTOCOL);
 
-        // Update state and broadcast
-        this._state = state;
-        this.$rootScope.$broadcast('signaling:state', state)
+        // Set binary type
+        ws.binaryType = 'arraybuffer';
 
-        // Open?
-        // TODO: Use enums for states
-        if (state == 'open') {
-            // Cancel connect timer and reset counter
-            this._cancelConnectTimer();
-            this._connectTries = 0;
-        }
+        // Set event handlers
+        ws.addEventListener('open', this.onOpen);
+        ws.addEventListener('error', this.onError);
+        ws.addEventListener('close', this.onClose);
+
+        // We assign the handshake method to the message event listener directly
+        // to make sure that we don't miss any message.
+        ws.addEventListener('message', this.handshake);
+
+        // Store connection on instance
+        this.state = State.Connecting;
+        console.debug('Signaling: Opening WebSocket connection to path', path);
+        this.ws = ws;
     }
 
-    reset(hard: boolean = false): void {
-        let state = this._state;
-        this.state = 'unknown';
+    private async handshake(ev: MessageEvent) {
+        this.ws.removeEventListener('message', this.handshake);
+        await this.serverHandshake(ev.data);
+        await this.initiatorHandshake();
+    }
 
-        // Close and reset event instance
-        if (this._events !== null) {
-            this._events.stop();
+    /**
+     * Do the server handshake.
+     *
+     * The `buffer` argument contains the `server-hello` packet.
+     */
+    private async serverHandshake(buffer: ArrayBuffer): Promise<void> {
+        // Decode server-hello
+        let bytes = new Uint8Array(buffer);
+        if (bytes[0] !== saltyrtc.ReceiverByte.Server) {
+            console.error('Signaling: Invalid server-hello message, bad receiver byte:', bytes[0]);
+            throw 'bad-receiver-byte';
         }
-        this._events = new SignalingEvents(this, this.$rootScope);
+        let serverHello = msgpack.decode(bytes.slice(1)) as saltyrtc.ServerHello;
 
-        // Close web socket instance
-        if (this.ws && state === 'open') {
-            console.debug('Disconnecting Web Socket');
+        // Validate data
+        if (serverHello.type !== 'server-hello') {
+            console.error('Signaling: Invalid server-hello message, bad type field:', serverHello);
+            throw 'bad-message-type';
+        }
+
+        // Store server public key
+        this.keyStore.otherKey = serverHello.key;
+
+        // Generate cookie
+        let cookie;
+        do {
+            cookie = nacl.randomBytes(24);
+        } while (cookie === serverHello.my_cookie);
+
+        // Build client-auth packet
+        let clientAuth: saltyrtc.ClientAuth = {
+            type: 'client-auth',
+            my_cookie: cookie,
+            your_cookie: serverHello.my_cookie,
+        };
+        let box = this.keyStore.encrypt(msgpack.encode(clientAuth));
+
+        // Send client-auth
+        this.ws.send(this.buildPacket(box.toArray(), saltyrtc.ReceiverByte.Initiator));
+
+        // Get server-auth
+        let serverAuth = await this.recvMessage(saltyrtc.ReceiverByte.Server, 'server-auth') as saltyrtc.ServerAuth;
+
+        // Validate cookie
+        if (serverAuth.your_cookie != cookie) {
+            console.error('Signaling: Bad cookie in server-auth message');
+            console.debug('Their response:', serverAuth.your_cookie, ', my cookie:', cookie);
+            throw 'bad-cookie';
+        }
+
+        this.responders = serverAuth.responders;
+    }
+
+    /**
+     * Do the initiator p2p handshake.
+     */
+    private async initiatorHandshake(): Promise<void> {
+        // TODO
+    }
+
+    /**
+     * Return a promise for the next WebSocket message event.
+     */
+    private recvMessageEvent(): Promise<MessageEvent> {
+        return new Promise((resolve) => {
+            function handler(ev: MessageEvent) {
+                this.ws.removeEventListener('message', handler);
+                resolve(ev);
+            };
+            this.ws.addEventListener('message', handler);
+        });
+    }
+
+    /**
+     * Like `recvMessageEvent`, but only return the `data` inside the message
+     * event instead of the entire `MessageEvent` object.
+     */
+    private async recvMessageData(): Promise<Uint8Array> {
+        let ev = await this.recvMessageEvent();
+        return new Uint8Array(ev.data);
+    }
+
+    /**
+     * Wait for the next WebSocket message. When it arrives, retrieve the data,
+     * optionally decrypt it, validate it and return the deserialized MsgPack
+     * object.
+     *
+     * If the receiver byte and message type don't match, the promise is
+     * rejected.
+     */
+    private async recvMessage(receiverByte: number,
+                              type: saltyrtc.MessageType,
+                              decrypt: boolean = true)
+                              : Promise<saltyrtc.Message> {
+        // Wait for message
+        let raw: Uint8Array = await this.recvMessageData();
+
+        // Validate receiver byte
+        if (raw[0] !== receiverByte) {
+            console.error('Signaling: Invalid', type, 'message, bad receiver byte:', receiverByte);
+            throw 'bad-receiver-byte';
+        }
+
+        // Extract data
+        let data: Uint8Array = raw.slice(1);
+
+        // If necessary, decrypt
+        if (decrypt !== false) {
+            let box = Box.fromArray(data);
+            data = this.keyStore.decrypt(box);
+        }
+
+        // Decode
+        let msg = msgpack.decode(data) as saltyrtc.Message;
+
+        // Validate type
+        if (msg.type !== type) {
+            console.error('Signaling: Invalid', type, 'message, bad type field:', msg);
+            throw 'bad-message-type';
+        }
+
+        return msg;
+    }
+
+    /**
+     * Build and return a packet containing the specified data, tagged with the
+     * specified receiver byte.
+     */
+    private buildPacket(data: Uint8Array, receiverByte: number): Uint8Array {
+        let buf = new Uint8Array(data.length + 1);
+        buf[0] = receiverByte;
+        buf.set(data, 1);
+        return buf;
+    }
+
+    /**
+     * Reset/close the connection.
+     *
+     * - Close WebSocket if still open
+     * - Set `this.ws` to `null`
+     * - Set `this.status` to `Unknown`
+     * - Clear the cache
+     */
+    private resetConnection(): void {
+        let oldState = this.state;
+        this.state = State.Unknown;
+
+        // Close WebSocket instance
+        if (this.ws !== null && oldState === State.Open) {
+            console.debug('Signaling: Disconnecting WebSocket');
             this.ws.close();
         }
         this.ws = null;
 
-        // Hard reset?
-        if (hard === false) {
-            return
-        }
-
-        // Cancel connect timer and reset counter
-        this._cancelConnectTimer();
-        this._connectTries = 0;
-
         // Clear cached messages
-        this.clear();
+        this.clearCache();
     }
 
     /**
      * Clear cached messages
      */
-    clear(): void {
+    private clearCache(): void {
         this.cached = [];
     }
 
-    connect(path, url = Signaling.DEFAULT_URL): void { // TODO: Use WSS
-        // Store path and URL
-        this.path = path;
-        this.url = url;
+    /**
+     * WebSocket onopen handler.
+     */
+    private onOpen = (ev: Event) => {
+        console.info('Signaling: Opened connection');
+        this.state = State.Open;
+        this.saltyrtc.onConnected(ev);
+    };
 
-        // Give up?
-        if (this._connectTries == Signaling.CONNECT_MAX_RETRIES) {
-            this._connectTries = 0;
-            console.error('Connecting signaling channel failed');
-            this.state = 'failed';
-            return;
+    /**
+     * WebSocket onerror handler.
+     */
+    private onError = (ev: ErrorEvent) => {
+        console.error('Signaling: General WebSocket error', ev);
+        this.state = this.getStateFromSocket();
+        this.saltyrtc.onConnectionError(ev);
+    };
+
+    /**
+     * WebSocket onclose handler.
+     */
+    private onClose = (ev: CloseEvent) => {
+        console.info('Signaling: Closed connection');
+        this.state = State.Closed;
+        this.saltyrtc.onConnectionClosed(ev);
+    };
+
+    /**
+     * Websocket onmessage handler.
+     */
+    private onMessage = (ev: MessageEvent) => {
+        console.debug('Signaling: Received message');
+    };
+
+    /**
+     * Return state based on websocket `readyState` attribute.
+     */
+    private getStateFromSocket(): State {
+        switch (this.ws.readyState) {
+            case WebSocket.CONNECTING:
+                return State.Connecting;
+            case WebSocket.OPEN:
+                return State.Open;
+            case WebSocket.CLOSING:
+                return State.Closing;
+            case WebSocket.CLOSED:
+                return State.Closed;
         }
-
-        // Reset and create web socket connection
-        this.reset();
-        this.ws = new WebSocket(url + path);
-        this.ws.binaryType = 'arraybuffer';
-        console.debug('Created signaling channel, connecting to path:', path);
-        this.state = 'connecting';
-
-        // Start connect timer
-        this._startConnectTimer();
-
-        // Web socket connection is ready for sending and receiving
-        this.ws.onopen = this._events.onOpen;
-        // An error occurred
-        this.ws.onerror = this._events.onError;
-        // Web socket connection has been closed
-        this.ws.onclose = this._events.onClose;
-        // A message has been received
-        // [String|Blob|ArrayBuffer] event.data
-        this.ws.onmessage = this._events.onMessage;
+        return State.Unknown;
     }
 
-    reconnect(delay: number = Signaling.CONNECT_RETRY_INTERVAL): void {
-        this._restartConnectTimer(delay);
-    }
-
-    sendHello(): void {
-        console.debug('Sending hello');
-        this._send({type: 'hello-client'}, false);
-    }
-
-    sendReset(): void {
-        console.debug('Sending reset');
-        this._send({type: 'reset'}, false);
-    }
-
-    receiveReset(): void {
-        console.debug('Broadcasting reset');
-        this.$rootScope.$broadcast('signaling:reset');
-    }
-
-    receiveSendError(): void {
-        console.debug('Broadcasting send error');
-        this.$rootScope.$broadcast('signaling:sendError');
-    }
-
-    receiveKey(key): void {
-        console.debug('Broadcasting key');
-        this.$rootScope.$broadcast('signaling:key', key);
-    }
-
-    public sendOffer(offerSdp: RTCSessionDescription): void {
-        console.debug('Sending offer');
-        this._send({
-            type: 'offer',
-            session: this.session.id,
-            data: offerSdp,
-        });
-    }
-
-    sendCandidate(candidate): void {
-        console.debug('Sending candidate');
-        this._send({
-            type: 'candidate',
-            session: this.session.id,
-            data: candidate,
-        });
-    }
-
-    receiveCandidate(candidate): void {
-        console.debug('Broadcasting candidate');
-        this.$rootScope.$broadcast('signaling:candidate', candidate);
-    }
-
-    _startConnectTimer(delay = Signaling.CONNECT_RETRY_INTERVAL): void {
-        this._connectTimer = setTimeout(() => {
-            this._connectTries += 1;
-            console.debug('Signaling connect timeout, retry ' + this._connectTries+ '/' + Signaling.CONNECT_MAX_RETRIES);
-            this.connect(this.path, this.url);
-        }, delay);
-    }
-
-    _restartConnectTimer(delay): void {
-        this._cancelConnectTimer();
-        this._startConnectTimer(delay);
-    }
-
-    _cancelConnectTimer(): void {
-        if (this._connectTimer !== null) {
-            clearTimeout(this._connectTimer);
-            this._connectTimer = null;
-        }
-    }
-
-    _sendCached(): void {
-        console.debug('Sending ' + this.cached.length + ' delayed signaling messages');
-        this.cached.forEach((item) => this._send(item.message, item.encrypt));
-        this.cached = [];
-    }
-
-    _send(message: SignalingMessage, encrypt = true): void {
-        // Delay sending until connected
-        // 0: connecting, 1: open, 2: closing, 3: closed
-        if (this.ws.readyState == 1) {
-            console.debug('Sending signaling message (encrypted: ' + encrypt + '):', message);
-            if (encrypt === true) {
-                let box: Box;
-                try {
-                    box = this.keyStore.encrypt(JSON.stringify(message));
-                } catch (error) {
-                    this.$rootScope.$broadcast('signaling:error', 'crypto', error);
-                    return;
-                }
-                this.ws.send(box.toArray());
-            } else {
-                this.ws.send(JSON.stringify(message));
-            }
-        } else {
-            console.debug('Delaying signaling message until WebSocket is open');
-            this.cached.push({
-                message: message,
-                encrypt: encrypt,
-            })
-        }
-    }
-
-    _receiveText(data: string): void {
-        let message = JSON.parse(data);
-        console.debug('Received text signaling message:', message);
-
-        // Dispatch message
-        switch (message.type) {
-            case 'reset':
-                this.receiveReset();
-                break;
-            case 'send-error':
-                this.receiveSendError();
-                break;
-            case 'key':
-                this.receiveKey(message.data);
-                break;
-            default:
-                console.warn('Ignored signaling message:', message);
-        }
-    }
-
-    _receiveBinary(data: ArrayBuffer): void {
-        // Convert to Uint8Array
-        let box: Box = this.keyStore.boxFromArray(new Uint8Array(data));
-
-        // Decrypt data
-        let decryptedData: string;
-        try {
-            decryptedData = this.keyStore.decrypt(box);
-        } catch (error) {
-            this.$rootScope.$broadcast('signaling:error', 'crypto', error);
-            return
-        }
-
-        // Decode data
-        let message = JSON.parse(decryptedData);
-        console.debug('Received encrypted signaling message:', message);
-
-        // Check session
-        if (message.session != this.session.id) {
-            console.warn('Ignored message from another session:', message.session);
-            return;
-        }
-
-        // Dispatch message
-        switch (message.type) {
-            case 'answer':
-                this.saltyrtc.onReceiveAnswer(message.data);
-                break;
-            case 'candidate':
-                this.receiveCandidate(message.data);
-                break;
-            default:
-                console.warn('Ignored encrypted signaling message:', message);
-        }
-    }
 }

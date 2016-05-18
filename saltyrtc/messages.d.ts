@@ -1,98 +1,113 @@
 declare namespace saltyrtc {
 
+    type MessageType = 'server-hello' | 'client-hello' | 'client-auth'
+                     | 'server-auth' | 'new-initiator' | 'new-responder'
+                     | 'drop-responder' | 'send-error' | 'token' | 'key'
+                     | 'auth' | 'offer' | 'answer' | 'candidates' | 'restart';
+
+    // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#packet-structure
+    const enum ReceiverByte {
+        Server = 0x00,
+        Initiator = 0x01,
+    }
+
+    interface Message {
+        type: MessageType,
+    }
+
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#server-hello
-    interface ServerHello {
+    interface ServerHello extends Message {
         type: 'server-hello',
         key: Uint8Array,
         my_cookie: Uint8Array,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#client-hello
-    interface ClientHello {
+    interface ClientHello extends Message {
         type: 'client-hello',
         key: Uint8Array,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#client-auth
-    interface ClientAuth {
+    interface ClientAuth extends Message {
         type: 'client-auth',
         your_cookie: Uint8Array,
         my_cookie: Uint8Array,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#server-auth
-    interface ServerAuth {
+    interface ServerAuth extends Message {
         type: 'server-auth',
         your_cookie: Uint8Array,
-        initiator_connected: boolean,
-        responders: number[],
+        initiator_connected?: boolean,
+        responders?: number[],
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#new-initiator
-    interface NewInitiator {
+    interface NewInitiator extends Message {
         type: 'new-initiator',
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#new-responder
-    interface NewResponder {
+    interface NewResponder extends Message {
         type: 'new-responder',
         id: number,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#drop-responder
-    interface DropResponder {
+    interface DropResponder extends Message {
         type: 'drop-responder',
         id: number,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#send-error
-    interface SendError {
+    interface SendError extends Message {
         type: 'send-error',
         hash: Uint8Array,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#token
-    interface Token {
+    interface Token extends Message {
         type: 'token',
         key: Uint8Array,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#key
-    interface Key {
+    interface Key extends Message {
         type: 'key',
         key: Uint8Array,
         my_cookie: Uint8Array,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#auth
-    interface Auth {
+    interface Auth extends Message {
         type: 'auth',
         your_cookie: Uint8Array,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#offer
-    interface Offer {
+    interface Offer extends Message {
         type: 'offer',
         session: Uint8Array,
         sdp: string, // TODO: #28
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#answer
-    interface Answer {
+    interface Answer extends Message {
         type: 'answer',
         session: Uint8Array,
         sdp: string, // TODO: #28
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#candidates
-    interface Candidates {
-        type: 'answer',
+    interface Candidates extends Message {
+        type: 'candidates',
         session: Uint8Array,
         sdp: string[], // TODO: #28
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#restart
-    interface Restart {
+    interface Restart extends Message {
         type: 'restart',
     }
 

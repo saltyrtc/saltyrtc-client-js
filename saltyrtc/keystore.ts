@@ -64,7 +64,7 @@ interface IKeyPair {
 
 export class KeyStore {
     // Public key of the recipient
-    public otherKey = null;
+    private _otherKey: Uint8Array = null;
     // The NaCl key pair
     public keyPair: IKeyPair;
 
@@ -99,6 +99,12 @@ export class KeyStore {
         return this.otherKey != null;
     }
 
+    public get otherKey(): Uint8Array { return this.otherKey; }
+    public set otherKey(key: Uint8Array) {
+        console.debug('KeyStore: Updating other key');
+        this.otherKey = key;
+    }
+
     /**
      * Return the public key as hex string.
      */
@@ -123,10 +129,7 @@ export class KeyStore {
     /**
      * Encrypt data for the peer.
      */
-    public encrypt(data: string): Box {
-        // Convert string to bytes
-        let bytes = nacl.util.decodeUTF8(data);
-
+    public encrypt(bytes: Uint8Array): Box {
         // Generate random nonce
         let nonce = nacl.randomBytes(nacl.secretbox.nonceLength);
 
@@ -140,7 +143,7 @@ export class KeyStore {
     /**
      * Decrypt data from the peer.
      */
-    public decrypt(box: Box): string {
+    public decrypt(box: Box): Uint8Array {
         // Decrypt data
         let data = nacl.box.open(box.data, box.nonce, this.otherKey, this.keyPair.secretKey);
         if (data == false) {
@@ -150,15 +153,5 @@ export class KeyStore {
 
         // Return data as string
         return nacl.util.encodeUTF8(data);
-    }
-
-    /**
-     * Wrap the Box.fromArray static method. Needed because Angular creates a
-     * KeyStore singleton without direct access to the Box class.
-     *
-     * @deprecated, probably not needed in a generic saltyrtc library.
-     */
-    public boxFromArray(array): Box {
-        return Box.fromArray(array);
     }
 }
