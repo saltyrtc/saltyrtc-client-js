@@ -31,17 +31,20 @@ class FakeWebSocket {
     } 
 }
 
-export default () => {
+export default () => { describe('signaling', () => {
 
-    describe('signaling.Signaling', () => {
+    describe('Signaling', () => {
+
+        beforeEach(() => {
+            this.fakeSaltyRTC = new FakeSaltyRTC() as SaltyRTC;
+            this.keyStore = new KeyStore();
+            this.session = new Session();
+            this.sig = new Signaling(this.fakeSaltyRTC, '127.0.0.1', 8765, this.keyStore, this.session);
+        });
 
         describe('connect', () => {
 
             beforeEach(() => {
-                this.fakeSaltyRTC = new FakeSaltyRTC() as SaltyRTC;
-                this.keyStore = new KeyStore();
-                this.session = new Session();
-                this.sig = new Signaling(this.fakeSaltyRTC, '127.0.0.1', 8765, this.keyStore, this.session);
                 spyOn(window, 'WebSocket').and.callFake((url, subprotocols) => new FakeWebSocket(url, subprotocols));
             });
 
@@ -78,4 +81,4 @@ export default () => {
 
     });
 
-}
+}); }
