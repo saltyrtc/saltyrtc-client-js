@@ -4,7 +4,7 @@ import { u8aToHex, hexToU8a, randomString } from "../saltyrtc/utils";
 
 export default () => {
 
-    describe('Uint8Array / Hex conversion', () => {
+    describe('utils.hexToU8a / utils.u8aToHex', () => {
 
         it('conversion from Uint8Array to hex works', () => {
             let source = new Uint8Array([0x01, 0x10, 0xde, 0xad, 0xbe, 0xef]);
@@ -32,7 +32,7 @@ export default () => {
 
     });
 
-    describe('randomString()', () => {
+    describe('utils.randomString', () => {
 
         it('generates a 32 character random string', () => {
             let random1 = randomString();

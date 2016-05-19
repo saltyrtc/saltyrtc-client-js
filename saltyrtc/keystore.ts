@@ -5,7 +5,7 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-import { u8aToHex, hexToU8a, randomString } from "./utils";
+import { u8aToHex, hexToU8a } from "./utils";
 
 declare var nacl: any; // TODO
 
