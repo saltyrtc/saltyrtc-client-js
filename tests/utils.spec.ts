@@ -1,10 +1,10 @@
 /// <reference path="jasmine.d.ts" />
 
-import { u8aToHex, hexToU8a, randomString } from "../saltyrtc/utils";
+import { u8aToHex, hexToU8a, randomString, concat } from "../saltyrtc/utils";
 
-export default () => {
+export default () => { describe('utils', () => {
 
-    describe('utils.hexToU8a / utils.u8aToHex', () => {
+    describe('hexToU8a / u8aToHex', () => {
 
         it('conversion from Uint8Array to hex works', () => {
             let source = new Uint8Array([0x01, 0x10, 0xde, 0xad, 0xbe, 0xef]);
@@ -32,7 +32,7 @@ export default () => {
 
     });
 
-    describe('utils.randomString', () => {
+    describe('randomString', () => {
 
         it('generates a 32 character random string', () => {
             let random1 = randomString();
@@ -44,4 +44,29 @@ export default () => {
 
     });
 
-}
+    describe('concat', () => {
+
+        it('does not change a single array', () => {
+            let src = Uint8Array.of(1, 2, 3, 4);
+            expect(concat(src)).toEqual(src);
+        });
+
+        it('concatenates two arrays', () => {
+            let src1 = Uint8Array.of(1, 2, 3, 4);
+            let src2 = Uint8Array.of(5, 6);
+            expect(concat(src1, src2))
+                .toEqual(Uint8Array.of(1, 2, 3, 4, 5, 6));
+        });
+
+        it('concatenates multiple arrays', () => {
+            let src1 = Uint8Array.of(1, 2, 3, 4);
+            let src2 = Uint8Array.of(5, 6);
+            let src3 = Uint8Array.of(7);
+            let src4 = Uint8Array.of(7, 8, 9);
+            expect(concat(src1, src2, src3, src4))
+                .toEqual(Uint8Array.of(1, 2, 3, 4, 5, 6, 7, 7, 8, 9));
+        });
+
+    });
+
+}); }
