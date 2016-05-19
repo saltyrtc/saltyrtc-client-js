@@ -7,14 +7,14 @@
 
 import { u8aToHex, hexToU8a, randomString } from "./utils";
 
-var nacl: any; // TODO
+declare var nacl: any; // TODO
 
 export class Box {
 
     private _nonce: Uint8Array;
     private _data: any; // TODO
 
-    constructor(nonce: Uint8Array, data) {
+    constructor(nonce: Uint8Array, data: Uint8Array) {
         this._nonce = nonce;
         this._data = data;
     }
@@ -66,30 +66,13 @@ export class KeyStore {
     // Public key of the recipient
     private _otherKey: Uint8Array = null;
     // The NaCl key pair
-    public keyPair: IKeyPair;
+    private keyPair: IKeyPair;
 
     constructor() {
         // Create new key pair
-        // TODO: Try to read from webstorage first and send push message to app
         this.keyPair = nacl.box.keyPair();
-        console.debug('Private key:', u8aToHex(this.keyPair.secretKey));
-        console.debug('Public key:', u8aToHex(this.keyPair.publicKey));
-
-        // Make sure that toHex and toBin work properly
-        // TODO: Move to test
-        let result = JSON.stringify(hexToU8a(u8aToHex(this.keyPair.secretKey)));
-        if (JSON.stringify(this.keyPair.secretKey) != result) {
-            throw 'Assertion error';
-        }
-
-        // Make sure encryption and decryption work properly
-        // TODO: Move to test
-        this.otherKey = this.keyPair.publicKey;
-        let expected = randomString();
-        if (this.decrypt(this.encrypt(expected)) != expected) {
-            throw 'Assertion error';
-        }
-        this.otherKey = null;
+        console.debug('KeyStore: Private key:', u8aToHex(this.keyPair.secretKey));
+        console.debug('KeyStore: Public key:', u8aToHex(this.keyPair.publicKey));
     }
 
     /**
@@ -99,32 +82,31 @@ export class KeyStore {
         return this.otherKey != null;
     }
 
-    public get otherKey(): Uint8Array { return this.otherKey; }
+    public get otherKey(): Uint8Array { return this._otherKey; }
     public set otherKey(key: Uint8Array) {
         console.debug('KeyStore: Updating other key');
-        this.otherKey = key;
+        this._otherKey = key;
     }
 
     /**
      * Return the public key as hex string.
      */
-    public getPublicKey() {
-        return u8aToHex(this.keyPair.publicKey);
-    }
+    get publicKeyHex() { return u8aToHex(this.keyPair.publicKey); }
 
     /**
-     * Return the data necessary to create a QR code.
-     *
-     * @deprecated, probably not needed in a generic saltyrtc library.
+     * Return the public key as Uint8Array.
      */
-    public getPublicKeyAsQRCode() {
-        return {
-            version: 5,
-            errorCorrectionLevel: 'M',
-            size: 256,
-            data: this.getPublicKey()
-        };
-    }
+    get publicKeyBytes() { return this.keyPair.publicKey; }
+
+    /**
+     * Return the secret key as hex string.
+     */
+    get secretKeyHex() { return u8aToHex(this.keyPair.secretKey); }
+
+    /**
+     * Return the secret key as Uint8Array.
+     */
+    get secretKeyBytes() { return this.keyPair.secretKey; }
 
     /**
      * Encrypt data for the peer.
@@ -150,8 +132,6 @@ export class KeyStore {
             // TODO: Handle error
             throw 'Decryption failed'
         }
-
-        // Return data as string
-        return nacl.util.encodeUTF8(data);
+        return data;
     }
 }
