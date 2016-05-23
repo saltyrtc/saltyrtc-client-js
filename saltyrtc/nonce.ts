@@ -12,29 +12,29 @@
  *
  * Nonce structure:
  *
- * |CCCCCCCCCCCCCCCC|HHHH|QQQQ|
+ * |CCCCCCCCCCCCCCCC|OOOO|QQQQ|
  *
  * - C: Cookie (16 byte)
- * - H: Channel number (4 bytes)
+ * - O: Overflow number (4 bytes)
  * - Q: Sequence number (4 bytes)
  */
 export class Nonce {
 
     protected _cookie: Uint8Array;
-    protected _channel: number;
+    protected _overflow: number;
     protected _sequenceNumber: number;
 
-    constructor(cookie: Uint8Array, channel: number, sequenceNumber: number) {
+    constructor(cookie: Uint8Array, overflow: number, sequenceNumber: number) {
         if (cookie.length != 16) {
             throw 'bad-cookie-length';
         }
         this._cookie = cookie;
-        this._channel = channel;
+        this._overflow = overflow;
         this._sequenceNumber = sequenceNumber;
     }
 
     get cookie() { return this._cookie; }
-    get channel() { return this._channel; }
+    get overflow() { return this._overflow; }
     get sequenceNumber() { return this._sequenceNumber; }
 
     /**
@@ -52,10 +52,10 @@ export class Nonce {
 
         // Parse and return nonce
         let cookie = new Uint8Array(packet, 0, 16);
-        let channel = view.getUint32(16);
+        let overflow = view.getUint32(16);
         let sequenceNumber = view.getUint32(20);
 
-        return new Nonce(cookie, channel, sequenceNumber);
+        return new Nonce(cookie, overflow, sequenceNumber);
     }
 
     /**
@@ -68,7 +68,7 @@ export class Nonce {
         uint8view.set(this._cookie);
 
         let view = new DataView(buf);
-        view.setUint32(16, this._channel);
+        view.setUint32(16, this._overflow);
         view.setUint32(20, this._sequenceNumber);
 
         return buf;
@@ -81,16 +81,16 @@ export class Nonce {
  * A SaltyRTC signaling nonce.
  *
  * This is very similar to the regular nonce, but also contains a sender and
- * receiver byte. That reduces the length of the channel number to 2 bytes.
+ * receiver byte. That reduces the length of the overflow number to 2 bytes.
  *
  * Nonce structure:
  *
- * |CCCCCCCCCCCCCCCC|S|D|HH|QQQQ|
+ * |CCCCCCCCCCCCCCCC|S|D|OO|QQQQ|
  *
  * - C: Cookie (16 byte)
  * - S: Source byte (1 byte)
  * - D: Destination byte (1 byte)
- * - H: Channel number (4 bytes)
+ * - O: Overflow number (4 bytes)
  * - Q: Sequence number (4 bytes)
  */
 export class SignalingNonce extends Nonce {
@@ -98,9 +98,9 @@ export class SignalingNonce extends Nonce {
     protected _source: saltyrtc.AddressType;
     protected _destination: saltyrtc.AddressType;
 
-    constructor(cookie: Uint8Array, channel: number, sequenceNumber: number,
+    constructor(cookie: Uint8Array, overflow: number, sequenceNumber: number,
                 source: saltyrtc.AddressType, destination: saltyrtc.AddressType) {
-        super(cookie, channel, sequenceNumber);
+        super(cookie, overflow, sequenceNumber);
         this._source = source;
         this._destination = destination;
     }
@@ -125,10 +125,10 @@ export class SignalingNonce extends Nonce {
         let cookie = new Uint8Array(packet, 0, 16);
         let source = view.getUint8(16);
         let destination = view.getUint8(17);
-        let channel = view.getUint16(18);
+        let overflow = view.getUint16(18);
         let sequenceNumber = view.getUint32(20);
 
-        return new SignalingNonce(cookie, channel, sequenceNumber, source, destination);
+        return new SignalingNonce(cookie, overflow, sequenceNumber, source, destination);
     }
 
     /**
@@ -143,7 +143,7 @@ export class SignalingNonce extends Nonce {
         let view = new DataView(buf);
         view.setUint8(16, this._source);
         view.setUint8(17, this._destination);
-        view.setUint16(18, this._channel);
+        view.setUint16(18, this._overflow);
         view.setUint32(20, this._sequenceNumber);
 
         return buf;

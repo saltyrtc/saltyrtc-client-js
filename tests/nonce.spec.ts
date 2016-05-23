@@ -10,7 +10,7 @@ export default () => { describe('nonce', () => {
             this.array = new Uint8Array([
                 // Cookie
                 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
-                // Channel: 16909060 big endian
+                // Overflow: 16909060 big endian
                 1, 2, 3, 4,
                 // Sequence number: 84281096 big endian
                 5, 6, 7, 8,
@@ -21,15 +21,15 @@ export default () => { describe('nonce', () => {
             let nonce = Nonce.fromArrayBuffer(this.array.buffer);
             expect(nonce.cookie).toEqual(
                 new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]));
-            expect(nonce.channel).toEqual((1 << 24) + (2 << 16) + (3 << 8) + 4);
+            expect(nonce.overflow).toEqual((1 << 24) + (2 << 16) + (3 << 8) + 4);
             expect(nonce.sequenceNumber).toEqual((5 << 24) + (6 << 16) + (7 << 8) + 8);
         });
 
         it('serializes correctly', () => {
             let cookie = Uint8Array.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
-            let channel = 16909060;
+            let overflow = 16909060;
             let sequenceNumber = 84281096;
-            let nonce = new Nonce(cookie, channel, sequenceNumber);
+            let nonce = new Nonce(cookie, overflow, sequenceNumber);
             let buf = nonce.toArrayBuffer();
             expect(new Uint8Array(buf)).toEqual(this.array);
         });
@@ -46,7 +46,7 @@ export default () => { describe('nonce', () => {
                 17,
                 // Destination: 18
                 18,
-                // Channel: 258 big endian
+                // Overflow: 258 big endian
                 1, 2,
                 // Sequence number: 50595078 big endian
                 3, 4, 5, 6,
@@ -59,7 +59,7 @@ export default () => { describe('nonce', () => {
                 new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]));
             expect(nonce.source).toEqual(17);
             expect(nonce.destination).toEqual(18);
-            expect(nonce.channel).toEqual((1 << 8) + 2);
+            expect(nonce.overflow).toEqual((1 << 8) + 2);
             expect(nonce.sequenceNumber).toEqual((3 << 24) + (4 << 16) + (5 << 8) + 6);
         });
 
@@ -67,9 +67,9 @@ export default () => { describe('nonce', () => {
             let cookie = Uint8Array.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
             let source = 17;
             let destination = 18;
-            let channel = 258;
+            let overflow = 258;
             let sequenceNumber = 50595078;
-            let nonce = new SignalingNonce(cookie, channel, sequenceNumber, source, destination);
+            let nonce = new SignalingNonce(cookie, overflow, sequenceNumber, source, destination);
             let buf = nonce.toArrayBuffer();
             expect(new Uint8Array(buf)).toEqual(this.array);
         });
