@@ -36,6 +36,7 @@ export class Nonce {
     get cookie() { return this._cookie; }
     get overflow() { return this._overflow; }
     get sequenceNumber() { return this._sequenceNumber; }
+    get combinedSequenceNumber() { return (this._overflow << 32) + this._sequenceNumber; }
 
     /**
      * Create a nonce from an ArrayBuffer.

@@ -74,6 +74,11 @@ export default () => { describe('nonce', () => {
             expect(new Uint8Array(buf)).toEqual(this.array);
         });
 
+        it('returns the correct combined sequence number', () => {
+            let nonce = SignalingNonce.fromArrayBuffer(this.array.buffer);
+            expect(nonce.combinedSequenceNumber).toEqual((258 << 32) + 50595078);
+        });
+
     });
 
 }); };
