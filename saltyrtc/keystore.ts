@@ -9,6 +9,9 @@ import { u8aToHex, hexToU8a } from "./utils";
 
 declare var nacl: any; // TODO
 
+/**
+ * A `Box` contains a nonce and encrypted data.
+ */
 export class Box {
 
     private _nonce: Uint8Array;
@@ -19,7 +22,7 @@ export class Box {
         this._data = data;
     }
 
-    public get length() {
+    public get length(): number {
         return this._nonce.length + this._data.length;
     }
 
@@ -27,13 +30,13 @@ export class Box {
         return this._data;
     }
 
-    public get nonce() {
+    public get nonce(): Uint8Array {
         return this._nonce;
     }
 
-    public static fromArray(array) {
+    public static fromArray(array: Uint8Array) {
         // Unpack nonce
-        let nonce_length = nacl.secretbox.nonceLength;
+        let nonce_length = nacl.box.nonceLength;
         let nonce = array.slice(0, nonce_length);
 
         // Unpack data
@@ -43,15 +46,14 @@ export class Box {
         return new Box(nonce, data);
     }
 
-    public toArray() {
-        let nonce_length = nacl.secretbox.nonceLength;
-
+    public toArray(): Uint8Array {
         // Return both the nonce and the encrypted data
         let box = new Uint8Array(this.length);
         box.set(this._nonce);
-        box.set(this._data, nonce_length);
+        box.set(this._data, nacl.box.nonceLength);
         return box;
     }
+
 }
 
 
@@ -62,6 +64,10 @@ interface IKeyPair {
 }
 
 
+/**
+ * A KeyStore holds public and private keys and can handle encryption and
+ * decryption.
+ */
 export class KeyStore {
     // Public key of the recipient
     private _otherKey: Uint8Array = null;
@@ -111,15 +117,9 @@ export class KeyStore {
     /**
      * Encrypt data for the peer.
      */
-    public encrypt(bytes: Uint8Array): Box {
-        // Generate random nonce
-        let nonce = nacl.randomBytes(nacl.secretbox.nonceLength);
-
-        // Encrypt data with keys and nonce
-        bytes = nacl.box(bytes, nonce, this.otherKey, this.keyPair.secretKey);
-
-        // Return box
-        return new Box(nonce, bytes);
+    public encrypt(bytes: Uint8Array, nonce: Uint8Array): Box {
+        let encrypted = nacl.box(bytes, nonce, this.otherKey, this.keyPair.secretKey);
+        return new Box(nonce, encrypted);
     }
 
     /**

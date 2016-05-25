@@ -48,6 +48,8 @@ export default () => { describe('keystore', () => {
     describe('KeyStore', () => {
 
         let ks = new KeyStore();
+        let nonce = nacl.randomBytes(24);
+        let data = nacl.randomBytes(7);
 
         it('generates a keypair', () => {
             // Internal test
@@ -88,7 +90,12 @@ export default () => { describe('keystore', () => {
             let ks2 = new KeyStore();
             ks.otherKey = ks2.publicKeyBytes;
             let expected = nacl.randomBytes(24);
-            expect(ks.decrypt(ks.encrypt(expected))).toEqual(expected);
+            expect(ks.decrypt(ks.encrypt(expected, nonce))).toEqual(expected);
+        });
+
+        it('cannot encrypt without a proper nonce', () => {
+            let encrypt = () => ks.encrypt(data, nacl.randomBytes(3));
+            expect(encrypt).toThrow(new Error('bad nonce size'));
         });
 
     });
