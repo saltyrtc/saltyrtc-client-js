@@ -5,12 +5,6 @@ declare namespace saltyrtc {
                      | 'drop-responder' | 'send-error' | 'token' | 'key'
                      | 'auth' | 'offer' | 'answer' | 'candidates' | 'restart';
 
-    // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#packet-structure
-    const enum ReceiverByte {
-        Server = 0x00,
-        Initiator = 0x01,
-    }
-
     interface Message {
         type: MessageType,
     }
@@ -19,7 +13,6 @@ declare namespace saltyrtc {
     interface ServerHello extends Message {
         type: 'server-hello',
         key: Uint8Array,
-        my_cookie: Uint8Array,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#client-hello
@@ -32,7 +25,6 @@ declare namespace saltyrtc {
     interface ClientAuth extends Message {
         type: 'client-auth',
         your_cookie: Uint8Array,
-        my_cookie: Uint8Array,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#server-auth
@@ -76,7 +68,6 @@ declare namespace saltyrtc {
     interface Key extends Message {
         type: 'key',
         key: Uint8Array,
-        my_cookie: Uint8Array,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#auth

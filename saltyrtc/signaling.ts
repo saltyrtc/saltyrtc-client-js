@@ -12,6 +12,8 @@
 import { Session } from "./session";
 import { KeyStore, Box } from "./keystore";
 import { SaltyRTC } from "./client";
+import { SignalingChannelNonce as Nonce } from "./nonce";
+import { concat } from "./utils";
 
 var nacl: any; // TODO
 
@@ -31,44 +33,59 @@ export const enum State {
     Unknown = 99
 }
 
-interface CachedSignalingMessage {
-    message: SignalingMessage,
-    encrypt: boolean,
-}
-
 interface SignalingMessage {
     type: 'hello-client' | 'reset' | 'offer' | 'candidate',
     session?: string,
     data?: any; // TODO: type
 }
 
+/**
+ * Signaling class.
+ *
+ * Note: This class currently assumes the side of the initiator. Responder will
+ * need to be added later on.
+ */
 export class Signaling {
     static CONNECT_MAX_RETRIES = 10;
     static CONNECT_RETRY_INTERVAL = 10000;
     static SALTYRTC_WS_SUBPROTOCOL = 'saltyrtc-1.0';
+    static SALTYRTC_ADDR_SERVER = 0x00;
+    static SALTYRTC_ADDR_INITIATOR = 0x01;
 
     private $rootScope: any;
 
-    private saltyrtc: SaltyRTC;
-    private keyStore: KeyStore;
-    private session: Session;
+    // WebSocket
     private host: string;
     private port: number;
-
-    private state: State = State.Unknown;
+    private protocol: string = 'wss';
     private path: string = null;
-    private url: string = null;
-    private cached: CachedSignalingMessage[];
-
     private ws: WebSocket = null;
 
+    // Connection state
+    private state: State = State.Unknown;
+
+    // Main class
+    private client: SaltyRTC;
+
+    // Keystore and session
+    private keyStore: KeyStore;
+    private session: Session;
+
+    // Signaling
+    private cookie: Uint8Array = null;
+    private serverCookie: Uint8Array = null;
+    private PeerCookie: Uint8Array = null;
+    private overflow: number = 0;
+    private sequenceNumber: number = 0;
+    private address: number = Signaling.SALTYRTC_ADDR_INITIATOR;
     private responders: number[] = [];
 
-    constructor(saltyrtc: SaltyRTC, host: string, port: number, keyStore: KeyStore, session: Session) {
-        super();
-        this.saltyrtc = saltyrtc;
+    constructor(client: SaltyRTC, host: string, port: number, keyStore: KeyStore, session: Session) {
+        this.client = client;
         this.keyStore = keyStore;
         this.session = session;
+        this.host = host;
+        this.port = port;
     }
 
     /**
@@ -83,8 +100,8 @@ export class Signaling {
      * Open a new WebSocket connection to the signaling server.
      */
     private initWebsocket() {
-        let url = 'wss://' + this.host + ':' + this.port + '/';
-        let path = this.keyStore.getPublicKey();
+        let url = this.protocol + '://' + this.host + ':' + this.port + '/';
+        let path = this.keyStore.publicKeyHex;
         let ws = new WebSocket(url + path, Signaling.SALTYRTC_WS_SUBPROTOCOL);
 
         // Set binary type
@@ -105,6 +122,12 @@ export class Signaling {
         this.ws = ws;
     }
 
+    /**
+     * Do a full server- and p2p-handshake.
+     *
+     * This method is not invoked directly, but instead used as callback for
+     * the `onMessage` event.
+     */
     private async handshake(ev: MessageEvent) {
         this.ws.removeEventListener('message', this.handshake);
         await this.serverHandshake(ev.data);
@@ -117,58 +140,68 @@ export class Signaling {
      * The `buffer` argument contains the `server-hello` packet.
      */
     private async serverHandshake(buffer: ArrayBuffer): Promise<void> {
-        // Decode server-hello
-        let bytes = new Uint8Array(buffer);
-        if (bytes[0] !== saltyrtc.ReceiverByte.Server) {
-            console.error('Signaling: Invalid server-hello message, bad receiver byte:', bytes[0]);
-            throw 'bad-receiver-byte';
-        }
-        let serverHello = msgpack.decode(bytes.slice(1)) as saltyrtc.ServerHello;
 
-        // Validate data
-        if (serverHello.type !== 'server-hello') {
-            console.error('Signaling: Invalid server-hello message, bad type field:', serverHello);
-            throw 'bad-message-type';
-        }
+        { // Process server-hello
 
-        // Store server public key
-        this.keyStore.otherKey = serverHello.key;
+            // First packet is unencrypted. Decode it directly.
+            let nonce = Nonce.fromArrayBuffer(buffer.slice(0, 24));
+            let payload = new Uint8Array(buffer.slice(24));
+            let serverHello = msgpack.decode(payload) as saltyrtc.ServerHello;
 
-        // Generate cookie
-        let cookie;
-        do {
-            cookie = nacl.randomBytes(24);
-        } while (cookie === serverHello.my_cookie);
+            // Validate nonce
+            this.validateNonce(nonce, 0x00);
 
-        // Build client-auth packet
-        let clientAuth: saltyrtc.ClientAuth = {
-            type: 'client-auth',
-            my_cookie: cookie,
-            your_cookie: serverHello.my_cookie,
-        };
-        let box = this.keyStore.encrypt(msgpack.encode(clientAuth));
+            // Validate data
+            if (serverHello.type !== 'server-hello') {
+                console.error('Signaling: Invalid server-hello message, bad type field:', serverHello);
+                throw 'bad-message-type';
+            }
 
-        // Send client-auth
-        this.ws.send(this.buildPacket(box.toArray(), saltyrtc.ReceiverByte.Initiator));
-
-        // Get server-auth
-        let serverAuth = await this.recvMessage(saltyrtc.ReceiverByte.Server, 'server-auth') as saltyrtc.ServerAuth;
-
-        // Validate cookie
-        if (serverAuth.your_cookie != cookie) {
-            console.error('Signaling: Bad cookie in server-auth message');
-            console.debug('Their response:', serverAuth.your_cookie, ', my cookie:', cookie);
-            throw 'bad-cookie';
+            // Store server public key and cookie
+            this.keyStore.otherKey = serverHello.key;
+            this.serverCookie = nonce.cookie;
         }
 
-        this.responders = serverAuth.responders;
+        { // Generate cookie
+
+            let cookie;
+            do {
+                cookie = nacl.randomBytes(24);
+            } while (cookie === this.serverCookie);
+            this.cookie = cookie;
+        }
+
+        { // Send client-auth
+
+            let message: saltyrtc.ClientAuth = {
+                type: 'client-auth',
+                your_cookie: this.serverCookie,
+            };
+            let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
+            this.ws.send(packet);
+        }
+
+        { // Receive server-auth
+
+            let packet = await this.recvMessage(Signaling.SALTYRTC_ADDR_SERVER, 'server-auth');
+            let message = packet.message as saltyrtc.ServerAuth;
+
+            // Validate cookie
+            if (message.your_cookie != this.cookie) {
+                console.error('Signaling: Bad cookie in server-auth message');
+                console.debug('Their response:', message.your_cookie, ', my cookie:', this.cookie);
+                throw 'bad-cookie';
+            }
+
+            // Store responders
+            this.responders = message.responders;
+        }
     }
 
     /**
      * Do the initiator p2p handshake.
      */
     private async initiatorHandshake(): Promise<void> {
-        // TODO
     }
 
     /**
@@ -195,55 +228,94 @@ export class Signaling {
 
     /**
      * Wait for the next WebSocket message. When it arrives, retrieve the data,
-     * optionally decrypt it, validate it and return the deserialized MsgPack
-     * object.
+     * decrypt it, validate it and return the deserialized MsgPack object as
+     * well as the nonce.
      *
-     * If the receiver byte and message type don't match, the promise is
-     * rejected.
+     * If the address type and message type don't match, or of nonce validation
+     * fails, the promise is rejected.
      */
-    private async recvMessage(receiverByte: number,
-                              type: saltyrtc.MessageType,
-                              decrypt: boolean = true)
-                              : Promise<saltyrtc.Message> {
+    private async recvMessage(source: number,
+                              type?: saltyrtc.MessageType)
+                              : Promise<{message: saltyrtc.Message, nonce: Nonce}> {
         // Wait for message
-        let raw: Uint8Array = await this.recvMessageData();
+        let bytes: Uint8Array = await this.recvMessageData();
 
-        // Validate receiver byte
-        if (raw[0] !== receiverByte) {
-            console.error('Signaling: Invalid', type, 'message, bad receiver byte:', receiverByte);
-            throw 'bad-receiver-byte';
+        // Validate length
+        if (bytes.byteLength <= 24) {
+            console.error('Signaling: Received message with only', bytes.byteLength, 'bytes length');
+            throw 'bad-message-length';
         }
 
-        // Extract data
-        let data: Uint8Array = raw.slice(1);
+        // Return decoded message
+        return this.decodePacket(bytes, source, type);
+    }
 
-        // If necessary, decrypt
-        if (decrypt !== false) {
-            let box = Box.fromArray(data);
-            data = this.keyStore.decrypt(box);
+    /**
+     * Validate length, source and destination of nonce.
+     */
+    private validateNonce(nonce: Nonce, source: number): void {
+        // Validate destination
+        if (nonce.destination != this.address) {
+            console.error('Signaling: Nonce destination is', nonce.destination, 'but we\'re', this.address);
+            throw 'bad-nonce-destination';
         }
+
+        // Validate source
+        if (nonce.source != source) {
+            console.error('Signaling: Nonce source is', nonce.source, 'but should be', source);
+            throw 'bad-nonce-source';
+        }
+
+        // TODO: sequence & overflow
+    }
+
+    /**
+     * Decrypt the packet, decode it and validate type and nonce.
+     *
+     * If the type is specified and does not match the message, throw an
+     * exception.
+     */
+    private decodePacket(data: Uint8Array,
+                         source: number,
+                         type?: saltyrtc.MessageType)
+                         : {message: saltyrtc.Message, nonce: Nonce} {
+        // Decrypt
+        let box = Box.fromArray(data);
+        let raw = this.keyStore.decrypt(box);
+
+        // Validate nonce
+        let nonce = Nonce.fromArrayBuffer(box.nonce.buffer)
+        this.validateNonce(nonce, source);
 
         // Decode
-        let msg = msgpack.decode(data) as saltyrtc.Message;
+        let msg = msgpack.decode(raw) as saltyrtc.Message;
 
         // Validate type
-        if (msg.type !== type) {
+        if (typeof type !== 'undefined' && msg.type !== type) {
             console.error('Signaling: Invalid', type, 'message, bad type field:', msg);
             throw 'bad-message-type';
         }
 
-        return msg;
+        return {message: msg, nonce: nonce};
     }
 
     /**
-     * Build and return a packet containing the specified data, tagged with the
-     * specified receiver byte.
+     * Build and return a packet containing the specified message for the
+     * specified receiver.
      */
-    private buildPacket(data: Uint8Array, receiverByte: number): Uint8Array {
-        let buf = new Uint8Array(data.length + 1);
-        buf[0] = receiverByte;
-        buf.set(data, 1);
-        return buf;
+    private buildPacket(message: saltyrtc.Message, receiver: number): Uint8Array {
+        // Create nonce
+        let nonce = new Nonce(this.cookie, this.overflow, this.sequenceNumber,
+                              this.address, receiver);
+        let nonceBytes = new Uint8Array(nonce.toArrayBuffer());
+
+        // Encode message
+        let data = msgpack.encode(message);
+
+        // Encrypt
+        let box = this.keyStore.encrypt(data, nonceBytes);
+
+        return box.toArray();
     }
 
     /**
@@ -252,11 +324,13 @@ export class Signaling {
      * - Close WebSocket if still open
      * - Set `this.ws` to `null`
      * - Set `this.status` to `Unknown`
+     * - Reset `this.sequenceNumber` to 0
      * - Clear the cache
      */
     private resetConnection(): void {
         let oldState = this.state;
         this.state = State.Unknown;
+        this.sequenceNumber = 0;
 
         // Close WebSocket instance
         if (this.ws !== null && oldState === State.Open) {
@@ -264,16 +338,6 @@ export class Signaling {
             this.ws.close();
         }
         this.ws = null;
-
-        // Clear cached messages
-        this.clearCache();
-    }
-
-    /**
-     * Clear cached messages
-     */
-    private clearCache(): void {
-        this.cached = [];
     }
 
     /**
@@ -282,7 +346,7 @@ export class Signaling {
     private onOpen = (ev: Event) => {
         console.info('Signaling: Opened connection');
         this.state = State.Open;
-        this.saltyrtc.onConnected(ev);
+        this.client.onConnected(ev);
     };
 
     /**
@@ -291,7 +355,7 @@ export class Signaling {
     private onError = (ev: ErrorEvent) => {
         console.error('Signaling: General WebSocket error', ev);
         this.state = this.getStateFromSocket();
-        this.saltyrtc.onConnectionError(ev);
+        this.client.onConnectionError(ev);
     };
 
     /**
@@ -300,7 +364,7 @@ export class Signaling {
     private onClose = (ev: CloseEvent) => {
         console.info('Signaling: Closed connection');
         this.state = State.Closed;
-        this.saltyrtc.onConnectionClosed(ev);
+        this.client.onConnectionClosed(ev);
     };
 
     /**
