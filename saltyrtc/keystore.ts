@@ -5,9 +5,9 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-import { u8aToHex, hexToU8a } from "./utils";
+/// <reference path='types/tweetnacl.d.ts' />
 
-declare var nacl: any; // TODO
+import { u8aToHex, hexToU8a } from "./utils";
 
 /**
  * A `Box` contains a nonce and encrypted data.
@@ -15,10 +15,12 @@ declare var nacl: any; // TODO
 export class Box {
 
     private _nonce: Uint8Array;
+    private _nonceLength: number;
     private _data: any; // TODO
 
-    constructor(nonce: Uint8Array, data: Uint8Array) {
+    constructor(nonce: Uint8Array, data: Uint8Array, nonceLength: number) {
         this._nonce = nonce;
+        this._nonceLength = nonceLength;
         this._data = data;
     }
 
@@ -34,33 +36,25 @@ export class Box {
         return this._nonce;
     }
 
-    public static fromArray(array: Uint8Array) {
+    public static fromArray(array: Uint8Array, nonceLength: number) {
         // Unpack nonce
-        let nonce_length = nacl.box.nonceLength;
-        let nonce = array.slice(0, nonce_length);
+        let nonce = array.slice(0, nonceLength);
 
         // Unpack data
-        let data = array.slice(nonce_length);
+        let data = array.slice(nonceLength);
 
         // Return box
-        return new Box(nonce, data);
+        return new Box(nonce, data, nonceLength);
     }
 
     public toArray(): Uint8Array {
         // Return both the nonce and the encrypted data
         let box = new Uint8Array(this.length);
         box.set(this._nonce);
-        box.set(this._data, nacl.box.nonceLength);
+        box.set(this._data, this._nonceLength);
         return box;
     }
 
-}
-
-
-// A tweetnacl KeyPair
-interface IKeyPair {
-    publicKey: Uint8Array,
-    secretKey: Uint8Array
 }
 
 
@@ -72,13 +66,12 @@ export class KeyStore {
     // Public key of the recipient
     private _otherKey: Uint8Array = null;
     // The NaCl key pair
-    private keyPair: IKeyPair;
+    private _keyPair: nacl.KeyPair;
 
     constructor() {
         // Create new key pair
-        this.keyPair = nacl.box.keyPair();
-        console.debug('KeyStore: Private key:', u8aToHex(this.keyPair.secretKey));
-        console.debug('KeyStore: Public key:', u8aToHex(this.keyPair.publicKey));
+        this._keyPair = nacl.box.keyPair();
+        console.debug('KeyStore: Public key:', u8aToHex(this._keyPair.publicKey));
     }
 
     /**
@@ -97,29 +90,29 @@ export class KeyStore {
     /**
      * Return the public key as hex string.
      */
-    get publicKeyHex() { return u8aToHex(this.keyPair.publicKey); }
+    get publicKeyHex() { return u8aToHex(this._keyPair.publicKey); }
 
     /**
      * Return the public key as Uint8Array.
      */
-    get publicKeyBytes() { return this.keyPair.publicKey; }
+    get publicKeyBytes() { return this._keyPair.publicKey; }
 
     /**
      * Return the secret key as hex string.
      */
-    get secretKeyHex() { return u8aToHex(this.keyPair.secretKey); }
+    get secretKeyHex() { return u8aToHex(this._keyPair.secretKey); }
 
     /**
      * Return the secret key as Uint8Array.
      */
-    get secretKeyBytes() { return this.keyPair.secretKey; }
+    get secretKeyBytes() { return this._keyPair.secretKey; }
 
     /**
      * Encrypt data for the peer.
      */
     public encrypt(bytes: Uint8Array, nonce: Uint8Array): Box {
-        let encrypted = nacl.box(bytes, nonce, this.otherKey, this.keyPair.secretKey);
-        return new Box(nonce, encrypted);
+        let encrypted = nacl.box(bytes, nonce, this.otherKey, this._keyPair.secretKey);
+        return new Box(nonce, encrypted, nacl.box.nonceLength);
     }
 
     /**
@@ -127,11 +120,54 @@ export class KeyStore {
      */
     public decrypt(box: Box): Uint8Array {
         // Decrypt data
-        let data = nacl.box.open(box.data, box.nonce, this.otherKey, this.keyPair.secretKey);
-        if (data == false) {
+        let data = nacl.box.open(box.data, box.nonce, this.otherKey, this._keyPair.secretKey);
+        if (data === false) {
             // TODO: Handle error
-            throw 'Decryption failed'
+            throw 'decryption-failed'
         }
-        return data;
+        return data as Uint8Array;
     }
+}
+
+
+export class AuthToken {
+
+    private _authToken: Uint8Array = null;
+
+    constructor() {
+        this._authToken = nacl.randomBytes(32);
+        console.debug('AuthToken: Generated auth token');
+    }
+
+    /**
+     * Return the secret key as Uint8Array.
+     */
+    get keyBytes() { return this._authToken; }
+
+    /**
+     * Return the secret key as hex string.
+     */
+    get keyHex() { return u8aToHex(this._authToken); }
+
+    /**
+     * Encrypt data using the shared auth token.
+     */
+    public encrypt(bytes: Uint8Array): Box {
+        let nonce = nacl.randomBytes(nacl.secretbox.nonceLength);
+        let encrypted = nacl.secretbox(bytes, nonce, this._authToken);
+        return new Box(nonce, encrypted, nacl.secretbox.nonceLength);
+    }
+
+    /**
+     * Decrypt data using the shared auth token.
+     */
+    public decrypt(box: Box): Uint8Array {
+        let data = nacl.secretbox.open(box.data, box.nonce, this._authToken);
+        if (data === false) {
+            // TODO: handle error
+            throw 'decryption-failed'
+        }
+        return data as Uint8Array;
+    }
+
 }

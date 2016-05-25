@@ -1,6 +1,6 @@
 /// <reference path="jasmine.d.ts" />
 
-import { KeyStore, Box } from "../saltyrtc/keystore";
+import { Box, KeyStore, AuthToken } from "../saltyrtc/keystore";
 
 declare var nacl: any; // TODO
 
@@ -10,7 +10,7 @@ export default () => { describe('keystore', () => {
 
         let nonce = nacl.randomBytes(24);
         let data = nacl.randomBytes(7);
-        let box = new Box(nonce, data);
+        let box = new Box(nonce, data, 24);
 
         it('correctly calculates the length', () => {
             expect(box.length).toEqual(7 + 24);
@@ -25,13 +25,13 @@ export default () => { describe('keystore', () => {
         });
 
         it('can be created from a byte array', () => {
-            let nonceLength = nacl.secretbox.nonceLength;
+            let nonceLength = nacl.box.nonceLength;
             let nonce = nacl.randomBytes(nonceLength);
             let data = nacl.randomBytes(5);
             let array = new Uint8Array(nonceLength + 5)
             array.set(nonce);
             array.set(data, nonceLength);
-            let box = Box.fromArray(array);
+            let box = Box.fromArray(array, nonceLength);
             expect(box.nonce).toEqual(nonce);
             expect(box.data).toEqual(data);
             expect(box.length).toEqual(nonceLength + 5);
@@ -53,8 +53,8 @@ export default () => { describe('keystore', () => {
 
         it('generates a keypair', () => {
             // Internal test
-            expect((ks as any).keyPair.publicKey).toBeTruthy();
-            expect((ks as any).keyPair.secretKey).toBeTruthy();
+            expect((ks as any)._keyPair.publicKey).toBeTruthy();
+            expect((ks as any)._keyPair.secretKey).toBeTruthy();
         });
 
         it('can return the secret/public keys as bytes', () => {
@@ -96,6 +96,28 @@ export default () => { describe('keystore', () => {
         it('cannot encrypt without a proper nonce', () => {
             let encrypt = () => ks.encrypt(data, nacl.randomBytes(3));
             expect(encrypt).toThrow(new Error('bad nonce size'));
+        });
+
+    });
+
+    describe('AuthToken', () => {
+
+        let at = new AuthToken();
+
+        it('can return the secret key as bytes', () => {
+            expect(at.keyBytes).toBeTruthy();
+            expect(at.keyBytes instanceof Uint8Array).toEqual(true);
+        });
+
+        it('can return the secret key as hex string', () => {
+            expect(at.keyHex).toBeTruthy();
+            expect(typeof at.keyHex).toEqual('string');
+        });
+
+        it('can encrypt and decrypt properly (round trip)', () => {
+            let expected = nacl.randomBytes(7);
+            expect(at.encrypt(expected)).not.toEqual(expected);
+            expect(at.decrypt(at.encrypt(expected))).toEqual(expected);
         });
 
     });
