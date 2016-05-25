@@ -8,18 +8,9 @@
 /// <reference path='messages.d.ts' />
 
 /**
- * A SaltyRTC nonce.
- *
- * Nonce structure:
- *
- * |CCCCCCCCCCCCCCCC|OOOO|QQQQ|
- *
- * - C: Cookie (16 byte)
- * - O: Overflow number (4 bytes)
- * - Q: Sequence number (4 bytes)
+ * Base class for all nonces.
  */
-export class Nonce {
-
+abstract class Nonce {
     protected _cookie: Uint8Array;
     protected _overflow: number;
     protected _sequenceNumber: number;
@@ -37,6 +28,24 @@ export class Nonce {
     get overflow() { return this._overflow; }
     get sequenceNumber() { return this._sequenceNumber; }
     get combinedSequenceNumber() { return (this._overflow << 32) + this._sequenceNumber; }
+}
+
+/**
+ * A SaltyRTC data channel nonce.
+ *
+ * Nonce structure:
+ *
+ * |CCCCCCCCCCCCCCCC|OOOO|QQQQ|
+ *
+ * - C: Cookie (16 byte)
+ * - O: Overflow number (4 bytes)
+ * - Q: Sequence number (4 bytes)
+ */
+export class DataChannelNonce extends Nonce {
+
+    constructor(cookie: Uint8Array, overflow: number, sequenceNumber: number) {
+        super(cookie, overflow, sequenceNumber);
+    }
 
     /**
      * Create a nonce from an ArrayBuffer.
@@ -56,7 +65,7 @@ export class Nonce {
         let overflow = view.getUint32(16);
         let sequenceNumber = view.getUint32(20);
 
-        return new Nonce(cookie, overflow, sequenceNumber);
+        return new DataChannelNonce(cookie, overflow, sequenceNumber);
     }
 
     /**
@@ -79,7 +88,7 @@ export class Nonce {
 
 
 /**
- * A SaltyRTC signaling nonce.
+ * A SaltyRTC signaling channel nonce.
  *
  * This is very similar to the regular nonce, but also contains a sender and
  * receiver byte. That reduces the length of the overflow number to 2 bytes.
@@ -94,7 +103,7 @@ export class Nonce {
  * - O: Overflow number (4 bytes)
  * - Q: Sequence number (4 bytes)
  */
-export class SignalingNonce extends Nonce {
+export class SignalingChannelNonce extends Nonce {
 
     protected _source: saltyrtc.AddressType;
     protected _destination: saltyrtc.AddressType;
@@ -114,7 +123,7 @@ export class SignalingNonce extends Nonce {
      *
      * If packet is not exactly 24 bytes long, throw an exception.
      */
-    public static fromArrayBuffer(packet: ArrayBuffer): SignalingNonce {
+    public static fromArrayBuffer(packet: ArrayBuffer): SignalingChannelNonce {
         if (packet.byteLength != 24) {
             throw 'bad-packet-length';
         }
@@ -129,7 +138,7 @@ export class SignalingNonce extends Nonce {
         let overflow = view.getUint16(18);
         let sequenceNumber = view.getUint32(20);
 
-        return new SignalingNonce(cookie, overflow, sequenceNumber, source, destination);
+        return new SignalingChannelNonce(cookie, overflow, sequenceNumber, source, destination);
     }
 
     /**
