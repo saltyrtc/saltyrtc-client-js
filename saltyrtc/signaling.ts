@@ -8,14 +8,13 @@
 /// <reference path='messages.d.ts' />
 /// <reference path='types/RTCPeerConnection.d.ts' />
 /// <reference path='types/msgpack-lite.d.ts' />
+/// <reference path='types/tweetnacl.d.ts' />
 
 import { Session } from "./session";
-import { KeyStore, Box } from "./keystore";
+import { KeyStore, AuthToken, Box } from "./keystore";
 import { SaltyRTC } from "./client";
 import { SignalingChannelNonce as Nonce } from "./nonce";
 import { concat } from "./utils";
-
-var nacl: any; // TODO
 
 /**
  * Possible states for SaltyRTC connection.
@@ -37,6 +36,29 @@ interface SignalingMessage {
     type: 'hello-client' | 'reset' | 'offer' | 'candidate',
     session?: string,
     data?: any; // TODO: type
+}
+
+interface Packet {
+    message: saltyrtc.Message,
+    nonce: Nonce,
+}
+
+class Responder {
+    // Permanent key of the responder
+    public permanentKey: Uint8Array = null;
+
+    // Session key of the responder
+    public sessionKey: Uint8Array = null;
+
+    // Our own session keystore
+    public keyStore: KeyStore = new KeyStore();
+
+    // Cookies
+    public ourCookie: Uint8Array = null;
+    public theirCookie: Uint8Array = null;
+
+    // Handshake state
+    public state: 'new' | 'token-received' | 'key-received' = 'new';
 }
 
 /**
@@ -67,8 +89,13 @@ export class Signaling {
     // Main class
     private client: SaltyRTC;
 
-    // Keystore and session
-    private keyStore: KeyStore;
+    // Keys
+    private serverKey: Uint8Array = null;
+    private permanentKey: KeyStore;
+    private sessionKey: KeyStore = null;
+    private authToken: AuthToken = new AuthToken();
+
+    // Session
     private session: Session;
 
     // Signaling
@@ -78,11 +105,12 @@ export class Signaling {
     private overflow: number = 0;
     private sequenceNumber: number = 0;
     private address: number = Signaling.SALTYRTC_ADDR_INITIATOR;
-    private responders: number[] = [];
+    private responders: Map<number, Responder> = new Map<number, Responder>();
+    private responder: number = null;
 
-    constructor(client: SaltyRTC, host: string, port: number, keyStore: KeyStore, session: Session) {
+    constructor(client: SaltyRTC, host: string, port: number, permanentKey: KeyStore, session: Session) {
         this.client = client;
-        this.keyStore = keyStore;
+        this.permanentKey = permanentKey;
         this.session = session;
         this.host = host;
         this.port = port;
@@ -101,7 +129,7 @@ export class Signaling {
      */
     private initWebsocket() {
         let url = this.protocol + '://' + this.host + ':' + this.port + '/';
-        let path = this.keyStore.publicKeyHex;
+        let path = this.permanentKey.publicKeyHex;
         let ws = new WebSocket(url + path, Signaling.SALTYRTC_WS_SUBPROTOCOL);
 
         // Set binary type
@@ -158,7 +186,7 @@ export class Signaling {
             }
 
             // Store server public key and cookie
-            this.keyStore.otherKey = serverHello.key;
+            this.serverKey = serverHello.key;
             this.serverCookie = nonce.cookie;
         }
 
@@ -183,8 +211,26 @@ export class Signaling {
 
         { // Receive server-auth
 
-            let packet = await this.recvMessage(Signaling.SALTYRTC_ADDR_SERVER, 'server-auth');
-            let message = packet.message as saltyrtc.ServerAuth;
+            // Wait for message
+            let bytes: Uint8Array = await this.recvMessageData();
+
+            // Validate length
+            if (bytes.byteLength <= 24) {
+                console.error('Signaling: Received message with only', bytes.byteLength, 'bytes length');
+                throw 'bad-message-length';
+            }
+
+            // Decrypt message
+            let box = Box.fromArray(bytes, nacl.box.nonceLength);
+            let decrypted = this.permanentKey.decrypt(box, this.serverKey);
+
+            // Now that the nonce integrity is guaranteed by decrypting,
+            // create a `Nonce` instance and validate it
+            let nonce = Nonce.fromArrayBuffer(box.nonce.buffer)
+            this.validateNonce(nonce, Signaling.SALTYRTC_ADDR_SERVER);
+
+            // Decode message
+            let message = this.decodeMessage(decrypted, 'server-auth') as saltyrtc.ServerAuth;
 
             // Validate cookie
             if (message.your_cookie != this.cookie) {
@@ -194,7 +240,9 @@ export class Signaling {
             }
 
             // Store responders
-            this.responders = message.responders;
+            for (let id of message.responders) {
+                this.responders.set(id, new Responder());
+            }
         }
     }
 
@@ -202,6 +250,11 @@ export class Signaling {
      * Do the initiator p2p handshake.
      */
     private async initiatorHandshake(): Promise<void> {
+        if (responders) {
+            await responderToken
+        } else {
+            
+        }
     }
 
     /**
@@ -227,33 +280,13 @@ export class Signaling {
     }
 
     /**
-     * Wait for the next WebSocket message. When it arrives, retrieve the data,
-     * decrypt it, validate it and return the deserialized MsgPack object as
-     * well as the nonce.
+     * Validate destination and optionally source of nonce.
      *
-     * If the address type and message type don't match, or of nonce validation
-     * fails, the promise is rejected.
+     * Possible exceptions:
+     * - bad-nonce-source
+     * - bad-nonce-destination
      */
-    private async recvMessage(source: number,
-                              type?: saltyrtc.MessageType)
-                              : Promise<{message: saltyrtc.Message, nonce: Nonce}> {
-        // Wait for message
-        let bytes: Uint8Array = await this.recvMessageData();
-
-        // Validate length
-        if (bytes.byteLength <= 24) {
-            console.error('Signaling: Received message with only', bytes.byteLength, 'bytes length');
-            throw 'bad-message-length';
-        }
-
-        // Return decoded message
-        return this.decodePacket(bytes, source, type);
-    }
-
-    /**
-     * Validate length, source and destination of nonce.
-     */
-    private validateNonce(nonce: Nonce, source: number): void {
+    private validateNonce(nonce: Nonce, source?: number): void {
         // Validate destination
         if (nonce.destination != this.address) {
             console.error('Signaling: Nonce destination is', nonce.destination, 'but we\'re', this.address);
@@ -261,34 +294,32 @@ export class Signaling {
         }
 
         // Validate source
-        if (nonce.source != source) {
+        if (typeof source !== 'undefined' && nonce.source != source) {
             console.error('Signaling: Nonce source is', nonce.source, 'but should be', source);
             throw 'bad-nonce-source';
         }
 
-        // TODO: sequence & overflow
+        // TODO: sequence & overflow & cookie
     }
 
     /**
-     * Decrypt the packet, decode it and validate type and nonce.
+     * Decode the decrypted message and validate type.
      *
      * If the type is specified and does not match the message, throw an
      * exception.
+     *
+     * Possible exceptions:
+     * - bad-message
+     * - bad-message-type
      */
-    private decodePacket(data: Uint8Array,
-                         source: number,
-                         type?: saltyrtc.MessageType)
-                         : {message: saltyrtc.Message, nonce: Nonce} {
-        // Decrypt
-        let box = Box.fromArray(data);
-        let raw = this.keyStore.decrypt(box);
-
-        // Validate nonce
-        let nonce = Nonce.fromArrayBuffer(box.nonce.buffer)
-        this.validateNonce(nonce, source);
-
+    private decodeMessage(data: Uint8Array, type?: saltyrtc.MessageType): saltyrtc.Message {
         // Decode
-        let msg = msgpack.decode(raw) as saltyrtc.Message;
+        let msg = msgpack.decode(data) as saltyrtc.Message;
+
+        if (typeof msg.type === 'undefined') {
+            console.error('Signaling: Failed to decode msgpack data.');
+            throw 'bad-message';
+        }
 
         // Validate type
         if (typeof type !== 'undefined' && msg.type !== type) {
@@ -296,7 +327,7 @@ export class Signaling {
             throw 'bad-message-type';
         }
 
-        return {message: msg, nonce: nonce};
+        return msg;
     }
 
     /**
@@ -313,7 +344,12 @@ export class Signaling {
         let data = msgpack.encode(message);
 
         // Encrypt
-        let box = this.keyStore.encrypt(data, nonceBytes);
+        let box;
+        if (receiver === 0x00) {
+            box = this.permanentKey.encrypt(data, nonceBytes, this.serverKey);
+        } else {
+            throw 'not-yet-implemented';
+        }
 
         return box.toArray();
     }
@@ -368,11 +404,158 @@ export class Signaling {
     };
 
     /**
-     * Websocket onmessage handler.
+     * Websocket onmessage handler during responder handshake phase.
+     *
+     * This event handler is registered after the server handshake is done,
+     * and removed once the responder handshake is done.
+     */
+    private onResponderHandshakeMessage = (ev: MessageEvent) => {
+        console.debug('Signaling: Received message');
+
+        // Abort function
+        let abort = () => {
+            console.error('Resetting connection.');
+            this.ws.removeEventListener('message', this.onResponderHandshakeMessage);
+            this.resetConnection();
+            throw 'abort';
+        }
+
+        // Decrypt function
+        // The `otherKey` param may be undefined if the `keyStore` is an `AuthToken`
+        let decrypt = (box: Box, keyStore: KeyStore | AuthToken, otherKey?: Uint8Array) => {
+            try {
+                return keyStore.decrypt(box, otherKey);
+            } catch (err) {
+                if (err === 'decryption-failed') {
+                    console.error('Signaling: Decryption failed.');
+                    abort();
+                } else {
+                    throw err;
+                }
+            }
+        }
+
+        // Assert message type function
+        let assertType = (message: saltyrtc.Message, type: saltyrtc.MessageType) => {
+            if (message.type !== type) {
+                console.error('Signaling: Expected message type "', type, '" but got "', message.type, '".');
+                abort();
+            }
+        }
+
+        let buffer = ev.data;
+
+        // Peek at nonce.
+        // Important: At this point the nonce is not yet authenticated,
+        // so don't trust it yet!
+        let unsafeNonce = Nonce.fromArrayBuffer(buffer.slice(0, 24));
+        this.validateNonce(unsafeNonce);
+
+        // Dispatch messages according to source.
+        // Note that we can trust the source flag as soon as we have decrypted
+        // (and thus authenticated) the message.
+        if (unsafeNonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
+            // Decrypt message
+            let box = Box.fromArray(buffer, nacl.box.nonceLength);
+            let decrypted = this.permanentKey.decrypt(box, this.serverKey);
+
+            // Decode message
+            let message = this.decodeMessage(decrypted);
+
+            if (message.type === 'new-responder') {
+                // A new responder wants to connect. Store id.
+                let responderId = (message as saltyrtc.NewResponder).id;
+                if (!this.responders.has(responderId)) {
+                    this.responders.set(responderId, new Responder());
+                } else {
+                    console.warn('Signaling: Got new-responder message for an already known responder.');
+                }
+            } else {
+                console.warn('Signaling: Ignored server message of type "', message.type, '".');
+            }
+        } else if (unsafeNonce.source > Signaling.SALTYRTC_ADDR_INITIATOR && unsafeNonce.source <= 0xFF) {
+            // In order to know what key to use for decryption, we need to check the state of the responder.
+            let responder = this.responders.get(unsafeNonce.source);
+            if (typeof responder === 'undefined') {
+                console.error('Signaling: Received message from unknown responder (', unsafeNonce.source, ')');
+                return;
+            }
+
+            if (responder.state === 'new') {
+                // If the state is 'new', then we expect a 'token' message,
+                // encrypted with the authentication token.
+                let box = Box.fromArray(buffer, nacl.secretbox.nonceLength);
+                let decrypted = decrypt(box, this.authToken);
+                let message = this.decodeMessage(decrypted) as saltyrtc.Token;
+                assertType(message, 'token');
+
+                // Store responder permanent key
+                responder.permanentKey = message.key;
+                responder.state = 'token-received';
+            } else if (responder.state === 'token-received') {
+                // If the state is 'token-received', we expect a 'key' message,
+                // encrypted with our permanent key.
+                let box = Box.fromArray(buffer, nacl.box.nonceLength);
+                let decrypted = decrypt(box, this.permanentKey, responder.permanentKey);
+                let message = this.decodeMessage(decrypted) as saltyrtc.Key;
+                assertType(message, 'key');
+
+                // Store responder session key and cookie
+                let nonce = unsafeNonce;
+                responder.sessionKey = message.key;
+                responder.theirCookie = nonce.cookie;;
+                responder.state = 'key-received';
+            } else if (responder.state === 'key-received') {
+                // If the state is 'key-received', we expect a 'auth' message,
+                // encrypted with our session key.
+                let box = Box.fromArray(buffer, nacl.box.nonceLength);
+                let decrypted = decrypt(box, responder.keyStore, responder.sessionKey);
+                let message = this.decodeMessage(decrypted) as saltyrtc.Auth;
+                assertType(message, 'auth');
+
+                // Verify the cookie
+                let nonce = unsafeNonce;
+                if (nonce.cookie !== responder.ourCookie) {
+                    console.error('Signaling: Invalid cookie in auth message.');
+                    abort();
+                }
+
+                // Store responder id and session key
+                console.debug('Signaling: Responder ', nonce.source, ' authenticated.');
+                this.responder = nonce.source;
+                this.sessionKey = responder.keyStore;
+
+                // Drop all other responders
+                console.debug('Signaling: Dropping ', this.responders.size - 1, ' other responders.');
+                for (let id of this.responders.keys()) {
+                    if (id != this.responder) {
+                        let message: saltyrtc.DropResponder = {
+                            type: 'drop-responder',
+                            id: id,
+                        };
+                        let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
+                        this.ws.send(packet);
+                    }
+                    this.responders.delete(id);
+                }
+
+                // Deregister handshake
+                console.info('Signaling: Responder handshake done.');
+                this.ws.removeEventListener('message', this.onResponderHandshakeMessage);
+                this.ws.addEventListener('message', this.onMessage);
+            }
+        } else {
+            console.error('Signaling: Invalid source byte in nonce:', unsafeNonce.source);
+            abort();
+        }
+    };
+
+    /**
+     * A message was received.
      */
     private onMessage = (ev: MessageEvent) => {
-        console.debug('Signaling: Received message');
-    };
+        console.info('Message received!');
+    }
 
     /**
      * Return state based on websocket `readyState` attribute.

@@ -105,11 +105,11 @@ export class DataChannelNonce extends Nonce {
  */
 export class SignalingChannelNonce extends Nonce {
 
-    protected _source: saltyrtc.AddressType;
-    protected _destination: saltyrtc.AddressType;
+    protected _source: number;
+    protected _destination: number;
 
     constructor(cookie: Uint8Array, overflow: number, sequenceNumber: number,
-                source: saltyrtc.AddressType, destination: saltyrtc.AddressType) {
+                source: number, destination: number) {
         super(cookie, overflow, sequenceNumber);
         this._source = source;
         this._destination = destination;
