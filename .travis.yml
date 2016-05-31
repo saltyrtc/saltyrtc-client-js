@@ -4,7 +4,7 @@ language: node_js
 node_js:
   - "4"
 addons:
-  firefox: "44.0"
+  firefox: "45.0"
 before_script:
   - export CHROME_BIN=/usr/bin/google-chrome
   - export DISPLAY=:99.0

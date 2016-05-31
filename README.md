@@ -8,7 +8,7 @@ for ECMAScript 2015 written in TypeScript 1.8+.
 The development is still ongoing, you can find the current version in the
 `develop` branch.
 
-Currently at least Firefox 44 and Chromium 49 are required.
+Currently at least Firefox 45 and Chromium 49 are required.
 
 [API Docs](https://saltyrtc.github.io/saltyrtc-client-js/)
 
