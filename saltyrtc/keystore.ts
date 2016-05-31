@@ -63,8 +63,6 @@ export class Box {
  * decryption.
  */
 export class KeyStore {
-    // Public key of the recipient
-    private _otherKey: Uint8Array = null;
     // The NaCl key pair
     private _keyPair: nacl.KeyPair;
 
@@ -72,19 +70,6 @@ export class KeyStore {
         // Create new key pair
         this._keyPair = nacl.box.keyPair();
         console.debug('KeyStore: Public key:', u8aToHex(this._keyPair.publicKey));
-    }
-
-    /**
-     * Whether or not the keystore has stored the public key of the recipient.
-     */
-    public hasOtherKey() {
-        return this.otherKey != null;
-    }
-
-    public get otherKey(): Uint8Array { return this._otherKey; }
-    public set otherKey(key: Uint8Array) {
-        console.debug('KeyStore: Updating other key');
-        this._otherKey = key;
     }
 
     /**
@@ -110,17 +95,17 @@ export class KeyStore {
     /**
      * Encrypt data for the peer.
      */
-    public encrypt(bytes: Uint8Array, nonce: Uint8Array): Box {
-        let encrypted = nacl.box(bytes, nonce, this.otherKey, this._keyPair.secretKey);
+    public encrypt(bytes: Uint8Array, nonce: Uint8Array, otherKey: Uint8Array): Box {
+        let encrypted = nacl.box(bytes, nonce, otherKey, this._keyPair.secretKey);
         return new Box(nonce, encrypted, nacl.box.nonceLength);
     }
 
     /**
      * Decrypt data from the peer.
      */
-    public decrypt(box: Box): Uint8Array {
+    public decrypt(box: Box, otherKey: Uint8Array): Uint8Array {
         // Decrypt data
-        let data = nacl.box.open(box.data, box.nonce, this.otherKey, this._keyPair.secretKey);
+        let data = nacl.box.open(box.data, box.nonce, otherKey, this._keyPair.secretKey);
         if (data === false) {
             // TODO: Handle error
             throw 'decryption-failed'

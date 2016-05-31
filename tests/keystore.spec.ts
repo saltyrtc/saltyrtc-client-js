@@ -71,30 +71,24 @@ export default () => { describe('keystore', () => {
             expect(typeof ks.secretKeyHex).toEqual('string');
         });
 
-        it('detects whether an otherKey was set', () => {
-            ks.otherKey = nacl.randomBytes(16);
-            expect(ks.hasOtherKey()).toEqual(true);
-            ks.otherKey = null;
-            expect(ks.hasOtherKey()).toEqual(false);
-        });
-
-        it('can set and retrieve an otherKey', () => {
-            ks.otherKey = null;
-            expect(ks.otherKey).toBeNull();
-            let other = nacl.randomBytes(16);
-            ks.otherKey = other;
-            expect(ks.otherKey).toEqual(other);
-        });
-
         it('can encrypt and decrypt properly (round trip)', () => {
             let ks2 = new KeyStore();
-            ks.otherKey = ks2.publicKeyBytes;
             let expected = nacl.randomBytes(24);
-            expect(ks.decrypt(ks.encrypt(expected, nonce))).toEqual(expected);
+            let encrypted = ks.encrypt(expected, nonce, ks2.publicKeyBytes);
+            expect(ks.decrypt(encrypted, ks2.publicKeyBytes)).toEqual(expected);
+        });
+
+        it('can only encrypt and decrypt if pubkey matches', () => {
+            let ks2 = new KeyStore();
+            let ks3 = new KeyStore();
+            let expected = nacl.randomBytes(24);
+            let encrypted = ks.encrypt(expected, nonce, ks2.publicKeyBytes);
+            let decrypt = () => ks.decrypt(encrypted, ks3.publicKeyBytes);
+            expect(decrypt).toThrow('decryption-failed');
         });
 
         it('cannot encrypt without a proper nonce', () => {
-            let encrypt = () => ks.encrypt(data, nacl.randomBytes(3));
+            let encrypt = () => ks.encrypt(data, nacl.randomBytes(3), nacl.randomBytes(32));
             expect(encrypt).toThrow(new Error('bad nonce size'));
         });
 
