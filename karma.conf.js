@@ -3,6 +3,8 @@ module.exports = function(config) {
   var configuration = {
     frameworks: ['jasmine'],
     files: [
+      'vendor/nacl-fast.min.js',
+      'vendor/msgpack.min.js',
       'dist/tests.js'
     ],
     customLaunchers: {
