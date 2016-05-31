@@ -68,7 +68,7 @@ export default () => { describe('signaling', () => {
                 expect((this.sig as any).ws.eventListeners['open']).toEqual([this.sig.onOpen]);
                 expect((this.sig as any).ws.eventListeners['error']).toEqual([this.sig.onError]);
                 expect((this.sig as any).ws.eventListeners['close']).toEqual([this.sig.onClose]);
-                expect((this.sig as any).ws.eventListeners['message']).toEqual([this.sig.handshake]);
+                expect((this.sig as any).ws.eventListeners['message']).toEqual([this.sig.onInitServerHandshake]);
             });
 
             it('sets the correct state', () => {

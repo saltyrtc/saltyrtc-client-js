@@ -142,7 +142,7 @@ export class Signaling {
 
         // We assign the handshake method to the message event listener directly
         // to make sure that we don't miss any message.
-        ws.addEventListener('message', this.handshake);
+        ws.addEventListener('message', this.onInitServerHandshake);
 
         // Store connection on instance
         this.state = State.Connecting;
@@ -156,10 +156,10 @@ export class Signaling {
      * This method is not invoked directly, but instead used as callback for
      * the `onMessage` event.
      */
-    private async handshake(ev: MessageEvent) {
-        this.ws.removeEventListener('message', this.handshake);
+    private async onInitServerHandshake(ev: MessageEvent) {
+        this.ws.removeEventListener('message', this.onInitServerHandshake);
         await this.serverHandshake(ev.data);
-        await this.initiatorHandshake();
+        this.ws.addEventListener('message', this.onResponderHandshakeMessage);
     }
 
     /**
@@ -243,17 +243,6 @@ export class Signaling {
             for (let id of message.responders) {
                 this.responders.set(id, new Responder());
             }
-        }
-    }
-
-    /**
-     * Do the initiator p2p handshake.
-     */
-    private async initiatorHandshake(): Promise<void> {
-        if (responders) {
-            await responderToken
-        } else {
-            
         }
     }
 
