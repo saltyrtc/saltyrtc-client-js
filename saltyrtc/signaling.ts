@@ -10,7 +10,6 @@
 /// <reference path='types/msgpack-lite.d.ts' />
 /// <reference path='types/tweetnacl.d.ts' />
 
-import { Session } from "./session";
 import { KeyStore, AuthToken, Box } from "./keystore";
 import { Cookie } from "./cookie";
 import { SaltyRTC } from "./client";
@@ -31,6 +30,21 @@ export const enum State {
     Closed,
     // Status is unknown
     Unknown = 99
+}
+
+const enum CloseCode {
+    // No free responder byte
+    PathFull = 3000,
+    // Invalid message, invalid path length, ...
+    ProtocolError,
+    // Syntax error, ...
+    InternalError,
+    // Handover to Data Channel
+    Handover,
+    // Dropped by initiator (for an initiator that means another initiator has
+    // connected to the path, for a responder it means that an initiator
+    // requested to drop the responder)
+    Dropped,
 }
 
 interface SignalingMessage {
@@ -97,25 +111,58 @@ export class Signaling {
     private sessionKey: KeyStore = null;
     private authToken: AuthToken = new AuthToken();
 
-    // Session
-    private session: Session;
-
     // Signaling
+    private role: 'initiator' | 'responder' = null;
+    private logTag: string = 'Signaling:';
     private cookie: Cookie = null;
     private serverCookie: Cookie = null;
     private PeerCookie: Uint8Array = null;
     private overflow: number = 0;
     private sequenceNumber: number = 0;
     private address: number = Signaling.SALTYRTC_ADDR_UNKNOWN;
-    private responders: Map<number, Responder> = new Map<number, Responder>();
+    private initiatorConnected: boolean = null;
+    private responders: Map<number, Responder> = null;
     private responder: number = null;
 
-    constructor(client: SaltyRTC, host: string, port: number, permanentKey: KeyStore, session: Session) {
+    /**
+     * Create a new signaling instance.
+     *
+     * If the authToken and path are specified, then the class will act as a
+     * responder, otherwise as an initiator.
+     */
+    constructor(client: SaltyRTC, host: string, port: number,
+                permanentKey: KeyStore,
+                path?: string,
+                authToken?: AuthToken) {
         this.client = client;
         this.permanentKey = permanentKey;
-        this.session = session;
         this.host = host;
         this.port = port;
+        if (typeof authToken !== 'undefined' && typeof path !== 'undefined') {
+            // We're a responder
+            this.role = 'responder';
+            this.logTag = 'Responder:';
+            this.path = path;
+            this.authToken = authToken;
+        } else {
+            // We're an initiator
+            this.role = 'initiator';
+            this.logTag = 'Initiator:';
+        }
+    }
+
+    /**
+     * Return the public permanent key as hex string.
+     */
+    public get publicKeyHex(): string {
+        return this.permanentKey.publicKeyHex;
+    }
+
+    /**
+     * Return the auth token as Uint8Array.
+     */
+    public get authTokenBytes(): Uint8Array {
+        return this.authToken.keyBytes;
     }
 
     /**
@@ -131,7 +178,7 @@ export class Signaling {
      */
     private initWebsocket() {
         let url = this.protocol + '://' + this.host + ':' + this.port + '/';
-        let path = this.permanentKey.publicKeyHex;
+        let path = this.path || this.permanentKey.publicKeyHex;
         this.ws = new WebSocket(url + path, Signaling.SALTYRTC_WS_SUBPROTOCOL);
 
         // Set binary type
@@ -148,7 +195,7 @@ export class Signaling {
 
         // Store connection on instance
         this.state = State.Connecting;
-        console.debug('Signaling: Opening WebSocket connection to', url + path);
+        console.debug(this.logTag, 'Opening WebSocket connection to', url + path);
     }
 
     /**
@@ -158,10 +205,10 @@ export class Signaling {
      * the `onMessage` event.
      */
     private onInitServerHandshake = async (ev: MessageEvent) => {
-        console.debug('Signaling: Start server handshake');
+        console.debug(this.logTag, 'Start server handshake');
         this.ws.removeEventListener('message', this.onInitServerHandshake);
         await this.serverHandshake(ev.data);
-        this.ws.addEventListener('message', this.onResponderHandshakeMessage);
+        this.ws.addEventListener('message', this.onPeerHandshakeMessage);
     }
 
     /**
@@ -179,11 +226,11 @@ export class Signaling {
             let serverHello = msgpack.decode(payload) as saltyrtc.ServerHello;
 
             // Validate nonce
-            this.validateNonce(nonce, 0x00);
+            this.validateNonce(nonce, this.address, 0x00);
 
             // Validate data
             if (serverHello.type !== 'server-hello') {
-                console.error('Signaling: Invalid server-hello message, bad type field:', serverHello);
+                console.error(this.logTag, 'Invalid server-hello message, bad type field:', serverHello);
                 throw 'bad-message-type';
             }
 
@@ -201,6 +248,18 @@ export class Signaling {
             this.cookie = cookie;
         }
 
+        // In the case of the responder, send client-hello
+        if (this.role == 'responder') {
+
+            let message: saltyrtc.ClientHello = {
+                type: 'client-hello',
+                key: this.permanentKey.publicKeyArray,
+            };
+            let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER, false);
+            console.debug(this.logTag, 'Sending client-hello');
+            this.ws.send(packet);
+        }
+
         { // Send client-auth
 
             let message: saltyrtc.ClientAuth = {
@@ -208,6 +267,7 @@ export class Signaling {
                 your_cookie: this.serverCookie.asArray(),
             };
             let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
+            console.debug(this.logTag, 'Sending client-auth');
             this.ws.send(packet);
 
             // Set previously unknown address to 0x01 (initiator)
@@ -221,7 +281,7 @@ export class Signaling {
 
             // Validate length
             if (bytes.byteLength <= 24) {
-                console.error('Signaling: Received message with only', bytes.byteLength, 'bytes length');
+                console.error(this.logTag, 'Received message with only', bytes.byteLength, 'bytes length');
                 throw 'bad-message-length';
             }
 
@@ -230,23 +290,42 @@ export class Signaling {
             let decrypted = this.permanentKey.decrypt(box, this.serverKey);
 
             // Now that the nonce integrity is guaranteed by decrypting,
-            // create a `Nonce` instance and validate it
-            let nonce = Nonce.fromArrayBuffer(box.nonce.buffer)
-            this.validateNonce(nonce, Signaling.SALTYRTC_ADDR_SERVER);
+            // create a `Nonce` instance.
+            let nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
+
+            // Validate nonce and set proper address.
+            if (this.role == 'initiator') {
+                this.address = Signaling.SALTYRTC_ADDR_INITIATOR;
+                this.validateNonce(nonce, this.address, Signaling.SALTYRTC_ADDR_SERVER);
+            } else {
+                this.validateNonce(nonce, undefined, Signaling.SALTYRTC_ADDR_SERVER);
+                if (nonce.source > 0xff || nonce.source < 0x02) {
+                    console.error(this.logTag, 'Invalid nonce source:', nonce.source);
+                    throw 'bad-nonce-source';
+                }
+                this.address = nonce.source;
+            }
 
             // Decode message
             let message = this.decodeMessage(decrypted, 'server-auth') as saltyrtc.ServerAuth;
 
             // Validate cookie
             if (!Cookie.from(message.your_cookie).equals(this.cookie)) {
-                console.error('Signaling: Bad cookie in server-auth message');
-                console.debug('Their response:', message.your_cookie, ', my cookie:', this.cookie);
+                console.error(this.logTag, 'Bad cookie in server-auth message');
+                console.debug(this.logTag, 'Their response:', message.your_cookie, ', our cookie:', this.cookie);
                 throw 'bad-cookie';
             }
 
             // Store responders
-            for (let id of message.responders) {
-                this.responders.set(id, new Responder());
+            if (this.role == 'initiator') {
+                this.responders = new Map<number, Responder>();
+                for (let id of message.responders) {
+                    this.responders.set(id, new Responder());
+                }
+                console.debug(this.logTag, this.responders.size, 'responders connected');
+            } else {
+                this.initiatorConnected = message.initiator_connected;
+                console.debug(this.logTag, 'Initiator', this.initiatorConnected ? '' : 'not', 'connected');
             }
         }
     }
@@ -280,16 +359,16 @@ export class Signaling {
      * - bad-nonce-source
      * - bad-nonce-destination
      */
-    private validateNonce(nonce: Nonce, source?: number): void {
+    private validateNonce(nonce: Nonce, destination?: number, source?: number): void {
         // Validate destination
-        if (nonce.destination !== this.address) {
-            console.error('Signaling: Nonce destination is', nonce.destination, 'but we\'re', this.address);
+        if (typeof destination !== 'undefined' && nonce.destination !== destination) {
+            console.error(this.logTag, 'Nonce destination is', nonce.destination, 'but we\'re', this.address);
             throw 'bad-nonce-destination';
         }
 
         // Validate source
         if (typeof source !== 'undefined' && nonce.source !== source) {
-            console.error('Signaling: Nonce source is', nonce.source, 'but should be', source);
+            console.error(this.logTag, 'Nonce source is', nonce.source, 'but should be', source);
             throw 'bad-nonce-source';
         }
 
@@ -311,13 +390,13 @@ export class Signaling {
         let msg = msgpack.decode(data) as saltyrtc.Message;
 
         if (typeof msg.type === 'undefined') {
-            console.error('Signaling: Failed to decode msgpack data.');
+            console.error(this.logTag, 'Failed to decode msgpack data.');
             throw 'bad-message';
         }
 
         // Validate type
         if (typeof type !== 'undefined' && msg.type !== type) {
-            console.error('Signaling: Invalid', type, 'message, bad type field:', msg);
+            console.error(this.logTag, 'Invalid', type, 'message, bad type field:', msg);
             throw 'bad-message-type';
         }
 
@@ -328,24 +407,28 @@ export class Signaling {
      * Build and return a packet containing the specified message for the
      * specified receiver.
      */
-    private buildPacket(message: saltyrtc.Message, receiver: number): Uint8Array {
+    private buildPacket(message: saltyrtc.Message, receiver: number, encrypt=true): Uint8Array {
         // Create nonce
         let nonce = new Nonce(this.cookie, this.overflow, this.sequenceNumber,
                               this.address, receiver);
         let nonceBytes = new Uint8Array(nonce.toArrayBuffer());
 
         // Encode message
-        let data = msgpack.encode(message);
+        let data: Uint8Array = msgpack.encode(message);
 
-        // Encrypt
-        let box;
-        if (receiver === 0x00) {
-            box = this.permanentKey.encrypt(data, nonceBytes, this.serverKey);
+        // Encrypt if desired
+        if (encrypt !== false) {
+            let box;
+            if (receiver === 0x00) {
+                box = this.permanentKey.encrypt(data, nonceBytes, this.serverKey);
+            } else {
+                throw 'not-yet-implemented';
+            }
+
+            return box.toArray();
         } else {
-            throw 'not-yet-implemented';
+            return concat(nonceBytes, data);
         }
-
-        return box.toArray();
     }
 
     /**
@@ -364,7 +447,7 @@ export class Signaling {
 
         // Close WebSocket instance
         if (this.ws !== null && oldState === State.Open) {
-            console.debug('Signaling: Disconnecting WebSocket');
+            console.debug(this.logTag, 'Disconnecting WebSocket');
             this.ws.close();
         }
         this.ws = null;
@@ -374,7 +457,7 @@ export class Signaling {
      * WebSocket onopen handler.
      */
     private onOpen = (ev: Event) => {
-        console.info('Signaling: Opened connection');
+        console.info(this.logTag, 'Opened connection');
         this.state = State.Open;
         this.client.onConnected(ev);
     };
@@ -383,7 +466,7 @@ export class Signaling {
      * WebSocket onerror handler.
      */
     private onError = (ev: ErrorEvent) => {
-        console.error('Signaling: General WebSocket error', ev);
+        console.error(this.logTag, 'General WebSocket error', ev);
         this.state = this.getStateFromSocket();
         this.client.onConnectionError(ev);
     };
@@ -392,24 +475,41 @@ export class Signaling {
      * WebSocket onclose handler.
      */
     private onClose = (ev: CloseEvent) => {
-        console.info('Signaling: Closed connection');
+        console.info(this.logTag, 'Closed connection');
         this.state = State.Closed;
+        switch (ev.code) {
+            case CloseCode.PathFull:
+                console.error(this.logTag, 'Path full (no free responder byte)');
+                break;
+            case CloseCode.ProtocolError:
+                console.error(this.logTag, 'Protocol error');
+                break;
+            case CloseCode.InternalError:
+                console.error(this.logTag, 'Internal server error');
+                break;
+            case CloseCode.Handover:
+                console.info(this.logTag, 'Handover to data channel');
+                break;
+            case CloseCode.Dropped:
+                console.warn(this.logTag, 'Dropped by initiator');
+                break;
+        }
         this.client.onConnectionClosed(ev);
     };
 
     /**
-     * Websocket onmessage handler during responder handshake phase.
+     * Websocket onmessage handler during peer handshake phase.
      *
      * This event handler is registered after the server handshake is done,
-     * and removed once the responder handshake is done.
+     * and removed once the peer handshake is done.
      */
-    private onResponderHandshakeMessage = (ev: MessageEvent) => {
-        console.debug('Signaling: Received message');
+    private onPeerHandshakeMessage = (ev: MessageEvent) => {
+        console.debug(this.logTag, 'Received message');
 
         // Abort function
         let abort = () => {
-            console.error('Resetting connection.');
-            this.ws.removeEventListener('message', this.onResponderHandshakeMessage);
+            console.error(this.logTag, 'Resetting connection.');
+            this.ws.removeEventListener('message', this.onPeerHandshakeMessage);
             this.resetConnection();
             throw 'abort';
         }
@@ -421,7 +521,7 @@ export class Signaling {
                 return keyStore.decrypt(box, otherKey);
             } catch (err) {
                 if (err === 'decryption-failed') {
-                    console.error('Signaling: Decryption failed.');
+                    console.error(this.logTag, 'Decryption failed.');
                     abort();
                 } else {
                     throw err;
@@ -432,7 +532,7 @@ export class Signaling {
         // Assert message type function
         let assertType = (message: saltyrtc.Message, type: saltyrtc.MessageType) => {
             if (message.type !== type) {
-                console.error('Signaling: Expected message type "', type, '" but got "', message.type, '".');
+                console.error(this.logTag, 'Expected message type "', type, '" but got "', message.type, '".');
                 abort();
             }
         }
@@ -443,7 +543,7 @@ export class Signaling {
         // Important: At this point the nonce is not yet authenticated,
         // so don't trust it yet!
         let unsafeNonce = Nonce.fromArrayBuffer(buffer.slice(0, 24));
-        this.validateNonce(unsafeNonce);
+        this.validateNonce(unsafeNonce, this.address);
 
         // Dispatch messages according to source.
         // Note that we can trust the source flag as soon as we have decrypted
@@ -462,16 +562,16 @@ export class Signaling {
                 if (!this.responders.has(responderId)) {
                     this.responders.set(responderId, new Responder());
                 } else {
-                    console.warn('Signaling: Got new-responder message for an already known responder.');
+                    console.warn(this.logTag, 'Got new-responder message for an already known responder.');
                 }
             } else {
-                console.warn('Signaling: Ignored server message of type "', message.type, '".');
+                console.warn(this.logTag, 'Ignored server message of type "', message.type, '".');
             }
         } else if (unsafeNonce.source > Signaling.SALTYRTC_ADDR_INITIATOR && unsafeNonce.source <= 0xFF) {
             // In order to know what key to use for decryption, we need to check the state of the responder.
             let responder = this.responders.get(unsafeNonce.source);
             if (typeof responder === 'undefined') {
-                console.error('Signaling: Received message from unknown responder (', unsafeNonce.source, ')');
+                console.error(this.logTag, 'Received message from unknown responder (', unsafeNonce.source, ')');
                 return;
             }
 
@@ -510,17 +610,17 @@ export class Signaling {
                 // Verify the cookie
                 let nonce = unsafeNonce;
                 if (nonce.cookie !== responder.ourCookie) {
-                    console.error('Signaling: Invalid cookie in auth message.');
+                    console.error(this.logTag, 'Invalid cookie in auth message.');
                     abort();
                 }
 
                 // Store responder id and session key
-                console.debug('Signaling: Responder ', nonce.source, ' authenticated.');
+                console.debug(this.logTag, 'Responder ', nonce.source, ' authenticated.');
                 this.responder = nonce.source;
                 this.sessionKey = responder.keyStore;
 
                 // Drop all other responders
-                console.debug('Signaling: Dropping ', this.responders.size - 1, ' other responders.');
+                console.debug(this.logTag, 'Dropping ', this.responders.size - 1, ' other responders.');
                 for (let id of this.responders.keys()) {
                     if (id !== this.responder) {
                         let message: saltyrtc.DropResponder = {
@@ -528,18 +628,19 @@ export class Signaling {
                             id: id,
                         };
                         let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
+                        console.debug(this.logTag, 'Sending drop-responder', id);
                         this.ws.send(packet);
                     }
                     this.responders.delete(id);
                 }
 
                 // Deregister handshake
-                console.info('Signaling: Responder handshake done.');
-                this.ws.removeEventListener('message', this.onResponderHandshakeMessage);
+                console.info(this.logTag, 'Responder handshake done.');
+                this.ws.removeEventListener('message', this.onPeerHandshakeMessage);
                 this.ws.addEventListener('message', this.onMessage);
             }
         } else {
-            console.error('Signaling: Invalid source byte in nonce:', unsafeNonce.source);
+            console.error(this.logTag, 'Invalid source byte in nonce:', unsafeNonce.source);
             abort();
         }
     };
@@ -548,7 +649,7 @@ export class Signaling {
      * A message was received.
      */
     private onMessage = (ev: MessageEvent) => {
-        console.info('Message received!');
+        console.info(this.logTag, 'Message received!');
     }
 
     /**

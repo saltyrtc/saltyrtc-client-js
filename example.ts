@@ -7,7 +7,7 @@
 import { SaltyRTC, KeyStore } from "saltyrtc/main";
 
 let ks = new KeyStore();
-let sc = new SaltyRTC(ks, null, "127.0.0.1:8765");
+let sc = new SaltyRTC(ks, null, "127.0.0.1:8765").asInitiator();
 
 async function initiatorFlow(pc: RTCPeerConnection, sc: SaltyRTC) {
     let offer = await pc.createOffer()
