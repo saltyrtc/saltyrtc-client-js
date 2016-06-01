@@ -7,4 +7,5 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 export { SaltyRTC } from "./client";
+export { State } from "./signaling";
 export { KeyStore, Box } from "./keystore";

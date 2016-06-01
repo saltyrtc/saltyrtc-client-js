@@ -7,7 +7,7 @@
 
 import { KeyStore, Box } from "./keystore";
 import { Session } from "./session";
-import { Signaling } from "./signaling";
+import { Signaling, State } from "./signaling";
 import { u8aToHex, hexToU8a } from "./utils";
 
 interface ClientHandler {
@@ -38,6 +38,13 @@ export class SaltyRTC {
 
         // Initialize signaling class
         this.signaling = new Signaling(this, host, port, permanentKey, session);
+    }
+
+    /**
+     * Return the signaling state.
+     */
+    public get state(): State {
+        return this.signaling.state;
     }
 
     /**

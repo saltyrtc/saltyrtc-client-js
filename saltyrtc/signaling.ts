@@ -84,7 +84,7 @@ export class Signaling {
     private ws: WebSocket = null;
 
     // Connection state
-    private state: State = State.Unknown;
+    public state: State = State.Unknown;
 
     // Main class
     private client: SaltyRTC;
