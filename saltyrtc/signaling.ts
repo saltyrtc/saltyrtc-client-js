@@ -12,6 +12,7 @@
 
 import { Session } from "./session";
 import { KeyStore, AuthToken, Box } from "./keystore";
+import { Cookie } from "./cookie";
 import { SaltyRTC } from "./client";
 import { SignalingChannelNonce as Nonce } from "./nonce";
 import { concat } from "./utils";
@@ -54,8 +55,8 @@ class Responder {
     public keyStore: KeyStore = new KeyStore();
 
     // Cookies
-    public ourCookie: Uint8Array = null;
-    public theirCookie: Uint8Array = null;
+    public ourCookie: Cookie = null;
+    public theirCookie: Cookie = null;
 
     // Handshake state
     public state: 'new' | 'token-received' | 'key-received' = 'new';
@@ -71,6 +72,7 @@ export class Signaling {
     static CONNECT_MAX_RETRIES = 10;
     static CONNECT_RETRY_INTERVAL = 10000;
     static SALTYRTC_WS_SUBPROTOCOL = 'saltyrtc-1.0';
+    static SALTYRTC_ADDR_UNKNOWN = 0x00;
     static SALTYRTC_ADDR_SERVER = 0x00;
     static SALTYRTC_ADDR_INITIATOR = 0x01;
 
@@ -99,12 +101,12 @@ export class Signaling {
     private session: Session;
 
     // Signaling
-    private cookie: Uint8Array = null;
-    private serverCookie: Uint8Array = null;
+    private cookie: Cookie = null;
+    private serverCookie: Cookie = null;
     private PeerCookie: Uint8Array = null;
     private overflow: number = 0;
     private sequenceNumber: number = 0;
-    private address: number = Signaling.SALTYRTC_ADDR_INITIATOR;
+    private address: number = Signaling.SALTYRTC_ADDR_UNKNOWN;
     private responders: Map<number, Responder> = new Map<number, Responder>();
     private responder: number = null;
 
@@ -130,24 +132,23 @@ export class Signaling {
     private initWebsocket() {
         let url = this.protocol + '://' + this.host + ':' + this.port + '/';
         let path = this.permanentKey.publicKeyHex;
-        let ws = new WebSocket(url + path, Signaling.SALTYRTC_WS_SUBPROTOCOL);
+        this.ws = new WebSocket(url + path, Signaling.SALTYRTC_WS_SUBPROTOCOL);
 
         // Set binary type
-        ws.binaryType = 'arraybuffer';
+        this.ws.binaryType = 'arraybuffer';
 
         // Set event handlers
-        ws.addEventListener('open', this.onOpen);
-        ws.addEventListener('error', this.onError);
-        ws.addEventListener('close', this.onClose);
+        this.ws.addEventListener('open', this.onOpen);
+        this.ws.addEventListener('error', this.onError);
+        this.ws.addEventListener('close', this.onClose);
 
         // We assign the handshake method to the message event listener directly
         // to make sure that we don't miss any message.
-        ws.addEventListener('message', this.onInitServerHandshake);
+        this.ws.addEventListener('message', this.onInitServerHandshake);
 
         // Store connection on instance
         this.state = State.Connecting;
-        console.debug('Signaling: Opening WebSocket connection to path', path);
-        this.ws = ws;
+        console.debug('Signaling: Opening WebSocket connection to', url + path);
     }
 
     /**
@@ -187,16 +188,16 @@ export class Signaling {
             }
 
             // Store server public key and cookie
-            this.serverKey = serverHello.key;
+            this.serverKey = new Uint8Array(serverHello.key);
             this.serverCookie = nonce.cookie;
         }
 
         { // Generate cookie
 
-            let cookie;
+            let cookie: Cookie;
             do {
-                cookie = nacl.randomBytes(24);
-            } while (cookie === this.serverCookie);
+                cookie = new Cookie();
+            } while (cookie.equals(this.serverCookie));
             this.cookie = cookie;
         }
 
@@ -204,10 +205,13 @@ export class Signaling {
 
             let message: saltyrtc.ClientAuth = {
                 type: 'client-auth',
-                your_cookie: this.serverCookie,
+                your_cookie: this.serverCookie.asArray(),
             };
             let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
             this.ws.send(packet);
+
+            // Set previously unknown address to 0x01 (initiator)
+            this.address = Signaling.SALTYRTC_ADDR_INITIATOR;
         }
 
         { // Receive server-auth
@@ -234,7 +238,7 @@ export class Signaling {
             let message = this.decodeMessage(decrypted, 'server-auth') as saltyrtc.ServerAuth;
 
             // Validate cookie
-            if (message.your_cookie != this.cookie) {
+            if (!Cookie.from(message.your_cookie).equals(this.cookie)) {
                 console.error('Signaling: Bad cookie in server-auth message');
                 console.debug('Their response:', message.your_cookie, ', my cookie:', this.cookie);
                 throw 'bad-cookie';
@@ -278,13 +282,13 @@ export class Signaling {
      */
     private validateNonce(nonce: Nonce, source?: number): void {
         // Validate destination
-        if (nonce.destination != this.address) {
+        if (nonce.destination !== this.address) {
             console.error('Signaling: Nonce destination is', nonce.destination, 'but we\'re', this.address);
             throw 'bad-nonce-destination';
         }
 
         // Validate source
-        if (typeof source !== 'undefined' && nonce.source != source) {
+        if (typeof source !== 'undefined' && nonce.source !== source) {
             console.error('Signaling: Nonce source is', nonce.source, 'but should be', source);
             throw 'bad-nonce-source';
         }
@@ -480,7 +484,7 @@ export class Signaling {
                 assertType(message, 'token');
 
                 // Store responder permanent key
-                responder.permanentKey = message.key;
+                responder.permanentKey = Uint8Array.from(message.key);
                 responder.state = 'token-received';
             } else if (responder.state === 'token-received') {
                 // If the state is 'token-received', we expect a 'key' message,
@@ -492,8 +496,8 @@ export class Signaling {
 
                 // Store responder session key and cookie
                 let nonce = unsafeNonce;
-                responder.sessionKey = message.key;
-                responder.theirCookie = nonce.cookie;;
+                responder.sessionKey = Uint8Array.from(message.key);
+                responder.theirCookie = nonce.cookie;
                 responder.state = 'key-received';
             } else if (responder.state === 'key-received') {
                 // If the state is 'key-received', we expect a 'auth' message,
@@ -518,7 +522,7 @@ export class Signaling {
                 // Drop all other responders
                 console.debug('Signaling: Dropping ', this.responders.size - 1, ' other responders.');
                 for (let id of this.responders.keys()) {
-                    if (id != this.responder) {
+                    if (id !== this.responder) {
                         let message: saltyrtc.DropResponder = {
                             type: 'drop-responder',
                             id: id,
