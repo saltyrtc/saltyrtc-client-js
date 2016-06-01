@@ -156,7 +156,8 @@ export class Signaling {
      * This method is not invoked directly, but instead used as callback for
      * the `onMessage` event.
      */
-    private async onInitServerHandshake(ev: MessageEvent) {
+    private onInitServerHandshake = async (ev: MessageEvent) => {
+        console.debug('Signaling: Start server handshake');
         this.ws.removeEventListener('message', this.onInitServerHandshake);
         await this.serverHandshake(ev.data);
         this.ws.addEventListener('message', this.onResponderHandshakeMessage);
@@ -251,7 +252,7 @@ export class Signaling {
      */
     private recvMessageEvent(): Promise<MessageEvent> {
         return new Promise((resolve) => {
-            function handler(ev: MessageEvent) {
+            let handler = (ev: MessageEvent) => {
                 this.ws.removeEventListener('message', handler);
                 resolve(ev);
             };
