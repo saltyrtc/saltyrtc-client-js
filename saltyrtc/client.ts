@@ -18,22 +18,26 @@ interface ClientHandler {
 export class SaltyRTC {
     private host: string;
     private port: number;
-    private keyStore: KeyStore;
+    private permanentKey: KeyStore;
     private session: Session;
     private signaling: Signaling;
     private ws: WebSocket = null;
 
-    private _started: boolean = false;
+    constructor(permanentKey: KeyStore, session: Session, host: string, port: number = 8765) {
+        // Validate data
+        if (host.endsWith('/')) {
+            throw new Error('SaltyRTC host may not end with a slash');
+        }
+        if (host.indexOf('//') !== -1) {
+            throw new Error('SaltyRTC host should not contain protocol');
+        }
 
-    constructor(keyStore: KeyStore,
-                session: Session,
-                host: string,
-                port: number = 8765) {
-        this.keyStore = keyStore;
+        // Store properties
+        this.permanentKey = permanentKey;
         this.session = session;
 
         // Initialize signaling class
-        this.signaling = new Signaling(this, host, port, keyStore, session);
+        this.signaling = new Signaling(this, host, port, permanentKey, session);
     }
 
     /**
