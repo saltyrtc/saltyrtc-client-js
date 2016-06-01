@@ -3,7 +3,6 @@
 import { Signaling, State } from "../saltyrtc/signaling";
 import { SaltyRTC } from "../saltyrtc/client";
 import { KeyStore } from "../saltyrtc/keystore";
-import { Session } from "../saltyrtc/session";
 
 class FakeSaltyRTC {
     onConnected(ev) {}
@@ -38,8 +37,7 @@ export default () => { describe('signaling', () => {
         beforeEach(() => {
             this.fakeSaltyRTC = new FakeSaltyRTC() as SaltyRTC;
             this.keyStore = new KeyStore();
-            this.session = new Session();
-            this.sig = new Signaling(this.fakeSaltyRTC, '127.0.0.1', 8765, this.keyStore, this.session);
+            this.sig = new Signaling(this.fakeSaltyRTC, '127.0.0.1', 8765, this.keyStore);
         });
 
         describe('connect', () => {
