@@ -1,6 +1,7 @@
 /// <reference path="jasmine.d.ts" />
 
 import { DataChannelNonce, SignalingChannelNonce } from "../saltyrtc/nonce";
+import { Cookie } from "../saltyrtc/cookie";
 
 export default () => { describe('nonce', () => {
 
@@ -19,14 +20,14 @@ export default () => { describe('nonce', () => {
 
         it('parses correctly', () => {
             let nonce = DataChannelNonce.fromArrayBuffer(this.array.buffer);
-            expect(nonce.cookie).toEqual(
-                new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]));
+            expect(nonce.cookie.bytes).toEqual(
+                Uint8Array.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
             expect(nonce.overflow).toEqual((1 << 24) + (2 << 16) + (3 << 8) + 4);
             expect(nonce.sequenceNumber).toEqual((5 << 24) + (6 << 16) + (7 << 8) + 8);
         });
 
         it('serializes correctly', () => {
-            let cookie = Uint8Array.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+            let cookie = new Cookie(Uint8Array.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
             let overflow = 16909060;
             let sequenceNumber = 84281096;
             let nonce = new DataChannelNonce(cookie, overflow, sequenceNumber);
@@ -55,8 +56,8 @@ export default () => { describe('nonce', () => {
 
         it('parses correctly', () => {
             let nonce = SignalingChannelNonce.fromArrayBuffer(this.array.buffer);
-            expect(nonce.cookie).toEqual(
-                new Uint8Array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]));
+            expect(nonce.cookie.bytes).toEqual(
+                Uint8Array.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
             expect(nonce.source).toEqual(17);
             expect(nonce.destination).toEqual(18);
             expect(nonce.overflow).toEqual((1 << 8) + 2);
@@ -64,7 +65,7 @@ export default () => { describe('nonce', () => {
         });
 
         it('serializes correctly', () => {
-            let cookie = Uint8Array.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16);
+            let cookie = new Cookie(Uint8Array.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
             let source = 17;
             let destination = 18;
             let overflow = 258;
