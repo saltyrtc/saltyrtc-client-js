@@ -7,18 +7,17 @@
 
 /// <reference path='messages.d.ts' />
 
+import { Cookie } from "./cookie";
+
 /**
  * Base class for all nonces.
  */
 abstract class Nonce {
-    protected _cookie: Uint8Array;
+    protected _cookie: Cookie;
     protected _overflow: number;
     protected _sequenceNumber: number;
 
-    constructor(cookie: Uint8Array, overflow: number, sequenceNumber: number) {
-        if (cookie.length != 16) {
-            throw 'bad-cookie-length';
-        }
+    constructor(cookie: Cookie, overflow: number, sequenceNumber: number) {
         this._cookie = cookie;
         this._overflow = overflow;
         this._sequenceNumber = sequenceNumber;
@@ -43,7 +42,7 @@ abstract class Nonce {
  */
 export class DataChannelNonce extends Nonce {
 
-    constructor(cookie: Uint8Array, overflow: number, sequenceNumber: number) {
+    constructor(cookie: Cookie, overflow: number, sequenceNumber: number) {
         super(cookie, overflow, sequenceNumber);
     }
 
@@ -61,7 +60,7 @@ export class DataChannelNonce extends Nonce {
         let view = new DataView(packet);
 
         // Parse and return nonce
-        let cookie = new Uint8Array(packet, 0, 16);
+        let cookie = new Cookie(new Uint8Array(packet, 0, 16));
         let overflow = view.getUint32(16);
         let sequenceNumber = view.getUint32(20);
 
@@ -75,7 +74,7 @@ export class DataChannelNonce extends Nonce {
         let buf = new ArrayBuffer(24);
 
         let uint8view = new Uint8Array(buf);
-        uint8view.set(this._cookie);
+        uint8view.set(this._cookie.asUint8Array());
 
         let view = new DataView(buf);
         view.setUint32(16, this._overflow);
@@ -108,7 +107,7 @@ export class SignalingChannelNonce extends Nonce {
     protected _source: number;
     protected _destination: number;
 
-    constructor(cookie: Uint8Array, overflow: number, sequenceNumber: number,
+    constructor(cookie: Cookie, overflow: number, sequenceNumber: number,
                 source: number, destination: number) {
         super(cookie, overflow, sequenceNumber);
         this._source = source;
@@ -132,7 +131,7 @@ export class SignalingChannelNonce extends Nonce {
         let view = new DataView(packet);
 
         // Parse and return nonce
-        let cookie = new Uint8Array(packet, 0, 16);
+        let cookie = new Cookie(new Uint8Array(packet, 0, 16));
         let source = view.getUint8(16);
         let destination = view.getUint8(17);
         let overflow = view.getUint16(18);
@@ -148,7 +147,7 @@ export class SignalingChannelNonce extends Nonce {
         let buf = new ArrayBuffer(24);
 
         let uint8view = new Uint8Array(buf);
-        uint8view.set(this._cookie);
+        uint8view.set(this._cookie.asUint8Array());
 
         let view = new DataView(buf);
         view.setUint8(16, this._source);
