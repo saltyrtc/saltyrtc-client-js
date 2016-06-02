@@ -64,3 +64,16 @@ export class Cookie {
     }
 
 }
+
+/**
+ * A cookie pair.
+ */
+export class CookiePair {
+    public ours: Cookie;
+    public theirs: Cookie;
+
+    constructor(ours: Cookie, theirs: Cookie) {
+        this.ours = ours;
+        this.theirs = theirs;
+    }
+}
