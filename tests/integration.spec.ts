@@ -31,10 +31,10 @@ export default () => { describe('Integration Tests', () => {
         });
 
         it('connect (initiator first)', async (done) => {
-            expect(this.initiator.state).toEqual(State.Unknown);
-            expect(this.responder.state).toEqual(State.Unknown);
+            expect(this.initiator.state).toEqual('unknown');
+            expect(this.responder.state).toEqual('unknown');
             this.initiator.connect();
-            expect(this.initiator.state).toEqual(State.Connecting);
+            expect(this.initiator.state).toEqual('ws-connecting');
             await sleep(1500);
             this.responder.connect();
             done();

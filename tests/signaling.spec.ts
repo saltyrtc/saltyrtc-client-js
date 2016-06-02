@@ -70,9 +70,9 @@ export default () => { describe('signaling', () => {
             });
 
             it('sets the correct state', () => {
-                expect((this.sig as any).state).toEqual(State.Unknown);
+                expect((this.sig as any).state).toEqual('unknown');
                 this.sig.connect();
-                expect((this.sig as any).state).toEqual(State.Connecting);
+                expect((this.sig as any).state).toEqual('ws-connecting');
             });
 
         });
