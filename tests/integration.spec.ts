@@ -37,6 +37,18 @@ export default () => { describe('Integration Tests', () => {
             expect(this.initiator.state).toEqual('ws-connecting');
             await sleep(1500);
             this.responder.connect();
+            expect(this.responder.state).toEqual('ws-connecting');
+            done();
+        });
+
+        it('connect (responder first)', async (done) => {
+            expect(this.initiator.state).toEqual('unknown');
+            expect(this.responder.state).toEqual('unknown');
+            this.responder.connect();
+            expect(this.responder.state).toEqual('ws-connecting');
+            await sleep(1500);
+            this.initiator.connect();
+            expect(this.initiator.state).toEqual('ws-connecting');
             done();
         });
 
