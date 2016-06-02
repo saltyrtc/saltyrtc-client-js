@@ -11,10 +11,10 @@
 /// <reference path='types/tweetnacl.d.ts' />
 
 import { KeyStore, AuthToken, Box } from "./keystore";
-import { Cookie } from "./cookie";
+import { Cookie, CookiePair } from "./cookie";
 import { SaltyRTC } from "./client";
 import { SignalingChannelNonce as Nonce } from "./nonce";
-import { concat, randomUint32 } from "./utils";
+import { concat, randomUint32, byteToHex } from "./utils";
 
 /**
  * Possible states for SaltyRTC connection.
@@ -102,7 +102,7 @@ class Responder {
     // Our own session keystore
     public keyStore: KeyStore = new KeyStore();
 
-    // Cookies
+    // Cookies (TODO: CookiePair)
     public ourCookie: Cookie = null;
     public theirCookie: Cookie = null;
 
@@ -151,14 +151,17 @@ export class Signaling {
     // Signaling
     private role: 'initiator' | 'responder' = null;
     private logTag: string = 'Signaling:';
-    private ourCookie: Cookie = null;
-    private serverCookie: Cookie = null;
-    private serverCombinedSequence: CombinedSequence = new CombinedSequence();
-    private PeerCookie: Uint8Array = null;
     private address: number = Signaling.SALTYRTC_ADDR_UNKNOWN;
-    private initiatorConnected: boolean = null;
+    private cookiePair: CookiePair = null;
+    private serverCombinedSequence = new CombinedSequence();
+
+    // Signaling: Initiator
     private responders: Map<number, Responder> = null;
     private responder: number = null;
+
+    // Signaling: Responder
+    private initiatorConnected: boolean = null;
+    private initiatorCombinedSequence = new CombinedSequence();
 
     /**
      * Create a new signaling instance.
@@ -246,6 +249,9 @@ export class Signaling {
         this.state = 'server-handshake';
         await this.serverHandshake(ev.data);
         this.state = 'peer-handshake';
+        if (this.role === 'responder' && this.initiatorConnected === true) {
+            this.sendToken();
+        }
         this.ws.addEventListener('message', this.onPeerHandshakeMessage);
     }
 
@@ -272,18 +278,15 @@ export class Signaling {
                 throw 'bad-message-type';
             }
 
-            // Store server public key and cookie
+            // Store server public key
             this.serverKey = new Uint8Array(serverHello.key);
-            this.serverCookie = nonce.cookie;
-        }
 
-        { // Generate cookie
-
+            // Generate cookie
             let cookie: Cookie;
             do {
                 cookie = new Cookie();
-            } while (cookie.equals(this.serverCookie));
-            this.ourCookie = cookie;
+            } while (cookie.equals(nonce.cookie));
+            this.cookiePair = new CookiePair(cookie, nonce.cookie);
         }
 
         // In the case of the responder, send client-hello
@@ -302,7 +305,7 @@ export class Signaling {
 
             let message: saltyrtc.ClientAuth = {
                 type: 'client-auth',
-                your_cookie: this.serverCookie.asArray(),
+                your_cookie: this.cookiePair.theirs.asArray(),
             };
             let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
             console.debug(this.logTag, 'Sending client-auth');
@@ -344,15 +347,18 @@ export class Signaling {
                     throw 'bad-nonce-destination';
                 }
                 this.address = nonce.destination;
+                console.debug(this.logTag, 'Server assigned address', byteToHex(this.address));
+                this.logTag = 'Responder[' + byteToHex(this.address) + ']:';
             }
 
             // Decode message
             let message = this.decodeMessage(decrypted, 'server-auth') as saltyrtc.ServerAuth;
 
             // Validate cookie
-            if (!Cookie.from(message.your_cookie).equals(this.ourCookie)) {
+            if (!Cookie.from(message.your_cookie).equals(this.cookiePair.ours)) {
                 console.error(this.logTag, 'Bad cookie in server-auth message');
-                console.debug(this.logTag, 'Their response:', message.your_cookie, ', our cookie:', this.ourCookie);
+                console.debug(this.logTag, 'Their response:', message.your_cookie,
+                                           ', our cookie:', this.cookiePair.ours.asArray());
                 throw 'bad-cookie';
             }
 
@@ -368,6 +374,19 @@ export class Signaling {
                 console.debug(this.logTag, 'Initiator', this.initiatorConnected ? '' : 'not', 'connected');
             }
         }
+    }
+
+    /**
+     * Send a 'token' message to the initiator.
+     */
+    private sendToken(): void {
+        let message: saltyrtc.Token = {
+            type: 'token',
+            key: this.permanentKey.publicKeyArray,
+        };
+        let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_INITIATOR);
+        console.debug(this.logTag, 'Sending token');
+        this.ws.send(packet);
     }
 
     /**
@@ -449,17 +468,22 @@ export class Signaling {
      */
     private buildPacket(message: saltyrtc.Message, receiver: number, encrypt=true): Uint8Array {
         // Create nonce
-        let cookie, csn;
-        if (receiver === 0x00) {
-            cookie = this.ourCookie;
+        let cookie, csn, nonce, nonceBytes;
+        if (receiver === Signaling.SALTYRTC_ADDR_SERVER) {
+            cookie = this.cookiePair.ours;
             csn = this.serverCombinedSequence.next();
+        } else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR) {
+            cookie = this.cookiePair.ours;
+            csn = this.initiatorCombinedSequence.next();
         } else if (receiver >= 0x02 && receiver <= 0xff) {
             let responder = this.responders.get(receiver);
             cookie = responder.ourCookie;
             csn = responder.combinedSequence;
+        } else {
+            throw 'bad-receiver';
         }
-        let nonce = new Nonce(cookie, csn.overflow, csn.sequenceNumber, this.address, receiver);
-        let nonceBytes = new Uint8Array(nonce.toArrayBuffer());
+        nonce = new Nonce(cookie, csn.overflow, csn.sequenceNumber, this.address, receiver);
+        nonceBytes = new Uint8Array(nonce.toArrayBuffer());
 
         // Encode message
         let data: Uint8Array = msgpack.encode(message);
@@ -467,12 +491,13 @@ export class Signaling {
         // Encrypt if desired
         if (encrypt !== false) {
             let box;
-            if (receiver === 0x00) {
+            if (receiver === Signaling.SALTYRTC_ADDR_SERVER) {
                 box = this.permanentKey.encrypt(data, nonceBytes, this.serverKey);
+            } else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR) {
+                box = this.authToken.encrypt(data, nonceBytes);
             } else {
                 throw 'not-yet-implemented';
             }
-
             return box.toUint8Array();
         } else {
             return concat(nonceBytes, data);
@@ -623,7 +648,7 @@ export class Signaling {
             } else {
                 console.warn(this.logTag, 'Ignored server message of type "', message.type, '".');
             }
-        } else if (unsafeNonce.source > Signaling.SALTYRTC_ADDR_INITIATOR && unsafeNonce.source <= 0xFF) {
+        } else if (unsafeNonce.source >= 0x02 && unsafeNonce.source <= 0xff) {
             // In order to know what key to use for decryption, we need to check the state of the responder.
             let responder = this.responders.get(unsafeNonce.source);
             if (typeof responder === 'undefined') {

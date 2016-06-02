@@ -69,11 +69,17 @@ export class Cookie {
  * A cookie pair.
  */
 export class CookiePair {
-    public ours: Cookie;
-    public theirs: Cookie;
+    public ours: Cookie = null;
+    public theirs: Cookie = null;
 
-    constructor(ours: Cookie, theirs: Cookie) {
-        this.ours = ours;
-        this.theirs = theirs;
+    constructor(ours?: Cookie, theirs?: Cookie) {
+        if (typeof ours !== 'undefined' && typeof theirs !== 'undefined') {
+            this.ours = ours;
+            this.theirs = theirs;
+        } else if (typeof ours === 'undefined' && typeof theirs === 'undefined') {
+            this.ours = new Cookie();
+        } else {
+            throw new Error('Either both or no cookies must be specified');
+        }
     }
 }
