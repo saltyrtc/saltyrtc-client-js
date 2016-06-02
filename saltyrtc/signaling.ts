@@ -33,6 +33,10 @@ export const enum State {
 }
 
 const enum CloseCode {
+    // The endpoint is going away
+    GoingAway = 1001,
+    // No shared sub-protocol could be found
+    SubprotocolError,
     // No free responder byte
     PathFull = 3000,
     // Invalid message, invalid path length, ...
@@ -478,6 +482,12 @@ export class Signaling {
         console.info(this.logTag, 'Closed connection');
         this.state = State.Closed;
         switch (ev.code) {
+            case CloseCode.GoingAway:
+                console.error(this.logTag, 'Server is being shut down');
+                break;
+            case CloseCode.SubprotocolError:
+                console.error(this.logTag, 'No shared sub-protocol could be found');
+                break;
             case CloseCode.PathFull:
                 console.error(this.logTag, 'Path full (no free responder byte)');
                 break;
