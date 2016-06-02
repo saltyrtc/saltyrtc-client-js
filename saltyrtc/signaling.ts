@@ -14,7 +14,7 @@ import { KeyStore, AuthToken, Box } from "./keystore";
 import { Cookie, CookiePair } from "./cookie";
 import { SaltyRTC } from "./client";
 import { SignalingChannelNonce as Nonce } from "./nonce";
-import { concat, randomUint32, byteToHex } from "./utils";
+import { concat, randomUint32, byteToHex, u8aToHex } from "./utils";
 
 /**
  * Possible states for SaltyRTC connection.
@@ -138,7 +138,6 @@ export class Signaling {
     private host: string;
     private port: number;
     private protocol: string = 'wss';
-    private path: string = null;
     private ws: WebSocket = null;
 
     // Connection state
@@ -165,7 +164,10 @@ export class Signaling {
     private responder: number = null;
 
     // Signaling: Responder
+    private initiatorPermanentKey: Uint8Array = null;
+    private initiatorSessionKey: Uint8Array = null;
     private initiatorConnected: boolean = null;
+    private initiatorHandshakeState: 'new' | 'token-sent' | 'key-received' | 'auth-received' = null;
     private initiatorCombinedSequence = new CombinedSequence();
 
     /**
@@ -176,17 +178,17 @@ export class Signaling {
      */
     constructor(client: SaltyRTC, host: string, port: number,
                 permanentKey: KeyStore,
-                path?: string,
+                initiatorPubKey?: Uint8Array,
                 authToken?: AuthToken) {
         this.client = client;
         this.permanentKey = permanentKey;
         this.host = host;
         this.port = port;
-        if (typeof authToken !== 'undefined' && typeof path !== 'undefined') {
+        if (typeof authToken !== 'undefined' && typeof initiatorPubKey !== 'undefined') {
             // We're a responder
             this.role = 'responder';
             this.logTag = 'Responder:';
-            this.path = path;
+            this.initiatorPermanentKey = initiatorPubKey;
             this.authToken = authToken;
         } else {
             // We're an initiator
@@ -196,10 +198,10 @@ export class Signaling {
     }
 
     /**
-     * Return the public permanent key as hex string.
+     * Return the public permanent key as Uint8Array.
      */
-    public get publicKeyHex(): string {
-        return this.permanentKey.publicKeyHex;
+    public get permanentKeyBytes(): Uint8Array {
+        return this.permanentKey.publicKeyBytes;
     }
 
     /**
@@ -222,7 +224,12 @@ export class Signaling {
      */
     private initWebsocket() {
         let url = this.protocol + '://' + this.host + ':' + this.port + '/';
-        let path = this.path || this.permanentKey.publicKeyHex;
+        let path;
+        if (this.role == 'initiator') {
+            path = this.permanentKey.publicKeyHex;
+        } else {
+            path = u8aToHex(this.initiatorPermanentKey);
+        }
         this.ws = new WebSocket(url + path, Signaling.SALTYRTC_WS_SUBPROTOCOL);
 
         // Set binary type
@@ -254,8 +261,11 @@ export class Signaling {
         this.state = 'server-handshake';
         await this.serverHandshake(ev.data);
         this.state = 'peer-handshake';
-        if (this.role === 'responder' && this.initiatorConnected === true) {
-            this.sendToken();
+        if (this.role === 'responder') {
+            this.initiatorHandshakeState = 'new';
+            if (this.initiatorConnected === true) {
+                this.sendToken();
+            }
         }
         this.ws.addEventListener('message', this.onPeerHandshakeMessage);
     }
@@ -391,6 +401,9 @@ export class Signaling {
         };
         let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_INITIATOR);
         console.debug(this.logTag, 'Sending token');
+        if (this.role === 'responder') {
+            this.initiatorHandshakeState = 'token-sent';
+        }
         this.ws.send(packet);
     }
 
@@ -662,14 +675,45 @@ export class Signaling {
             } else {
                 console.warn(this.logTag, 'Ignored server message of type "', message.type, '".');
             }
+        } else if (unsafeNonce.source === Signaling.SALTYRTC_ADDR_INITIATOR) {
+            // We're the responder.
+            if (this.role !== 'responder') {
+                console.error('Source byte from initiator, but we\'re not the responder.');
+                abort();
+            }
+
+            // Construct a box
+            let box = Box.fromUint8Array(bytes, nacl.box.nonceLength);
+
+            // Decrypt. The 'key' messages are encrypted with a different key than the rest.
+            let decrypted;
+            if (this.initiatorHandshakeState == 'token-sent') {
+                // If the state is 'token-sent', then we expect a 'key' message,
+                // encrypted with the permanent key.
+                decrypted = decrypt(box, this.permanentKey, this.initiatorPermanentKey);
+            } else {
+                // Otherwise, it must be encrypted with the session key.
+                decrypted = decrypt(box, this.sessionKey, this.initiatorSessionKey);
+            }
+
+            // Decode message
+            let message: saltyrtc.Message = this.decodeMessage(decrypted);
+            console.debug(this.logTag, 'Received', message.type);
         } else if (unsafeNonce.source >= 0x02 && unsafeNonce.source <= 0xff) {
-            // In order to know what key to use for decryption, we need to check the state of the responder.
+            // We're the initiator.
+            if (this.role !== 'initiator') {
+                console.error('Source byte from responder, but we\'re not the initiator.');
+                abort();
+            }
+
+            // Get responder
             let responder = this.responders.get(unsafeNonce.source);
             if (typeof responder === 'undefined') {
                 console.error(this.logTag, 'Received message from unknown responder (', unsafeNonce.source, ')');
                 return;
             }
 
+            // In order to know what key to use for decryption, we need to check the state of the responder.
             if (responder.state === 'new') {
                 {
                     // If the state is 'new', then we expect a 'token' message,

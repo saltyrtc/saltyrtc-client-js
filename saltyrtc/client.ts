@@ -53,12 +53,12 @@ export class SaltyRTC {
     /**
      * Initialize SaltyRTC instance as responder.
      */
-    public asResponder(path: string, authToken: Uint8Array): SaltyRTC {
+    public asResponder(initiatorPubKey: Uint8Array, authToken: Uint8Array): SaltyRTC {
         // Create AuthToken instance
         let token = new AuthToken(authToken);
 
         // Initialize signaling class
-        this._signaling = new Signaling(this, this.host, this.port, this.permanentKey, path, token);
+        this._signaling = new Signaling(this, this.host, this.port, this.permanentKey, initiatorPubKey, token);
 
         // Return self
         return this;
@@ -79,10 +79,10 @@ export class SaltyRTC {
     }
 
     /**
-     * Return the public permanent key as hex string.
+     * Return the public permanent key as Uint8Array.
      */
-    public get publicKeyHex(): string {
-        return this.signaling.publicKeyHex;
+    public get permanentKeyBytes(): Uint8Array {
+        return this.signaling.permanentKeyBytes;
     }
 
     /**

@@ -23,11 +23,11 @@ export default () => { describe('Integration Tests', () => {
                                           Config.SALTYRTC_HOST,
                                           Config.SALTYRTC_PORT).asInitiator();
 
-            let path = this.initiator.publicKeyHex;
+            let pubKey = this.initiator.permanentKeyBytes;
             let authToken = this.initiator.authTokenBytes;
             this.responder = new SaltyRTC(new KeyStore(),
                                           Config.SALTYRTC_HOST,
-                                          Config.SALTYRTC_PORT).asResponder(path, authToken);
+                                          Config.SALTYRTC_PORT).asResponder(pubKey, authToken);
         });
 
         it('connect (initiator first)', async (done) => {
