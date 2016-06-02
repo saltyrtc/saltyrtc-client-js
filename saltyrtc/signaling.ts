@@ -102,10 +102,6 @@ class Responder {
     // Our own session keystore
     public keyStore: KeyStore = new KeyStore();
 
-    // Cookies (TODO: CookiePair)
-    public ourCookie: Cookie = null;
-    public theirCookie: Cookie = null;
-
     // Handshake state
     public state: 'new' | 'token-received' | 'key-received' = 'new';
 
@@ -468,22 +464,18 @@ export class Signaling {
      */
     private buildPacket(message: saltyrtc.Message, receiver: number, encrypt=true): Uint8Array {
         // Create nonce
-        let cookie, csn, nonce, nonceBytes;
+        let csn;
         if (receiver === Signaling.SALTYRTC_ADDR_SERVER) {
-            cookie = this.cookiePair.ours;
             csn = this.serverCombinedSequence.next();
         } else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR) {
-            cookie = this.cookiePair.ours;
             csn = this.initiatorCombinedSequence.next();
         } else if (receiver >= 0x02 && receiver <= 0xff) {
-            let responder = this.responders.get(receiver);
-            cookie = responder.ourCookie;
-            csn = responder.combinedSequence;
+            csn = this.responders.get(receiver).combinedSequence;
         } else {
             throw 'bad-receiver';
         }
-        nonce = new Nonce(cookie, csn.overflow, csn.sequenceNumber, this.address, receiver);
-        nonceBytes = new Uint8Array(nonce.toArrayBuffer());
+        let nonce = new Nonce(this.cookiePair.ours, csn.overflow, csn.sequenceNumber, this.address, receiver);
+        let nonceBytes = new Uint8Array(nonce.toArrayBuffer());
 
         // Encode message
         let data: Uint8Array = msgpack.encode(message);
@@ -693,7 +685,7 @@ export class Signaling {
 
                 // Verify the cookie
                 let nonce = unsafeNonce;
-                if (nonce.cookie !== responder.ourCookie) {
+                if (nonce.cookie !== responder.cookiePair.ours) {
                     console.error(this.logTag, 'Invalid cookie in auth message.');
                     abort();
                 }
