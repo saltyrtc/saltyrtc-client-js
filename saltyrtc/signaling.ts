@@ -161,7 +161,7 @@ export class Signaling {
 
     // Signaling: Initiator
     private responders: Map<number, Responder> = null;
-    private responder: number = null;
+    private responder: Responder = null;
 
     // Signaling: Responder
     private initiatorPermanentKey: Uint8Array = null;
@@ -510,7 +510,13 @@ export class Signaling {
             if (receiver === Signaling.SALTYRTC_ADDR_SERVER) {
                 box = this.permanentKey.encrypt(data, nonceBytes, this.serverKey);
             } else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR) {
-                box = this.authToken.encrypt(data, nonceBytes);
+                if (message.type === 'token') {
+                    box = this.authToken.encrypt(data, nonceBytes);
+                } else if (message.type === 'key') {
+                    box = this.permanentKey.encrypt(data, nonceBytes, this.initiatorPermanentKey);
+                } else {
+                    box = this.sessionKey.encrypt(data, nonceBytes, this.initiatorSessionKey);
+                }
             } else if (receiver >= 0x02 && receiver <= 0xff) {
                 let responder = this.responders.get(receiver);
                 if (message.type === 'key'){
@@ -699,6 +705,24 @@ export class Signaling {
             // Decode message
             let message: saltyrtc.Message = this.decodeMessage(decrypted);
             console.debug(this.logTag, 'Received', message.type);
+
+            if (this.initiatorHandshakeState == 'token-sent') {
+                assertType(message, 'key');
+
+                // We got a public session key from the initiator. Store...
+                this.initiatorHandshakeState = 'key-received';
+                this.initiatorSessionKey = new Uint8Array((message as saltyrtc.Key).key);
+
+                // ...and reply with our own session key.
+                this.sessionKey = new KeyStore();
+                let replyMessage: saltyrtc.Key = {
+                    type: 'key',
+                    key: this.sessionKey.publicKeyArray,
+                };
+                let packet: Uint8Array = this.buildPacket(replyMessage, Signaling.SALTYRTC_ADDR_INITIATOR);
+                console.debug(this.logTag, 'Sending key');
+                this.ws.send(packet);
+            }
         } else if (unsafeNonce.source >= 0x02 && unsafeNonce.source <= 0xff) {
             // We're the initiator.
             if (this.role !== 'initiator') {
@@ -769,21 +793,20 @@ export class Signaling {
 
                 // Store responder id and session key
                 console.debug(this.logTag, 'Responder ', nonce.source, ' authenticated.');
-                this.responder = nonce.source;
+                this.responder = this.responders.get(nonce.source);
+                this.responders.delete(nonce.source);
                 this.sessionKey = responder.keyStore;
 
                 // Drop all other responders
                 console.debug(this.logTag, 'Dropping ', this.responders.size - 1, ' other responders.');
                 for (let id of this.responders.keys()) {
-                    if (id !== this.responder) {
-                        let message: saltyrtc.DropResponder = {
-                            type: 'drop-responder',
-                            id: id,
-                        };
-                        let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
-                        console.debug(this.logTag, 'Sending drop-responder', id);
-                        this.ws.send(packet);
-                    }
+                    let message: saltyrtc.DropResponder = {
+                        type: 'drop-responder',
+                        id: id,
+                    };
+                    let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
+                    console.debug(this.logTag, 'Sending drop-responder', id);
+                    this.ws.send(packet);
                     this.responders.delete(id);
                 }
 
