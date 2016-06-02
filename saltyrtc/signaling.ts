@@ -637,6 +637,10 @@ export class Signaling {
                 } else {
                     console.warn(this.logTag, 'Got new-responder message for an already known responder.');
                 }
+            } else if (message.type === 'new-initiator') {
+                // A new initiator connected.
+                this.initiatorConnected = true;
+                this.sendToken();
             } else {
                 console.warn(this.logTag, 'Ignored server message of type "', message.type, '".');
             }
