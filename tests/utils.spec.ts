@@ -1,6 +1,6 @@
 /// <reference path="jasmine.d.ts" />
 
-import { u8aToHex, hexToU8a, randomString, concat } from "../saltyrtc/utils";
+import { u8aToHex, hexToU8a, randomString, concat, randomUint32 } from "../saltyrtc/utils";
 
 export default () => { describe('utils', () => {
 
@@ -65,6 +65,21 @@ export default () => { describe('utils', () => {
             let src4 = Uint8Array.of(7, 8, 9);
             expect(concat(src1, src2, src3, src4))
                 .toEqual(Uint8Array.of(1, 2, 3, 4, 5, 6, 7, 7, 8, 9));
+        });
+
+    });
+
+    describe('randomUint32', () => {
+
+        it('generates a random number between 0 and 2**32', () => {
+            let lastNum: number = null;
+            for (let i = 0; i < 50; i++) {
+                let num = randomUint32();
+                expect(num).not.toEqual(lastNum);
+                expect(num).toBeGreaterThan(-1);
+                expect(num).toBeLessThan(0x100000000 + 1);
+                lastNum = num;
+            }
         });
 
     });

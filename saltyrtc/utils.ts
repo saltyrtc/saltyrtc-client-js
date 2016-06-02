@@ -60,6 +60,14 @@ export function randomString(length=32, chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg
     return str;
 }
 
+/**
+ * Generate a random 32 bit unsigned integer.
+ */
+export function randomUint32(): number {
+    let crypto = window.crypto || (window as any).msCrypto;
+    return crypto.getRandomValues(new Uint32Array(1))[0];
+}
+
 
 /**
  * Concatenate multiple Uint8Array objects.
