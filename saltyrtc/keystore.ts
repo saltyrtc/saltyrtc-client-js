@@ -16,7 +16,7 @@ export class Box {
 
     private _nonce: Uint8Array;
     private _nonceLength: number;
-    private _data: any; // TODO
+    private _data: Uint8Array;
 
     constructor(nonce: Uint8Array, data: Uint8Array, nonceLength: number) {
         this._nonce = nonce;
@@ -36,7 +36,7 @@ export class Box {
         return this._nonce;
     }
 
-    public static fromArray(array: Uint8Array, nonceLength: number) {
+    public static fromUint8Array(array: Uint8Array, nonceLength: number) {
         // Unpack nonce
         let nonce = array.slice(0, nonceLength);
 
@@ -47,7 +47,7 @@ export class Box {
         return new Box(nonce, data, nonceLength);
     }
 
-    public toArray(): Uint8Array {
+    public toUint8Array(): Uint8Array {
         // Return both the nonce and the encrypted data
         let box = new Uint8Array(this.length);
         box.set(this._nonce);

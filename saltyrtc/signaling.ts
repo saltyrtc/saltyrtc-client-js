@@ -14,7 +14,7 @@ import { KeyStore, AuthToken, Box } from "./keystore";
 import { Cookie } from "./cookie";
 import { SaltyRTC } from "./client";
 import { SignalingChannelNonce as Nonce } from "./nonce";
-import { concat } from "./utils";
+import { concat, randomUint32 } from "./utils";
 
 /**
  * Possible states for SaltyRTC connection.
@@ -62,6 +62,45 @@ interface Packet {
     nonce: Nonce,
 }
 
+class CombinedSequence {
+    private static SEQUENCE_NUMBER_MAX = 0x100000000; // 1<<32
+    private static OVERFLOW_MAX = 0x100000; // 1<<16
+
+    private sequenceNumber: number;
+    private overflow: number;
+
+    constructor() {
+        this.sequenceNumber = randomUint32();
+        this.overflow = 0;
+    }
+
+    /**
+     * Return next sequence number and overflow.
+     *
+     * May throw an error if overflow number overflows. This is extremely
+     * unlikely and must be treated as a protocol error.
+     */
+    public next(): {sequenceNumber: number, overflow: number} {
+        if (this.sequenceNumber + 1 >= CombinedSequence.SEQUENCE_NUMBER_MAX) {
+            // Sequence number overflow
+            this.sequenceNumber = 0;
+            this.overflow += 1;
+            if (this.overflow  >= CombinedSequence.OVERFLOW_MAX) {
+                // Overflow overflow
+                console.error('Overflow number just overflowed!');
+                throw new Error('overflow-overflow');
+            }
+        } else {
+            this.sequenceNumber += 1;
+        }
+        return {
+            sequenceNumber: this.sequenceNumber,
+            overflow: this.overflow,
+        };
+    }
+
+}
+
 class Responder {
     // Permanent key of the responder
     public permanentKey: Uint8Array = null;
@@ -78,6 +117,9 @@ class Responder {
 
     // Handshake state
     public state: 'new' | 'token-received' | 'key-received' = 'new';
+
+    // Sequence number
+    public combinedSequence: CombinedSequence = new CombinedSequence();
 }
 
 /**
@@ -118,11 +160,10 @@ export class Signaling {
     // Signaling
     private role: 'initiator' | 'responder' = null;
     private logTag: string = 'Signaling:';
-    private cookie: Cookie = null;
+    private ourCookie: Cookie = null;
     private serverCookie: Cookie = null;
+    private serverCombinedSequence: CombinedSequence = new CombinedSequence();
     private PeerCookie: Uint8Array = null;
-    private overflow: number = 0;
-    private sequenceNumber: number = 0;
     private address: number = Signaling.SALTYRTC_ADDR_UNKNOWN;
     private initiatorConnected: boolean = null;
     private responders: Map<number, Responder> = null;
@@ -249,7 +290,7 @@ export class Signaling {
             do {
                 cookie = new Cookie();
             } while (cookie.equals(this.serverCookie));
-            this.cookie = cookie;
+            this.ourCookie = cookie;
         }
 
         // In the case of the responder, send client-hello
@@ -290,7 +331,7 @@ export class Signaling {
             }
 
             // Decrypt message
-            let box = Box.fromArray(bytes, nacl.box.nonceLength);
+            let box = Box.fromUint8Array(bytes, nacl.box.nonceLength);
             let decrypted = this.permanentKey.decrypt(box, this.serverKey);
 
             // Now that the nonce integrity is guaranteed by decrypting,
@@ -299,24 +340,26 @@ export class Signaling {
 
             // Validate nonce and set proper address.
             if (this.role == 'initiator') {
+                // Initiator
                 this.address = Signaling.SALTYRTC_ADDR_INITIATOR;
                 this.validateNonce(nonce, this.address, Signaling.SALTYRTC_ADDR_SERVER);
             } else {
+                // Responder
                 this.validateNonce(nonce, undefined, Signaling.SALTYRTC_ADDR_SERVER);
-                if (nonce.source > 0xff || nonce.source < 0x02) {
-                    console.error(this.logTag, 'Invalid nonce source:', nonce.source);
-                    throw 'bad-nonce-source';
+                if (nonce.destination > 0xff || nonce.destination < 0x02) {
+                    console.error(this.logTag, 'Invalid nonce destination:', nonce.destination);
+                    throw 'bad-nonce-destination';
                 }
-                this.address = nonce.source;
+                this.address = nonce.destination;
             }
 
             // Decode message
             let message = this.decodeMessage(decrypted, 'server-auth') as saltyrtc.ServerAuth;
 
             // Validate cookie
-            if (!Cookie.from(message.your_cookie).equals(this.cookie)) {
+            if (!Cookie.from(message.your_cookie).equals(this.ourCookie)) {
                 console.error(this.logTag, 'Bad cookie in server-auth message');
-                console.debug(this.logTag, 'Their response:', message.your_cookie, ', our cookie:', this.cookie);
+                console.debug(this.logTag, 'Their response:', message.your_cookie, ', our cookie:', this.ourCookie);
                 throw 'bad-cookie';
             }
 
@@ -413,8 +456,16 @@ export class Signaling {
      */
     private buildPacket(message: saltyrtc.Message, receiver: number, encrypt=true): Uint8Array {
         // Create nonce
-        let nonce = new Nonce(this.cookie, this.overflow, this.sequenceNumber,
-                              this.address, receiver);
+        let cookie, csn;
+        if (receiver === 0x00) {
+            cookie = this.ourCookie;
+            csn = this.serverCombinedSequence.next();
+        } else if (receiver >= 0x02 && receiver <= 0xff) {
+            let responder = this.responders.get(receiver);
+            cookie = responder.ourCookie;
+            csn = responder.combinedSequence;
+        }
+        let nonce = new Nonce(cookie, csn.overflow, csn.sequenceNumber, this.address, receiver);
         let nonceBytes = new Uint8Array(nonce.toArrayBuffer());
 
         // Encode message
@@ -429,7 +480,7 @@ export class Signaling {
                 throw 'not-yet-implemented';
             }
 
-            return box.toArray();
+            return box.toUint8Array();
         } else {
             return concat(nonceBytes, data);
         }
@@ -447,7 +498,7 @@ export class Signaling {
     private resetConnection(): void {
         let oldState = this.state;
         this.state = State.Unknown;
-        this.sequenceNumber = 0;
+        this.serverCombinedSequence = new CombinedSequence();
 
         // Close WebSocket instance
         if (this.ws !== null && oldState === State.Open) {
@@ -514,7 +565,7 @@ export class Signaling {
      * and removed once the peer handshake is done.
      */
     private onPeerHandshakeMessage = (ev: MessageEvent) => {
-        console.debug(this.logTag, 'Received message');
+        console.debug(this.logTag, 'Incoming WebSocket message');
 
         // Abort function
         let abort = () => {
@@ -548,6 +599,7 @@ export class Signaling {
         }
 
         let buffer = ev.data;
+        let bytes = new Uint8Array(buffer);
 
         // Peek at nonce.
         // Important: At this point the nonce is not yet authenticated,
@@ -560,11 +612,12 @@ export class Signaling {
         // (and thus authenticated) the message.
         if (unsafeNonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
             // Decrypt message
-            let box = Box.fromArray(buffer, nacl.box.nonceLength);
+            let box = Box.fromUint8Array(bytes, nacl.box.nonceLength);
             let decrypted = this.permanentKey.decrypt(box, this.serverKey);
 
             // Decode message
             let message = this.decodeMessage(decrypted);
+            console.debug(this.logTag, 'Received', message.type);
 
             if (message.type === 'new-responder') {
                 // A new responder wants to connect. Store id.
@@ -588,9 +641,10 @@ export class Signaling {
             if (responder.state === 'new') {
                 // If the state is 'new', then we expect a 'token' message,
                 // encrypted with the authentication token.
-                let box = Box.fromArray(buffer, nacl.secretbox.nonceLength);
+                let box = Box.fromUint8Array(bytes, nacl.secretbox.nonceLength);
                 let decrypted = decrypt(box, this.authToken);
                 let message = this.decodeMessage(decrypted) as saltyrtc.Token;
+                console.debug(this.logTag, 'Received', message.type);
                 assertType(message, 'token');
 
                 // Store responder permanent key
@@ -599,9 +653,10 @@ export class Signaling {
             } else if (responder.state === 'token-received') {
                 // If the state is 'token-received', we expect a 'key' message,
                 // encrypted with our permanent key.
-                let box = Box.fromArray(buffer, nacl.box.nonceLength);
+                let box = Box.fromUint8Array(bytes, nacl.box.nonceLength);
                 let decrypted = decrypt(box, this.permanentKey, responder.permanentKey);
                 let message = this.decodeMessage(decrypted) as saltyrtc.Key;
+                console.debug(this.logTag, 'Received', message.type);
                 assertType(message, 'key');
 
                 // Store responder session key and cookie
@@ -612,9 +667,10 @@ export class Signaling {
             } else if (responder.state === 'key-received') {
                 // If the state is 'key-received', we expect a 'auth' message,
                 // encrypted with our session key.
-                let box = Box.fromArray(buffer, nacl.box.nonceLength);
+                let box = Box.fromUint8Array(bytes, nacl.box.nonceLength);
                 let decrypted = decrypt(box, responder.keyStore, responder.sessionKey);
                 let message = this.decodeMessage(decrypted) as saltyrtc.Auth;
+                console.debug(this.logTag, 'Received', message.type);
                 assertType(message, 'auth');
 
                 // Verify the cookie

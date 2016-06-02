@@ -31,14 +31,14 @@ export default () => { describe('keystore', () => {
             let array = new Uint8Array(nonceLength + 5)
             array.set(nonce);
             array.set(data, nonceLength);
-            let box = Box.fromArray(array, nonceLength);
+            let box = Box.fromUint8Array(array, nonceLength);
             expect(box.nonce).toEqual(nonce);
             expect(box.data).toEqual(data);
             expect(box.length).toEqual(nonceLength + 5);
         });
 
         it('can be converted into a byte array', () => {
-            let array = box.toArray();
+            let array = box.toUint8Array();
             expect(array.slice(0, nacl.secretbox.nonceLength)).toEqual(nonce);
             expect(array.slice(nacl.secretbox.nonceLength)).toEqual(data);
         });
