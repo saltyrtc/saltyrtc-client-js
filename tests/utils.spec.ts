@@ -1,6 +1,6 @@
 /// <reference path="jasmine.d.ts" />
 
-import { u8aToHex, hexToU8a, randomString, concat, randomUint32 } from "../saltyrtc/utils";
+import { u8aToHex, hexToU8a, randomString, concat, randomUint32, byteToHex } from "../saltyrtc/utils";
 
 export default () => { describe('utils', () => {
 
@@ -80,6 +80,26 @@ export default () => { describe('utils', () => {
                 expect(num).toBeLessThan(0x100000000 + 1);
                 lastNum = num;
             }
+        });
+
+    });
+
+    describe('byteToHex', () => {
+
+        it('converts 0 to 0x00', () => {
+            expect(byteToHex(0)).toEqual('0x00');
+        });
+
+        it('converts 9 to 0x09', () => {
+            expect(byteToHex(9)).toEqual('0x09');
+        });
+
+        it('converts 10 to 0x0a', () => {
+            expect(byteToHex(10)).toEqual('0x0a');
+        });
+
+        it('converts 255 to 0xff', () => {
+            expect(byteToHex(255)).toEqual('0xff');
         });
 
     });

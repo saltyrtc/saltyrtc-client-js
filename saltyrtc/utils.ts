@@ -46,6 +46,13 @@ export function hexToU8a(hexstring: string): Uint8Array {
     return array;
 }
 
+/**
+ * Convert a byte to its hex string representation.
+ */
+export function byteToHex(value: number) {
+    return '0x' + ('00' + value.toString(16)).substr(-2);
+}
+
 
 /**
  * Generate a random string.
