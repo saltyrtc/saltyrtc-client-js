@@ -93,6 +93,10 @@ class CombinedSequence {
 }
 
 class Responder {
+    // Responder id
+    private _id: number;
+    public get id(): number { return this._id; }
+
     // Permanent key of the responder
     public permanentKey: Uint8Array = null;
 
@@ -107,6 +111,11 @@ class Responder {
 
     // Sequence number
     public combinedSequence: CombinedSequence = new CombinedSequence();
+
+    constructor(id: number) {
+        this._id = id;
+    }
+
 }
 
 /**
@@ -362,7 +371,7 @@ export class Signaling {
             if (this.role == 'initiator') {
                 this.responders = new Map<number, Responder>();
                 for (let id of message.responders) {
-                    this.responders.set(id, new Responder());
+                    this.responders.set(id, new Responder(id));
                 }
                 console.debug(this.logTag, this.responders.size, 'responders connected');
             } else {
@@ -463,7 +472,7 @@ export class Signaling {
      * specified receiver.
      */
     private buildPacket(message: saltyrtc.Message, receiver: number, encrypt=true): Uint8Array {
-        // Create nonce
+        // Choose proper sequence number
         let csn;
         if (receiver === Signaling.SALTYRTC_ADDR_SERVER) {
             csn = this.serverCombinedSequence.next();
@@ -474,6 +483,8 @@ export class Signaling {
         } else {
             throw 'bad-receiver';
         }
+
+        // Create nonce
         let nonce = new Nonce(this.cookiePair.ours, csn.overflow, csn.sequenceNumber, this.address, receiver);
         let nonceBytes = new Uint8Array(nonce.toArrayBuffer());
 
@@ -487,8 +498,15 @@ export class Signaling {
                 box = this.permanentKey.encrypt(data, nonceBytes, this.serverKey);
             } else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR) {
                 box = this.authToken.encrypt(data, nonceBytes);
+            } else if (receiver >= 0x02 && receiver <= 0xff) {
+                let responder = this.responders.get(receiver);
+                if (message.type === 'key'){
+                    box = this.permanentKey.encrypt(data, nonceBytes, responder.permanentKey);
+                } else {
+                    box = responder.keyStore.encrypt(data, nonceBytes, responder.sessionKey);
+                }
             } else {
-                throw 'not-yet-implemented';
+                throw 'bad-receiver';
             }
             return box.toUint8Array();
         } else {
@@ -582,7 +600,7 @@ export class Signaling {
             console.error(this.logTag, 'Resetting connection.');
             this.ws.removeEventListener('message', this.onPeerHandshakeMessage);
             this.resetConnection();
-            throw 'abort';
+            throw new Error('Aborting due to a protocol error');
         }
 
         // Decrypt function
@@ -631,9 +649,9 @@ export class Signaling {
 
             if (message.type === 'new-responder') {
                 // A new responder wants to connect. Store id.
-                let responderId = (message as saltyrtc.NewResponder).id;
-                if (!this.responders.has(responderId)) {
-                    this.responders.set(responderId, new Responder());
+                let id = (message as saltyrtc.NewResponder).id;
+                if (!this.responders.has(id)) {
+                    this.responders.set(id, new Responder(id));
                 } else {
                     console.warn(this.logTag, 'Got new-responder message for an already known responder.');
                 }
@@ -653,17 +671,29 @@ export class Signaling {
             }
 
             if (responder.state === 'new') {
-                // If the state is 'new', then we expect a 'token' message,
-                // encrypted with the authentication token.
-                let box = Box.fromUint8Array(bytes, nacl.secretbox.nonceLength);
-                let decrypted = decrypt(box, this.authToken);
-                let message = this.decodeMessage(decrypted) as saltyrtc.Token;
-                console.debug(this.logTag, 'Received', message.type);
-                assertType(message, 'token');
+                {
+                    // If the state is 'new', then we expect a 'token' message,
+                    // encrypted with the authentication token.
+                    let box = Box.fromUint8Array(bytes, nacl.secretbox.nonceLength);
+                    let decrypted = decrypt(box, this.authToken);
+                    let message = this.decodeMessage(decrypted) as saltyrtc.Token;
+                    console.debug(this.logTag, 'Received', message.type);
+                    assertType(message, 'token');
 
-                // Store responder permanent key
-                responder.permanentKey = Uint8Array.from(message.key);
-                responder.state = 'token-received';
+                    // Store responder permanent key
+                    responder.permanentKey = Uint8Array.from(message.key);
+                    responder.state = 'token-received';
+                }
+                {
+                    // Send key
+                    let message: saltyrtc.Key = {
+                        type: 'key',
+                        key: responder.keyStore.publicKeyArray,
+                    };
+                    let packet: Uint8Array = this.buildPacket(message, responder.id);
+                    console.debug(this.logTag, 'Sending key');
+                    this.ws.send(packet);
+                }
             } else if (responder.state === 'token-received') {
                 // If the state is 'token-received', we expect a 'key' message,
                 // encrypted with our permanent key.
@@ -673,10 +703,9 @@ export class Signaling {
                 console.debug(this.logTag, 'Received', message.type);
                 assertType(message, 'key');
 
-                // Store responder session key and cookie
+                // Store responder session key
                 let nonce = unsafeNonce;
                 responder.sessionKey = Uint8Array.from(message.key);
-                responder.theirCookie = nonce.cookie;
                 responder.state = 'key-received';
             } else if (responder.state === 'key-received') {
                 // If the state is 'key-received', we expect a 'auth' message,
@@ -689,7 +718,7 @@ export class Signaling {
 
                 // Verify the cookie
                 let nonce = unsafeNonce;
-                if (nonce.cookie !== responder.cookiePair.ours) {
+                if (nonce.cookie !== this.cookiePair.ours) {
                     console.error(this.logTag, 'Invalid cookie in auth message.');
                     abort();
                 }
