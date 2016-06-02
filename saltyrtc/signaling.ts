@@ -19,18 +19,9 @@ import { concat, randomUint32 } from "./utils";
 /**
  * Possible states for SaltyRTC connection.
  */
-export const enum State {
-    // Websocket is connecting
-    Connecting = 0,
-    // Websocket is open
-    Open,
-    // Websocket is closing
-    Closing,
-    // Websocket is closed
-    Closed,
-    // Status is unknown
-    Unknown = 99
-}
+export type State = 'unknown' | 'ws-connecting' | 'ws-open' |
+                    'server-handshake' | 'peer-handshake' |
+                    'open' | 'closing' | 'closed';
 
 const enum CloseCode {
     // The endpoint is going away
@@ -146,7 +137,7 @@ export class Signaling {
     private ws: WebSocket = null;
 
     // Connection state
-    public state: State = State.Unknown;
+    public state: State = 'unknown';
 
     // Main class
     private client: SaltyRTC;
@@ -239,7 +230,7 @@ export class Signaling {
         this.ws.addEventListener('message', this.onInitServerHandshake);
 
         // Store connection on instance
-        this.state = State.Connecting;
+        this.state = 'ws-connecting';
         console.debug(this.logTag, 'Opening WebSocket connection to', url + path);
     }
 
@@ -252,7 +243,9 @@ export class Signaling {
     private onInitServerHandshake = async (ev: MessageEvent) => {
         console.debug(this.logTag, 'Start server handshake');
         this.ws.removeEventListener('message', this.onInitServerHandshake);
+        this.state = 'server-handshake';
         await this.serverHandshake(ev.data);
+        this.state = 'peer-handshake';
         this.ws.addEventListener('message', this.onPeerHandshakeMessage);
     }
 
@@ -497,11 +490,11 @@ export class Signaling {
      */
     private resetConnection(): void {
         let oldState = this.state;
-        this.state = State.Unknown;
+        this.state = 'unknown';
         this.serverCombinedSequence = new CombinedSequence();
 
         // Close WebSocket instance
-        if (this.ws !== null && oldState === State.Open) {
+        if (this.ws !== null) {
             console.debug(this.logTag, 'Disconnecting WebSocket');
             this.ws.close();
         }
@@ -513,7 +506,7 @@ export class Signaling {
      */
     private onOpen = (ev: Event) => {
         console.info(this.logTag, 'Opened connection');
-        this.state = State.Open;
+        this.state = 'ws-open';
         this.client.onConnected(ev);
     };
 
@@ -531,7 +524,7 @@ export class Signaling {
      */
     private onClose = (ev: CloseEvent) => {
         console.info(this.logTag, 'Closed connection');
-        this.state = State.Closed;
+        this.state = 'closed';
         switch (ev.code) {
             case CloseCode.GoingAway:
                 console.error(this.logTag, 'Server is being shut down');
@@ -724,15 +717,15 @@ export class Signaling {
     private getStateFromSocket(): State {
         switch (this.ws.readyState) {
             case WebSocket.CONNECTING:
-                return State.Connecting;
+                return 'ws-connecting';
             case WebSocket.OPEN:
-                return State.Open;
+                return 'unknown';
             case WebSocket.CLOSING:
-                return State.Closing;
+                return 'closing';
             case WebSocket.CLOSED:
-                return State.Closed;
+                return 'closed';
         }
-        return State.Unknown;
+        return 'unknown';
     }
 
 }
