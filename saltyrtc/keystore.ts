@@ -163,8 +163,7 @@ export class AuthToken {
     /**
      * Encrypt data using the shared auth token.
      */
-    public encrypt(bytes: Uint8Array): Box {
-        let nonce = nacl.randomBytes(nacl.secretbox.nonceLength);
+    public encrypt(bytes: Uint8Array, nonce: Uint8Array): Box {
         let encrypted = nacl.secretbox(bytes, nonce, this._authToken);
         return new Box(nonce, encrypted, nacl.secretbox.nonceLength);
     }
