@@ -46,6 +46,13 @@ export function hexToU8a(hexstring: string): Uint8Array {
     return array;
 }
 
+/**
+ * Convert a byte to its hex string representation.
+ */
+export function byteToHex(value: number) {
+    return '0x' + ('00' + value.toString(16)).substr(-2);
+}
+
 
 /**
  * Generate a random string.
@@ -58,4 +65,32 @@ export function randomString(length=32, chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg
         str += chars.charAt(Math.floor(Math.random() * chars.length))
     }
     return str;
+}
+
+/**
+ * Generate a random 32 bit unsigned integer.
+ */
+export function randomUint32(): number {
+    let crypto = window.crypto || (window as any).msCrypto;
+    return crypto.getRandomValues(new Uint32Array(1))[0];
+}
+
+
+/**
+ * Concatenate multiple Uint8Array objects.
+ *
+ * Based on http://www.2ality.com/2015/10/concatenating-typed-arrays.html
+ */
+export function concat(...arrays: Uint8Array[]): Uint8Array {
+    let totalLength = 0;
+    for (let arr of arrays) {
+        totalLength += arr.length;
+    }
+    let result = new Uint8Array(totalLength);
+    let offset = 0;
+    for (let arr of arrays) {
+        result.set(arr, offset);
+        offset += arr.length;
+    }
+    return result;
 }

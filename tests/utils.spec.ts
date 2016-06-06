@@ -1,10 +1,10 @@
 /// <reference path="jasmine.d.ts" />
 
-import { u8aToHex, hexToU8a, randomString } from "../saltyrtc/utils";
+import { u8aToHex, hexToU8a, randomString, concat, randomUint32, byteToHex } from "../saltyrtc/utils";
 
-export default () => {
+export default () => { describe('utils', () => {
 
-    describe('Uint8Array / Hex conversion', () => {
+    describe('hexToU8a / u8aToHex', () => {
 
         it('conversion from Uint8Array to hex works', () => {
             let source = new Uint8Array([0x01, 0x10, 0xde, 0xad, 0xbe, 0xef]);
@@ -32,7 +32,7 @@ export default () => {
 
     });
 
-    describe('randomString()', () => {
+    describe('randomString', () => {
 
         it('generates a 32 character random string', () => {
             let random1 = randomString();
@@ -44,4 +44,64 @@ export default () => {
 
     });
 
-}
+    describe('concat', () => {
+
+        it('does not change a single array', () => {
+            let src = Uint8Array.of(1, 2, 3, 4);
+            expect(concat(src)).toEqual(src);
+        });
+
+        it('concatenates two arrays', () => {
+            let src1 = Uint8Array.of(1, 2, 3, 4);
+            let src2 = Uint8Array.of(5, 6);
+            expect(concat(src1, src2))
+                .toEqual(Uint8Array.of(1, 2, 3, 4, 5, 6));
+        });
+
+        it('concatenates multiple arrays', () => {
+            let src1 = Uint8Array.of(1, 2, 3, 4);
+            let src2 = Uint8Array.of(5, 6);
+            let src3 = Uint8Array.of(7);
+            let src4 = Uint8Array.of(7, 8, 9);
+            expect(concat(src1, src2, src3, src4))
+                .toEqual(Uint8Array.of(1, 2, 3, 4, 5, 6, 7, 7, 8, 9));
+        });
+
+    });
+
+    describe('randomUint32', () => {
+
+        it('generates a random number between 0 and 2**32', () => {
+            let lastNum: number = null;
+            for (let i = 0; i < 50; i++) {
+                let num = randomUint32();
+                expect(num).not.toEqual(lastNum);
+                expect(num).toBeGreaterThan(-1);
+                expect(num).toBeLessThan(0x100000000 + 1);
+                lastNum = num;
+            }
+        });
+
+    });
+
+    describe('byteToHex', () => {
+
+        it('converts 0 to 0x00', () => {
+            expect(byteToHex(0)).toEqual('0x00');
+        });
+
+        it('converts 9 to 0x09', () => {
+            expect(byteToHex(9)).toEqual('0x09');
+        });
+
+        it('converts 10 to 0x0a', () => {
+            expect(byteToHex(10)).toEqual('0x0a');
+        });
+
+        it('converts 255 to 0xff', () => {
+            expect(byteToHex(255)).toEqual('0xff');
+        });
+
+    });
+
+}); }

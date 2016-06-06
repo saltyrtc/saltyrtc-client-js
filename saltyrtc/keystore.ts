@@ -5,21 +5,26 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-import { u8aToHex, hexToU8a, randomString } from "./utils";
+/// <reference path='types/tweetnacl.d.ts' />
 
-var nacl: any; // TODO
+import { u8aToHex, hexToU8a } from "./utils";
 
+/**
+ * A `Box` contains a nonce and encrypted data.
+ */
 export class Box {
 
     private _nonce: Uint8Array;
-    private _data: any; // TODO
+    private _nonceLength: number;
+    private _data: Uint8Array;
 
-    constructor(nonce: Uint8Array, data) {
+    constructor(nonce: Uint8Array, data: Uint8Array, nonceLength: number) {
         this._nonce = nonce;
+        this._nonceLength = nonceLength;
         this._data = data;
     }
 
-    public get length() {
+    public get length(): number {
         return this._nonce.length + this._data.length;
     }
 
@@ -27,138 +32,152 @@ export class Box {
         return this._data;
     }
 
-    public get nonce() {
+    public get nonce(): Uint8Array {
         return this._nonce;
     }
 
-    public static fromArray(array) {
+    public static fromUint8Array(array: Uint8Array, nonceLength: number) {
         // Unpack nonce
-        let nonce_length = nacl.secretbox.nonceLength;
-        let nonce = array.slice(0, nonce_length);
+        let nonce = array.slice(0, nonceLength);
 
         // Unpack data
-        let data = array.slice(nonce_length);
+        let data = array.slice(nonceLength);
 
         // Return box
-        return new Box(nonce, data);
+        return new Box(nonce, data, nonceLength);
     }
 
-    public toArray() {
-        let nonce_length = nacl.secretbox.nonceLength;
-
+    public toUint8Array(): Uint8Array {
         // Return both the nonce and the encrypted data
         let box = new Uint8Array(this.length);
         box.set(this._nonce);
-        box.set(this._data, nonce_length);
+        box.set(this._data, this._nonceLength);
         return box;
     }
+
 }
 
 
-// A tweetnacl KeyPair
-interface IKeyPair {
-    publicKey: Uint8Array,
-    secretKey: Uint8Array
-}
-
-
+/**
+ * A KeyStore holds public and private keys and can handle encryption and
+ * decryption.
+ */
 export class KeyStore {
-    // Public key of the recipient
-    public otherKey = null;
     // The NaCl key pair
-    public keyPair: IKeyPair;
+    private _keyPair: nacl.KeyPair;
 
     constructor() {
         // Create new key pair
-        // TODO: Try to read from webstorage first and send push message to app
-        this.keyPair = nacl.box.keyPair();
-        console.debug('Private key:', u8aToHex(this.keyPair.secretKey));
-        console.debug('Public key:', u8aToHex(this.keyPair.publicKey));
-
-        // Make sure that toHex and toBin work properly
-        // TODO: Move to test
-        let result = JSON.stringify(hexToU8a(u8aToHex(this.keyPair.secretKey)));
-        if (JSON.stringify(this.keyPair.secretKey) != result) {
-            throw 'Assertion error';
-        }
-
-        // Make sure encryption and decryption work properly
-        // TODO: Move to test
-        this.otherKey = this.keyPair.publicKey;
-        let expected = randomString();
-        if (this.decrypt(this.encrypt(expected)) != expected) {
-            throw 'Assertion error';
-        }
-        this.otherKey = null;
-    }
-
-    /**
-     * Whether or not the keystore has stored the public key of the recipient.
-     */
-    public hasOtherKey() {
-        return this.otherKey != null;
+        this._keyPair = nacl.box.keyPair();
+        console.debug('KeyStore: Public key:', u8aToHex(this._keyPair.publicKey));
     }
 
     /**
      * Return the public key as hex string.
      */
-    public getPublicKey() {
-        return u8aToHex(this.keyPair.publicKey);
-    }
+    get publicKeyHex() { return u8aToHex(this._keyPair.publicKey); }
 
     /**
-     * Return the data necessary to create a QR code.
-     *
-     * @deprecated, probably not needed in a generic saltyrtc library.
+     * Return the public key as Uint8Array.
      */
-    public getPublicKeyAsQRCode() {
-        return {
-            version: 5,
-            errorCorrectionLevel: 'M',
-            size: 256,
-            data: this.getPublicKey()
-        };
-    }
+    get publicKeyBytes() { return this._keyPair.publicKey; }
+
+    /**
+     * Return the public key as array.
+     */
+    get publicKeyArray() { return Array.from(this._keyPair.publicKey); }
+
+    /**
+     * Return the secret key as hex string.
+     */
+    get secretKeyHex() { return u8aToHex(this._keyPair.secretKey); }
+
+    /**
+     * Return the secret key as Uint8Array.
+     */
+    get secretKeyBytes() { return this._keyPair.secretKey; }
+
+    /**
+     * Return the secret key as array.
+     */
+    get secretKeyArray() { return Array.from(this._keyPair.secretKey); }
 
     /**
      * Encrypt data for the peer.
      */
-    public encrypt(data: string): Box {
-        // Convert string to bytes
-        let bytes = nacl.util.decodeUTF8(data);
-
-        // Generate random nonce
-        let nonce = nacl.randomBytes(nacl.secretbox.nonceLength);
-
-        // Encrypt data with keys and nonce
-        bytes = nacl.box(bytes, nonce, this.otherKey, this.keyPair.secretKey);
-
-        // Return box
-        return new Box(nonce, bytes);
+    public encrypt(bytes: Uint8Array, nonce: Uint8Array, otherKey: Uint8Array): Box {
+        let encrypted = nacl.box(bytes, nonce, otherKey, this._keyPair.secretKey);
+        return new Box(nonce, encrypted, nacl.box.nonceLength);
     }
 
     /**
      * Decrypt data from the peer.
      */
-    public decrypt(box: Box): string {
+    public decrypt(box: Box, otherKey: Uint8Array): Uint8Array {
         // Decrypt data
-        let data = nacl.box.open(box.data, box.nonce, this.otherKey, this.keyPair.secretKey);
-        if (data == false) {
+        let data = nacl.box.open(box.data, box.nonce, otherKey, this._keyPair.secretKey);
+        if (data === false) {
             // TODO: Handle error
-            throw 'Decryption failed'
+            throw 'decryption-failed'
         }
+        return data as Uint8Array;
+    }
+}
 
-        // Return data as string
-        return nacl.util.encodeUTF8(data);
+
+export class AuthToken {
+
+    public static SECRET_LENGTH = 32;
+
+    private _authToken: Uint8Array = null;
+
+    constructor(bytes?: Uint8Array) {
+        if (typeof bytes === 'undefined') {
+            this._authToken = nacl.randomBytes(AuthToken.SECRET_LENGTH);
+            console.debug('AuthToken: Generated auth token');
+        } else {
+            if (bytes.byteLength != AuthToken.SECRET_LENGTH) {
+                console.error('Auth token must be', AuthToken.SECRET_LENGTH, 'bytes long.');
+                throw 'bad-token-length';
+            }
+            this._authToken = bytes;
+            console.debug('AuthToken: Initialized auth token');
+        }
     }
 
     /**
-     * Wrap the Box.fromArray static method. Needed because Angular creates a
-     * KeyStore singleton without direct access to the Box class.
-     *
-     * @deprecated, probably not needed in a generic saltyrtc library.
+     * Return the secret key as Uint8Array.
      */
-    public boxFromArray(array): Box {
-        return Box.fromArray(array);
+    get keyBytes() { return this._authToken; }
+
+    /**
+     * Return the secret key as hex string.
+     */
+    get keyHex() { return u8aToHex(this._authToken); }
+
+    /**
+     * Return the secret key as hex string.
+     */
+    get keyArray() { return Array.from(this._authToken); }
+
+    /**
+     * Encrypt data using the shared auth token.
+     */
+    public encrypt(bytes: Uint8Array, nonce: Uint8Array): Box {
+        let encrypted = nacl.secretbox(bytes, nonce, this._authToken);
+        return new Box(nonce, encrypted, nacl.secretbox.nonceLength);
     }
+
+    /**
+     * Decrypt data using the shared auth token.
+     */
+    public decrypt(box: Box): Uint8Array {
+        let data = nacl.secretbox.open(box.data, box.nonce, this._authToken);
+        if (data === false) {
+            // TODO: handle error
+            throw 'decryption-failed'
+        }
+        return data as Uint8Array;
+    }
+
 }
