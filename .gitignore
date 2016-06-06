@@ -4,3 +4,7 @@ node_modules/
 npm-debug.log
 dist/
 docs/
+saltyrtc.crt
+saltyrtc.csr
+saltyrtc.key
+saltyrtc-server-python/
