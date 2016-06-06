@@ -19,7 +19,7 @@ import { concat, randomUint32, byteToHex, u8aToHex } from "./utils";
 /**
  * Possible states for SaltyRTC connection.
  */
-export type State = 'unknown' | 'ws-connecting' |
+export type State = 'new' | 'ws-connecting' |
                     'server-handshake' | 'peer-handshake' |
                     'open' | 'closing' | 'closed';
 
@@ -141,7 +141,7 @@ export class Signaling {
     private ws: WebSocket = null;
 
     // Connection state
-    public state: State = 'unknown';
+    public state: State = 'new';
 
     // Main class
     private client: SaltyRTC;
@@ -539,13 +539,13 @@ export class Signaling {
      *
      * - Close WebSocket if still open
      * - Set `this.ws` to `null`
-     * - Set `this.status` to `Unknown`
+     * - Set `this.status` to `new`
      * - Reset `this.sequenceNumber` to 0
      * - Clear the cache
      */
     private resetConnection(): void {
         let oldState = this.state;
-        this.state = 'unknown';
+        this.state = 'new';
         this.serverCombinedSequence = new CombinedSequence();
 
         // Close WebSocket instance
@@ -570,7 +570,7 @@ export class Signaling {
      */
     private onError = (ev: ErrorEvent) => {
         console.error(this.logTag, 'General WebSocket error', ev);
-        this.state = this.getStateFromSocket();
+        // TODO: Do we need to update the state here?
         this.client.onConnectionError(ev);
     };
 
@@ -894,23 +894,6 @@ export class Signaling {
      */
     private onMessage = (ev: MessageEvent) => {
         console.info(this.logTag, 'Message received!');
-    }
-
-    /**
-     * Return state based on websocket `readyState` attribute.
-     */
-    private getStateFromSocket(): State {
-        switch (this.ws.readyState) {
-            case WebSocket.CONNECTING:
-                return 'ws-connecting';
-            case WebSocket.OPEN:
-                return 'unknown';
-            case WebSocket.CLOSING:
-                return 'closing';
-            case WebSocket.CLOSED:
-                return 'closed';
-        }
-        return 'unknown';
     }
 
 }

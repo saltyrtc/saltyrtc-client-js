@@ -31,13 +31,12 @@ export default () => { describe('Integration Tests', () => {
         });
 
         it('connect (initiator first)', async (done) => {
-            expect(this.initiator.state).toEqual('unknown');
-            expect(this.responder.state).toEqual('unknown');
+            expect(this.initiator.state).toEqual('new');
+            expect(this.responder.state).toEqual('new');
             this.initiator.connect();
             expect(this.initiator.state).toEqual('ws-connecting');
             await sleep(1500);
-            expect(this.initiator.state === 'ws-open' ||
-                   this.initiator.state === 'server-handshake' ||
+            expect(this.initiator.state === 'server-handshake' ||
                    this.initiator.state === 'peer-handshake').toBe(true);
             this.responder.connect();
             expect(this.responder.state).toEqual('ws-connecting');
@@ -48,13 +47,12 @@ export default () => { describe('Integration Tests', () => {
         });
 
         it('connect (responder first)', async (done) => {
-            expect(this.initiator.state).toEqual('unknown');
-            expect(this.responder.state).toEqual('unknown');
+            expect(this.initiator.state).toEqual('new');
+            expect(this.responder.state).toEqual('new');
             this.responder.connect();
             expect(this.responder.state).toEqual('ws-connecting');
             await sleep(1500);
-            expect(this.responder.state === 'ws-open' ||
-                   this.responder.state === 'server-handshake' ||
+            expect(this.responder.state === 'server-handshake' ||
                    this.responder.state === 'peer-handshake').toBe(true);
             this.initiator.connect();
             expect(this.initiator.state).toEqual('ws-connecting');
