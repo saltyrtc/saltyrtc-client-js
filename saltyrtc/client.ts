@@ -126,8 +126,8 @@ export class SaltyRTC {
     /**
      * Connection is ready for sending and receiving.
      */
-    public onConnected(ev: Event): void {
-        console.debug('SaltyRTC: Connected to server');
+    public onConnected(): void {
+        console.info('SaltyRTC: Connected to peer');
     }
 
     /**
