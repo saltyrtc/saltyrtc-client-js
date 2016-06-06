@@ -36,8 +36,14 @@ export default () => { describe('Integration Tests', () => {
             this.initiator.connect();
             expect(this.initiator.state).toEqual('ws-connecting');
             await sleep(1500);
+            expect(this.initiator.state === 'ws-open' ||
+                   this.initiator.state === 'server-handshake' ||
+                   this.initiator.state === 'peer-handshake').toBe(true);
             this.responder.connect();
             expect(this.responder.state).toEqual('ws-connecting');
+            await sleep(1500);
+            expect(this.initiator.state).toBe('open');
+            expect(this.responder.state).toBe('open');
             done();
         });
 
@@ -47,8 +53,14 @@ export default () => { describe('Integration Tests', () => {
             this.responder.connect();
             expect(this.responder.state).toEqual('ws-connecting');
             await sleep(1500);
+            expect(this.responder.state === 'ws-open' ||
+                   this.responder.state === 'server-handshake' ||
+                   this.responder.state === 'peer-handshake').toBe(true);
             this.initiator.connect();
             expect(this.initiator.state).toEqual('ws-connecting');
+            await sleep(1500);
+            expect(this.initiator.state).toBe('open');
+            expect(this.responder.state).toBe('open');
             done();
         });
 
