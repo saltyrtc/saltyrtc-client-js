@@ -13,23 +13,32 @@ before_script:
   - wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
   - sudo dpkg -i google-chrome*.deb
   - sh -e /etc/init.d/xvfb start
+  # Start chrome to initialize profile
+  - google-chrome &
+  - CHROME_PID=$!
   # Libsodium
   - sudo add-apt-repository -y ppa:chris-lea/libsodium
   - sudo apt-get update && sudo apt-get install -y libsodium-dev
-  # SaltyRTC server
-  - openssl req -new -newkey rsa:1024 -nodes -sha256 -out saltyrtc.csr -keyout saltyrtc.key -subj '/C=CH/CN=localhost/'
+  # Create test certificate for localhost
+  - openssl req -new -newkey rsa:1024 -nodes -sha256 -out saltyrtc.csr -keyout saltyrtc.key -subj '/C=CH/O=SaltyRTC/CN=localhost/'
   - openssl x509 -req -days 365 -in saltyrtc.csr -signkey saltyrtc.key -out saltyrtc.crt
+  # Add certificate to firefox and chrome
+  - kill $CHROME_PID
+  - sudo apt-get install -y libnss3-tools
+  - mkdir ~/.mozilla/firefox/saltyrtc
+  - certutil -d ~/.mozilla/firefox/saltyrtc -A -n saltyrtc-test-ca -t Ccw,, -i saltyrtc.crt
+  - certutil -d sql:$HOME/.pki/nssdb -A -n saltyrtc-test-ca -t Ccw,, -i saltyrtc.crt
+  # Start SaltyRTC server
   - git clone https://github.com/saltyrtc/saltyrtc-server-python -b develop
-  - export SALTYRTC_TLS_CERT=../saltyrtc.crt
-  - export SALTYRTC_TLS_KEY=../saltyrtc.key
+  - export SALTYRTC_TLS_CERT=../saltyrtc.crt SALTYRTC_TLS_KEY=../saltyrtc.key
   - |
     cd saltyrtc-server-python
     pyvenv venv
     venv/bin/python setup.py install
     venv/bin/pip install logbook
     venv/bin/python examples/debug.py &
-    SALTYRTC_SERVER_PID=$!
-    sleep 3
+    export SALTYRTC_SERVER_PID=$!
+    sleep 2
     cd ..
   # Rollup tests
   - npm run rollup_tests
@@ -37,7 +46,11 @@ script:
   - node_modules/.bin/tsc --target ES2015 --noEmit
   - npm test
 after_script:
+  # Stop SaltyRTC server
+  - kill -INT $SALTYRTC_SERVER_PID
+  # Build docs
   - bash scripts/travis_build_docs.sh
+  - ls -la ~/.mozilla/firefox
 env:
   global:
     - secure: "mWKQu4QlYcEO7G6o2hYOKaeZV/+NXDcHu1OJok6BCEmyT1G6ExCNP7+mzKbzhNm7LTAjl14KzPolB4306+xj1k67ssFQ7nGm+GmEvYQQ8AsVVBTpnAUDDKE65VJHqRXSTeBAnv3JAlFGXHDSCHbhX02CW+rW8L8XJD9ZdkKyuQYZ42h83hDqBs8hYxoX7DHOwigmohYUcYvRMH1Eh/Y3VOOQ6mCYN+BZ5ppryC/HaCMkiIC0G1azVo5XqNMaMZ5QZ8qDdYGclFZB8yFc89whUoXk+JeT/PVgakoPS8Tb9MAzm1b+fz1xfk9CGRLNcp9ZluohQiacrWxmKOsTqfaiE1eoU/wrDsRw7bXZTEskHL1aBlOssRirLmyHLOvPOxsz4mGfs6gTRWayeOv1x4vDQuw8VODfwRfioxok10E+a85Ow8i/2HsBkWXynN7NanXqerBtat4fmIM+5UQB2g3+F3eFaF/15BRil8dMA384fUuhXd2e9YyNN5gh3Y/ehKRI5nae73cq5l2D/MntjZBgvQe7//qT6IJfSylwFIafD2+kAEe+8AYKRTtDyjgkGWB1tmuRkLiwuEch+ezaV/17gNyqciDh6gN89+1D0IzgN3RdVRqmJTvh/R/09m3A1mu24ZI3eaJ92nWkaCVacfQo76O0yvimM9cW6JDz6mn8YQ8="
