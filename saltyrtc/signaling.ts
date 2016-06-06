@@ -19,7 +19,7 @@ import { concat, randomUint32, byteToHex, u8aToHex } from "./utils";
 /**
  * Possible states for SaltyRTC connection.
  */
-export type State = 'unknown' | 'ws-connecting' | 'ws-open' |
+export type State = 'unknown' | 'ws-connecting' |
                     'server-handshake' | 'peer-handshake' |
                     'open' | 'closing' | 'closed';
 
@@ -258,6 +258,7 @@ export class Signaling {
     private onInitServerHandshake = async (ev: MessageEvent) => {
         console.debug(this.logTag, 'Start server handshake');
         this.ws.removeEventListener('message', this.onInitServerHandshake);
+        // The state is already updated in onOpen, but let's make sure it's set correctly.
         this.state = 'server-handshake';
         await this.serverHandshake(ev.data);
         this.state = 'peer-handshake';
@@ -560,7 +561,7 @@ export class Signaling {
      */
     private onOpen = (ev: Event) => {
         console.info(this.logTag, 'Opened connection');
-        this.state = 'ws-open';
+        this.state = 'server-handshake';
         this.client.onConnected(ev);
     };
 
