@@ -110,8 +110,9 @@ export default () => { describe('keystore', () => {
 
         it('can encrypt and decrypt properly (round trip)', () => {
             let expected = nacl.randomBytes(7);
-            expect(at.encrypt(expected)).not.toEqual(expected);
-            expect(at.decrypt(at.encrypt(expected))).toEqual(expected);
+            let nonce = nacl.randomBytes(24);
+            expect(at.encrypt(expected, nonce)).not.toEqual(expected);
+            expect(at.decrypt(at.encrypt(expected, nonce))).toEqual(expected);
         });
 
     });
