@@ -6,10 +6,9 @@
  */
 
 /// <reference path="types/angular.d.ts" />
-/// <reference path="peerconnection.ts" />
+/// <reference path="types/RTCPeerConnection.d.ts" />
 
 import { KeyStore, Box } from "./keystore";
-import { PeerConnection } from "./peerconnection";
 import { randomString } from "./utils";
 import { Chunkifier, Unchunkifier } from "./chunkifier";
 
