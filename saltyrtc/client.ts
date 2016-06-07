@@ -100,30 +100,6 @@ export class SaltyRTC {
     }
 
     /**
-     * Send an ICE candidate through the signaling channel.
-     *
-     * TODO: Make sure candidates are buffered for 10ms, according to the
-     * SaltyRTC spec.
-     */
-    public sendCandidate(candidate: RTCIceCandidate) {
-        this.signaling.sendCandidate(candidate);
-    }
-
-    /**
-     * Send an offer through the signaling channel.
-     */
-    public sendOffer(offerSdp: RTCSessionDescription) {
-        this.signaling.sendOffer(offerSdp);
-    }
-
-    /**
-     * Receive an answer through the signaling channel.
-     */
-    public onReceiveAnswer(answerSdp: RTCSessionDescription) {
-        console.debug('SaltyRTC: Received answer');
-    }
-
-    /**
      * Connection is ready for sending and receiving.
      */
     public onConnected(): void {

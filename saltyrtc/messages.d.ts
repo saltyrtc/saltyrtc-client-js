@@ -3,7 +3,7 @@ declare namespace saltyrtc {
     type MessageType = 'server-hello' | 'client-hello' | 'client-auth'
                      | 'server-auth' | 'new-initiator' | 'new-responder'
                      | 'drop-responder' | 'send-error' | 'token' | 'key'
-                     | 'auth' | 'offer' | 'answer' | 'sdp' | 'candidates' | 'restart';
+                     | 'auth' | 'restart' | 'data';
 
     interface Message {
         type: MessageType,
@@ -76,33 +76,15 @@ declare namespace saltyrtc {
         your_cookie: number[],
     }
 
-    // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#offer
-    interface Offer extends Message {
-        type: 'offer',
-        sdp: string,
-    }
-
-    // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#answer
-    interface Answer extends Message {
-        type: 'answer',
-        sdp: string,
-    }
-
-    interface Sdp extends Message {
-        type: 'sdp',
-        sdp_type: 'offer' | 'answer' | 'pranswer' | 'rollback',
-        sdp: string,
-    }
-
-    // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#candidates
-    interface Candidates extends Message {
-        type: 'candidates',
-        sdp: string[], // TODO: #28
-    }
-
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#restart
     interface Restart extends Message {
         type: 'restart',
+    }
+
+    interface Data extends Message {
+        type: 'data',
+        data_type: string,
+        data: any,
     }
 
 }

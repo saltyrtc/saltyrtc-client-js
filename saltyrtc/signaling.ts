@@ -897,4 +897,22 @@ export class Signaling {
         console.info(this.logTag, 'Message received!');
     }
 
+    /**
+     * Send a data message to the peer, encrypted with the session key.
+     */
+    private sendData(data: saltyrtc.Data) {
+        if (this.state !== 'open') {
+            console.error(this.logTag, 'Trying to send a message, but connection state is', this.state);
+            throw 'bad-state';
+        }
+
+        // Determine peer address
+        let peerAddress = this.role === 'initiator' ? Signaling.SALTYRTC_ADDR_INITIATOR : this.responder.id;
+
+        // Send message
+        let packet: Uint8Array = this.buildPacket(data, peerAddress);
+        console.debug(this.logTag, 'Sending', data.data_type, 'data message');
+        this.ws.send(packet);
+    }
+
 }
