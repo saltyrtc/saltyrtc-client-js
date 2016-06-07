@@ -902,12 +902,23 @@ export class Signaling {
      */
     private onMessage = (ev: MessageEvent) => {
         console.info(this.logTag, 'Message received!');
+        let message = ev.data as saltyrtc.Message;
+        switch (message.type) {
+            case 'data':
+                console.debug('New data message');
+                this.client.onData(message as saltyrtc.Data);
+                break;
+            case 'restart':
+                throw 'not-yet-implemented';
+            default:
+                console.error(this.logTag, 'Invalid message type:', message.type);
+        }
     }
 
     /**
      * Send a data message to the peer, encrypted with the session key.
      */
-    private sendData(data: saltyrtc.Data) {
+    public sendData(data: saltyrtc.Data) {
         if (this.state !== 'open') {
             console.error(this.logTag, 'Trying to send a message, but connection state is', this.state);
             throw 'bad-state';

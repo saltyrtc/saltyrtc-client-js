@@ -83,7 +83,7 @@ declare namespace saltyrtc {
 
     interface Data extends Message {
         type: 'data',
-        data_type: string,
+        data_type?: string,
         data: any,
     }
 

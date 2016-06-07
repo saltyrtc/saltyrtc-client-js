@@ -100,10 +100,28 @@ export class SaltyRTC {
     }
 
     /**
+     * Send signaling data to the peer.
+     */
+    public sendData(dataType: string, data: any) {
+         this.signaling.sendData({
+             type: 'data',
+             data_type: dataType,
+             data: data,
+         } as saltyrtc.Data);
+    }
+
+    /**
      * Connection is ready for sending and receiving.
      */
     public onConnected(): void {
         console.info('SaltyRTC: Connected to peer');
+    }
+
+    /**
+     * A data message arrived.
+     */
+    public onData(data: saltyrtc.Data): void {
+        console.info('SaltyRTC: New data message:', data);
     }
 
     /**
