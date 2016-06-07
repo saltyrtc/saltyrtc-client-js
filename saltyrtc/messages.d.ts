@@ -3,7 +3,7 @@ declare namespace saltyrtc {
     type MessageType = 'server-hello' | 'client-hello' | 'client-auth'
                      | 'server-auth' | 'new-initiator' | 'new-responder'
                      | 'drop-responder' | 'send-error' | 'token' | 'key'
-                     | 'auth' | 'offer' | 'answer' | 'candidates' | 'restart';
+                     | 'auth' | 'offer' | 'answer' | 'sdp' | 'candidates' | 'restart';
 
     interface Message {
         type: MessageType,
@@ -79,13 +79,19 @@ declare namespace saltyrtc {
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#offer
     interface Offer extends Message {
         type: 'offer',
-        sdp: string, // TODO: #28
+        sdp: string,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#answer
     interface Answer extends Message {
         type: 'answer',
-        sdp: string, // TODO: #28
+        sdp: string,
+    }
+
+    interface Sdp extends Message {
+        type: 'sdp',
+        sdp_type: 'offer' | 'answer' | 'pranswer' | 'rollback',
+        sdp: string,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#candidates
