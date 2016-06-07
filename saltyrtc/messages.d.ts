@@ -79,21 +79,18 @@ declare namespace saltyrtc {
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#offer
     interface Offer extends Message {
         type: 'offer',
-        session: number[],
         sdp: string, // TODO: #28
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#answer
     interface Answer extends Message {
         type: 'answer',
-        session: number[],
         sdp: string, // TODO: #28
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#candidates
     interface Candidates extends Message {
         type: 'candidates',
-        session: number[],
         sdp: string[], // TODO: #28
     }
 
