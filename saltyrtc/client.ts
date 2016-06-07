@@ -149,6 +149,28 @@ export class SaltyRTC {
     }
 
     /**
+     * Emit an event.
+     */
+    public emit(event: Event) {
+        let handlers = this.eventRegistry.get(event.type);
+        for (let handler of handlers) {
+            this.callHandler(handler, event);
+        }
+    }
+
+    /**
+     * Call a handler with the specified event.
+     *
+     * If the handler returns `false`, unregister it.
+     */
+    private callHandler(handler: EventHandler, event: Event) {
+        let response = handler(event);
+        if (response === false) {
+            this.eventRegistry.unregister(event.type, handler);
+        }
+    }
+
+    /**
      * Connection is ready for sending and receiving.
      */
     public onConnected(): void {
