@@ -765,7 +765,7 @@ export class Signaling {
 
                 // We're connected!
                 this.state = 'open';
-                this.client.onConnected();
+                this.onConnected();
             }
         } else if (unsafeNonce.source >= 0x02 && unsafeNonce.source <= 0xff) {
             // We're the initiator.
@@ -882,13 +882,20 @@ export class Signaling {
 
                 // We're connected!
                 this.state = 'open';
-                this.client.onConnected();
+                this.onConnected();
             }
         } else {
             console.error(this.logTag, 'Invalid source byte in nonce:', unsafeNonce.source);
             abort();
         }
     };
+
+    /**
+     * We're connected!
+     */
+    private onConnected = () => {
+        this.client.onConnected();
+    }
 
     /**
      * A message was received.
