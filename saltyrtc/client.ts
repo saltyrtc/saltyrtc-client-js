@@ -7,12 +7,9 @@
 
 import { KeyStore, AuthToken, Box } from "./keystore";
 import { Signaling, State } from "./signaling";
+import { Event, EventHandler, EventRegistry } from "./eventregistry";
 import { u8aToHex, hexToU8a } from "./utils";
 
-interface ClientHandler {
-    signaling: Object,
-    dc: Object,
-}
 
 export class SaltyRTC {
     private host: string;
@@ -20,6 +17,7 @@ export class SaltyRTC {
     private permanentKey: KeyStore;
     private _signaling: Signaling = null;
     private ws: WebSocket = null;
+    private eventRegistry: EventRegistry;
 
     /**
      * Create a new SaltyRTC instance.
@@ -37,6 +35,9 @@ export class SaltyRTC {
         this.host = host;
         this.port = port;
         this.permanentKey = permanentKey;
+
+        // Create new event registry
+        this.reventRegistry = new EventRegistry();
     }
 
     /**
@@ -108,6 +109,43 @@ export class SaltyRTC {
              data_type: dataType,
              data: data,
          } as saltyrtc.Data);
+    }
+
+    /**
+     * Attach an event handler to the specified event(s).
+     *
+     * Note: The same event handler cannot be registered twice. It will only
+     * run once.
+     */
+    public on(event: string | string[], handler: EventHandler): void {
+        this.eventRegistry.register(event, handler);
+    }
+
+    /**
+     * Attach a one-time event handler to the specified event(s).
+     *
+     * Note: If the same handler was already registered previously as a regular
+     * event handler, it will be completely removed after running once.
+     */
+    public once(event: string | string[], handler: EventHandler): void {
+        let onceHandler: EventHandler = (ev: Event) => {
+            try {
+                handler(ev);
+            } catch (e) {
+                this.off(ev.type, handler);
+            }
+        };
+        this.eventRegistry.register(event, onceHandler);
+    }
+
+    /**
+     * Remove an event handler from the specified event(s).
+     *
+     * If no handler is specified, remove all handlers for the specified
+     * event(s).
+     */
+    public off(event: string | string[], handler?: EventHandler): void {
+        this.eventRegistry.unregister(event, handler);
     }
 
     /**
