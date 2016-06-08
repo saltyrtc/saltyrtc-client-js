@@ -7,7 +7,7 @@
 
 export interface Event {
     type: string,
-    data: any,
+    data?: any,
 }
 
 export type EventHandler = (event: Event) => boolean | void;

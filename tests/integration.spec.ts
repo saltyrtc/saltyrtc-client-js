@@ -6,13 +6,8 @@
 /// <reference path="jasmine.d.ts" />
 
 import { Config } from "./config";
+import { sleep } from "./utils";
 import { SaltyRTC, KeyStore, State } from "../saltyrtc/main";
-
-function sleep(milliseconds: number): Promise<{}> {
-    return new Promise(function(resolve) {
-        window.setTimeout(resolve, milliseconds);
-    });
-}
 
 export default () => { describe('Integration Tests', () => {
 

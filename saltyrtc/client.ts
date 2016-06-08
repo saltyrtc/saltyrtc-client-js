@@ -37,7 +37,7 @@ export class SaltyRTC {
         this.permanentKey = permanentKey;
 
         // Create new event registry
-        this.reventRegistry = new EventRegistry();
+        this.eventRegistry = new EventRegistry();
     }
 
     /**
@@ -132,8 +132,11 @@ export class SaltyRTC {
             try {
                 handler(ev);
             } catch (e) {
-                this.off(ev.type, handler);
+                // Handle exceptions
+                this.off(ev.type, onceHandler);
+                throw e;
             }
+            this.off(ev.type, onceHandler);
         };
         this.eventRegistry.register(event, onceHandler);
     }
@@ -152,9 +155,14 @@ export class SaltyRTC {
      * Emit an event.
      */
     public emit(event: Event) {
+        console.debug('SaltyRTC: New event:', event.type);
         let handlers = this.eventRegistry.get(event.type);
         for (let handler of handlers) {
-            this.callHandler(handler, event);
+            try {
+                this.callHandler(handler, event);
+            } catch (e) {
+                console.error('SaltyRTC: Unhandled exception in', event.type, 'handler:', e);
+            }
         }
     }
 
