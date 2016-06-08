@@ -79,6 +79,37 @@ export default () => { describe('Integration Tests', () => {
             this.responder.connect();
         });
 
+        /**
+         * Send round-trip custom data.
+         */
+        it('sending data', async (done) => {
+            expect(this.initiator.state).toEqual('new');
+            expect(this.responder.state).toEqual('new');
+            function connectBoth(a, b) {
+                let ready = 0;
+                return new Promise((resolve) => {
+                    a.once('connected', () => { ready += 1; if (ready == 2) resolve(); });
+                    b.once('connected', () => { ready += 1; if (ready == 2) resolve(); });
+                    a.connect();
+                    b.connect();
+                });
+            }
+            await connectBoth(this.initiator, this.responder);
+            this.responder.on('data:fondue', (msg) => {
+                expect(msg.type).toBe('data:fondue');
+                expect(msg.data).toBe('Your fondue is ready!');
+                this.responder.sendData('thanks', ['merci', 'danke', 'grazie'])
+            });
+            this.initiator.on('data:thanks', (msg) => {
+                expect(msg.type).toBe('data:thanks');
+                expect(msg.data[0]).toBe('merci');
+                expect(msg.data[1]).toBe('danke');
+                expect(msg.data[2]).toBe('grazie');
+                done();
+            });
+            this.initiator.sendData('fondue', 'Your fondue is ready!');
+        });
+
     });
 
 }); }
