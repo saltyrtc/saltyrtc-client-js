@@ -31,8 +31,19 @@ export default () => { describe('client', () => {
                 this.sc.emit({type: 'data'});
                 this.sc.emit({type: 'connection-error'});
                 this.sc.emit({type: 'connected'});
-                await sleep(100);
+                await sleep(20);
                 expect(counter).toEqual(3);
+                done();
+            });
+
+            it('only adds a handler once', async (done) => {
+                let counter = 0;
+                let handler = () => {counter += 1;};
+                this.sc.on('data', handler);
+                this.sc.on('data', handler);
+                this.sc.emit({type: 'data'});
+                await sleep(20);
+                expect(counter).toEqual(1);
                 done();
             });
 
@@ -44,7 +55,7 @@ export default () => { describe('client', () => {
                 this.sc.on(['connected'], handler2);
                 this.sc.emit({type: 'connected'});
                 this.sc.emit({type: 'data'});
-                await sleep(100);
+                await sleep(20);
                 expect(counter).toEqual(3);
                 done();
             });
@@ -58,8 +69,22 @@ export default () => { describe('client', () => {
                 this.sc.off('data', handler);
                 this.sc.emit({type: 'connected'});
                 this.sc.emit({type: 'data'});
-                await sleep(100);
+                await sleep(20);
                 expect(counter).toEqual(3);
+                done();
+            });
+
+            it('can cancel handlers for multiple events', async (done) => {
+                let counter = 0;
+                let handler = () => {counter += 1;};
+                this.sc.on(['data', 'connected'], handler);
+                this.sc.emit({type: 'connected'});
+                this.sc.emit({type: 'data'});
+                this.sc.off(['data', 'connected'], handler);
+                this.sc.emit({type: 'connected'});
+                this.sc.emit({type: 'data'});
+                await sleep(20);
+                expect(counter).toEqual(2);
                 done();
             });
 
@@ -69,7 +94,7 @@ export default () => { describe('client', () => {
                 this.sc.once('data', handler);
                 this.sc.emit({type: 'data'});
                 this.sc.emit({type: 'data'});
-                await sleep(100);
+                await sleep(20);
                 expect(counter).toEqual(1);
                 done();
             });
@@ -80,8 +105,26 @@ export default () => { describe('client', () => {
                 this.sc.once('data', handler);
                 this.sc.emit({type: 'data'});
                 this.sc.emit({type: 'data'});
-                await sleep(100);
+                await sleep(20);
                 expect(counter).toEqual(1);
+                done();
+            });
+
+            it('removes handlers that return false', async (done) => {
+                let counter = 0;
+                let handler = () => {
+                    if (counter <= 4) {
+                        counter += 1;
+                    } else {
+                        return false;
+                    }
+                };
+                this.sc.on('data', handler);
+                for (let i = 0; i < 7; i++) {
+                    this.sc.emit({type: 'data'});
+                }
+                await sleep(20);
+                expect(counter).toEqual(5);
                 done();
             });
 
