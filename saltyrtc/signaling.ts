@@ -494,7 +494,11 @@ export class Signaling {
         } else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR) {
             csn = this.initiatorCombinedSequence.next();
         } else if (receiver >= 0x02 && receiver <= 0xff) {
-            csn = this.responders.get(receiver).combinedSequence;
+            if (this.responder && this.responder.id === receiver) {
+                csn = this.responder.combinedSequence;
+            } else {
+                csn = this.responders.get(receiver).combinedSequence;
+            }
         } else {
             throw 'bad-receiver';
         }
@@ -520,7 +524,12 @@ export class Signaling {
                     box = this.sessionKey.encrypt(data, nonceBytes, this.initiatorSessionKey);
                 }
             } else if (receiver >= 0x02 && receiver <= 0xff) {
-                let responder = this.responders.get(receiver);
+                let responder;
+                if (this.responder && this.responder.id === receiver) {
+                    responder = this.responder;
+                } else {
+                    responder = this.responders.get(receiver);
+                }
                 if (message.type === 'key'){
                     box = this.permanentKey.encrypt(data, nonceBytes, responder.permanentKey);
                 } else {
