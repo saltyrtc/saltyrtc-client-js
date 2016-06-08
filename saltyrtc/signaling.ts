@@ -930,7 +930,7 @@ export class Signaling {
         }
 
         // Determine peer address
-        let peerAddress = this.role === 'initiator' ? Signaling.SALTYRTC_ADDR_INITIATOR : this.responder.id;
+        let peerAddress = this.role === 'responder' ? Signaling.SALTYRTC_ADDR_INITIATOR : this.responder.id;
 
         // Send message
         let packet: Uint8Array = this.buildPacket(data, peerAddress);
