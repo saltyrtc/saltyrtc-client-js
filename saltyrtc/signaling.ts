@@ -753,7 +753,7 @@ export class Signaling {
                 // Deregister handshake
                 console.info(this.logTag, 'Initiator handshake done.');
                 this.ws.removeEventListener('message', this.onPeerHandshakeMessage);
-                this.ws.addEventListener('message', this.onMessage);
+                this.ws.addEventListener('message', this.onPeerMessage);
 
                 // Update state
                 this.initiatorHandshakeState = 'auth-received';
@@ -888,7 +888,7 @@ export class Signaling {
                 // Deregister handshake
                 console.info(this.logTag, 'Responder handshake done.');
                 this.ws.removeEventListener('message', this.onPeerHandshakeMessage);
-                this.ws.addEventListener('message', this.onMessage);
+                this.ws.addEventListener('message', this.onPeerMessage);
 
                 // We're connected!
                 this.state = 'open';
@@ -908,11 +908,23 @@ export class Signaling {
     }
 
     /**
-     * A message was received.
+     * A p2p message was received.
+     *
+     * This handler is registered *after* the handshake is done.
      */
-    private onMessage = (ev: MessageEvent) => {
+    private onPeerMessage = (ev: MessageEvent) => {
         console.info(this.logTag, 'Message received!');
-        let message = ev.data as saltyrtc.Message;
+
+        // Decrypt and decode message
+        let box = Box.fromUint8Array(new Uint8Array(ev.data), nacl.box.nonceLength);
+        let decrypted;
+        if (this.role == 'initiator') {
+            decrypted = this.sessionKey.decrypt(box, this.responder.sessionKey);
+        } else {
+            decrypted = this.sessionKey.decrypt(box, this.initiatorSessionKey);
+        }
+        let message = this.decodeMessage(decrypted);
+
         switch (message.type) {
             case 'data':
                 console.debug('New data message');
