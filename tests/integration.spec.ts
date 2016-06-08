@@ -72,8 +72,8 @@ export default () => { describe('Integration Tests', () => {
                     done();
                 }
             };
-            this.initiator.onConnected = callback;
-            this.responder.onConnected = callback;
+            this.initiator.on('connected', callback);
+            this.responder.on('connected', callback);
             t1 = new Date();
             this.initiator.connect();
             this.responder.connect();

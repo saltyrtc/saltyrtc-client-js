@@ -1,6 +1,6 @@
 /// <reference path="jasmine.d.ts" />
 
-import { Event, EventHandler, EventRegistry } from "../saltyrtc/eventregistry";
+import { SaltyRTCEvent, EventHandler, EventRegistry } from "../saltyrtc/eventregistry";
 
 export default () => { describe('eventregistry', () => {
 
@@ -8,8 +8,8 @@ export default () => { describe('eventregistry', () => {
 
         beforeEach(() => {
             this.registry = new EventRegistry();
-            this.handler1 = (ev: Event) => { console.log('Event 1 occurred'); };
-            this.handler2 = (ev: Event) => { console.log('Event 2 occurred'); };
+            this.handler1 = (ev: SaltyRTCEvent) => { console.log('Event 1 occurred'); };
+            this.handler2 = (ev: SaltyRTCEvent) => { console.log('Event 2 occurred'); };
         });
 
         it('can register a new event', () => {
@@ -55,7 +55,7 @@ export default () => { describe('eventregistry', () => {
             this.registry.map.set('far', [this.handler1, this.handler2]);
 
             // Unknown handler
-            this.registry.unregister('far', (ev: Event) => {});
+            this.registry.unregister('far', (ev: SaltyRTCEvent) => {});
             expect(this.registry.get('far')).toEqual([this.handler1, this.handler2]);
 
             // Unknown event

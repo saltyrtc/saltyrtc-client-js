@@ -5,12 +5,12 @@
  * of the MIT license. See the `LICENSE.md` file for details.
  */
 
-export interface Event {
+export interface SaltyRTCEvent {
     type: string,
     data?: any,
 }
 
-export type EventHandler = (event: Event) => boolean | void;
+export type EventHandler = (event: SaltyRTCEvent) => boolean | void;
 
 export class EventRegistry {
     private map: Map<string, EventHandler[]>;

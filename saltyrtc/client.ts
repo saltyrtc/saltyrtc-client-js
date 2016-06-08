@@ -7,10 +7,23 @@
 
 import { KeyStore, AuthToken, Box } from "./keystore";
 import { Signaling, State } from "./signaling";
-import { Event, EventHandler, EventRegistry } from "./eventregistry";
+import { SaltyRTCEvent, EventHandler, EventRegistry } from "./eventregistry";
 import { u8aToHex, hexToU8a } from "./utils";
 
 
+/**
+ * The main class used to create a P2P connection through a SaltyRTC signaling
+ * server.
+ *
+ * This class can emit the following events:
+ *
+ * - connected(void): Handshake has been completed, we're connected!
+ * - connection-error(ErrorEvent): A WebSocket connection error occured
+ * - connection-closed(CloseEvent): The WebSocket connection was closed
+ * - data(saltyrtc.Data): A new data message was received
+ * - data:<data-type>(saltyrtc.Data): The data event, filtered by data type
+ *
+ */
 export class SaltyRTC {
     private host: string;
     private port: number;
@@ -128,7 +141,7 @@ export class SaltyRTC {
      * event handler, it will be completely removed after running once.
      */
     public once(event: string | string[], handler: EventHandler): void {
-        let onceHandler: EventHandler = (ev: Event) => {
+        let onceHandler: EventHandler = (ev: SaltyRTCEvent) => {
             try {
                 handler(ev);
             } catch (e) {
@@ -154,7 +167,7 @@ export class SaltyRTC {
     /**
      * Emit an event.
      */
-    public emit(event: Event) {
+    public emit(event: SaltyRTCEvent) {
         console.debug('SaltyRTC: New event:', event.type);
         let handlers = this.eventRegistry.get(event.type);
         for (let handler of handlers) {
@@ -171,39 +184,11 @@ export class SaltyRTC {
      *
      * If the handler returns `false`, unregister it.
      */
-    private callHandler(handler: EventHandler, event: Event) {
+    private callHandler(handler: EventHandler, event: SaltyRTCEvent) {
         let response = handler(event);
         if (response === false) {
             this.eventRegistry.unregister(event.type, handler);
         }
-    }
-
-    /**
-     * Connection is ready for sending and receiving.
-     */
-    public onConnected(): void {
-        console.info('SaltyRTC: Connected to peer');
-    }
-
-    /**
-     * A data message arrived.
-     */
-    public onData(data: saltyrtc.Data): void {
-        console.info('SaltyRTC: New data message:', data);
-    }
-
-    /**
-     * A connection error occured.
-     */
-    public onConnectionError(ev: ErrorEvent): void {
-        console.error('SaltyRTC: Connection error:', ev);
-    }
-
-    /**
-     * The connection to the server has been closed.
-     */
-    public onConnectionClosed(ev: CloseEvent): void {
-        console.warn('SaltyRTC: Connection closed:', ev);
     }
 
 }
