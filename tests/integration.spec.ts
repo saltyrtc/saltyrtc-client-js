@@ -6,13 +6,8 @@
 /// <reference path="jasmine.d.ts" />
 
 import { Config } from "./config";
+import { sleep } from "./utils";
 import { SaltyRTC, KeyStore, State } from "../saltyrtc/main";
-
-function sleep(milliseconds: number): Promise<{}> {
-    return new Promise(function(resolve) {
-        window.setTimeout(resolve, milliseconds);
-    });
-}
 
 export default () => { describe('Integration Tests', () => {
 
@@ -77,8 +72,8 @@ export default () => { describe('Integration Tests', () => {
                     done();
                 }
             };
-            this.initiator.onConnected = callback;
-            this.responder.onConnected = callback;
+            this.initiator.on('connected', callback);
+            this.responder.on('connected', callback);
             t1 = new Date();
             this.initiator.connect();
             this.responder.connect();

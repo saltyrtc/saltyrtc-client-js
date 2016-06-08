@@ -13,6 +13,7 @@
 import { KeyStore, AuthToken, Box } from "./keystore";
 import { Cookie, CookiePair } from "./cookie";
 import { SaltyRTC } from "./client";
+import { SaltyRTCEvent } from "./eventregistry";
 import { SignalingChannelNonce as Nonce } from "./nonce";
 import { concat, randomUint32, byteToHex, u8aToHex } from "./utils";
 
@@ -570,7 +571,7 @@ export class Signaling {
     private onError = (ev: ErrorEvent) => {
         console.error(this.logTag, 'General WebSocket error', ev);
         // TODO: Do we need to update the state here?
-        this.client.onConnectionError(ev);
+        this.client.emit({type: 'connection-error', data: ev});
     };
 
     /**
@@ -602,7 +603,7 @@ export class Signaling {
                 console.warn(this.logTag, 'Dropped by initiator');
                 break;
         }
-        this.client.onConnectionClosed(ev);
+        this.client.emit({type: 'connection-closed', data: ev});
     };
 
     /**
@@ -894,7 +895,7 @@ export class Signaling {
      * We're connected!
      */
     private onConnected = () => {
-        this.client.onConnected();
+        this.client.emit({type: 'connected'});
     }
 
     /**
@@ -906,7 +907,11 @@ export class Signaling {
         switch (message.type) {
             case 'data':
                 console.debug('New data message');
-                this.client.onData(message as saltyrtc.Data);
+                let dataMessage = message as saltyrtc.Data;
+                this.client.emit({type: 'data', data: dataMessage.data});
+                if (typeof dataMessage.data_type === 'string') {
+                    this.client.emit({type: 'data:' + dataMessage.data_type, data: dataMessage.data});
+                }
                 break;
             case 'restart':
                 throw 'not-yet-implemented';
