@@ -330,7 +330,7 @@ interface RTCPeerConnection {
 }
 declare var RTCPeerConnection: {
   prototype: RTCPeerConnection;
-  new (configuration: RTCConfiguration,
+  new (configuration?: RTCConfiguration,
        constraints?: RTCMediaConstraints): RTCPeerConnection;
 };
 
