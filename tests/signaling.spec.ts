@@ -35,7 +35,7 @@ export default () => { describe('signaling', () => {
     describe('Signaling', () => {
 
         beforeEach(() => {
-            this.fakeSaltyRTC = new FakeSaltyRTC() as SaltyRTC;
+            this.fakeSaltyRTC = new FakeSaltyRTC() as any as SaltyRTC;
             this.keyStore = new KeyStore();
             this.sig = new Signaling(this.fakeSaltyRTC, '127.0.0.1', 8765, this.keyStore);
         });

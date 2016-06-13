@@ -83,11 +83,6 @@ export class KeyStore {
     get publicKeyBytes() { return this._keyPair.publicKey; }
 
     /**
-     * Return the public key as array.
-     */
-    get publicKeyArray() { return Array.from(this._keyPair.publicKey); }
-
-    /**
      * Return the secret key as hex string.
      */
     get secretKeyHex() { return u8aToHex(this._keyPair.secretKey); }
@@ -96,11 +91,6 @@ export class KeyStore {
      * Return the secret key as Uint8Array.
      */
     get secretKeyBytes() { return this._keyPair.secretKey; }
-
-    /**
-     * Return the secret key as array.
-     */
-    get secretKeyArray() { return Array.from(this._keyPair.secretKey); }
 
     /**
      * Encrypt data for the peer.
@@ -154,11 +144,6 @@ export class AuthToken {
      * Return the secret key as hex string.
      */
     get keyHex() { return u8aToHex(this._authToken); }
-
-    /**
-     * Return the secret key as hex string.
-     */
-    get keyArray() { return Array.from(this._authToken); }
 
     /**
      * Encrypt data using the shared auth token.

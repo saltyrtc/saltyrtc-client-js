@@ -74,7 +74,7 @@ export class DataChannelNonce extends Nonce {
         let buf = new ArrayBuffer(24);
 
         let uint8view = new Uint8Array(buf);
-        uint8view.set(this._cookie.asUint8Array());
+        uint8view.set(this._cookie.bytes);
 
         let view = new DataView(buf);
         view.setUint32(16, this._overflow);
@@ -147,7 +147,7 @@ export class SignalingChannelNonce extends Nonce {
         let buf = new ArrayBuffer(24);
 
         let uint8view = new Uint8Array(buf);
-        uint8view.set(this._cookie.asUint8Array());
+        uint8view.set(this._cookie.bytes);
 
         let view = new DataView(buf);
         view.setUint8(16, this._source);

@@ -12,25 +12,25 @@ declare namespace saltyrtc {
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#server-hello
     interface ServerHello extends Message {
         type: 'server-hello',
-        key: number[],
+        key: ArrayBuffer,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#client-hello
     interface ClientHello extends Message {
         type: 'client-hello',
-        key: number[],
+        key: ArrayBuffer,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#client-auth
     interface ClientAuth extends Message {
         type: 'client-auth',
-        your_cookie: number[],
+        your_cookie: ArrayBuffer,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#server-auth
     interface ServerAuth extends Message {
         type: 'server-auth',
-        your_cookie: number[],
+        your_cookie: ArrayBuffer,
         initiator_connected?: boolean,
         responders?: number[],
     }
@@ -55,25 +55,25 @@ declare namespace saltyrtc {
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#send-error
     interface SendError extends Message {
         type: 'send-error',
-        hash: number[],
+        hash: ArrayBuffer,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#token
     interface Token extends Message {
         type: 'token',
-        key: number[],
+        key: ArrayBuffer,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#key
     interface Key extends Message {
         type: 'key',
-        key: number[],
+        key: ArrayBuffer,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#auth
     interface Auth extends Message {
         type: 'auth',
-        your_cookie: number[],
+        your_cookie: ArrayBuffer,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#restart

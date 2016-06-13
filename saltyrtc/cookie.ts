@@ -32,22 +32,15 @@ export class Cookie {
     /**
      * Create a Cookie from an array.
      */
-    public static from(bytes: number[]): Cookie {
-        return new Cookie(Uint8Array.from(bytes));
+    public static fromArrayBuffer(buffer: ArrayBuffer): Cookie {
+        return new Cookie(new Uint8Array(buffer));
     }
 
     /**
-     * Return the cookie bytes as array.
+     * Return the underlying ArrayBuffer.
      */
-    public asArray(): number[] {
-        return Array.from(this.bytes);
-    }
-
-    /**
-     * Return the cookie bytes as Uint8Array.
-     */
-    public asUint8Array(): Uint8Array {
-        return this.bytes;
+    public asArrayBuffer(): ArrayBuffer {
+        return this.bytes.buffer.slice(this.bytes.byteOffset, this.bytes.byteLength);
     }
 
     /**

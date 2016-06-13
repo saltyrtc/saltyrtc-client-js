@@ -141,6 +141,11 @@ export class Signaling {
     private protocol: string = 'wss';
     private ws: WebSocket = null;
 
+    // Msgpack
+    private msgpackOptions: Object = {
+        codec: msgpack.createCodec({binarraybuffer: true}),
+    };
+
     // Connection state
     public state: State = 'new';
 
@@ -210,6 +215,20 @@ export class Signaling {
      */
     public get authTokenBytes(): Uint8Array {
         return this.authToken.keyBytes;
+    }
+
+    /**
+     * Encode msgpack data.
+     */
+    private msgpackEncode(data: Object) {
+        return msgpack.encode(data, this.msgpackOptions);
+    }
+
+    /**
+     * Decode msgpack data.
+     */
+    private msgpackDecode(data: Uint8Array) {
+        return msgpack.decode(data, this.msgpackOptions);
     }
 
     /**
@@ -284,7 +303,7 @@ export class Signaling {
             // First packet is unencrypted. Decode it directly.
             let nonce = Nonce.fromArrayBuffer(buffer.slice(0, 24));
             let payload = new Uint8Array(buffer.slice(24));
-            let serverHello = msgpack.decode(payload) as saltyrtc.ServerHello;
+            let serverHello = this.msgpackDecode(payload) as saltyrtc.ServerHello;
 
             // Validate nonce
             this.validateNonce(nonce, this.address, 0x00);
@@ -308,10 +327,9 @@ export class Signaling {
 
         // In the case of the responder, send client-hello
         if (this.role == 'responder') {
-
             let message: saltyrtc.ClientHello = {
                 type: 'client-hello',
-                key: this.permanentKey.publicKeyArray,
+                key: this.permanentKey.publicKeyBytes.buffer,
             };
             let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER, false);
             console.debug(this.logTag, 'Sending client-hello');
@@ -322,7 +340,7 @@ export class Signaling {
 
             let message: saltyrtc.ClientAuth = {
                 type: 'client-auth',
-                your_cookie: this.cookiePair.theirs.asArray(),
+                your_cookie: this.cookiePair.theirs.asArrayBuffer(),
             };
             let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
             console.debug(this.logTag, 'Sending client-auth');
@@ -372,7 +390,8 @@ export class Signaling {
             let message = this.decodeMessage(decrypted, 'server-auth') as saltyrtc.ServerAuth;
 
             // Validate cookie
-            if (!Cookie.from(message.your_cookie).equals(this.cookiePair.ours)) {
+            let cookie = Cookie.fromArrayBuffer(message.your_cookie);
+            if (!cookie.equals(this.cookiePair.ours)) {
                 console.error(this.logTag, 'Bad cookie in server-auth message');
                 console.debug(this.logTag, 'Their response:', message.your_cookie,
                                            ', our cookie:', this.cookiePair.ours);
@@ -399,7 +418,7 @@ export class Signaling {
     private sendToken(): void {
         let message: saltyrtc.Token = {
             type: 'token',
-            key: this.permanentKey.publicKeyArray,
+            key: this.permanentKey.publicKeyBytes.buffer,
         };
         let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_INITIATOR);
         console.debug(this.logTag, 'Sending token');
@@ -466,7 +485,7 @@ export class Signaling {
      */
     private decodeMessage(data: Uint8Array, type?: saltyrtc.MessageType): saltyrtc.Message {
         // Decode
-        let msg = msgpack.decode(data) as saltyrtc.Message;
+        let msg = this.msgpackDecode(data) as saltyrtc.Message;
 
         if (typeof msg.type === 'undefined') {
             console.error(this.logTag, 'Failed to decode msgpack data.');
@@ -508,7 +527,7 @@ export class Signaling {
         let nonceBytes = new Uint8Array(nonce.toArrayBuffer());
 
         // Encode message
-        let data: Uint8Array = msgpack.encode(message);
+        let data: Uint8Array = this.msgpackEncode(message);
 
         // Encrypt if desired
         if (encrypt !== false) {
@@ -729,7 +748,7 @@ export class Signaling {
                 this.sessionKey = new KeyStore();
                 let replyMessage: saltyrtc.Key = {
                     type: 'key',
-                    key: this.sessionKey.publicKeyArray,
+                    key: this.sessionKey.publicKeyBytes.buffer,
                 };
                 let packet: Uint8Array = this.buildPacket(replyMessage, Signaling.SALTYRTC_ADDR_INITIATOR);
                 console.debug(this.logTag, 'Sending key');
@@ -739,11 +758,11 @@ export class Signaling {
                 assertType(message, 'auth');
 
                 // Verify the cookie
-                let cookie = Cookie.from((message as saltyrtc.Auth).your_cookie);
+                let cookie = Cookie.fromArrayBuffer((message as saltyrtc.Auth).your_cookie);
                 if (!cookie.equals(this.cookiePair.ours)) {
                     console.error(this.logTag, 'Invalid cookie in auth message.');
-                    console.debug(this.logTag, 'Theirs:', cookie.asUint8Array());
-                    console.debug(this.logTag, 'Ours:', this.cookiePair.ours.asUint8Array());
+                    console.debug(this.logTag, 'Theirs:', cookie.bytes);
+                    console.debug(this.logTag, 'Ours:', this.cookiePair.ours.bytes);
                     abort();
                 }
 
@@ -767,7 +786,7 @@ export class Signaling {
                 // Respond with our own auth message
                 let replyMessage: saltyrtc.Auth = {
                     type: 'auth',
-                    your_cookie: nonce.cookie.asArray(),
+                    your_cookie: nonce.cookie.asArrayBuffer(),
                 };
                 let packet: Uint8Array = this.buildPacket(replyMessage, Signaling.SALTYRTC_ADDR_INITIATOR);
                 console.debug(this.logTag, 'Sending auth');
@@ -803,14 +822,14 @@ export class Signaling {
                     assertType(message, 'token');
 
                     // Store responder permanent key
-                    responder.permanentKey = Uint8Array.from(message.key);
+                    responder.permanentKey = new Uint8Array(message.key);
                     responder.state = 'token-received';
                 }
                 {
                     // Send key
                     let message: saltyrtc.Key = {
                         type: 'key',
-                        key: responder.keyStore.publicKeyArray,
+                        key: responder.keyStore.publicKeyBytes.buffer,
                     };
                     let packet: Uint8Array = this.buildPacket(message, responder.id);
                     console.debug(this.logTag, 'Sending key');
@@ -827,7 +846,7 @@ export class Signaling {
                     assertType(message, 'key');
 
                     // Store responder session key
-                    responder.sessionKey = Uint8Array.from(message.key);
+                    responder.sessionKey = new Uint8Array(message.key);
                     responder.state = 'key-received';
                 }
                 {
@@ -841,7 +860,7 @@ export class Signaling {
                     // Send auth
                     let message: saltyrtc.Auth = {
                         type: 'auth',
-                        your_cookie: nonce.cookie.asArray(),
+                        your_cookie: nonce.cookie.asArrayBuffer(),
                     };
                     let packet: Uint8Array = this.buildPacket(message, responder.id);
                     console.debug(this.logTag, 'Sending auth');
@@ -857,11 +876,11 @@ export class Signaling {
                 assertType(message, 'auth');
 
                 // Verify the cookie
-                let cookie = Cookie.from((message as saltyrtc.Auth).your_cookie);
+                let cookie = Cookie.fromArrayBuffer((message as saltyrtc.Auth).your_cookie);
                 if (!cookie.equals(this.cookiePair.ours)) {
                     console.error(this.logTag, 'Invalid cookie in auth message.');
-                    console.debug(this.logTag, 'Theirs:', cookie.asUint8Array());
-                    console.debug(this.logTag, 'Ours:', this.cookiePair.ours.asUint8Array());
+                    console.debug(this.logTag, 'Theirs:', cookie.bytes);
+                    console.debug(this.logTag, 'Ours:', this.cookiePair.ours.bytes);
                     abort();
                 }
 
