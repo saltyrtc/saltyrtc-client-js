@@ -7,6 +7,7 @@
 
 import { KeyStore, AuthToken, Box } from "./keystore";
 import { Signaling, State } from "./signaling";
+import { SecureDataChannel } from "./datachannel";
 import { SaltyRTCEvent, EventHandler, EventRegistry } from "./eventregistry";
 import { u8aToHex, hexToU8a } from "./utils";
 
@@ -115,18 +116,39 @@ export class SaltyRTC {
     }
 
     /**
-     * Send signaling data to the peer.
+     * Send data to the peer.
      *
      * Note that you can only send primitive types or plain dict-like objects.
-     * If you want to send custom typed objects, send them as plain objects
-     * instead.
+     * If you want to send custom typed objects, convert them to plain objects.
+     *
+     * If you want to send data through a specific data channel, pass it in.
+     *
+     * If you don't want to set a dataType, pass it in as `undefined`.
      */
-    public sendData(dataType: string, data: any) {
-        this.signaling.sendData({
+    public sendData(dataType: string, data: any, dc?: RTCDataChannel) {
+        let dataMessage: saltyrtc.Data = {
             type: 'data',
-            data_type: dataType,
             data: data,
-        } as saltyrtc.Data);
+        }
+        if (dataType !== undefined) {
+            dataMessage.data_type = dataType;
+        }
+        this.signaling.sendData(dataMessage, dc);
+    }
+
+    /**
+     * Decrypt data from a peer.
+     *
+     * If data message has a type other than "data", a 'bad-message-type' error
+     * is thrown.
+     */
+    public decryptData(data: ArrayBuffer): any {
+        let message = this.signaling.decryptPeerMessage(data);
+        if (message.type !== 'data') {
+            console.error('Data messages must have message type set to "data", not "' + message.type + '".');
+            throw 'bad-message-type';
+        }
+        return (message as saltyrtc.Data).data;
     }
 
     /**
@@ -134,6 +156,13 @@ export class SaltyRTC {
      */
     public handover(pc: RTCPeerConnection) {
         this.signaling.handover(pc);
+    }
+
+    /**
+     * Wrap a WebRTC data channel.
+     */
+    public wrapDataChannel(dc: RTCDataChannel): SecureDataChannel {
+        return new SecureDataChannel(dc, this);
     }
 
     /**

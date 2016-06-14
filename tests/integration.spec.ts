@@ -200,7 +200,10 @@ export default () => { describe('Integration Tests', () => {
             });
         }
 
-        it('setting up a peer connection', async (done) => {
+        /**
+         * Create two peer connections and do the handshake.
+         */
+        async function setupPeerConnection(): Promise<{initiator: RTCPeerConnection, responder: RTCPeerConnection}> {
             // Create peer connections
             let initiatorConn = new RTCPeerConnection();
             let responderConn = new RTCPeerConnection();
@@ -251,6 +254,15 @@ export default () => { describe('Integration Tests', () => {
             await handover();
             console.info('Handover done.');
 
+            return {
+                initiator: initiatorConn,
+                responder: responderConn,
+            }
+        };
+
+        it('setting up a peer connection', async (done) => {
+            await setupPeerConnection.bind(this)();
+
             // Get references to private signaling datachannel
             let initiatorDc = (this.initiator.signaling as any).dc as RTCDataChannel;
             let responderDc = (this.responder.signaling as any).dc as RTCDataChannel;
@@ -270,6 +282,72 @@ export default () => { describe('Integration Tests', () => {
             };
             initiatorDc.send('bonan tagon.');
         });
+
+        it('wrapping a data channel', async (done) => {
+            let connections: {
+                initiator: RTCPeerConnection,
+                responder: RTCPeerConnection,
+            } = await setupPeerConnection.bind(this)();
+
+            // Create a new unencrypted datachannel
+            let testUnencrypted = () => {
+                return new Promise((resolve) => {
+                    connections.responder.ondatachannel = (e: RTCDataChannelEvent) => {
+                        e.channel.onmessage = (e: RTCMessageEvent) => {
+                            expect(e.data).toEqual('bonjour');
+                            resolve();
+                        };
+                    };
+                    let dc = connections.initiator.createDataChannel('dc1');
+                    dc.send('bonjour');
+                });
+            }
+            await testUnencrypted();
+            console.info('Unencrypted test done');
+
+            // Wrap data channel
+            let testEncrypted = () => {
+                return new Promise((resolve) => {
+                    connections.responder.ondatachannel = (e: RTCDataChannelEvent) => {
+                        // The receiver should get encrypted data.
+                        e.channel.onmessage = (e: RTCMessageEvent) => {
+                            expect(e.data).not.toEqual('enigma');
+                            resolve();
+                        };
+                    };
+                    let dc = connections.initiator.createDataChannel('dc2');
+                    let safedc = this.initiator.wrapDataChannel(dc);
+                    safedc.send('enigma');
+                });
+            }
+            await testEncrypted();
+            console.info('Encrypted test done');
+
+            done();
+        });
+
+        it('onmessage handler on wrapped data channel', async (done) => {
+            let connections: {
+                initiator: RTCPeerConnection,
+                responder: RTCPeerConnection,
+            } = await setupPeerConnection.bind(this)();
+
+            // Wrap data channel
+            connections.responder.ondatachannel = (e: RTCDataChannelEvent) => {
+                // The receiver should transparently decrypt received data.
+                let receiverDc = this.responder.wrapDataChannel(e.channel);
+                console.log(receiverDc);
+                receiverDc.onmessage = (e: RTCMessageEvent) => {
+                    expect(e.data).toEqual('enigma');
+                    done();
+                };
+            };
+            let dc = connections.initiator.createDataChannel('dc2');
+            let safedc = this.initiator.wrapDataChannel(dc);
+            safedc.send('enigma');
+        });
+
+        // TODO: Test addEventListener
 
     });
 
