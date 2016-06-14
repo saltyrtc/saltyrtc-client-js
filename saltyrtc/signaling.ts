@@ -146,6 +146,9 @@ export class Signaling {
         codec: msgpack.createCodec({binarraybuffer: true}),
     };
 
+    // WebRTC / ORTC
+    private dc: RTCDataChannel = null;
+
     // Connection state
     public state: State = 'new';
 
@@ -606,32 +609,33 @@ export class Signaling {
      * WebSocket onclose handler.
      */
     private onClose = (ev: CloseEvent) => {
-        console.info(this.logTag, 'Closed connection');
-        this.state = 'closed';
-        switch (ev.code) {
-            case CloseCode.GoingAway:
-                console.error(this.logTag, 'Server is being shut down');
-                break;
-            case CloseCode.SubprotocolError:
-                console.error(this.logTag, 'No shared sub-protocol could be found');
-                break;
-            case CloseCode.PathFull:
-                console.error(this.logTag, 'Path full (no free responder byte)');
-                break;
-            case CloseCode.ProtocolError:
-                console.error(this.logTag, 'Protocol error');
-                break;
-            case CloseCode.InternalError:
-                console.error(this.logTag, 'Internal server error');
-                break;
-            case CloseCode.Handover:
-                console.info(this.logTag, 'Handover to data channel');
-                break;
-            case CloseCode.Dropped:
-                console.warn(this.logTag, 'Dropped by initiator');
-                break;
+        console.info(this.logTag, 'Closed WebSocket connection');
+        if (ev.code === CloseCode.Handover) {
+            console.info(this.logTag, 'Handover to data channel');
+        } else {
+            this.state = 'closed';
+            switch (ev.code) {
+                case CloseCode.GoingAway:
+                    console.error(this.logTag, 'Server is being shut down');
+                    break;
+                case CloseCode.SubprotocolError:
+                    console.error(this.logTag, 'No shared sub-protocol could be found');
+                    break;
+                case CloseCode.PathFull:
+                    console.error(this.logTag, 'Path full (no free responder byte)');
+                    break;
+                case CloseCode.ProtocolError:
+                    console.error(this.logTag, 'Protocol error');
+                    break;
+                case CloseCode.InternalError:
+                    console.error(this.logTag, 'Internal server error');
+                    break;
+                case CloseCode.Dropped:
+                    console.warn(this.logTag, 'Dropped by initiator');
+                    break;
+            }
+            this.client.emit({type: 'connection-closed', data: ev});
         }
-        this.client.emit({type: 'connection-closed', data: ev});
     };
 
     /**
@@ -641,8 +645,6 @@ export class Signaling {
      * and removed once the peer handshake is done.
      */
     private onPeerHandshakeMessage = (ev: MessageEvent) => {
-        console.debug(this.logTag, 'Incoming WebSocket message');
-
         // Abort function
         let abort = () => {
             console.error(this.logTag, 'Resetting connection.');
@@ -946,7 +948,6 @@ export class Signaling {
 
         switch (message.type) {
             case 'data':
-                console.debug('New data message');
                 let dataMessage = message as saltyrtc.Data;
                 this.client.emit({type: 'data', data: dataMessage.data});
                 if (typeof dataMessage.data_type === 'string') {
@@ -976,6 +977,33 @@ export class Signaling {
         let packet: Uint8Array = this.buildPacket(data, peerAddress);
         console.debug(this.logTag, 'Sending', data.data_type, 'data message');
         this.ws.send(packet);
+    }
+
+    /**
+     * Do the handover from WebSocket to WebRTC DataChannel.
+     */
+    public handover(pc: RTCPeerConnection) {
+        console.debug(this.logTag, 'Starting handover');
+        // TODO (https://github.com/saltyrtc/saltyrtc-meta/issues/3): Negotiate channel id
+        this.dc = pc.createDataChannel('saltyrtc', {
+            id: 0,
+            negotiated: true,
+            ordered: true,
+            protocol: this.ws.protocol,
+        });
+        this.dc.onopen = (ev: Event) => {
+            this.ws.close(CloseCode.Handover);
+            console.info(this.logTag, 'Handover to data channel finished');
+            this.client.emit({type: 'handover'});
+        };
+        this.dc.onerror = (ev: Event) => {
+            console.error(this.logTag, 'Data channel error:', ev);
+            this.client.emit({type: 'connection-error', data: ev});
+        };
+        this.dc.onclose = (ev: Event) => {
+            console.info(this.logTag, 'Closed DataChannel connection');
+            this.client.emit({type: 'connection-closed', data: ev});
+        };
     }
 
 }

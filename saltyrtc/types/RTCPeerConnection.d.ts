@@ -82,7 +82,7 @@ declare var webkitRTCPeerConnection: {
 interface RTCOptionalMediaConstraint {
   // When true, will use DTLS/SCTP data channels
   DtlsSrtpKeyAgreement?: boolean;
-  // When true will use Rtp-based data channels (depreicated)
+  // When true will use Rtp-based data channels (deprecated)
   RtpDataChannels?: boolean;
 }
 
@@ -203,6 +203,13 @@ interface RTCIceCandidateEvent extends Event {
   candidate: RTCIceCandidate;
 }
 
+interface RTCPeerConnectionIceErrorEvent extends Event {
+  hostCandidate: string;
+  url: string;
+  errorCode: number;
+  errorText: string;
+}
+
 interface RTCMediaStreamEvent extends Event {
   stream: MediaStream;
 }
@@ -321,6 +328,7 @@ interface RTCPeerConnection {
   onstatechange: (event: Event) => void;
   oniceconnectionstatechange: (event: Event) => void;
   onicecandidate: (event: RTCIceCandidateEvent) => void;
+  onicecandidateerror: (event: RTCPeerConnectionIceErrorEvent) => void;
   onidentityresult: (event: Event) => void;
   onsignalingstatechange: (event: Event) => void;
   getStats(selector: MediaStreamTrack): Promise<RTCStatsReport>;

@@ -18,6 +18,7 @@ import { u8aToHex, hexToU8a } from "./utils";
  * This class can emit the following events:
  *
  * - connected(void): Handshake has been completed, we're connected!
+ * - handover(void): The handover to the data channel is done
  * - connection-error(ErrorEvent): A WebSocket connection error occured
  * - connection-closed(CloseEvent): The WebSocket connection was closed
  * - data(saltyrtc.Data): A new data message was received
@@ -115,13 +116,24 @@ export class SaltyRTC {
 
     /**
      * Send signaling data to the peer.
+     *
+     * Note that you can only send primitive types or plain dict-like objects.
+     * If you want to send custom typed objects, send them as plain objects
+     * instead.
      */
     public sendData(dataType: string, data: any) {
-         this.signaling.sendData({
-             type: 'data',
-             data_type: dataType,
-             data: data,
-         } as saltyrtc.Data);
+        this.signaling.sendData({
+            type: 'data',
+            data_type: dataType,
+            data: data,
+        } as saltyrtc.Data);
+    }
+
+    /**
+     * Do the handover from WebSocket to WebRTC DataChannel.
+     */
+    public handover(pc: RTCPeerConnection) {
+        this.signaling.handover(pc);
     }
 
     /**

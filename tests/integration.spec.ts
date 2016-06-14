@@ -4,6 +4,7 @@
 // Configure the server in `tests/config.ts`.
 
 /// <reference path="jasmine.d.ts" />
+/// <reference path="../saltyrtc/types/RTCPeerConnection.d.ts" />
 
 import { Config } from "./config";
 import { sleep } from "./utils";
@@ -11,19 +12,19 @@ import { SaltyRTC, KeyStore, State } from "../saltyrtc/main";
 
 export default () => { describe('Integration Tests', () => {
 
+    beforeEach(() => {
+        this.initiator = new SaltyRTC(new KeyStore(),
+                                      Config.SALTYRTC_HOST,
+                                      Config.SALTYRTC_PORT).asInitiator();
+
+        let pubKey = this.initiator.permanentKeyBytes;
+        let authToken = this.initiator.authTokenBytes;
+        this.responder = new SaltyRTC(new KeyStore(),
+                                      Config.SALTYRTC_HOST,
+                                      Config.SALTYRTC_PORT).asResponder(pubKey, authToken);
+    });
+
     describe('SaltyRTC', () => {
-
-        beforeEach(() => {
-            this.initiator = new SaltyRTC(new KeyStore(),
-                                          Config.SALTYRTC_HOST,
-                                          Config.SALTYRTC_PORT).asInitiator();
-
-            let pubKey = this.initiator.permanentKeyBytes;
-            let authToken = this.initiator.authTokenBytes;
-            this.responder = new SaltyRTC(new KeyStore(),
-                                          Config.SALTYRTC_HOST,
-                                          Config.SALTYRTC_PORT).asResponder(pubKey, authToken);
-        });
 
         it('connect (initiator first)', async (done) => {
             expect(this.initiator.state).toEqual('new');
@@ -108,6 +109,166 @@ export default () => { describe('Integration Tests', () => {
                 done();
             });
             this.initiator.sendData('fondue', 'Your fondue is ready!');
+        });
+
+    });
+
+    describe('WebRTC', () => {
+
+        async function initiatorFlow(pc: RTCPeerConnection, salty: SaltyRTC): Promise<void> {
+            // Validate
+            if (salty.state !== 'open') {
+                throw new Error('SaltyRTC instance is not connected');
+            }
+
+            // Send offer
+            let offer: RTCSessionDescription = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+            console.debug('Initiator: Created offer, set local description');
+            salty.sendData('offer', offer.sdp);
+
+            // Receive answer
+            function receiveAnswer(): Promise<string> {
+                return new Promise((resolve) => {
+                    salty.once('data:answer', (message: saltyrtc.Data) => {
+                        resolve(message.data);
+                    });
+                });
+            }
+            let answerSdp = await receiveAnswer();
+            await pc.setRemoteDescription({type: 'answer', 'sdp': answerSdp})
+              .catch(error => console.error('Could not set remote description', error));
+            console.debug('Initiator: Received answer, set remote description');
+        }
+
+        async function responderFlow(pc: RTCPeerConnection, salty: SaltyRTC): Promise<void> {
+            // Validate
+            if (salty.state !== 'open') {
+                throw new Error('SaltyRTC instance is not connected');
+            }
+
+            // Receive offer
+            function receiveOffer(): Promise<string> {
+                return new Promise((resolve) => {
+                    salty.once('data:offer', (message: saltyrtc.Data) => {
+                        resolve(message.data);
+                    });
+                });
+            }
+            let offerSdp = await receiveOffer();
+            await pc.setRemoteDescription({type: 'offer', 'sdp': offerSdp})
+              .catch(error => console.error('Could not set remote description', error));
+            console.debug('Initiator: Received offer, set remote description');
+
+            // Send answer
+            let answer: RTCSessionDescription = await pc.createAnswer();
+            await pc.setLocalDescription(answer);
+            console.debug('Initiator: Created answer, set local description');
+            salty.sendData('answer', answer.sdp);
+        }
+
+        /**
+         * Set up transmission and processing of ICE candidates.
+         */
+        function setupIceCandidateHandling(pc: RTCPeerConnection, salty: SaltyRTC) {
+            let role = (salty as any).signaling.role;
+            let logTag = role.charAt(0).toUpperCase() + role.slice(1) + ':';
+            console.debug(logTag, 'Setting up ICE candidate handling');
+            pc.onicecandidate = (e: RTCIceCandidateEvent) => {
+                if (e.candidate) {
+                    salty.sendData('candidate', {
+                        candidate: e.candidate.candidate,
+                        sdpMid: e.candidate.sdpMid,
+                        sdpMLineIndex: e.candidate.sdpMLineIndex,
+                    } as RTCIceCandidate);
+                }
+            };
+            pc.onicecandidateerror = (e: RTCPeerConnectionIceErrorEvent) => {
+                console.error(logTag, 'ICE candidate error:', e);
+            };
+            salty.on('data:candidate', (message: saltyrtc.Data) => {
+                pc.addIceCandidate(new RTCIceCandidate(message.data));
+            });
+        }
+
+        function connect(salty: SaltyRTC): Promise<{}> {
+            return new Promise((resolve) => {
+                salty.once('connected', () => {
+                    resolve();
+                });
+                salty.connect();
+            });
+        }
+
+        it('setting up a peer connection', async (done) => {
+            // Create peer connections
+            let initiatorConn = new RTCPeerConnection();
+            let responderConn = new RTCPeerConnection();
+
+            // Connect both peers
+            let connectInitiator = connect(this.initiator);
+            let connectResponder = connect(this.responder);
+            await connectInitiator;
+            await connectResponder;
+
+            // Do initiator flow
+            initiatorConn.onnegotiationneeded = (e: Event) => {
+                initiatorFlow(initiatorConn, this.initiator).then(
+                    (value) => console.debug('Initiator flow successful'),
+                    (error) => console.error('Initiator flow failed', error)
+                );
+            };
+
+            // Do responder flow
+            responderConn.onnegotiationneeded =(e: Event) => {
+                responderFlow(responderConn, this.responder).then(
+                    (value) => console.debug('Responder flow successful'),
+                    (error) => console.error('Responder flow failed', error)
+                );
+            };
+
+            // Set up ICE candidate handling
+            setupIceCandidateHandling(initiatorConn, this.initiator);
+            setupIceCandidateHandling(responderConn, this.responder);
+
+            // Do handover
+            let handover = () => {
+                return new Promise((resolve) => {
+                    this.initiator.handover(initiatorConn);
+                    this.responder.handover(responderConn);
+
+                    let handoverCount = 0;
+                    let handoverHandler = () => {
+                        handoverCount += 1;
+                        if (handoverCount == 2) {
+                            resolve();
+                        }
+                    };
+                    this.initiator.once('handover', handoverHandler);
+                    this.responder.once('handover', handoverHandler);
+                });
+            };
+            await handover();
+            console.info('Handover done.');
+
+            // Get references to private signaling datachannel
+            let initiatorDc = (this.initiator.signaling as any).dc as RTCDataChannel;
+            let responderDc = (this.responder.signaling as any).dc as RTCDataChannel;
+            expect(initiatorDc.readyState).toEqual('open');
+            expect(responderDc.readyState).toEqual('open');
+
+            // Send a (unencrypted) test message through the signaling data channel
+            responderDc.onmessage = (e: RTCMessageEvent) => {
+                console.log('Responder: Received dc message!');
+                expect(e.data).toEqual('bonan tagon.');
+                responderDc.send('saluton!');
+            };
+            initiatorDc.onmessage = (e: RTCMessageEvent) => {
+                console.log('Initiator: Received dc message!');
+                expect(e.data).toEqual('saluton!');
+                done();
+            };
+            initiatorDc.send('bonan tagon.');
         });
 
     });
