@@ -3,7 +3,7 @@
  */
 
 /// <reference path='saltyrtc/types/RTCPeerConnection.d.ts' />
-import { SaltyRTC, KeyStore } from './saltyrtc/main';
+import { SaltyRTC, KeyStore, SecureDataChannel } from './saltyrtc/main';
 
 // Create a new keypair
 let permanentKey = new KeyStore();
@@ -38,7 +38,7 @@ async function initiatorFlow(pc: RTCPeerConnection, salty: SaltyRTC): Promise<vo
       .catch(error => console.error('Could not set remote description', error));
 }
 
-async function main(): Promise<void/*SecureDataChannel*/> {
+async function main(): Promise<SecureDataChannel> {
 
     // Create new peer connection
     let pc = new RTCPeerConnection({
@@ -57,22 +57,18 @@ async function main(): Promise<void/*SecureDataChannel*/> {
     await connect();
 
     // Do initiator flow
-    await initiatorFlow(pc, salty).then(
-        (value) => console.debug('Initiator flow successful'),
-        (error) => console.error('Initiator flow failed', error)
-    );
+    await initiatorFlow(pc, salty);
+    console.debug('Initiator flow successful');
 
-//    // Start handover in background
-//    let handover = salty.handover(pc).then(
-//        value => console.info('Handover successful'),
-//        error => console.error('Handover failed', error));
-//
-//    // Wrap insecure data channel
-//    let dc = salty.wrapDataChannel(pc.createDataChannel('seriously-secure'));
-//
-//    // Return data channel instance
-//    await handover;
-//    return dc;
+    // Start handover in background
+    let handover = await salty.handover(pc);
+    console.info('Handover successful');
+
+    // Wrap insecure data channel
+    let dc = salty.wrapDataChannel(pc.createDataChannel('seriously-secure'));
+
+    // Return data channel instance
+    return dc;
 
 }
 
