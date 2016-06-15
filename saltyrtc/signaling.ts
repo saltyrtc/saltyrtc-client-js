@@ -1005,7 +1005,7 @@ export class Signaling {
     /**
      * Do the handover from WebSocket to WebRTC DataChannel.
      */
-    public handover(pc: RTCPeerConnection) {
+    public handover(pc: RTCPeerConnection): Promise<{}> {
         console.debug(this.logTag, 'Starting handover');
         // TODO (https://github.com/saltyrtc/saltyrtc-meta/issues/3): Negotiate channel id
         this.dc = pc.createDataChannel('saltyrtc', {
@@ -1014,19 +1014,24 @@ export class Signaling {
             ordered: true,
             protocol: this.ws.protocol,
         });
-        this.dc.onopen = (ev: Event) => {
-            this.ws.close(CloseCode.Handover);
-            console.info(this.logTag, 'Handover to data channel finished');
-            this.client.emit({type: 'handover'});
-        };
-        this.dc.onerror = (ev: Event) => {
-            console.error(this.logTag, 'Data channel error:', ev);
-            this.client.emit({type: 'connection-error', data: ev});
-        };
-        this.dc.onclose = (ev: Event) => {
-            console.info(this.logTag, 'Closed DataChannel connection');
-            this.client.emit({type: 'connection-closed', data: ev});
-        };
+        return new Promise((resolve, reject) => {
+            this.dc.onopen = (ev: Event) => {
+                this.ws.close(CloseCode.Handover);
+                console.info(this.logTag, 'Handover to data channel finished');
+                this.client.emit({type: 'handover'});
+                resolve();
+            };
+            this.dc.onerror = (ev: Event) => {
+                console.error(this.logTag, 'Data channel error:', ev);
+                this.client.emit({type: 'connection-error', data: ev});
+                reject('connection-error');
+            };
+            this.dc.onclose = (ev: Event) => {
+                console.info(this.logTag, 'Closed DataChannel connection');
+                this.client.emit({type: 'connection-closed', data: ev});
+                reject('connection-closed');
+            };
+        });
     }
 
 }

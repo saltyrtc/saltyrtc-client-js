@@ -154,8 +154,8 @@ export class SaltyRTC {
     /**
      * Do the handover from WebSocket to WebRTC DataChannel.
      */
-    public handover(pc: RTCPeerConnection) {
-        this.signaling.handover(pc);
+    public handover(pc: RTCPeerConnection): Promise<{}> {
+        return this.signaling.handover(pc);
     }
 
     /**
