@@ -347,8 +347,6 @@ export default () => { describe('Integration Tests', () => {
             safedc.send('enigma');
         });
 
-        // TODO: Test addEventListener
-
     });
 
 }); }

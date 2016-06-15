@@ -42,6 +42,11 @@ export class SecureDataChannel implements RTCDataChannel {
     }
 
     private onEncryptedMessage = (event: RTCMessageEvent) => {
+        // If _onmessage is not defined, exit immediately.
+        if (this._onmessage === undefined) {
+            return;
+        }
+
         // Event object is read-only, so we need to clone it.
         let fakeEvent = {};
         for (let x in event) {
@@ -89,7 +94,19 @@ export class SecureDataChannel implements RTCDataChannel {
     close(): void { this.dc.close(); }
 
     // EventTarget API (according to https://developer.mozilla.org/de/docs/Web/API/EventTarget)
-    addEventListener(a: string, b: EventListenerOrEventListenerObject, c?: boolean): void { this.dc.addEventListener(a, b, c); }
-    removeEventListener(a: string, b: EventListenerOrEventListenerObject, c?: boolean): void { this.dc.removeEventListener(a, b, c); }
+    addEventListener(type: string, listener: EventListenerOrEventListenerObject, useCapture?: boolean): void {
+        if (type === 'message') {
+            throw new Error('addEventListener on message events is not currently supported by SaltyRTC.');
+        } else {
+            this.dc.addEventListener(type, listener, useCapture);
+        }
+    }
+    removeEventListener(type: string, listener: EventListenerOrEventListenerObject, useCapture?: boolean): void {
+        if (type === 'message') {
+            throw new Error('removeEventListener on message events is not currently supported by SaltyRTC.');
+        } else {
+            this.dc.removeEventListener(type, listener, useCapture);
+        }
+    }
     dispatchEvent(e: Event): boolean { return this.dc.dispatchEvent(e); }
 }
