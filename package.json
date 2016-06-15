@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "description": "SaltyRTC JavaScript implementation",
   "scripts": {
-    "test": "karma start --single-run",
+    "test": "karma start --single-run --log-level=debug --colors",
     "validate": "tsc -w",
     "rollup": "rollup -c",
     "rollup_tests": "rollup -c rollup.testing.js",
