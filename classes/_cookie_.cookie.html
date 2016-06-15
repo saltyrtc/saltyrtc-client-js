@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Session | saltyrtc</title>
+	<title>Cookie | saltyrtc</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -57,24 +57,33 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/_session_.html">&quot;session&quot;</a>
+					<a href="../modules/_cookie_.html">&quot;cookie&quot;</a>
 				</li>
 				<li>
-					<a href="_session_.session.html">Session</a>
+					<a href="_cookie_.cookie.html">Cookie</a>
 				</li>
 			</ul>
-			<h1>Class Session</h1>
+			<h1>Class Cookie</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>Copyright (C) 2016 Threema GmbH / SaltyRTC Contributors</p>
+					</div>
+					<p>This software may be modified and distributed under the terms
+					of the MIT license.  See the <code>LICENSE.md</code> file for details.</p>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">Session</span>
+						<span class="target">Cookie</span>
 					</li>
 				</ul>
 			</section>
@@ -82,76 +91,162 @@
 				<h2>Index</h2>
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
-						<section class="tsd-index-section tsd-is-private tsd-is-private-protected">
-							<h3>Properties</h3>
+						<section class="tsd-index-section ">
+							<h3>Constructors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_session_.session.html#_id" class="tsd-kind-icon">_id</a></li>
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="_cookie_.cookie.html#constructor" class="tsd-kind-icon">constructor</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
-							<h3>Accessors</h3>
+							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="_session_.session.html#id" class="tsd-kind-icon">id</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_cookie_.cookie.html#bytes" class="tsd-kind-icon">bytes</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><a href="_cookie_.cookie.html#cookie_length" class="tsd-kind-icon">COOKIE_<wbr>LENGTH</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_session_.session.html#new" class="tsd-kind-icon">new</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_cookie_.cookie.html#asarraybuffer" class="tsd-kind-icon">as<wbr>Array<wbr>Buffer</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_cookie_.cookie.html#equals" class="tsd-kind-icon">equals</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_cookie_.cookie.html#fromarraybuffer" class="tsd-kind-icon">from<wbr>Array<wbr>Buffer</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
-			<section class="tsd-panel-group tsd-member-group tsd-is-private tsd-is-private-protected">
-				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
-					<a name="_id" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagPrivate">Private</span> _id</h3>
-					<div class="tsd-signature tsd-kind-icon">_id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/session.ts#L11">session.ts:11</a></li>
-						</ul>
-					</aside>
-				</section>
-			</section>
 			<section class="tsd-panel-group tsd-member-group ">
-				<h2>Accessors</h2>
-				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class">
-					<a name="id" class="tsd-anchor"></a>
-					<h3>id</h3>
-					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> id<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+				<h2>Constructors</h2>
+				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class">
+					<a name="constructor" class="tsd-anchor"></a>
+					<h3>constructor</h3>
+					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Cookie<span class="tsd-signature-symbol">(</span>bytes<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_cookie_.cookie.html" class="tsd-signature-type">Cookie</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/session.ts#L13">session.ts:13</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8f47789/saltyrtc/cookie.ts#L14">cookie.ts:14</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Create a new cookie.</p>
+								</div>
+								<p>If no bytes are provided, generate a random cookie.</p>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> bytes: <span class="tsd-signature-type">Uint8Array</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="_cookie_.cookie.html" class="tsd-signature-type">Cookie</a></h4>
 						</li>
 					</ul>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Properties</h2>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="bytes" class="tsd-anchor"></a>
+					<h3>bytes</h3>
+					<div class="tsd-signature tsd-kind-icon">bytes<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8f47789/saltyrtc/cookie.ts#L14">cookie.ts:14</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-static">
+					<a name="cookie_length" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> COOKIE_<wbr>LENGTH</h3>
+					<div class="tsd-signature tsd-kind-icon">COOKIE_<wbr>LENGTH<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8f47789/saltyrtc/cookie.ts#L12">cookie.ts:12</a></li>
+						</ul>
+					</aside>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="new" class="tsd-anchor"></a>
-					<h3>new</h3>
+					<a name="asarraybuffer" class="tsd-anchor"></a>
+					<h3>as<wbr>Array<wbr>Buffer</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">as<wbr>Array<wbr>Buffer<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ArrayBuffer</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8397866/saltyrtc/session.ts#L17">session.ts:17</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8f47789/saltyrtc/cookie.ts#L42">cookie.ts:42</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Return the underlying ArrayBuffer.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">ArrayBuffer</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="equals" class="tsd-anchor"></a>
+					<h3>equals</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">equals<span class="tsd-signature-symbol">(</span>otherCookie<span class="tsd-signature-symbol">: </span><a href="_cookie_.cookie.html" class="tsd-signature-type">Cookie</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8f47789/saltyrtc/cookie.ts#L49">cookie.ts:49</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Return whether or not the two cookies are equal.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>otherCookie: <a href="_cookie_.cookie.html" class="tsd-signature-type">Cookie</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="fromarraybuffer" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> from<wbr>Array<wbr>Buffer</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">from<wbr>Array<wbr>Buffer<span class="tsd-signature-symbol">(</span>buffer<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ArrayBuffer</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_cookie_.cookie.html" class="tsd-signature-type">Cookie</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8f47789/saltyrtc/cookie.ts#L35">cookie.ts:35</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Create a Cookie from an array.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>buffer: <span class="tsd-signature-type">ArrayBuffer</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="_cookie_.cookie.html" class="tsd-signature-type">Cookie</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -169,8 +264,14 @@
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_client_.html">"client"</a>
 					</li>
+					<li class="current tsd-kind-external-module">
+						<a href="../modules/_cookie_.html">"cookie"</a>
+					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_datachannel_.html">"datachannel"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_eventregistry_.html">"eventregistry"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_keystore_.html">"keystore"</a>
@@ -179,10 +280,7 @@
 						<a href="../modules/_main_.html">"main"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/_peerconnection_.html">"peerconnection"</a>
-					</li>
-					<li class="current tsd-kind-external-module">
-						<a href="../modules/_session_.html">"session"</a>
+						<a href="../modules/_nonce_.html">"nonce"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_signaling_.html">"signaling"</a>
@@ -197,21 +295,33 @@
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_session_.session.html" class="tsd-kind-icon">Session</a>
+						<a href="_cookie_.cookie.html" class="tsd-kind-icon">Cookie</a>
 						<ul>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
-								<a href="_session_.session.html#_id" class="tsd-kind-icon">_id</a>
+							<li class=" tsd-kind-constructor tsd-parent-kind-class">
+								<a href="_cookie_.cookie.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
-							<li class=" tsd-kind-get-signature tsd-parent-kind-class">
-								<a href="_session_.session.html#id" class="tsd-kind-icon">id</a>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="_cookie_.cookie.html#bytes" class="tsd-kind-icon">bytes</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-static">
+								<a href="_cookie_.cookie.html#cookie_length" class="tsd-kind-icon">COOKIE_<wbr>LENGTH</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_session_.session.html#new" class="tsd-kind-icon">new</a>
+								<a href="_cookie_.cookie.html#asarraybuffer" class="tsd-kind-icon">as<wbr>Array<wbr>Buffer</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_cookie_.cookie.html#equals" class="tsd-kind-icon">equals</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="_cookie_.cookie.html#fromarraybuffer" class="tsd-kind-icon">from<wbr>Array<wbr>Buffer</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="_cookie_.cookiepair.html" class="tsd-kind-icon">Cookie<wbr>Pair</a>
+					</li>
 				</ul>
 			</nav>
 		</div>
