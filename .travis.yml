@@ -36,7 +36,7 @@ before_script:
     pyvenv venv
     venv/bin/python setup.py install
     venv/bin/pip install logbook
-    venv/bin/python examples/debug.py &
+    venv/bin/python examples/debug.py > serverlog.txt 2>&1 &
     export SALTYRTC_SERVER_PID=$!
     sleep 2
     cd ..
@@ -48,6 +48,11 @@ script:
 after_script:
   # Stop SaltyRTC server
   - kill -INT $SALTYRTC_SERVER_PID
+  # Print server log
+  - |
+    echo "---------- Server Log ----------\n"
+    cat saltyrtc-server-python/serverlog.txt
+    echo -e "\n---------- End Server Log ----------"
   # Build docs
   - bash scripts/travis_build_docs.sh
   - ls -la ~/.mozilla/firefox
