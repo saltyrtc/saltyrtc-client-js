@@ -158,33 +158,33 @@ interface RTCMessageEvent {
   data: any;
 }
 
-// TODO(1)
-declare enum RTCDataChannelState {
-  // http://dev.w3.org/2011/webrtc/editor/webrtc.html#idl-def-RTCDataChannelState
-  'connecting',
-  'open',
-  'closing',
-  'closed'
-}
+// https://www.w3.org/TR/webrtc/#idl-def-rtcdatachannelstate
+declare type RTCDataChannelState  = 'connecting' | 'open' | 'closing' | 'closed';
 
+declare type RTCBinaryType  = 'blob' | 'arraybuffer';
+
+// https://www.w3.org/TR/webrtc/#idl-def-rtcdatachannel
 interface RTCDataChannel extends EventTarget {
   label: string;
-  reliable: boolean;
-  readyState: string; // RTCDataChannelState; see TODO(1)
+  ordered: boolean;
+  maxPacketLifeTime?: number;
+  maxRetransmits?: number;
+  protocol: string;
+  negotiated: boolean;
+  id: number;
+  readyState: RTCDataChannelState;
   bufferedAmount: number;
-  binaryType: string;
+  bufferedAmountLowThreshold: number;
+  binaryType: RTCBinaryType;
 
   onopen: (event: Event) => void;
+  onbufferedamountlow: (event: Event) => void;
   onerror: (event: Event) => void;
   onclose: (event: Event) => void;
   onmessage: (event: RTCMessageEvent) => void;
 
   close(): void;
-
-  send(data: string): void ;
-  send(data: ArrayBuffer): void;
-  send(data: ArrayBufferView): void;
-  send(data: Blob): void;
+  send(data: string | ArrayBuffer | ArrayBufferView | Blob): void ;
 }
 declare var RTCDataChannel: {
   prototype: RTCDataChannel;

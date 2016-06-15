@@ -5,6 +5,7 @@ module.exports = function(config) {
     files: [
       'vendor/nacl-fast.min.js',
       'vendor/msgpack.min.js',
+      'node_modules/webrtc-adapter/out/adapter.js',
       'dist/tests.js'
     ],
     customLaunchers: {

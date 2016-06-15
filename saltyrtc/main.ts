@@ -9,3 +9,4 @@
 export { SaltyRTC } from "./client";
 export { State } from "./signaling";
 export { KeyStore, Box } from "./keystore";
+export { SecureDataChannel } from "./datachannel";

@@ -141,16 +141,17 @@ export class Signaling {
     private protocol: string = 'wss';
     private ws: WebSocket = null;
 
+    // WebRTC / ORTC
+    private dc: RTCDataChannel = null;
+
     // Msgpack
     private msgpackOptions: Object = {
         codec: msgpack.createCodec({binarraybuffer: true}),
     };
 
-    // WebRTC / ORTC
-    private dc: RTCDataChannel = null;
-
     // Connection state
     public state: State = 'new';
+    public signalingChannel: 'websocket' | 'datachannel' = 'websocket';
 
     // Main class
     private client: SaltyRTC;
@@ -935,17 +936,7 @@ export class Signaling {
      */
     private onPeerMessage = (ev: MessageEvent) => {
         console.info(this.logTag, 'Message received!');
-
-        // Decrypt and decode message
-        let box = Box.fromUint8Array(new Uint8Array(ev.data), nacl.box.nonceLength);
-        let decrypted;
-        if (this.role == 'initiator') {
-            decrypted = this.sessionKey.decrypt(box, this.responder.sessionKey);
-        } else {
-            decrypted = this.sessionKey.decrypt(box, this.initiatorSessionKey);
-        }
-        let message = this.decodeMessage(decrypted);
-
+        let message = this.decryptPeerMessage(ev.data);
         switch (message.type) {
             case 'data':
                 let dataMessage = message as saltyrtc.Data;
@@ -962,9 +953,27 @@ export class Signaling {
     }
 
     /**
-     * Send a data message to the peer, encrypted with the session key.
+     * Decrypt and decode a P2P message.
+     *
+     * TODO: Separate cookie / csn per data channel.
      */
-    public sendData(data: saltyrtc.Data) {
+    public decryptPeerMessage(data: ArrayBuffer): saltyrtc.Message {
+        let box = Box.fromUint8Array(new Uint8Array(data), nacl.box.nonceLength);
+        let decrypted;
+        if (this.role == 'initiator') {
+            decrypted = this.sessionKey.decrypt(box, this.responder.sessionKey);
+        } else {
+            decrypted = this.sessionKey.decrypt(box, this.initiatorSessionKey);
+        }
+        return this.decodeMessage(decrypted);
+    }
+
+    /**
+     * Send a data message to the peer, encrypted with the session key.
+     *
+     * TODO: Separate cookie / CSN for every DC
+     */
+    public sendData(data: saltyrtc.Data, dc?: RTCDataChannel) {
         if (this.state !== 'open') {
             console.error(this.logTag, 'Trying to send a message, but connection state is', this.state);
             throw 'bad-state';
@@ -975,14 +984,28 @@ export class Signaling {
 
         // Send message
         let packet: Uint8Array = this.buildPacket(data, peerAddress);
-        console.debug(this.logTag, 'Sending', data.data_type, 'data message');
-        this.ws.send(packet);
+        if (dc === undefined) {
+            console.debug(this.logTag, 'Sending', data.data_type, 'data message through', this.signalingChannel);
+            switch (this.signalingChannel) {
+                case 'websocket':
+                    this.ws.send(packet);
+                    break;
+                case 'datachannel':
+                    this.dc.send(packet);
+                    break;
+                default:
+                    throw new Error('Invalid signaling channel: ' + this.signalingChannel);
+            }
+        } else {
+            console.debug(this.logTag, 'Sending', data.data_type, 'data message through custom datachannel', dc.id);
+            dc.send(packet);
+        }
     }
 
     /**
      * Do the handover from WebSocket to WebRTC DataChannel.
      */
-    public handover(pc: RTCPeerConnection) {
+    public handover(pc: RTCPeerConnection): Promise<{}> {
         console.debug(this.logTag, 'Starting handover');
         // TODO (https://github.com/saltyrtc/saltyrtc-meta/issues/3): Negotiate channel id
         this.dc = pc.createDataChannel('saltyrtc', {
@@ -991,19 +1014,24 @@ export class Signaling {
             ordered: true,
             protocol: this.ws.protocol,
         });
-        this.dc.onopen = (ev: Event) => {
-            this.ws.close(CloseCode.Handover);
-            console.info(this.logTag, 'Handover to data channel finished');
-            this.client.emit({type: 'handover'});
-        };
-        this.dc.onerror = (ev: Event) => {
-            console.error(this.logTag, 'Data channel error:', ev);
-            this.client.emit({type: 'connection-error', data: ev});
-        };
-        this.dc.onclose = (ev: Event) => {
-            console.info(this.logTag, 'Closed DataChannel connection');
-            this.client.emit({type: 'connection-closed', data: ev});
-        };
+        return new Promise((resolve, reject) => {
+            this.dc.onopen = (ev: Event) => {
+                this.ws.close(CloseCode.Handover);
+                console.info(this.logTag, 'Handover to data channel finished');
+                this.client.emit({type: 'handover'});
+                resolve();
+            };
+            this.dc.onerror = (ev: Event) => {
+                console.error(this.logTag, 'Data channel error:', ev);
+                this.client.emit({type: 'connection-error', data: ev});
+                reject('connection-error');
+            };
+            this.dc.onclose = (ev: Event) => {
+                console.info(this.logTag, 'Closed DataChannel connection');
+                this.client.emit({type: 'connection-closed', data: ev});
+                reject('connection-closed');
+            };
+        });
     }
 
 }
