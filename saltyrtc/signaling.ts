@@ -126,14 +126,10 @@ class Responder {
  * need to be added later on.
  */
 export class Signaling {
-    static CONNECT_MAX_RETRIES = 10;
-    static CONNECT_RETRY_INTERVAL = 10000;
     static SALTYRTC_WS_SUBPROTOCOL = 'saltyrtc-1.0';
     static SALTYRTC_ADDR_UNKNOWN = 0x00;
     static SALTYRTC_ADDR_SERVER = 0x00;
     static SALTYRTC_ADDR_INITIATOR = 0x01;
-
-    private $rootScope: any;
 
     // WebSocket
     private host: string;
