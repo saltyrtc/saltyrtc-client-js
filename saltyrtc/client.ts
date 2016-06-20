@@ -31,7 +31,6 @@ export class SaltyRTC {
     private port: number;
     private permanentKey: KeyStore;
     private _signaling: Signaling = null;
-    private ws: WebSocket = null;
     private eventRegistry: EventRegistry;
 
     /**
