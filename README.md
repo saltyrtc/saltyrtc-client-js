@@ -1,12 +1,12 @@
 # SaltyRTC JavaScript Client
 
-[![Travis branch](https://img.shields.io/travis/saltyrtc/saltyrtc-client-js/develop.svg)](https://travis-ci.org/saltyrtc/saltyrtc-client-js)
+[![Travis branch](https://img.shields.io/travis/saltyrtc/saltyrtc-client-js/master.svg)](https://travis-ci.org/saltyrtc/saltyrtc-client-js)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/saltyrtc/saltyrtc-client-js)
 
 This is a [SaltyRTC](https://github.com/saltyrtc/saltyrtc-meta) implementation
 for ECMAScript 2015 written in TypeScript 1.8+.
 
-The development is still ongoing, you can find the current version in the
-`develop` branch.
+The development is still ongoing, the library is not yet production ready.
 
 Currently at least Firefox 45 and Chromium 49 are required.
 
