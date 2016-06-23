@@ -514,9 +514,9 @@ export class Signaling {
             csn = this.initiatorCombinedSequence.next();
         } else if (receiver >= 0x02 && receiver <= 0xff) {
             if (this.responder && this.responder.id === receiver) {
-                csn = this.responder.combinedSequence;
+                csn = this.responder.combinedSequence.next();
             } else {
-                csn = this.responders.get(receiver).combinedSequence;
+                csn = this.responders.get(receiver).combinedSequence.next();
             }
         } else {
             throw 'bad-receiver';
