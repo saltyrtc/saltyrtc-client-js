@@ -117,17 +117,15 @@ export class KeyStore {
 
 export class AuthToken {
 
-    public static SECRET_LENGTH = 32;
-
     private _authToken: Uint8Array = null;
 
     constructor(bytes?: Uint8Array) {
         if (typeof bytes === 'undefined') {
-            this._authToken = nacl.randomBytes(AuthToken.SECRET_LENGTH);
+            this._authToken = nacl.randomBytes(nacl.secretbox.keyLength);
             console.debug('AuthToken: Generated auth token');
         } else {
-            if (bytes.byteLength != AuthToken.SECRET_LENGTH) {
-                console.error('Auth token must be', AuthToken.SECRET_LENGTH, 'bytes long.');
+            if (bytes.byteLength != nacl.secretbox.keyLength) {
+                console.error('Auth token must be', nacl.secretbox.keyLength, 'bytes long.');
                 throw 'bad-token-length';
             }
             this._authToken = bytes;

@@ -20,8 +20,8 @@ import { u8aToHex, hexToU8a } from "./utils";
  *
  * - connected(void): Handshake has been completed, we're connected!
  * - handover(void): The handover to the data channel is done
- * - connection-error(ErrorEvent): A WebSocket connection error occured
- * - connection-closed(CloseEvent): The WebSocket connection was closed
+ * - connection-error(ErrorEvent): A connection error occured
+ * - connection-closed(CloseEvent): The connection was closed
  * - data(saltyrtc.Data): A new data message was received
  * - data:<data-type>(saltyrtc.Data): The data event, filtered by data type
  *

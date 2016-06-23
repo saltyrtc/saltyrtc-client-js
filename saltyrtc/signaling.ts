@@ -569,11 +569,9 @@ export class Signaling {
      * - Close WebSocket if still open
      * - Set `this.ws` to `null`
      * - Set `this.status` to `new`
-     * - Reset `this.sequenceNumber` to 0
-     * - Clear the cache
+     * - Reset the server combined sequence
      */
     private resetConnection(): void {
-        let oldState = this.state;
         this.state = 'new';
         this.serverCombinedSequence = new CombinedSequence();
 
