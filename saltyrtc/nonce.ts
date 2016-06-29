@@ -12,7 +12,7 @@ import { Cookie } from "./cookie";
 /**
  * Base class for all nonces.
  */
-abstract class Nonce {
+export abstract class Nonce {
     protected _cookie: Cookie;
     protected _overflow: number;
     protected _sequenceNumber: number;

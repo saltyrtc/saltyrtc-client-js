@@ -12,8 +12,8 @@ import { Chunkifier, Unchunkifier } from "./chunkifier";
 import { SaltyRTC } from "./client";
 
 
-declare type EventHandler = (event: Event) => void;
-declare type MessageEventHandler = (event: RTCMessageEvent) => void;
+export declare type EventHandler = (event: Event) => void;
+export declare type MessageEventHandler = (event: RTCMessageEvent) => void;
 
 /**
  * Wrapper around a regular DataChannel.

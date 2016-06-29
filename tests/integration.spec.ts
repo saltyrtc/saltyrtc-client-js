@@ -8,7 +8,7 @@
 
 import { Config } from "./config";
 import { sleep } from "./utils";
-import { SaltyRTC, KeyStore, State } from "../saltyrtc/main";
+import { SaltyRTC, KeyStore } from "../saltyrtc/main";
 
 export default () => { describe('Integration Tests', () => {
 
