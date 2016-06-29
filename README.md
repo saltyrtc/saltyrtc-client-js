@@ -12,6 +12,45 @@ Currently at least Firefox 45 and Chromium 49 are required.
 
 [API Docs](https://saltyrtc.github.io/saltyrtc-client-js/)
 
+## Usage
+
+First, create a keypair:
+
+    let permanentKey = new KeyStore();
+
+Then, create a SaltyRTC instance:
+
+    let salty = new SaltyRTC(permanentKey, saltyrtcHost, saltyrtcPort)
+
+Depending on whether you're the initiator or the responder, initialize the SaltyRTC instance:
+
+    let initiator = salty.asInitiator();
+    let responder = salty.asResponder(permanentKey.publicKeyBytes, initiator.authTokenBytes);
+
+Now you can connect both sides:
+
+    initiator.connect()
+    responder.connect()
+
+You can query the current signaling state:
+
+    >>> console.log(initiator.state)
+    server-handshake
+
+And you can register callbacks for certain events:
+
+    initiator.on('connected', () => console.log('Initiator is connected'));
+    responder.on('data', (dataMessage) => console.log('New data arrived:', dataMessage.data));
+
+The following events are available:
+
+ - `connected(void)`: Handshake has been completed, we're connected!
+ - `handover(void)`: The handover to the data channel is done
+ - `connection-error(ErrorEvent)`: A connection error occured
+ - `connection-closed(CloseEvent)`: The connection was closed
+ - `data(saltyrtc.Data)`: A new data message was received
+ - `data:<data-type>(saltyrtc.Data)`: The data event, filtered by data type
+
 ## Development
 
 Install dependencies with npm (or alternatively install them manually):
