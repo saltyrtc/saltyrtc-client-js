@@ -16,11 +16,11 @@ Currently at least Firefox 45 and Chromium 49 are required.
 
 First, create a keypair:
 
-    let permanentKey = new KeyStore();
+    let permanentKey = new saltyrtc.KeyStore();
 
 Then, create a SaltyRTC instance:
 
-    let salty = new SaltyRTC(permanentKey, saltyrtcHost, saltyrtcPort)
+    let salty = new saltyrtc.SaltyRTC(permanentKey, saltyrtcHost, saltyrtcPort)
 
 Depending on whether you're the initiator or the responder, initialize the SaltyRTC instance:
 
