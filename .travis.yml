@@ -43,8 +43,11 @@ before_script:
   # Rollup tests
   - npm run rollup_tests
 script:
-  - node_modules/.bin/tsc --target ES2015 --noEmit
   - npm test
+  - |
+    mv tsconfig.json tsconfig.ignore
+    node_modules/.bin/tsc --target ES2015 --noEmit
+    mv tsconfig.ignore tsconfig.json
 after_script:
   # Stop SaltyRTC server
   - kill -INT $SALTYRTC_SERVER_PID
