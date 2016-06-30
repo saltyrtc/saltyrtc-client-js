@@ -2,6 +2,7 @@
 js/
 node_modules/
 npm-debug.log
+build/
 dist/
 docs/
 saltyrtc.crt

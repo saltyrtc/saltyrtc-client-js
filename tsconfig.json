@@ -1,6 +1,15 @@
 {
     "compilerOptions": {
         "target": "ES2015",
-        "noEmit": true
-    }
+        "removeComments": true,
+        "outDir": "build/es2015"
+    },
+    "exclude": [
+        "node_modules",
+        "tests",
+        "build",
+        "dist",
+        "cli",
+        "example.ts"
+    ]
 }

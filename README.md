@@ -4,7 +4,7 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/saltyrtc/saltyrtc-client-js)
 
 This is a [SaltyRTC](https://github.com/saltyrtc/saltyrtc-meta) implementation
-for ECMAScript 2015 written in TypeScript 1.8+.
+for JavaScript (ES5) written in TypeScript 1.8+.
 
 The development is still ongoing, the library is not yet production ready.
 
@@ -57,12 +57,11 @@ Install dependencies with npm (or alternatively install them manually):
 
     $ npm install
 
-To compile the TypeScript sources to a single JavaScript (ES2015) file, run
-`rollup` in the main directory.
+To compile the TypeScript sources to a single minified JavaScript (ES5) file:
 
-    $ npm run rollup
+    $ npm run dist
 
-The resulting file will be located in `dist/saltyrtc.js`.
+The resulting file will be located in `dist/saltyrtc.min.js`.
 
 You can also watch the source code for changes and recompile automatically:
 

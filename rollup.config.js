@@ -1,17 +1,19 @@
-import typescript from 'rollup-plugin-typescript';
+import babel from 'rollup-plugin-babel';
+import uglify from 'rollup-plugin-uglify';
 
 export default {
-    entry: 'saltyrtc/main.ts',
-    dest: 'dist/saltyrtc.js',
-    sourceMap: true,
+    entry: 'build/es2015/main.js',
+    dest: 'dist/saltyrtc.min.js',
+    format: 'iife',
+    moduleName: 'saltyrtc',
+    sourceMap: false,
     treeshake: true,
     useStrict: true,
     plugins: [
-        typescript({
-            tsconfig: false,
-            target: 'ES2015',
-            removeComments: true
-        })
+        babel({
+            exclude: 'node_modules/**'
+        }),
+        uglify()
     ],
     banner: "/**\n" +
             " * SaltyRTC JavaScript implementation\n" +
