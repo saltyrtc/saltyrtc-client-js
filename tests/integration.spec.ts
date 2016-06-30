@@ -10,7 +10,7 @@ import { Config } from "./config";
 import { sleep } from "./utils";
 import { SaltyRTC, KeyStore } from "../saltyrtc/main";
 
-export default () => { describe('Integration Tests', () => {
+export default () => { describe('Integration Tests', function() {
 
     beforeEach(() => {
         this.initiator = new SaltyRTC(new KeyStore(),

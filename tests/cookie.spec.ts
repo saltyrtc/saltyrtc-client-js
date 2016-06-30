@@ -2,9 +2,9 @@
 
 import { Cookie } from "../saltyrtc/cookie";
 
-export default () => { describe('cookie', () => {
+export default () => { describe('cookie', function() {
 
-    describe('Cookie', () => {
+    describe('Cookie', function() {
 
         it('generates a cookie of the correct length', () => {
             let c = new Cookie();

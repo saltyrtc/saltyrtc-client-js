@@ -30,9 +30,9 @@ class FakeWebSocket {
     } 
 }
 
-export default () => { describe('signaling', () => {
+export default () => { describe('signaling', function() {
 
-    describe('Signaling', () => {
+    describe('Signaling', function() {
 
         beforeEach(() => {
             this.fakeSaltyRTC = new FakeSaltyRTC() as any as SaltyRTC;

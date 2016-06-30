@@ -4,10 +4,9 @@
   "description": "SaltyRTC JavaScript implementation",
   "scripts": {
     "test": "karma start --single-run --log-level=debug --colors",
-    "validate": "tsc -w",
-    "rollup": "rollup -c",
+    "dist": "tsc && rollup -c",
     "rollup_tests": "rollup -c rollup.testing.js",
-    "watch": "watch \"npm run rollup\" saltyrtc/",
+    "watch": "watch \"npm run dist\" saltyrtc/",
     "watch_tests": "watch \"npm run rollup_tests\" tests/ saltyrtc/"
   },
   "repository": {
@@ -28,15 +27,23 @@
   },
   "homepage": "https://github.com/saltyrtc/saltyrtc-client-js#readme",
   "devDependencies": {
+    "babel-preset-es2015-rollup": "^1.1.1",
     "jasmine-core": "^2.4",
     "karma": "^0.13.22",
     "karma-chrome-launcher": "^1.0.1",
     "karma-firefox-launcher": "^1.0.0",
     "karma-jasmine": "^1.0.2",
-    "rollup": "^0.26",
-    "rollup-plugin-typescript": "^0.7.5",
-    "typescript": "^1.8.0",
+    "rollup": "^0.33",
+    "rollup-plugin-babel": "^2.6.1",
+    "rollup-plugin-typescript": "^0.7.6",
+    "rollup-plugin-uglify": "^1.0.1",
+    "typescript": "^1.8.9",
     "watch": "^0.18.0",
     "webrtc-adapter": "^1.4.0"
+  },
+  "babel": {
+    "presets": [
+      "es2015-rollup"
+    ]
   }
 }

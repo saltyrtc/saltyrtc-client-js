@@ -2,9 +2,9 @@
 
 import { u8aToHex, hexToU8a, randomString, concat, randomUint32, byteToHex } from "../saltyrtc/utils";
 
-export default () => { describe('utils', () => {
+export default () => { describe('utils', function() {
 
-    describe('hexToU8a / u8aToHex', () => {
+    describe('hexToU8a / u8aToHex', function() {
 
         it('conversion from Uint8Array to hex works', () => {
             let source = new Uint8Array([0x01, 0x10, 0xde, 0xad, 0xbe, 0xef]);
@@ -32,7 +32,7 @@ export default () => { describe('utils', () => {
 
     });
 
-    describe('randomString', () => {
+    describe('randomString', function() {
 
         it('generates a 32 character random string', () => {
             let random1 = randomString();
@@ -44,7 +44,7 @@ export default () => { describe('utils', () => {
 
     });
 
-    describe('concat', () => {
+    describe('concat', function() {
 
         it('does not change a single array', () => {
             let src = Uint8Array.of(1, 2, 3, 4);
@@ -69,7 +69,7 @@ export default () => { describe('utils', () => {
 
     });
 
-    describe('randomUint32', () => {
+    describe('randomUint32', function() {
 
         it('generates a random number between 0 and 2**32', () => {
             let lastNum: number = null;
@@ -84,7 +84,7 @@ export default () => { describe('utils', () => {
 
     });
 
-    describe('byteToHex', () => {
+    describe('byteToHex', function() {
 
         it('converts 0 to 0x00', () => {
             expect(byteToHex(0)).toEqual('0x00');
