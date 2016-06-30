@@ -37,6 +37,14 @@ export class SaltyRTC {
      * Create a new SaltyRTC instance.
      */
     constructor(permanentKey: KeyStore, host: string, port: number = 8765) {
+        // Validate arguments
+        if (permanentKey === undefined) {
+            throw new Error('SaltyRTC must be initialized with a permanent key');
+        }
+        if (host === undefined) {
+            throw new Error('SaltyRTC must be initialized with a target host');
+        }
+
         // Validate data
         if (host.endsWith('/')) {
             throw new Error('SaltyRTC host may not end with a slash');
