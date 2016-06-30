@@ -345,9 +345,6 @@ export class Signaling {
             let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
             console.debug(this.logTag, 'Sending client-auth');
             this.ws.send(packet);
-
-            // Set previously unknown address to 0x01 (initiator)
-            this.address = Signaling.SALTYRTC_ADDR_INITIATOR;
         }
 
         { // Receive server-auth
@@ -356,6 +353,7 @@ export class Signaling {
             let bytes: Uint8Array = await this.recvMessageData();
 
             // Validate length
+            // TODO: Do we actually need this?
             if (bytes.byteLength <= 24) {
                 console.error(this.logTag, 'Received message with only', bytes.byteLength, 'bytes length');
                 throw 'bad-message-length';
@@ -387,6 +385,7 @@ export class Signaling {
             }
 
             // Decode message
+            // TODO: Maybe the address needs to be set *after* decoding the message?
             let message = this.decodeMessage(decrypted, 'server-auth') as saltyrtc.ServerAuth;
 
             // Validate cookie
@@ -693,6 +692,7 @@ export class Signaling {
             console.debug(this.logTag, 'Received', message.type);
 
             if (message.type === 'new-responder') {
+                // TODO: What if we're not an initiator?
                 // A new responder wants to connect. Store id.
                 let id = (message as saltyrtc.NewResponder).id;
                 if (!this.responders.has(id)) {
@@ -701,6 +701,7 @@ export class Signaling {
                     console.warn(this.logTag, 'Got new-responder message for an already known responder.');
                 }
             } else if (message.type === 'new-initiator') {
+                // TODO: What if we're not a responder?
                 // A new initiator connected.
                 this.initiatorConnected = true;
                 this.sendToken();
@@ -763,7 +764,7 @@ export class Signaling {
                     abort();
                 }
 
-                // Store responder id and session key
+                // OK!
                 console.debug(this.logTag, 'Initiator authenticated.');
 
                 // Deregister handshake
@@ -772,6 +773,7 @@ export class Signaling {
                 this.ws.addEventListener('message', this.onPeerMessage);
 
                 // Update state
+                // TODO: This state change is not really needed
                 this.initiatorHandshakeState = 'auth-received';
 
                 // Ensure that cookies are different
@@ -864,7 +866,7 @@ export class Signaling {
                     this.ws.send(packet);
                 }
             } else if (responder.state === 'key-received') {
-                // If the state is 'key-received', we expect a 'auth' message,
+                // If the state is 'key-received', we expect an 'auth' message,
                 // encrypted with our session key.
                 let box = Box.fromUint8Array(bytes, nacl.box.nonceLength);
                 let decrypted = decrypt(box, responder.keyStore, responder.sessionKey);
