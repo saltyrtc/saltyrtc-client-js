@@ -4,9 +4,9 @@ import { sleep } from "./utils";
 import { SaltyRTC } from "../saltyrtc/client";
 import { KeyStore } from "../saltyrtc/keystore";
 
-export default () => { describe('client', () => {
+export default () => { describe('client', function() {
 
-    describe('SaltyRTC', () => {
+    describe('SaltyRTC', function() {
 
         /*it('wrapDataChannel() acts as a proxy', () => {
             let pc = new RTCPeerConnection({iceServers: [{urls: ['stun:stun.services.mozilla.com']}]});
@@ -16,7 +16,7 @@ export default () => { describe('client', () => {
             proxy.send("hello");
         });*/
 
-        describe('events', () => {
+        describe('events', function() {
 
             beforeEach(() => {
                 this.sc = new SaltyRTC(new KeyStore(), 'localhost');

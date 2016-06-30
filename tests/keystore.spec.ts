@@ -4,9 +4,9 @@ import { Box, KeyStore, AuthToken } from "../saltyrtc/keystore";
 
 declare var nacl: any; // TODO
 
-export default () => { describe('keystore', () => {
+export default () => { describe('keystore', function() {
 
-    describe('Box', () => {
+    describe('Box', function() {
 
         let nonce = nacl.randomBytes(24);
         let data = nacl.randomBytes(7);
@@ -45,7 +45,7 @@ export default () => { describe('keystore', () => {
 
     });
 
-    describe('KeyStore', () => {
+    describe('KeyStore', function() {
 
         let ks = new KeyStore();
         let nonce = nacl.randomBytes(24);
@@ -94,7 +94,7 @@ export default () => { describe('keystore', () => {
 
     });
 
-    describe('AuthToken', () => {
+    describe('AuthToken', function() {
 
         let at = new AuthToken();
 

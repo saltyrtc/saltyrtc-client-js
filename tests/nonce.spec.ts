@@ -3,9 +3,9 @@
 import { DataChannelNonce, SignalingChannelNonce } from "../saltyrtc/nonce";
 import { Cookie } from "../saltyrtc/cookie";
 
-export default () => { describe('nonce', () => {
+export default () => { describe('nonce', function() {
 
-    describe('DataChannelNonce', () => {
+    describe('DataChannelNonce', function() {
 
         beforeEach(() => {
             this.array = new Uint8Array([
@@ -37,7 +37,7 @@ export default () => { describe('nonce', () => {
 
     });
 
-    describe('SignalingChannelNonce', () => {
+    describe('SignalingChannelNonce', function() {
 
         beforeEach(() => {
             this.array = new Uint8Array([

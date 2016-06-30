@@ -2,9 +2,9 @@
 
 import { SaltyRTCEvent, EventHandler, EventRegistry } from "../saltyrtc/eventregistry";
 
-export default () => { describe('eventregistry', () => {
+export default () => { describe('eventregistry', function() {
 
-    describe('EventRegistry', () => {
+    describe('EventRegistry', function() {
 
         beforeEach(() => {
             this.registry = new EventRegistry();
