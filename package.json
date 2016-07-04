@@ -40,10 +40,5 @@
     "typescript": "^1.8.9",
     "watch": "^0.18.0",
     "webrtc-adapter": "^1.4.0"
-  },
-  "babel": {
-    "presets": [
-      "es2015-rollup"
-    ]
   }
 }

@@ -11,7 +11,10 @@ export default {
     useStrict: true,
     plugins: [
         babel({
-            exclude: 'node_modules/**'
+            babelrc: false,
+            presets: [
+                'es2015-rollup'
+            ]
         }),
         uglify()
     ],
