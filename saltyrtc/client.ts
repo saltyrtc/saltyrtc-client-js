@@ -109,10 +109,24 @@ export class SaltyRTC {
     }
 
     /**
+     * Return the public permanent key as hex string.
+     */
+    public get permanentKeyHex(): string {
+        return u8aToHex(this.signaling.permanentKeyBytes);
+    }
+
+    /**
      * Return the auth token as Uint8Array.
      */
     public get authTokenBytes(): Uint8Array {
         return this.signaling.authTokenBytes;
+    }
+
+    /**
+     * Return the auth token as hex string.
+     */
+    public get authTokenHex(): string {
+        return u8aToHex(this.signaling.authTokenBytes);
     }
 
     /**
