@@ -5,10 +5,100 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
+/// <reference path="types/RTCPeerConnection.d.ts" />
+
 declare namespace saltyrtc {
+
+    interface Box {
+        //constructor(nonce: Uint8Array, data: Uint8Array, nonceLength: number);
+        length: number;
+        data: Uint8Array;
+        nonce: Uint8Array;
+        //static fromUint8Array(array: Uint8Array, nonceLength: number): Box;
+        toUint8Array(): Uint8Array;
+    }
+
+    interface KeyStore {
+        //constructor();
+        publicKeyHex: string;
+        publicKeyBytes: Uint8Array;
+        secretKeyHex: string;
+        secretKeyBytes: Uint8Array;
+        encrypt(bytes: Uint8Array, nonce: Uint8Array, otherKey: Uint8Array): Box;
+        decrypt(box: Box, otherKey: Uint8Array): Uint8Array;
+    }
+
+    interface AuthToken {
+        //constructor(bytes?: Uint8Array);
+        keyBytes: Uint8Array;
+        keyHex: string;
+        encrypt(bytes: Uint8Array, nonce: Uint8Array): Box;
+        decrypt(box: Box): Uint8Array;
+    }
 
     interface Message {
         type: messages.MessageType,
+    }
+
+    type State = 'new' | 'ws-connecting' | 'server-handshake' | 'peer-handshake' | 'open' | 'closing' | 'closed';
+
+    interface SaltyRTCEvent {
+        type: string;
+        data?: any;
+    }
+
+    type EventHandler = (event: Event) => void;
+    type SaltyEventHandler = (event: SaltyRTCEvent) => boolean | void;
+    type MessageEventHandler = (event: RTCMessageEvent) => void;
+
+    interface SecureDataChannel extends RTCDataChannel {
+        //constructor(dc: RTCDataChannel, saltyrtc: SaltyRTC);
+        send(data: string | Blob | ArrayBuffer | ArrayBufferView): void;
+        label: string;
+        ordered: boolean;
+        maxPacketLifeTime: number;
+        maxRetransmits: number;
+        protocol: string;
+        negotiated: boolean;
+        id: number;
+        readyState: RTCDataChannelState;
+        bufferedAmount: number;
+        bufferedAmountLowThreshold: number;
+        binaryType: RTCBinaryType;
+        onopen: EventHandler;
+        onbufferedamountlow: EventHandler;
+        onerror: EventHandler;
+        onclose: EventHandler;
+        onmessage: MessageEventHandler;
+        close(): void;
+        addEventListener(type: string, listener: EventListenerOrEventListenerObject, useCapture?: boolean): void;
+        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, useCapture?: boolean): void;
+        dispatchEvent(e: Event): boolean;
+    }
+
+    interface SaltyRTC {
+        //constructor(permanentKey: KeyStore, host: string, port?: number);
+        asInitiator(): SaltyRTC;
+        asResponder(initiatorPubKey: Uint8Array, authToken: Uint8Array): SaltyRTC;
+
+        state: State;
+
+        permanentKeyBytes: Uint8Array;
+        permanentKeyHex: string;
+        authTokenBytes: Uint8Array;
+        authTokenHex: string;
+
+        connect(): void;
+        sendData(dataType: string, data: any, dc?: RTCDataChannel): void;
+        decryptData(data: ArrayBuffer): any;
+        handover(pc: RTCPeerConnection): Promise<{}>;
+        wrapDataChannel(dc: RTCDataChannel): SecureDataChannel;
+
+        // Event handling
+        on(event: string | string[], handler: SaltyEventHandler): void;
+        once(event: string | string[], handler: SaltyEventHandler): void;
+        off(event: string | string[], handler?: SaltyEventHandler): void;
+        emit(event: SaltyRTCEvent): void;
     }
 
 }

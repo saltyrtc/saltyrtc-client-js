@@ -5,6 +5,7 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
+/// <reference path='saltyrtc.d.ts' />
 /// <reference path='types/tweetnacl.d.ts' />
 
 import { u8aToHex, hexToU8a } from "./utils";
@@ -12,7 +13,7 @@ import { u8aToHex, hexToU8a } from "./utils";
 /**
  * A `Box` contains a nonce and encrypted data.
  */
-export class Box {
+export class Box implements saltyrtc.Box {
 
     private _nonce: Uint8Array;
     private _nonceLength: number;
@@ -62,7 +63,7 @@ export class Box {
  * A KeyStore holds public and private keys and can handle encryption and
  * decryption.
  */
-export class KeyStore {
+export class KeyStore implements saltyrtc.KeyStore {
     // The NaCl key pair
     private _keyPair: nacl.KeyPair;
 
@@ -115,7 +116,7 @@ export class KeyStore {
 }
 
 
-export class AuthToken {
+export class AuthToken implements saltyrtc.AuthToken {
 
     private _authToken: Uint8Array = null;
 

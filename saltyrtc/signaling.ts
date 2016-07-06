@@ -13,7 +13,6 @@
 import { KeyStore, AuthToken, Box } from "./keystore";
 import { Cookie, CookiePair } from "./cookie";
 import { SaltyRTC } from "./client";
-import { SaltyRTCEvent } from "./eventregistry";
 import { SignalingChannelNonce as Nonce } from "./nonce";
 import { concat, randomUint32, byteToHex, u8aToHex } from "./utils";
 

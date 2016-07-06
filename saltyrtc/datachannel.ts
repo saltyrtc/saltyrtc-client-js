@@ -6,24 +6,22 @@
  */
 
 /// <reference path="types/RTCPeerConnection.d.ts" />
+/// <reference path="saltyrtc.d.ts" />
 
 import { KeyStore, Box } from "./keystore";
 import { Chunkifier, Unchunkifier } from "./chunkifier";
 import { SaltyRTC } from "./client";
 
 
-export declare type EventHandler = (event: Event) => void;
-export declare type MessageEventHandler = (event: RTCMessageEvent) => void;
-
 /**
  * Wrapper around a regular DataChannel.
  *
  * This type wraps the original DataChannel and provides the same interface.
  */
-export class SecureDataChannel implements RTCDataChannel {
+export class SecureDataChannel implements saltyrtc.SecureDataChannel {
     private dc: RTCDataChannel;
     private saltyrtc: SaltyRTC;
-    private _onmessage: MessageEventHandler;
+    private _onmessage: saltyrtc.MessageEventHandler;
     private logTag = 'SecureDataChannel:';
 
     constructor(dc: RTCDataChannel, saltyrtc: SaltyRTC) {
@@ -78,16 +76,16 @@ export class SecureDataChannel implements RTCDataChannel {
     set binaryType(value: RTCBinaryType) { this.dc.binaryType = value; }
 
     // Event handlers
-    get onopen(): EventHandler { return this.dc.onopen; }
-    set onopen(value: EventHandler) { this.dc.onopen = value; }
-    get onbufferedamountlow(): EventHandler { return this.dc.onbufferedamountlow; }
-    set onbufferedamountlow(value: EventHandler) { this.dc.onbufferedamountlow = value; }
-    get onerror(): EventHandler { return this.dc.onerror; }
-    set onerror(value: EventHandler) { this.dc.onerror = value; }
-    get onclose(): EventHandler { return this.dc.onclose; }
-    set onclose(value: EventHandler) { this.dc.onclose = value; }
-    get onmessage(): MessageEventHandler { return this.dc.onmessage; }
-    set onmessage(value: MessageEventHandler) { this._onmessage = value; }
+    get onopen(): saltyrtc.EventHandler { return this.dc.onopen; }
+    set onopen(value: saltyrtc.EventHandler) { this.dc.onopen = value; }
+    get onbufferedamountlow(): saltyrtc.EventHandler { return this.dc.onbufferedamountlow; }
+    set onbufferedamountlow(value: saltyrtc.EventHandler) { this.dc.onbufferedamountlow = value; }
+    get onerror(): saltyrtc.EventHandler { return this.dc.onerror; }
+    set onerror(value: saltyrtc.EventHandler) { this.dc.onerror = value; }
+    get onclose(): saltyrtc.EventHandler { return this.dc.onclose; }
+    set onclose(value: saltyrtc.EventHandler) { this.dc.onclose = value; }
+    get onmessage(): saltyrtc.MessageEventHandler { return this.dc.onmessage; }
+    set onmessage(value: saltyrtc.MessageEventHandler) { this._onmessage = value; }
 
     // Regular methods
     close(): void { this.dc.close(); }

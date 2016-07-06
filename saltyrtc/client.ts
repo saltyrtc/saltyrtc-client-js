@@ -10,7 +10,7 @@
 import { KeyStore, AuthToken, Box } from "./keystore";
 import { Signaling, State } from "./signaling";
 import { SecureDataChannel } from "./datachannel";
-import { SaltyRTCEvent, EventHandler, EventRegistry } from "./eventregistry";
+import { EventRegistry } from "./eventregistry";
 import { u8aToHex, hexToU8a } from "./utils";
 
 
@@ -28,7 +28,7 @@ import { u8aToHex, hexToU8a } from "./utils";
  * - data:<data-type>(saltyrtc.Data): The data event, filtered by data type
  *
  */
-export class SaltyRTC {
+export class SaltyRTC implements saltyrtc.SaltyRTC {
     private host: string;
     private port: number;
     private permanentKey: KeyStore;
@@ -194,7 +194,7 @@ export class SaltyRTC {
      * Note: The same event handler cannot be registered twice. It will only
      * run once.
      */
-    public on(event: string | string[], handler: EventHandler): void {
+    public on(event: string | string[], handler: saltyrtc.SaltyEventHandler): void {
         this.eventRegistry.register(event, handler);
     }
 
@@ -204,8 +204,8 @@ export class SaltyRTC {
      * Note: If the same handler was already registered previously as a regular
      * event handler, it will be completely removed after running once.
      */
-    public once(event: string | string[], handler: EventHandler): void {
-        let onceHandler: EventHandler = (ev: SaltyRTCEvent) => {
+    public once(event: string | string[], handler: saltyrtc.SaltyEventHandler): void {
+        let onceHandler: saltyrtc.SaltyEventHandler = (ev: saltyrtc.SaltyRTCEvent) => {
             try {
                 handler(ev);
             } catch (e) {
@@ -224,14 +224,14 @@ export class SaltyRTC {
      * If no handler is specified, remove all handlers for the specified
      * event(s).
      */
-    public off(event: string | string[], handler?: EventHandler): void {
+    public off(event: string | string[], handler?: saltyrtc.SaltyEventHandler): void {
         this.eventRegistry.unregister(event, handler);
     }
 
     /**
      * Emit an event.
      */
-    public emit(event: SaltyRTCEvent) {
+    public emit(event: saltyrtc.SaltyRTCEvent) {
         console.debug('SaltyRTC: New event:', event.type);
         let handlers = this.eventRegistry.get(event.type);
         for (let handler of handlers) {
@@ -248,7 +248,7 @@ export class SaltyRTC {
      *
      * If the handler returns `false`, unregister it.
      */
-    private callHandler(handler: EventHandler, event: SaltyRTCEvent) {
+    private callHandler(handler: saltyrtc.SaltyEventHandler, event: saltyrtc.SaltyRTCEvent) {
         let response = handler(event);
         if (response === false) {
             this.eventRegistry.unregister(event.type, handler);

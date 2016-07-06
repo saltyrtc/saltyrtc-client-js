@@ -5,15 +5,10 @@
  * of the MIT license. See the `LICENSE.md` file for details.
  */
 
-export interface SaltyRTCEvent {
-    type: string,
-    data?: any,
-}
-
-export type EventHandler = (event: SaltyRTCEvent) => boolean | void;
+/// <reference path='saltyrtc.d.ts' />
 
 export class EventRegistry {
-    private map: Map<string, EventHandler[]>;
+    private map: Map<string, saltyrtc.SaltyEventHandler[]>;
 
     constructor() {
         this.map = new Map();
@@ -22,7 +17,7 @@ export class EventRegistry {
     /**
      * Register an event handler for the specified event(s).
      */
-    public register(eventType: string | string[], handler: EventHandler): void {
+    public register(eventType: string | string[], handler: saltyrtc.SaltyEventHandler): void {
         if (typeof eventType === 'string') {
             this.set(eventType, handler);
         } else {
@@ -36,7 +31,7 @@ export class EventRegistry {
      * Unregister an event handler for the specified event(s).
      * If no handler is specified, all handlers for the specified event(s) are removed.
      */
-    public unregister(eventType: string | string[], handler?: EventHandler): void {
+    public unregister(eventType: string | string[], handler?: saltyrtc.SaltyEventHandler): void {
         if (typeof eventType === 'string') {
             // If the event does not exist, return
             if (!this.map.has(eventType)) {
@@ -63,7 +58,7 @@ export class EventRegistry {
     /**
      * Store a single event handler in the map.
      */
-    private set(key: string, value: EventHandler) {
+    private set(key: string, value: saltyrtc.SaltyEventHandler) {
         if (this.map.has(key)) {
             let list = this.map.get(key);
             if (list.indexOf(value) === -1) {
@@ -83,8 +78,8 @@ export class EventRegistry {
      *
      * Even if a handler is registered for multiple events, it is only returned once.
      */
-    public get(eventType: string | string[]): EventHandler[] {
-        let handlers: EventHandler[] = [];
+    public get(eventType: string | string[]): saltyrtc.SaltyEventHandler[] {
+        let handlers: saltyrtc.SaltyEventHandler[] = [];
         if (typeof eventType === 'string') {
             if (this.map.has(eventType)) {
                 handlers.push.apply(handlers, this.map.get(eventType));
