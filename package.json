@@ -4,7 +4,7 @@
   "description": "SaltyRTC JavaScript implementation",
   "scripts": {
     "test": "karma start --single-run --log-level=debug --colors",
-    "dist": "tsc && rollup -c rollup.dist.js",
+    "dist": "tsc && ln -s ../node_modules build/node_modules && rollup -c rollup.dist.js && cp saltyrtc/saltyrtc.d.ts dist/",
     "rollup_tests": "rollup -c rollup.testing.js",
     "watch": "watch \"npm run dist\" saltyrtc/",
     "watch_tests": "watch \"npm run rollup_tests\" tests/ saltyrtc/",
