@@ -5,6 +5,8 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
+/// <reference path='saltyrtc.d.ts' />
+
 import { KeyStore, AuthToken, Box } from "./keystore";
 import { Signaling, State } from "./signaling";
 import { SecureDataChannel } from "./datachannel";
@@ -147,7 +149,7 @@ export class SaltyRTC {
      * If you don't want to set a dataType, pass it in as `undefined`.
      */
     public sendData(dataType: string, data: any, dc?: RTCDataChannel) {
-        let dataMessage: saltyrtc.Data = {
+        let dataMessage: saltyrtc.messages.Data = {
             type: 'data',
             data: data,
         }
@@ -169,7 +171,7 @@ export class SaltyRTC {
             console.error('Data messages must have message type set to "data", not "' + message.type + '".');
             throw 'bad-message-type';
         }
-        return (message as saltyrtc.Data).data;
+        return (message as saltyrtc.messages.Data).data;
     }
 
     /**

@@ -7,7 +7,8 @@
     "dist": "tsc && rollup -c rollup.dist.js",
     "rollup_tests": "rollup -c rollup.testing.js",
     "watch": "watch \"npm run dist\" saltyrtc/",
-    "watch_tests": "watch \"npm run rollup_tests\" tests/ saltyrtc/"
+    "watch_tests": "watch \"npm run rollup_tests\" tests/ saltyrtc/",
+    "clean": "rm -rf js/ build/ saltyrtc/*.js"
   },
   "repository": {
     "type": "git",

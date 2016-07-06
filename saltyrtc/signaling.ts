@@ -5,7 +5,7 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-/// <reference path='messages.d.ts' />
+/// <reference path='saltyrtc.d.ts' />
 /// <reference path='types/RTCPeerConnection.d.ts' />
 /// <reference path='types/msgpack-lite.d.ts' />
 /// <reference path='types/tweetnacl.d.ts' />
@@ -303,7 +303,7 @@ export class Signaling {
             // First packet is unencrypted. Decode it directly.
             let nonce = Nonce.fromArrayBuffer(buffer.slice(0, 24));
             let payload = new Uint8Array(buffer.slice(24));
-            let serverHello = this.msgpackDecode(payload) as saltyrtc.ServerHello;
+            let serverHello = this.msgpackDecode(payload) as saltyrtc.messages.ServerHello;
 
             // Validate nonce
             this.validateNonce(nonce, this.address, 0x00);
@@ -327,7 +327,7 @@ export class Signaling {
 
         // In the case of the responder, send client-hello
         if (this.role == 'responder') {
-            let message: saltyrtc.ClientHello = {
+            let message: saltyrtc.messages.ClientHello = {
                 type: 'client-hello',
                 key: this.permanentKey.publicKeyBytes.buffer,
             };
@@ -338,7 +338,7 @@ export class Signaling {
 
         { // Send client-auth
 
-            let message: saltyrtc.ClientAuth = {
+            let message: saltyrtc.messages.ClientAuth = {
                 type: 'client-auth',
                 your_cookie: this.cookiePair.theirs.asArrayBuffer(),
             };
@@ -386,7 +386,7 @@ export class Signaling {
 
             // Decode message
             // TODO: Maybe the address needs to be set *after* decoding the message?
-            let message = this.decodeMessage(decrypted, 'server-auth') as saltyrtc.ServerAuth;
+            let message = this.decodeMessage(decrypted, 'server-auth') as saltyrtc.messages.ServerAuth;
 
             // Validate cookie
             let cookie = Cookie.fromArrayBuffer(message.your_cookie);
@@ -415,7 +415,7 @@ export class Signaling {
      * Send a 'token' message to the initiator.
      */
     private sendToken(): void {
-        let message: saltyrtc.Token = {
+        let message: saltyrtc.messages.Token = {
             type: 'token',
             key: this.permanentKey.publicKeyBytes.buffer,
         };
@@ -482,7 +482,7 @@ export class Signaling {
      * - bad-message
      * - bad-message-type
      */
-    private decodeMessage(data: Uint8Array, type?: saltyrtc.MessageType): saltyrtc.Message {
+    private decodeMessage(data: Uint8Array, type?: saltyrtc.messages.MessageType): saltyrtc.Message {
         // Decode
         let msg = this.msgpackDecode(data) as saltyrtc.Message;
 
@@ -663,7 +663,7 @@ export class Signaling {
         }
 
         // Assert message type function
-        let assertType = (message: saltyrtc.Message, type: saltyrtc.MessageType) => {
+        let assertType = (message: saltyrtc.Message, type: saltyrtc.messages.MessageType) => {
             if (message.type !== type) {
                 console.error(this.logTag, 'Expected message type "', type, '" but got "', message.type, '".');
                 abort();
@@ -694,7 +694,7 @@ export class Signaling {
             if (message.type === 'new-responder') {
                 // TODO: What if we're not an initiator?
                 // A new responder wants to connect. Store id.
-                let id = (message as saltyrtc.NewResponder).id;
+                let id = (message as saltyrtc.messages.NewResponder).id;
                 if (!this.responders.has(id)) {
                     this.responders.set(id, new Responder(id));
                 } else {
@@ -740,11 +740,11 @@ export class Signaling {
                 assertType(message, 'key');
 
                 // We got a public session key from the initiator. Store...
-                this.initiatorSessionKey = new Uint8Array((message as saltyrtc.Key).key);
+                this.initiatorSessionKey = new Uint8Array((message as saltyrtc.messages.Key).key);
 
                 // ...and reply with our own session key.
                 this.sessionKey = new KeyStore();
-                let replyMessage: saltyrtc.Key = {
+                let replyMessage: saltyrtc.messages.Key = {
                     type: 'key',
                     key: this.sessionKey.publicKeyBytes.buffer,
                 };
@@ -756,7 +756,7 @@ export class Signaling {
                 assertType(message, 'auth');
 
                 // Verify the cookie
-                let cookie = Cookie.fromArrayBuffer((message as saltyrtc.Auth).your_cookie);
+                let cookie = Cookie.fromArrayBuffer((message as saltyrtc.messages.Auth).your_cookie);
                 if (!cookie.equals(this.cookiePair.ours)) {
                     console.error(this.logTag, 'Invalid cookie in auth message.');
                     console.debug(this.logTag, 'Theirs:', cookie.bytes);
@@ -783,7 +783,7 @@ export class Signaling {
                 }
 
                 // Respond with our own auth message
-                let replyMessage: saltyrtc.Auth = {
+                let replyMessage: saltyrtc.messages.Auth = {
                     type: 'auth',
                     your_cookie: nonce.cookie.asArrayBuffer(),
                 };
@@ -816,7 +816,7 @@ export class Signaling {
                     // encrypted with the authentication token.
                     let box = Box.fromUint8Array(bytes, nacl.secretbox.nonceLength);
                     let decrypted = decrypt(box, this.authToken);
-                    let message = this.decodeMessage(decrypted) as saltyrtc.Token;
+                    let message = this.decodeMessage(decrypted) as saltyrtc.messages.Token;
                     console.debug(this.logTag, 'Received', message.type);
                     assertType(message, 'token');
 
@@ -826,7 +826,7 @@ export class Signaling {
                 }
                 {
                     // Send key
-                    let message: saltyrtc.Key = {
+                    let message: saltyrtc.messages.Key = {
                         type: 'key',
                         key: responder.keyStore.publicKeyBytes.buffer,
                     };
@@ -840,7 +840,7 @@ export class Signaling {
                     // encrypted with our permanent key.
                     let box = Box.fromUint8Array(bytes, nacl.box.nonceLength);
                     let decrypted = decrypt(box, this.permanentKey, responder.permanentKey);
-                    let message = this.decodeMessage(decrypted) as saltyrtc.Key;
+                    let message = this.decodeMessage(decrypted) as saltyrtc.messages.Key;
                     console.debug(this.logTag, 'Received', message.type);
                     assertType(message, 'key');
 
@@ -857,7 +857,7 @@ export class Signaling {
                     }
 
                     // Send auth
-                    let message: saltyrtc.Auth = {
+                    let message: saltyrtc.messages.Auth = {
                         type: 'auth',
                         your_cookie: nonce.cookie.asArrayBuffer(),
                     };
@@ -870,12 +870,12 @@ export class Signaling {
                 // encrypted with our session key.
                 let box = Box.fromUint8Array(bytes, nacl.box.nonceLength);
                 let decrypted = decrypt(box, responder.keyStore, responder.sessionKey);
-                let message = this.decodeMessage(decrypted) as saltyrtc.Auth;
+                let message = this.decodeMessage(decrypted) as saltyrtc.messages.Auth;
                 console.debug(this.logTag, 'Received', message.type);
                 assertType(message, 'auth');
 
                 // Verify the cookie
-                let cookie = Cookie.fromArrayBuffer((message as saltyrtc.Auth).your_cookie);
+                let cookie = Cookie.fromArrayBuffer((message as saltyrtc.messages.Auth).your_cookie);
                 if (!cookie.equals(this.cookiePair.ours)) {
                     console.error(this.logTag, 'Invalid cookie in auth message.');
                     console.debug(this.logTag, 'Theirs:', cookie.bytes);
@@ -893,7 +893,7 @@ export class Signaling {
                 // Drop all other responders
                 console.debug(this.logTag, 'Dropping', this.responders.size, 'other responders.');
                 for (let id of this.responders.keys()) {
-                    let message: saltyrtc.DropResponder = {
+                    let message: saltyrtc.messages.DropResponder = {
                         type: 'drop-responder',
                         id: id,
                     };
@@ -935,7 +935,7 @@ export class Signaling {
         let message = this.decryptPeerMessage(ev.data);
         switch (message.type) {
             case 'data':
-                let dataMessage = message as saltyrtc.Data;
+                let dataMessage = message as saltyrtc.messages.Data;
                 this.client.emit({type: 'data', data: dataMessage.data});
                 if (typeof dataMessage.data_type === 'string') {
                     this.client.emit({type: 'data:' + dataMessage.data_type, data: dataMessage.data});
@@ -969,7 +969,7 @@ export class Signaling {
      *
      * TODO: Separate cookie / CSN for every DC
      */
-    public sendData(data: saltyrtc.Data, dc?: RTCDataChannel) {
+    public sendData(data: saltyrtc.messages.Data, dc?: RTCDataChannel) {
         if (this.state !== 'open') {
             console.error(this.logTag, 'Trying to send a message, but connection state is', this.state);
             throw 'bad-state';

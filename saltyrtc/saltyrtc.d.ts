@@ -1,13 +1,24 @@
+/**
+ * Copyright (C) 2016 Threema GmbH / SaltyRTC Contributors
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the `LICENSE.md` file for details.
+ */
+
 declare namespace saltyrtc {
+
+    interface Message {
+        type: messages.MessageType,
+    }
+
+}
+
+declare namespace saltyrtc.messages {
 
     type MessageType = 'server-hello' | 'client-hello' | 'client-auth'
                      | 'server-auth' | 'new-initiator' | 'new-responder'
                      | 'drop-responder' | 'send-error' | 'token' | 'key'
                      | 'auth' | 'restart' | 'data';
-
-    interface Message {
-        type: MessageType,
-    }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#server-hello
     interface ServerHello extends Message {
