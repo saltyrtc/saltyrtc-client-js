@@ -89,6 +89,7 @@ declare namespace saltyrtc {
         authTokenHex: string;
 
         connect(): void;
+        disconnect(): void;
         sendData(dataType: string, data: any, dc?: RTCDataChannel): void;
         decryptData(data: ArrayBuffer): any;
         handover(pc: RTCPeerConnection): Promise<{}>;

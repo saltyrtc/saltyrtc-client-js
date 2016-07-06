@@ -133,9 +133,22 @@ export class SaltyRTC implements saltyrtc.SaltyRTC {
 
     /**
      * Connect to the SaltyRTC server.
+     *
+     * This method is asynchronous. To get notified when the connection is up
+     * and running, subscribe to the `connected` event.
      */
     public connect(): void {
         this.signaling.connect();
+    }
+
+    /**
+     * Disconnect from the SaltyRTC server.
+     *
+     * This method is asynchronous. To get notified when the connection is has
+     * been closed, subscribe to the `connection-closed` event.
+     */
+    public disconnect(): void {
+        this.signaling.disconnect();
     }
 
     /**

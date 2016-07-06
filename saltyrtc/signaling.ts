@@ -239,6 +239,22 @@ export class Signaling {
     }
 
     /**
+     * Disconnect from the signaling server.
+     */
+    public disconnect(): void {
+        // Close WebSocket instance
+        if (this.ws !== null) {
+            console.debug(this.logTag, 'Disconnecting WebSocket');
+            this.ws.close();
+        }
+        this.ws = null;
+
+        // TODO: Close dc
+
+        this.state = 'closed';
+    }
+
+    /**
      * Open a new WebSocket connection to the signaling server.
      */
     private initWebsocket() {
@@ -579,6 +595,8 @@ export class Signaling {
             this.ws.close();
         }
         this.ws = null;
+
+        // TODO: Close dc
     }
 
     /**

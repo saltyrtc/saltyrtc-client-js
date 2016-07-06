@@ -22,6 +22,17 @@ export default () => { describe('Integration Tests', function() {
         this.responder = new SaltyRTC(new KeyStore(),
                                       Config.SALTYRTC_HOST,
                                       Config.SALTYRTC_PORT).asResponder(pubKey, authToken);
+
+        // Helper function. Connect both clients and resolve once they're both connected.
+        this.connectBoth = (a, b) => {
+            let ready = 0;
+            return new Promise((resolve) => {
+                a.once('connected', () => { ready += 1; if (ready == 2) resolve(); });
+                b.once('connected', () => { ready += 1; if (ready == 2) resolve(); });
+                a.connect();
+                b.connect();
+            });
+        }
     });
 
     describe('SaltyRTC', () => {
@@ -86,16 +97,7 @@ export default () => { describe('Integration Tests', function() {
         it('sending data', async (done) => {
             expect(this.initiator.state).toEqual('new');
             expect(this.responder.state).toEqual('new');
-            function connectBoth(a, b) {
-                let ready = 0;
-                return new Promise((resolve) => {
-                    a.once('connected', () => { ready += 1; if (ready == 2) resolve(); });
-                    b.once('connected', () => { ready += 1; if (ready == 2) resolve(); });
-                    a.connect();
-                    b.connect();
-                });
-            }
-            await connectBoth(this.initiator, this.responder);
+            await this.connectBoth(this.initiator, this.responder);
             this.responder.on('data:fondue', (msg) => {
                 expect(msg.type).toBe('data:fondue');
                 expect(msg.data).toBe('Your fondue is ready!');
@@ -109,6 +111,31 @@ export default () => { describe('Integration Tests', function() {
                 done();
             });
             this.initiator.sendData('fondue', 'Your fondue is ready!');
+        });
+
+        it('disconnect before peer handshake', async (done) => {
+            expect(this.initiator.state).toEqual('new');
+            expect(this.responder.state).toEqual('new');
+            this.initiator.connect();
+            await sleep(1000);
+            expect(this.initiator.state).toEqual('peer-handshake');
+            expect(this.responder.state).toEqual('new');
+            this.initiator.once('connection-closed', (ev) => {
+                expect(this.initiator.state).toEqual('closed');
+                done();
+            });
+            this.initiator.disconnect();
+        });
+
+        it('disconnect after peer handshake', async (done) => {
+            expect(this.initiator.state).toEqual('new');
+            expect(this.responder.state).toEqual('new');
+            await this.connectBoth(this.initiator, this.responder);
+            this.initiator.once('connection-closed', (ev) => {
+                expect(this.initiator.state).toEqual('closed');
+                done();
+            });
+            this.initiator.disconnect();
         });
 
     });
