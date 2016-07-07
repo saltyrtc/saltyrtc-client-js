@@ -417,6 +417,7 @@ export class Signaling {
                 this.responders = new Map<number, Responder>();
                 for (let id of message.responders) {
                     this.responders.set(id, new Responder(id));
+                    this.client.emit({type: 'new-responder', data: id});
                 }
                 console.debug(this.logTag, this.responders.size, 'responders connected');
             } else {
@@ -710,10 +711,12 @@ export class Signaling {
 
             if (message.type === 'new-responder') {
                 // TODO: What if we're not an initiator?
+
                 // A new responder wants to connect. Store id.
                 let id = (message as saltyrtc.messages.NewResponder).id;
                 if (!this.responders.has(id)) {
                     this.responders.set(id, new Responder(id));
+                    this.client.emit({type: 'new-responder', data: id});
                 } else {
                     console.warn(this.logTag, 'Got new-responder message for an already known responder.');
                 }

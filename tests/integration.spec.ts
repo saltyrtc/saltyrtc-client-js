@@ -138,6 +138,65 @@ export default () => { describe('Integration Tests', function() {
             this.initiator.disconnect();
         });
 
+        it('new-responder event (responder first)', async (done) => {
+            expect(this.initiator.state).toEqual('new');
+            expect(this.responder.state).toEqual('new');
+
+            // Create two responders
+            const pubKey = this.initiator.permanentKeyBytes;
+            const authToken = this.initiator.authTokenBytes;
+            let responder1 = new SaltyRTC(new KeyStore(),
+                                          Config.SALTYRTC_HOST,
+                                          Config.SALTYRTC_PORT).asResponder(pubKey, authToken);
+            let responder2 = new SaltyRTC(new KeyStore(),
+                                          Config.SALTYRTC_HOST,
+                                          Config.SALTYRTC_PORT).asResponder(pubKey, authToken);
+            expect(responder1.state).toEqual('new');
+            expect(responder2.state).toEqual('new');
+
+            // Register event handler
+            let eventCounter = 0;
+            this.initiator.on('new-responder', (ev) => eventCounter += 1);
+            responder1.on('new-responder', (id) => expect(true).toBe(false));
+            responder2.on('new-responder', (id) => expect(true).toBe(false));
+
+            // Connect responders
+            responder1.connect();
+            responder2.connect();
+            await sleep(1000);
+            expect(eventCounter).toBe(0);
+
+            // Connect initiator
+            this.initiator.connect();
+            await sleep(1000);
+            expect(eventCounter).toBe(2);
+
+            done();
+        });
+
+        it('new-responder event (initiator first)', async (done) => {
+            expect(this.initiator.state).toEqual('new');
+            expect(this.responder.state).toEqual('new');
+
+            // Register event handler
+            let eventCounter = 0;
+            this.initiator.on('new-responder', (ev) => eventCounter += 1);
+            this.responder.on('new-responder', (id) => expect(true).toBe(false));
+
+            // Connect initiator
+            this.initiator.connect();
+            await sleep(1000);
+            expect(eventCounter).toBe(0);
+
+            // Connect responder
+            this.responder.connect();
+            await sleep(1000);
+            expect(eventCounter).toBe(1);
+
+            done();
+        });
+
+
     });
 
     describe('WebRTC', () => {

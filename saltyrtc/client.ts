@@ -17,16 +17,6 @@ import { u8aToHex, hexToU8a } from "./utils";
 /**
  * The main class used to create a P2P connection through a SaltyRTC signaling
  * server.
- *
- * This class can emit the following events:
- *
- * - connected(void): Handshake has been completed, we're connected!
- * - handover(void): The handover to the data channel is done
- * - connection-error(ErrorEvent): A connection error occured
- * - connection-closed(CloseEvent): The connection was closed
- * - data(saltyrtc.Data): A new data message was received
- * - data:<data-type>(saltyrtc.Data): The data event, filtered by data type
- *
  */
 export class SaltyRTC implements saltyrtc.SaltyRTC {
     private host: string;
