@@ -791,8 +791,6 @@ export class Signaling {
 
                 // Deregister handshake
                 console.info(this.logTag, 'Initiator handshake done.');
-                this.ws.removeEventListener('message', this.onPeerHandshakeMessage);
-                this.ws.addEventListener('message', this.onPeerMessage);
 
                 // Update state
                 // TODO: This state change is not really needed
@@ -812,6 +810,10 @@ export class Signaling {
                 let packet: Uint8Array = this.buildPacket(replyMessage, Signaling.SALTYRTC_ADDR_INITIATOR);
                 console.debug(this.logTag, 'Sending auth');
                 this.ws.send(packet);
+
+                // Update message handler
+                this.ws.removeEventListener('message', this.onPeerHandshakeMessage);
+                this.ws.addEventListener('message', this.onPeerMessage);
 
                 // We're connected!
                 this.state = 'open';
@@ -915,13 +917,7 @@ export class Signaling {
                 // Drop all other responders
                 console.debug(this.logTag, 'Dropping', this.responders.size, 'other responders.');
                 for (let id of this.responders.keys()) {
-                    let message: saltyrtc.messages.DropResponder = {
-                        type: 'drop-responder',
-                        id: id,
-                    };
-                    let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
-                    console.debug(this.logTag, 'Sending drop-responder', byteToHex(id));
-                    this.ws.send(packet);
+                    this.dropResponder(id);
                     this.responders.delete(id);
                 }
 
@@ -951,23 +947,60 @@ export class Signaling {
      * A p2p message was received.
      *
      * This handler is registered *after* the handshake is done.
+     *
+     * Note that although this method is called `onPeerMessage`, it's still
+     * possible that server messages arrive, e.g. a `send-error` message.
      */
     private onPeerMessage = (ev: MessageEvent) => {
         console.info(this.logTag, 'Message received!');
+
+        // Parse data
         const box = Box.fromUint8Array(new Uint8Array(ev.data), nacl.box.nonceLength);
-        const message = this.decryptPeerMessage(box);
-        switch (message.type) {
-            case 'data':
-                let dataMessage = message as saltyrtc.messages.Data;
-                this.client.emit({type: 'data', data: dataMessage.data});
-                if (typeof dataMessage.data_type === 'string') {
-                    this.client.emit({type: 'data:' + dataMessage.data_type, data: dataMessage.data});
-                }
-                break;
-            case 'restart':
-                throw 'not-yet-implemented';
-            default:
-                console.error(this.logTag, 'Invalid message type:', message.type);
+        const nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
+        let message;
+
+        // Process server messages
+        if (nonce.source == Signaling.SALTYRTC_ADDR_SERVER) {
+            message = this.decryptServerMessage(box);
+            switch (message.type) {
+                case 'send-error':
+                    throw 'not-yet-implemented';
+                default:
+                    console.error(this.logTag, 'Invalid server message type:', message.type);
+            }
+        } else {
+            // Make sure that a responder is defined
+            if (this.responder === null) {
+                this.resetConnection(CloseCode.ProtocolError);
+                throw new Error('Received peer message, but responder is null.')
+            }
+
+            // Validate source byte
+            if (this.role === 'responder') {
+                console.warn(this.logTag, 'Received message from other responder. ' +
+                                           'This is probably a server error.');
+                return;
+            } else if (nonce.source !== this.responder.id) {
+                console.warn(this.logTag, 'Received message from responder '
+                                          + byteToHex(nonce.source) + '. Ignoring.');
+                this.dropResponder(nonce.source);
+                return;
+            }
+
+            // Process peer messages
+            switch (message.type) {
+                case 'data':
+                    let dataMessage = message as saltyrtc.messages.Data;
+                    this.client.emit({type: 'data', data: dataMessage.data});
+                    if (typeof dataMessage.data_type === 'string') {
+                        this.client.emit({type: 'data:' + dataMessage.data_type, data: dataMessage.data});
+                    }
+                    break;
+                case 'restart':
+                    throw 'not-yet-implemented';
+                default:
+                    console.error(this.logTag, 'Invalid peer message type:', message.type);
+            }
         }
     }
 
@@ -977,14 +1010,15 @@ export class Signaling {
      * TODO: Separate cookie / csn per data channel.
      */
     public decryptPeerMessage(box: Box): saltyrtc.Message {
-        let decrypted;
         try {
+            let decrypted;
             if (this.role == 'initiator') {
                 decrypted = this.sessionKey.decrypt(box, this.responder.sessionKey);
             } else {
                 decrypted = this.sessionKey.decrypt(box, this.initiatorSessionKey);
             }
-        } catch (e) {
+            return this.decodeMessage(decrypted);
+        } catch(e) {
             if (e === 'decryption-failed') {
                 const nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
                 throw new Error('Could not decrypt peer message from ' + byteToHex(nonce.source));
@@ -992,7 +1026,22 @@ export class Signaling {
                 throw e;
             }
         }
-        return this.decodeMessage(decrypted);
+    }
+
+    /**
+     * Decrypt and decode a server message.
+     */
+    public decryptServerMessage(box: Box): saltyrtc.Message {
+        try {
+            const decrypted = this.permanentKey.decrypt(box, this.serverKey);
+            return this.decodeMessage(decrypted);
+        } catch(e) {
+            if (e === 'decryption-failed') {
+                throw new Error('Could not decrypt server message');
+            } else {
+                throw e;
+            }
+        }
     }
 
     /**
@@ -1059,6 +1108,19 @@ export class Signaling {
                 reject('connection-closed');
             };
         });
+    }
+
+    /**
+     * Send a drop-responder request to the server.
+     */
+    private dropResponder(responderId: number) {
+        let message: saltyrtc.messages.DropResponder = {
+            type: 'drop-responder',
+            id: responderId,
+        };
+        let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
+        console.debug(this.logTag, 'Sending drop-responder', byteToHex(responderId));
+        this.ws.send(packet);
     }
 
 }
