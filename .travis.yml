@@ -47,7 +47,7 @@ script:
   - npm test
   - |
     mv tsconfig.json tsconfig.ignore
-    node_modules/.bin/tsc --target ES2015 --noEmit
+    node_modules/.bin/tsc --target ES2015 --noEmit saltyrtc/main.ts
     mv tsconfig.ignore tsconfig.json
 after_script:
   # Stop SaltyRTC server
