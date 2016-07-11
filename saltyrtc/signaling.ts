@@ -295,9 +295,19 @@ export class Signaling {
     private onInitServerHandshake = async (ev: MessageEvent) => {
         console.debug(this.logTag, 'Start server handshake');
         this.ws.removeEventListener('message', this.onInitServerHandshake);
+
+        // Do server handshake
         // The state is already updated in onOpen, but let's make sure it's set correctly.
         this.state = 'server-handshake';
-        await this.serverHandshake(ev.data);
+        try {
+            await this.serverHandshake(ev.data);
+        } catch(e) {
+            console.error('Error occured during server handshake:', e);
+            this.resetConnection(CloseCode.ProtocolError);
+            return;
+        }
+
+        // Initiate peer handshake
         this.state = 'peer-handshake';
         if (this.role === 'responder') {
             this.initiatorHandshakeState = 'new';
@@ -323,11 +333,11 @@ export class Signaling {
             let serverHello = this.msgpackDecode(payload) as saltyrtc.messages.ServerHello;
 
             // Validate nonce
-            this.validateNonce(nonce, this.address, 0x00);
+            this.validateNonce(nonce, this.address, Signaling.SALTYRTC_ADDR_SERVER);
 
             // Validate data
             if (serverHello.type !== 'server-hello') {
-                console.error(this.logTag, 'Invalid server-hello message, bad type field:', serverHello);
+                console.error(this.logTag, 'Invalid server-hello message, bad type:', serverHello);
                 throw 'bad-message-type';
             }
 
@@ -469,13 +479,13 @@ export class Signaling {
      */
     private validateNonce(nonce: Nonce, destination?: number, source?: number): void {
         // Validate destination
-        if (typeof destination !== 'undefined' && nonce.destination !== destination) {
+        if (destination !== undefined && nonce.destination !== destination) {
             console.error(this.logTag, 'Nonce destination is', nonce.destination, 'but we\'re', this.address);
             throw 'bad-nonce-destination';
         }
 
         // Validate source
-        if (typeof source !== 'undefined' && nonce.source !== source) {
+        if (source !== undefined && nonce.source !== source) {
             console.error(this.logTag, 'Nonce source is', nonce.source, 'but should be', source);
             throw 'bad-nonce-source';
         }
@@ -504,7 +514,7 @@ export class Signaling {
 
         // Validate type
         if (typeof type !== 'undefined' && msg.type !== type) {
-            console.error(this.logTag, 'Invalid', type, 'message, bad type field:', msg);
+            console.error(this.logTag, 'Invalid', type, 'message, bad type:', msg);
             throw 'bad-message-type';
         }
 
@@ -951,6 +961,10 @@ export class Signaling {
         // Parse data
         const box = Box.fromUint8Array(new Uint8Array(ev.data), nacl.box.nonceLength);
         const nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
+
+        // Validate nonce (excluding source byte)
+        this.validateNonce(nonce, this.address);
+
         let message;
 
         // Process server messages
@@ -962,7 +976,11 @@ export class Signaling {
                 default:
                     console.error(this.logTag, 'Invalid server message type:', message.type);
             }
+            return;
+
+        // Process peer messages
         } else {
+
             // Make sure that a responder is defined
             if (this.role === 'initiator' && this.responder === null) {
                 this.resetConnection(CloseCode.ProtocolError);
