@@ -56,10 +56,10 @@ export class Box implements saltyrtc.Box {
         }
 
         // Unpack nonce
-        let nonce = array.slice(0, nonceLength);
+        const nonce = array.slice(0, nonceLength);
 
         // Unpack data
-        let data = array.slice(nonceLength);
+        const data = array.slice(nonceLength);
 
         // Return box
         return new Box(nonce, data, nonceLength);
@@ -67,7 +67,7 @@ export class Box implements saltyrtc.Box {
 
     public toUint8Array(): Uint8Array {
         // Return both the nonce and the encrypted data
-        let box = new Uint8Array(this.length);
+        const box = new Uint8Array(this.length);
         box.set(this._nonce);
         box.set(this._data, this._nonceLength);
         return box;
@@ -114,7 +114,7 @@ export class KeyStore implements saltyrtc.KeyStore {
      * Encrypt data for the peer.
      */
     public encrypt(bytes: Uint8Array, nonce: Uint8Array, otherKey: Uint8Array): Box {
-        let encrypted = nacl.box(bytes, nonce, otherKey, this._keyPair.secretKey);
+        const encrypted = nacl.box(bytes, nonce, otherKey, this._keyPair.secretKey);
         return new Box(nonce, encrypted, nacl.box.nonceLength);
     }
 
@@ -123,7 +123,7 @@ export class KeyStore implements saltyrtc.KeyStore {
      */
     public decrypt(box: Box, otherKey: Uint8Array): Uint8Array {
         // Decrypt data
-        let data = nacl.box.open(box.data, box.nonce, otherKey, this._keyPair.secretKey);
+        const data = nacl.box.open(box.data, box.nonce, otherKey, this._keyPair.secretKey);
         if (data === false) {
             // TODO: Handle error
             throw 'decryption-failed'
@@ -165,7 +165,7 @@ export class AuthToken implements saltyrtc.AuthToken {
      * Encrypt data using the shared auth token.
      */
     public encrypt(bytes: Uint8Array, nonce: Uint8Array): Box {
-        let encrypted = nacl.secretbox(bytes, nonce, this._authToken);
+        const encrypted = nacl.secretbox(bytes, nonce, this._authToken);
         return new Box(nonce, encrypted, nacl.secretbox.nonceLength);
     }
 
@@ -173,7 +173,7 @@ export class AuthToken implements saltyrtc.AuthToken {
      * Decrypt data using the shared auth token.
      */
     public decrypt(box: Box): Uint8Array {
-        let data = nacl.secretbox.open(box.data, box.nonce, this._authToken);
+        const data = nacl.secretbox.open(box.data, box.nonce, this._authToken);
         if (data === false) {
             // TODO: handle error
             throw 'decryption-failed'

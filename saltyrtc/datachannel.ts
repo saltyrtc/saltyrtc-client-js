@@ -45,8 +45,8 @@ export class SecureDataChannel implements saltyrtc.SecureDataChannel {
         }
 
         // Event object is read-only, so we need to clone it.
-        let fakeEvent = {};
-        for (let x in event) {
+        const fakeEvent = {};
+        for (const x in event) {
             fakeEvent[x] = event[x];
         }
 

@@ -14,8 +14,8 @@
  *   "01ff"
  */
 export function u8aToHex(array: Uint8Array): string {
-    let results: string[] = [];
-    for (let arrayByte of array) {
+    const results: string[] = [];
+    for (const arrayByte of array) {
         results.push(arrayByte.toString(16).replace(/^([\da-f])$/, '0$1'));
     }
     return results.join('');
@@ -71,7 +71,7 @@ export function randomString(length=32, chars='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefg
  * Generate a random 32 bit unsigned integer.
  */
 export function randomUint32(): number {
-    let crypto = window.crypto || (window as any).msCrypto;
+    const crypto = window.crypto || (window as any).msCrypto;
     return crypto.getRandomValues(new Uint32Array(1))[0];
 }
 
@@ -83,12 +83,12 @@ export function randomUint32(): number {
  */
 export function concat(...arrays: Uint8Array[]): Uint8Array {
     let totalLength = 0;
-    for (let arr of arrays) {
+    for (const arr of arrays) {
         totalLength += arr.length;
     }
-    let result = new Uint8Array(totalLength);
+    const result = new Uint8Array(totalLength);
     let offset = 0;
-    for (let arr of arrays) {
+    for (const arr of arrays) {
         result.set(arr, offset);
         offset += arr.length;
     }

@@ -260,7 +260,7 @@ export class Signaling {
      * Open a new WebSocket connection to the signaling server.
      */
     private initWebsocket() {
-        let url = this.protocol + '://' + this.host + ':' + this.port + '/';
+        const url = this.protocol + '://' + this.host + ':' + this.port + '/';
         let path;
         if (this.role == 'initiator') {
             path = this.permanentKey.publicKeyHex;
@@ -328,9 +328,9 @@ export class Signaling {
         { // Process server-hello
 
             // First packet is unencrypted. Decode it directly.
-            let nonce = Nonce.fromArrayBuffer(buffer.slice(0, 24));
-            let payload = new Uint8Array(buffer.slice(24));
-            let serverHello = this.msgpackDecode(payload) as saltyrtc.messages.ServerHello;
+            const nonce = Nonce.fromArrayBuffer(buffer.slice(0, 24));
+            const payload = new Uint8Array(buffer.slice(24));
+            const serverHello = this.msgpackDecode(payload) as saltyrtc.messages.ServerHello;
 
             // Validate nonce
             this.validateNonce(nonce, this.address, Signaling.SALTYRTC_ADDR_SERVER);
@@ -354,22 +354,22 @@ export class Signaling {
 
         // In the case of the responder, send client-hello
         if (this.role == 'responder') {
-            let message: saltyrtc.messages.ClientHello = {
+            const message: saltyrtc.messages.ClientHello = {
                 type: 'client-hello',
                 key: this.permanentKey.publicKeyBytes.buffer,
             };
-            let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER, false);
+            const packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER, false);
             console.debug(this.logTag, 'Sending client-hello');
             this.ws.send(packet);
         }
 
         { // Send client-auth
 
-            let message: saltyrtc.messages.ClientAuth = {
+            const message: saltyrtc.messages.ClientAuth = {
                 type: 'client-auth',
                 your_cookie: this.cookiePair.theirs.asArrayBuffer(),
             };
-            let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
+            const packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
             console.debug(this.logTag, 'Sending client-auth');
             this.ws.send(packet);
         }
@@ -377,15 +377,15 @@ export class Signaling {
         { // Receive server-auth
 
             // Wait for message
-            let bytes: Uint8Array = await this.recvMessageData();
+            const bytes: Uint8Array = await this.recvMessageData();
 
             // Decrypt message
-            let box = Box.fromUint8Array(bytes, nacl.box.nonceLength);
-            let decrypted = this.permanentKey.decrypt(box, this.serverKey);
+            const box = Box.fromUint8Array(bytes, nacl.box.nonceLength);
+            const decrypted = this.permanentKey.decrypt(box, this.serverKey);
 
             // Now that the nonce integrity is guaranteed by decrypting,
             // create a `Nonce` instance.
-            let nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
+            const nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
 
             // Validate nonce and set proper address.
             if (this.role == 'initiator') {
@@ -406,10 +406,10 @@ export class Signaling {
 
             // Decode message
             // TODO: Maybe the address needs to be set *after* decoding the message?
-            let message = this.decodeMessage(decrypted, 'server-auth') as saltyrtc.messages.ServerAuth;
+            const message = this.decodeMessage(decrypted, 'server-auth') as saltyrtc.messages.ServerAuth;
 
             // Validate cookie
-            let cookie = Cookie.fromArrayBuffer(message.your_cookie);
+            const cookie = Cookie.fromArrayBuffer(message.your_cookie);
             if (!cookie.equals(this.cookiePair.ours)) {
                 console.error(this.logTag, 'Bad cookie in server-auth message');
                 console.debug(this.logTag, 'Their response:', message.your_cookie,
@@ -420,7 +420,7 @@ export class Signaling {
             // Store responders
             if (this.role == 'initiator') {
                 this.responders = new Map<number, Responder>();
-                for (let id of message.responders) {
+                for (const id of message.responders) {
                     this.responders.set(id, new Responder(id));
                     this.client.emit({type: 'new-responder', data: id});
                 }
@@ -436,11 +436,11 @@ export class Signaling {
      * Send a 'token' message to the initiator.
      */
     private sendToken(): void {
-        let message: saltyrtc.messages.Token = {
+        const message: saltyrtc.messages.Token = {
             type: 'token',
             key: this.permanentKey.publicKeyBytes.buffer,
         };
-        let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_INITIATOR);
+        const packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_INITIATOR);
         console.debug(this.logTag, 'Sending token');
         if (this.role === 'responder') {
             this.initiatorHandshakeState = 'token-sent';
@@ -453,7 +453,7 @@ export class Signaling {
      */
     private recvMessageEvent(): Promise<MessageEvent> {
         return new Promise((resolve) => {
-            let handler = (ev: MessageEvent) => {
+            const handler = (ev: MessageEvent) => {
                 this.ws.removeEventListener('message', handler);
                 resolve(ev);
             };
@@ -466,7 +466,7 @@ export class Signaling {
      * event instead of the entire `MessageEvent` object.
      */
     private async recvMessageData(): Promise<Uint8Array> {
-        let ev = await this.recvMessageEvent();
+        const ev = await this.recvMessageEvent();
         return new Uint8Array(ev.data);
     }
 
@@ -505,7 +505,7 @@ export class Signaling {
      */
     private decodeMessage(data: Uint8Array, type?: saltyrtc.messages.MessageType): saltyrtc.Message {
         // Decode
-        let msg = this.msgpackDecode(data) as saltyrtc.Message;
+        const msg = this.msgpackDecode(data) as saltyrtc.Message;
 
         if (typeof msg.type === 'undefined') {
             console.error(this.logTag, 'Failed to decode msgpack data.');
@@ -543,11 +543,11 @@ export class Signaling {
         }
 
         // Create nonce
-        let nonce = new Nonce(this.cookiePair.ours, csn.overflow, csn.sequenceNumber, this.address, receiver);
-        let nonceBytes = new Uint8Array(nonce.toArrayBuffer());
+        const nonce = new Nonce(this.cookiePair.ours, csn.overflow, csn.sequenceNumber, this.address, receiver);
+        const nonceBytes = new Uint8Array(nonce.toArrayBuffer());
 
         // Encode message
-        let data: Uint8Array = this.msgpackEncode(message);
+        const data: Uint8Array = this.msgpackEncode(message);
 
         // Encrypt if desired
         if (encrypt !== false) {
@@ -664,7 +664,7 @@ export class Signaling {
      */
     private onPeerHandshakeMessage = (ev: MessageEvent) => {
         // Abort function
-        let abort = () => {
+        const abort = () => {
             console.error(this.logTag, 'Resetting connection.');
             this.ws.removeEventListener('message', this.onPeerHandshakeMessage);
             this.resetConnection(CloseCode.ProtocolError);
@@ -673,7 +673,7 @@ export class Signaling {
 
         // Decrypt function
         // The `otherKey` param may be undefined if the `keyStore` is an `AuthToken`
-        let decrypt = (box: Box, keyStore: KeyStore | AuthToken, otherKey?: Uint8Array) => {
+        const decrypt = (box: Box, keyStore: KeyStore | AuthToken, otherKey?: Uint8Array) => {
             try {
                 return keyStore.decrypt(box, otherKey);
             } catch (err) {
@@ -687,20 +687,20 @@ export class Signaling {
         }
 
         // Assert message type function
-        let assertType = (message: saltyrtc.Message, type: saltyrtc.messages.MessageType) => {
+        const assertType = (message: saltyrtc.Message, type: saltyrtc.messages.MessageType) => {
             if (message.type !== type) {
                 console.error(this.logTag, 'Expected message type "', type, '" but got "', message.type, '".');
                 abort();
             }
         }
 
-        let buffer = ev.data;
-        let bytes = new Uint8Array(buffer);
+        const buffer = ev.data;
+        const bytes = new Uint8Array(buffer);
 
         // Peek at nonce.
         // Important: At this point the nonce is not yet authenticated,
         // so don't trust it yet!
-        let unsafeNonce = Nonce.fromArrayBuffer(buffer.slice(0, 24));
+        const unsafeNonce = Nonce.fromArrayBuffer(buffer.slice(0, 24));
         this.validateNonce(unsafeNonce, this.address);
 
         // Dispatch messages according to source.
@@ -708,18 +708,18 @@ export class Signaling {
         // (and thus authenticated) the message.
         if (unsafeNonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
             // Decrypt message
-            let box = Box.fromUint8Array(bytes, nacl.box.nonceLength);
-            let decrypted = this.permanentKey.decrypt(box, this.serverKey);
+            const box = Box.fromUint8Array(bytes, nacl.box.nonceLength);
+            const decrypted = this.permanentKey.decrypt(box, this.serverKey);
 
             // Decode message
-            let message = this.decodeMessage(decrypted);
+            const message = this.decodeMessage(decrypted);
             console.debug(this.logTag, 'Received', message.type);
 
             if (message.type === 'new-responder') {
                 // TODO: What if we're not an initiator?
 
                 // A new responder wants to connect. Store id.
-                let id = (message as saltyrtc.messages.NewResponder).id;
+                const id = (message as saltyrtc.messages.NewResponder).id;
                 if (!this.responders.has(id)) {
                     this.responders.set(id, new Responder(id));
                     this.client.emit({type: 'new-responder', data: id});
@@ -742,7 +742,7 @@ export class Signaling {
             }
 
             // Construct a box
-            let box = Box.fromUint8Array(bytes, nacl.box.nonceLength);
+            const box = Box.fromUint8Array(bytes, nacl.box.nonceLength);
 
             // Decrypt. The 'key' messages are encrypted with a different key than the rest.
             let decrypted;
@@ -756,10 +756,10 @@ export class Signaling {
             }
 
             // Get nonce
-            let nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
+            const nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
 
             // Decode message
-            let message: saltyrtc.Message = this.decodeMessage(decrypted);
+            const message: saltyrtc.Message = this.decodeMessage(decrypted);
             console.debug(this.logTag, 'Received', message.type);
 
             if (this.initiatorHandshakeState == 'token-sent') {
@@ -770,11 +770,11 @@ export class Signaling {
 
                 // ...and reply with our own session key.
                 this.sessionKey = new KeyStore();
-                let replyMessage: saltyrtc.messages.Key = {
+                const replyMessage: saltyrtc.messages.Key = {
                     type: 'key',
                     key: this.sessionKey.publicKeyBytes.buffer,
                 };
-                let packet: Uint8Array = this.buildPacket(replyMessage, Signaling.SALTYRTC_ADDR_INITIATOR);
+                const packet: Uint8Array = this.buildPacket(replyMessage, Signaling.SALTYRTC_ADDR_INITIATOR);
                 console.debug(this.logTag, 'Sending key');
                 this.ws.send(packet);
                 this.initiatorHandshakeState = 'key-sent';
@@ -782,7 +782,7 @@ export class Signaling {
                 assertType(message, 'auth');
 
                 // Verify the cookie
-                let cookie = Cookie.fromArrayBuffer((message as saltyrtc.messages.Auth).your_cookie);
+                const cookie = Cookie.fromArrayBuffer((message as saltyrtc.messages.Auth).your_cookie);
                 if (!cookie.equals(this.cookiePair.ours)) {
                     console.error(this.logTag, 'Invalid cookie in auth message.');
                     console.debug(this.logTag, 'Theirs:', cookie.bytes);
@@ -807,11 +807,11 @@ export class Signaling {
                 }
 
                 // Respond with our own auth message
-                let replyMessage: saltyrtc.messages.Auth = {
+                const replyMessage: saltyrtc.messages.Auth = {
                     type: 'auth',
                     your_cookie: nonce.cookie.asArrayBuffer(),
                 };
-                let packet: Uint8Array = this.buildPacket(replyMessage, Signaling.SALTYRTC_ADDR_INITIATOR);
+                const packet: Uint8Array = this.buildPacket(replyMessage, Signaling.SALTYRTC_ADDR_INITIATOR);
                 console.debug(this.logTag, 'Sending auth');
                 this.ws.send(packet);
 
@@ -831,7 +831,7 @@ export class Signaling {
             }
 
             // Get responder
-            let responder = this.responders.get(unsafeNonce.source);
+            const responder = this.responders.get(unsafeNonce.source);
             if (typeof responder === 'undefined') {
                 console.error(this.logTag, 'Received message from unknown responder (', unsafeNonce.source, ')');
                 return;
@@ -842,9 +842,9 @@ export class Signaling {
                 {
                     // If the state is 'new', then we expect a 'token' message,
                     // encrypted with the authentication token.
-                    let box = Box.fromUint8Array(bytes, nacl.secretbox.nonceLength);
-                    let decrypted = decrypt(box, this.authToken);
-                    let message = this.decodeMessage(decrypted) as saltyrtc.messages.Token;
+                    const box = Box.fromUint8Array(bytes, nacl.secretbox.nonceLength);
+                    const decrypted = decrypt(box, this.authToken);
+                    const message = this.decodeMessage(decrypted) as saltyrtc.messages.Token;
                     console.debug(this.logTag, 'Received', message.type);
                     assertType(message, 'token');
 
@@ -854,11 +854,11 @@ export class Signaling {
                 }
                 {
                     // Send key
-                    let message: saltyrtc.messages.Key = {
+                    const message: saltyrtc.messages.Key = {
                         type: 'key',
                         key: responder.keyStore.publicKeyBytes.buffer,
                     };
-                    let packet: Uint8Array = this.buildPacket(message, responder.id);
+                    const packet: Uint8Array = this.buildPacket(message, responder.id);
                     console.debug(this.logTag, 'Sending key');
                     this.ws.send(packet);
                 }
@@ -866,9 +866,9 @@ export class Signaling {
                 {
                     // If the state is 'token-received', we expect a 'key' message,
                     // encrypted with our permanent key.
-                    let box = Box.fromUint8Array(bytes, nacl.box.nonceLength);
-                    let decrypted = decrypt(box, this.permanentKey, responder.permanentKey);
-                    let message = this.decodeMessage(decrypted) as saltyrtc.messages.Key;
+                    const box = Box.fromUint8Array(bytes, nacl.box.nonceLength);
+                    const decrypted = decrypt(box, this.permanentKey, responder.permanentKey);
+                    const message = this.decodeMessage(decrypted) as saltyrtc.messages.Key;
                     console.debug(this.logTag, 'Received', message.type);
                     assertType(message, 'key');
 
@@ -878,32 +878,32 @@ export class Signaling {
                 }
                 {
                     // Ensure that cookies are different
-                    let nonce = unsafeNonce;
+                    const nonce = unsafeNonce;
                     if (nonce.cookie.equals(this.cookiePair.ours)) {
                         console.error(this.logTag, 'Their cookie and our cookie are the same.');
                         abort();
                     }
 
                     // Send auth
-                    let message: saltyrtc.messages.Auth = {
+                    const message: saltyrtc.messages.Auth = {
                         type: 'auth',
                         your_cookie: nonce.cookie.asArrayBuffer(),
                     };
-                    let packet: Uint8Array = this.buildPacket(message, responder.id);
+                    const packet: Uint8Array = this.buildPacket(message, responder.id);
                     console.debug(this.logTag, 'Sending auth');
                     this.ws.send(packet);
                 }
             } else if (responder.state === 'key-received') {
                 // If the state is 'key-received', we expect an 'auth' message,
                 // encrypted with our session key.
-                let box = Box.fromUint8Array(bytes, nacl.box.nonceLength);
-                let decrypted = decrypt(box, responder.keyStore, responder.sessionKey);
-                let message = this.decodeMessage(decrypted) as saltyrtc.messages.Auth;
+                const box = Box.fromUint8Array(bytes, nacl.box.nonceLength);
+                const decrypted = decrypt(box, responder.keyStore, responder.sessionKey);
+                const message = this.decodeMessage(decrypted) as saltyrtc.messages.Auth;
                 console.debug(this.logTag, 'Received', message.type);
                 assertType(message, 'auth');
 
                 // Verify the cookie
-                let cookie = Cookie.fromArrayBuffer((message as saltyrtc.messages.Auth).your_cookie);
+                const cookie = Cookie.fromArrayBuffer((message as saltyrtc.messages.Auth).your_cookie);
                 if (!cookie.equals(this.cookiePair.ours)) {
                     console.error(this.logTag, 'Invalid cookie in auth message.');
                     console.debug(this.logTag, 'Theirs:', cookie.bytes);
@@ -912,7 +912,7 @@ export class Signaling {
                 }
 
                 // Store responder id and session key
-                let nonce = unsafeNonce;
+                const nonce = unsafeNonce;
                 console.debug(this.logTag, 'Responder', nonce.source, 'authenticated.');
                 this.responder = this.responders.get(nonce.source);
                 this.responders.delete(nonce.source);
@@ -920,7 +920,7 @@ export class Signaling {
 
                 // Drop all other responders
                 console.debug(this.logTag, 'Dropping', this.responders.size, 'other responders.');
-                for (let id of this.responders.keys()) {
+                for (const id of this.responders.keys()) {
                     this.dropResponder(id);
                     this.responders.delete(id);
                 }
@@ -1004,7 +1004,7 @@ export class Signaling {
             message = this.decryptPeerMessage(box);
             switch (message.type) {
                 case 'data':
-                    let dataMessage = message as saltyrtc.messages.Data;
+                    const dataMessage = message as saltyrtc.messages.Data;
                     this.client.emit({type: 'data', data: dataMessage.data});
                     if (typeof dataMessage.data_type === 'string') {
                         this.client.emit({type: 'data:' + dataMessage.data_type, data: dataMessage.data});
@@ -1070,10 +1070,10 @@ export class Signaling {
         }
 
         // Determine peer address
-        let peerAddress = this.role === 'responder' ? Signaling.SALTYRTC_ADDR_INITIATOR : this.responder.id;
+        const peerAddress = this.role === 'responder' ? Signaling.SALTYRTC_ADDR_INITIATOR : this.responder.id;
 
         // Send message
-        let packet: Uint8Array = this.buildPacket(data, peerAddress);
+        const packet: Uint8Array = this.buildPacket(data, peerAddress);
         if (dc === undefined) {
             console.debug(this.logTag, 'Sending', data.data_type, 'data message through', this.signalingChannel);
             switch (this.signalingChannel) {
@@ -1128,11 +1128,11 @@ export class Signaling {
      * Send a drop-responder request to the server.
      */
     private dropResponder(responderId: number) {
-        let message: saltyrtc.messages.DropResponder = {
+        const message: saltyrtc.messages.DropResponder = {
             type: 'drop-responder',
             id: responderId,
         };
-        let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
+        const packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
         console.debug(this.logTag, 'Sending drop-responder', byteToHex(responderId));
         this.ws.send(packet);
     }
