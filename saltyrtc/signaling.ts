@@ -918,7 +918,7 @@ export class Signaling {
                         id: id,
                     };
                     let packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
-                    console.debug(this.logTag, 'Sending drop-responder', id);
+                    console.debug(this.logTag, 'Sending drop-responder', byteToHex(id));
                     this.ws.send(packet);
                     this.responders.delete(id);
                 }
@@ -976,10 +976,19 @@ export class Signaling {
     public decryptPeerMessage(data: ArrayBuffer): saltyrtc.Message {
         let box = Box.fromUint8Array(new Uint8Array(data), nacl.box.nonceLength);
         let decrypted;
-        if (this.role == 'initiator') {
-            decrypted = this.sessionKey.decrypt(box, this.responder.sessionKey);
-        } else {
-            decrypted = this.sessionKey.decrypt(box, this.initiatorSessionKey);
+        try {
+            if (this.role == 'initiator') {
+                decrypted = this.sessionKey.decrypt(box, this.responder.sessionKey);
+            } else {
+                decrypted = this.sessionKey.decrypt(box, this.initiatorSessionKey);
+            }
+        } catch (e) {
+            if (e === 'decryption-failed') {
+                const nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
+                throw new Error('Could not decrypt peer message from ' + byteToHex(nonce.source));
+            } else {
+                throw e;
+            }
         }
         return this.decodeMessage(decrypted);
     }
