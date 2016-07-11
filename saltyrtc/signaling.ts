@@ -24,8 +24,10 @@ export type State = 'new' | 'ws-connecting' |
                     'open' | 'closing' | 'closed';
 
 const enum CloseCode {
+    // Normal closing of WebSocket
+    ClosingNormal = 1000,
     // The endpoint is going away
-    GoingAway = 1001,
+    GoingAway,
     // No shared sub-protocol could be found
     SubprotocolError,
     // No free responder byte
@@ -586,14 +588,14 @@ export class Signaling {
      * - Set `this.status` to `new`
      * - Reset the server combined sequence
      */
-    private resetConnection(): void {
+    private resetConnection(closeCode: CloseCode = CloseCode.ClosingNormal): void {
         this.state = 'new';
         this.serverCombinedSequence = new CombinedSequence();
 
         // Close WebSocket instance
         if (this.ws !== null) {
-            console.debug(this.logTag, 'Disconnecting WebSocket');
-            this.ws.close();
+            console.debug(this.logTag, 'Disconnecting WebSocket (close code ' + closeCode + ')');
+            this.ws.close(closeCode);
         }
         this.ws = null;
 
@@ -661,7 +663,7 @@ export class Signaling {
         let abort = () => {
             console.error(this.logTag, 'Resetting connection.');
             this.ws.removeEventListener('message', this.onPeerHandshakeMessage);
-            this.resetConnection();
+            this.resetConnection(CloseCode.ProtocolError);
             throw new Error('Aborting due to a protocol error');
         }
 
