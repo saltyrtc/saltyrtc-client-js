@@ -169,7 +169,8 @@ export class SaltyRTC implements saltyrtc.SaltyRTC {
      * is thrown.
      */
     public decryptData(data: ArrayBuffer): any {
-        let message = this.signaling.decryptPeerMessage(data);
+        const box = Box.fromUint8Array(new Uint8Array(data), nacl.box.nonceLength);
+        let message = this.signaling.decryptPeerMessage(box);
         if (message.type !== 'data') {
             console.error('Data messages must have message type set to "data", not "' + message.type + '".');
             throw 'bad-message-type';

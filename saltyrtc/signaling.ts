@@ -952,7 +952,8 @@ export class Signaling {
      */
     private onPeerMessage = (ev: MessageEvent) => {
         console.info(this.logTag, 'Message received!');
-        let message = this.decryptPeerMessage(ev.data);
+        const box = Box.fromUint8Array(new Uint8Array(ev.data), nacl.box.nonceLength);
+        const message = this.decryptPeerMessage(box);
         switch (message.type) {
             case 'data':
                 let dataMessage = message as saltyrtc.messages.Data;
@@ -973,8 +974,7 @@ export class Signaling {
      *
      * TODO: Separate cookie / csn per data channel.
      */
-    public decryptPeerMessage(data: ArrayBuffer): saltyrtc.Message {
-        let box = Box.fromUint8Array(new Uint8Array(data), nacl.box.nonceLength);
+    public decryptPeerMessage(box: Box): saltyrtc.Message {
         let decrypted;
         try {
             if (this.role == 'initiator') {
