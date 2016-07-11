@@ -621,24 +621,25 @@ export class Signaling {
             console.info(this.logTag, 'Handover to data channel');
         } else {
             this.state = 'closed';
+            const log = (reason) => console.error(this.logTag, 'Server closed connection:', reason);
             switch (ev.code) {
                 case CloseCode.GoingAway:
-                    console.error(this.logTag, 'Server is being shut down');
+                    log('Server is being shut down');
                     break;
                 case CloseCode.SubprotocolError:
-                    console.error(this.logTag, 'No shared sub-protocol could be found');
+                    log('No shared sub-protocol could be found');
                     break;
                 case CloseCode.PathFull:
-                    console.error(this.logTag, 'Path full (no free responder byte)');
+                    log('Path full (no free responder byte)');
                     break;
                 case CloseCode.ProtocolError:
-                    console.error(this.logTag, 'Protocol error');
+                    log('Protocol error');
                     break;
                 case CloseCode.InternalError:
-                    console.error(this.logTag, 'Internal server error');
+                    log('Internal server error');
                     break;
                 case CloseCode.Dropped:
-                    console.warn(this.logTag, 'Dropped by initiator');
+                    log('Dropped by initiator');
                     break;
             }
             this.client.emit({type: 'connection-closed', data: ev});
