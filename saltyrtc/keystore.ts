@@ -125,7 +125,6 @@ export class KeyStore implements saltyrtc.KeyStore {
         // Decrypt data
         const data = nacl.box.open(box.data, box.nonce, otherKey, this._keyPair.secretKey);
         if (data === false) {
-            // TODO: Handle error
             throw 'decryption-failed'
         }
         return data as Uint8Array;
@@ -175,7 +174,6 @@ export class AuthToken implements saltyrtc.AuthToken {
     public decrypt(box: Box): Uint8Array {
         const data = nacl.secretbox.open(box.data, box.nonce, this._authToken);
         if (data === false) {
-            // TODO: handle error
             throw 'decryption-failed'
         }
         return data as Uint8Array;
