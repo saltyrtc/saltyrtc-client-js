@@ -322,6 +322,9 @@ export class Signaling {
      * Do the server handshake.
      *
      * The `buffer` argument contains the `server-hello` packet.
+     *
+     * If an exception is thrown in this method, it will be converted to a
+     * protocol error.
      */
     private async serverHandshake(buffer: ArrayBuffer): Promise<void> {
 
@@ -421,6 +424,11 @@ export class Signaling {
             if (this.role == 'initiator') {
                 this.responders = new Map<number, Responder>();
                 for (let id of message.responders) {
+                    // Make sure that responder id is different from own id
+                    if (id === this.address) {
+                        console.error(this.logTag, 'Responder id matches own address.');
+                        throw 'address-conflict';
+                    }
                     this.responders.set(id, new Responder(id));
                     this.client.emit({type: 'new-responder', data: id});
                 }
@@ -721,6 +729,10 @@ export class Signaling {
                 // A new responder wants to connect. Store id.
                 const id = (message as saltyrtc.messages.NewResponder).id;
                 if (!this.responders.has(id)) {
+                    if (id === this.address) {
+                        console.error(this.logTag, 'Responder id matches own address.');
+                        abort();
+                    }
                     this.responders.set(id, new Responder(id));
                     this.client.emit({type: 'new-responder', data: id});
                 } else {
