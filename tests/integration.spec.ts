@@ -385,6 +385,7 @@ export default () => { describe('Integration Tests', function() {
                         };
                     };
                     let dc = connections.initiator.createDataChannel('dc1');
+                    dc.binaryType = 'arraybuffer';
                     dc.send('bonjour');
                 });
             }
@@ -402,6 +403,7 @@ export default () => { describe('Integration Tests', function() {
                         };
                     };
                     let dc = connections.initiator.createDataChannel('dc2');
+                    dc.binaryType = 'arraybuffer';
                     let safedc = this.initiator.wrapDataChannel(dc);
                     safedc.send('enigma');
                 });
@@ -421,6 +423,7 @@ export default () => { describe('Integration Tests', function() {
             // Wrap data channel
             connections.responder.ondatachannel = (e: RTCDataChannelEvent) => {
                 // The receiver should transparently decrypt received data.
+                e.channel.binaryType = 'arraybuffer';
                 let receiverDc = this.responder.wrapDataChannel(e.channel);
                 receiverDc.onmessage = (e: RTCMessageEvent) => {
                     expect(e.data).toEqual('enigma');
@@ -428,6 +431,7 @@ export default () => { describe('Integration Tests', function() {
                 };
             };
             let dc = connections.initiator.createDataChannel('dc2');
+            dc.binaryType = 'arraybuffer';
             let safedc = this.initiator.wrapDataChannel(dc);
             safedc.send('enigma');
         });
