@@ -970,17 +970,18 @@ export class Signaling {
             }
         } else {
             // Make sure that a responder is defined
-            if (this.responder === null) {
+            if (this.role === 'initiator' && this.responder === null) {
                 this.resetConnection(CloseCode.ProtocolError);
                 throw new Error('Received peer message, but responder is null.')
             }
 
             // Validate source byte
-            if (this.role === 'responder') {
+            if (this.role === 'responder' && nonce.source !== Signaling.SALTYRTC_ADDR_INITIATOR) {
                 console.warn(this.logTag, 'Received message from other responder. ' +
                                            'This is probably a server error.');
                 return;
-            } else if (nonce.source !== this.responder.id) {
+            }
+            if (this.role === 'initiator' && nonce.source !== this.responder.id) {
                 console.warn(this.logTag, 'Received message from responder '
                                           + byteToHex(nonce.source) + '. Ignoring.');
                 this.dropResponder(nonce.source);
@@ -988,6 +989,7 @@ export class Signaling {
             }
 
             // Process peer messages
+            message = this.decryptPeerMessage(box);
             switch (message.type) {
                 case 'data':
                     let dataMessage = message as saltyrtc.messages.Data;
