@@ -37,7 +37,24 @@ export class Box implements saltyrtc.Box {
         return this._nonce;
     }
 
+    /**
+     * Parse an Uint8Array, create a Box wrapping the data.
+     *
+     * May throw the following exceptions:
+     *
+     * - bad-message-length: Message is too short
+     */
     public static fromUint8Array(array: Uint8Array, nonceLength: number) {
+        // Validate nonceLength parameter
+        if (nonceLength === undefined) {
+            throw new Error('nonceLength parameter not specified');
+        }
+
+        // Validate message length
+        if (array.byteLength <= nonceLength) {
+            throw 'bad-message-length';
+        }
+
         // Unpack nonce
         let nonce = array.slice(0, nonceLength);
 

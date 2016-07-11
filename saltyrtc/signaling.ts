@@ -369,13 +369,6 @@ export class Signaling {
             // Wait for message
             let bytes: Uint8Array = await this.recvMessageData();
 
-            // Validate length
-            // TODO: Do we actually need this?
-            if (bytes.byteLength <= 24) {
-                console.error(this.logTag, 'Received message with only', bytes.byteLength, 'bytes length');
-                throw 'bad-message-length';
-            }
-
             // Decrypt message
             let box = Box.fromUint8Array(bytes, nacl.box.nonceLength);
             let decrypted = this.permanentKey.decrypt(box, this.serverKey);

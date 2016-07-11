@@ -37,6 +37,14 @@ export default () => { describe('keystore', function() {
             expect(box.length).toEqual(nonceLength + 5);
         });
 
+        it('validates the byte array length', () => {
+            let nonceLength = nacl.box.nonceLength;
+            let boxSameLength = () => Box.fromUint8Array(nacl.randomBytes(nonceLength), nonceLength);
+            let boxLessLength = () => Box.fromUint8Array(nacl.randomBytes(nonceLength - 2), nonceLength);
+            expect(boxSameLength).toThrow('bad-message-length');
+            expect(boxLessLength).toThrow('bad-message-length');
+        });
+
         it('can be converted into a byte array', () => {
             let array = box.toUint8Array();
             expect(array.slice(0, nacl.secretbox.nonceLength)).toEqual(nonce);
