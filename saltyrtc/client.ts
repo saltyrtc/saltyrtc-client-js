@@ -238,7 +238,7 @@ export class SaltyRTC implements saltyrtc.SaltyRTC {
     public emit(event: saltyrtc.SaltyRTCEvent) {
         console.debug('SaltyRTC: New event:', event.type);
         const handlers = this.eventRegistry.get(event.type);
-        for (const handler of handlers) {
+        for (let handler of handlers) {
             try {
                 this.callHandler(handler, event);
             } catch (e) {

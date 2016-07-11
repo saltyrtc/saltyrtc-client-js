@@ -21,7 +21,7 @@ export class EventRegistry {
         if (typeof eventType === 'string') {
             this.set(eventType, handler);
         } else {
-            for (const et of eventType) {
+            for (let et of eventType) {
                 this.set(et, handler);
             }
         }
@@ -49,7 +49,7 @@ export class EventRegistry {
                 }
             }
         } else {
-            for (const et of eventType) {
+            for (let et of eventType) {
                 this.unregister(et, handler);
             }
         }
@@ -84,8 +84,8 @@ export class EventRegistry {
                 handlers.push.apply(handlers, this.map.get(eventType));
             }
         } else {
-            for (const et of eventType) {
-                for (const handler of this.get(et)) {
+            for (let et of eventType) {
+                for (let handler of this.get(et)) {
                     if (handlers.indexOf(handler) === -1) {
                         handlers.push(handler);
                     }

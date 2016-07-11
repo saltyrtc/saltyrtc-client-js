@@ -15,7 +15,7 @@
  */
 export function u8aToHex(array: Uint8Array): string {
     const results: string[] = [];
-    for (const arrayByte of array) {
+    for (let arrayByte of array) {
         results.push(arrayByte.toString(16).replace(/^([\da-f])$/, '0$1'));
     }
     return results.join('');
@@ -83,12 +83,12 @@ export function randomUint32(): number {
  */
 export function concat(...arrays: Uint8Array[]): Uint8Array {
     let totalLength = 0;
-    for (const arr of arrays) {
+    for (let arr of arrays) {
         totalLength += arr.length;
     }
     const result = new Uint8Array(totalLength);
     let offset = 0;
-    for (const arr of arrays) {
+    for (let arr of arrays) {
         result.set(arr, offset);
         offset += arr.length;
     }

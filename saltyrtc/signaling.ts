@@ -420,7 +420,7 @@ export class Signaling {
             // Store responders
             if (this.role == 'initiator') {
                 this.responders = new Map<number, Responder>();
-                for (const id of message.responders) {
+                for (let id of message.responders) {
                     this.responders.set(id, new Responder(id));
                     this.client.emit({type: 'new-responder', data: id});
                 }
@@ -920,7 +920,7 @@ export class Signaling {
 
                 // Drop all other responders
                 console.debug(this.logTag, 'Dropping', this.responders.size, 'other responders.');
-                for (const id of this.responders.keys()) {
+                for (let id of this.responders.keys()) {
                     this.dropResponder(id);
                     this.responders.delete(id);
                 }
