@@ -55,12 +55,12 @@ export class DataChannelNonce extends Nonce {
         }
 
         // Get view to buffer
-        let view = new DataView(packet);
+        const view = new DataView(packet);
 
         // Parse and return nonce
-        let cookie = new Cookie(new Uint8Array(packet, 0, 16));
-        let overflow = view.getUint32(16);
-        let sequenceNumber = view.getUint32(20);
+        const cookie = new Cookie(new Uint8Array(packet, 0, 16));
+        const overflow = view.getUint32(16);
+        const sequenceNumber = view.getUint32(20);
 
         return new DataChannelNonce(cookie, overflow, sequenceNumber);
     }
@@ -69,12 +69,12 @@ export class DataChannelNonce extends Nonce {
      * Return an ArrayBuffer containing the nonce data.
      */
     public toArrayBuffer(): ArrayBuffer {
-        let buf = new ArrayBuffer(24);
+        const buf = new ArrayBuffer(24);
 
-        let uint8view = new Uint8Array(buf);
+        const uint8view = new Uint8Array(buf);
         uint8view.set(this._cookie.bytes);
 
-        let view = new DataView(buf);
+        const view = new DataView(buf);
         view.setUint32(16, this._overflow);
         view.setUint32(20, this._sequenceNumber);
 
@@ -126,14 +126,14 @@ export class SignalingChannelNonce extends Nonce {
         }
 
         // Get view to buffer
-        let view = new DataView(packet);
+        const view = new DataView(packet);
 
         // Parse and return nonce
-        let cookie = new Cookie(new Uint8Array(packet, 0, 16));
-        let source = view.getUint8(16);
-        let destination = view.getUint8(17);
-        let overflow = view.getUint16(18);
-        let sequenceNumber = view.getUint32(20);
+        const cookie = new Cookie(new Uint8Array(packet, 0, 16));
+        const source = view.getUint8(16);
+        const destination = view.getUint8(17);
+        const overflow = view.getUint16(18);
+        const sequenceNumber = view.getUint32(20);
 
         return new SignalingChannelNonce(cookie, overflow, sequenceNumber, source, destination);
     }
@@ -142,12 +142,12 @@ export class SignalingChannelNonce extends Nonce {
      * Return an ArrayBuffer containing the signaling nonce data.
      */
     public toArrayBuffer(): ArrayBuffer {
-        let buf = new ArrayBuffer(24);
+        const buf = new ArrayBuffer(24);
 
-        let uint8view = new Uint8Array(buf);
+        const uint8view = new Uint8Array(buf);
         uint8view.set(this._cookie.bytes);
 
-        let view = new DataView(buf);
+        const view = new DataView(buf);
         view.setUint8(16, this._source);
         view.setUint8(17, this._destination);
         view.setUint16(18, this._overflow);

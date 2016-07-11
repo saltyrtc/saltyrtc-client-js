@@ -42,8 +42,8 @@ export class EventRegistry {
                 this.map.delete(eventType);
             // Otherwise, remove the handler from the list if present
             } else {
-                let list = this.map.get(eventType);
-                let index = list.indexOf(handler);
+                const list = this.map.get(eventType);
+                const index = list.indexOf(handler);
                 if (index !== -1) {
                     list.splice(index, 1);
                 }
@@ -60,13 +60,12 @@ export class EventRegistry {
      */
     private set(key: string, value: saltyrtc.SaltyEventHandler) {
         if (this.map.has(key)) {
-            let list = this.map.get(key);
+            const list = this.map.get(key);
             if (list.indexOf(value) === -1) {
                 list.push(value);
             }
         } else {
-            let list = [value];
-            this.map.set(key, list);
+            this.map.set(key, [value]);
         }
     }
 
@@ -79,7 +78,7 @@ export class EventRegistry {
      * Even if a handler is registered for multiple events, it is only returned once.
      */
     public get(eventType: string | string[]): saltyrtc.SaltyEventHandler[] {
-        let handlers: saltyrtc.SaltyEventHandler[] = [];
+        const handlers: saltyrtc.SaltyEventHandler[] = [];
         if (typeof eventType === 'string') {
             if (this.map.has(eventType)) {
                 handlers.push.apply(handlers, this.map.get(eventType));

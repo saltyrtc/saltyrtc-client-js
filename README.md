@@ -91,6 +91,11 @@ Alternatively, run the tests automatically in Firefox and Chrome:
 
     $ npm test
 
+## Coding Guidelines
+
+- Write clean ES2015
+- Favor `const` over `let`
+
 ## License
 
 MIT, see `LICENSE.md`.

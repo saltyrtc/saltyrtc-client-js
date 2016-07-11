@@ -70,7 +70,7 @@ export class SaltyRTC implements saltyrtc.SaltyRTC {
      */
     public asResponder(initiatorPubKey: Uint8Array, authToken: Uint8Array): SaltyRTC {
         // Create AuthToken instance
-        let token = new AuthToken(authToken);
+        const token = new AuthToken(authToken);
 
         // Initialize signaling class
         this._signaling = new Signaling(this, this.host, this.port, this.permanentKey, initiatorPubKey, token);
@@ -152,7 +152,7 @@ export class SaltyRTC implements saltyrtc.SaltyRTC {
      * If you don't want to set a dataType, pass it in as `undefined`.
      */
     public sendData(dataType: string, data: any, dc?: RTCDataChannel) {
-        let dataMessage: saltyrtc.messages.Data = {
+        const dataMessage: saltyrtc.messages.Data = {
             type: 'data',
             data: data,
         }
@@ -170,7 +170,7 @@ export class SaltyRTC implements saltyrtc.SaltyRTC {
      */
     public decryptData(data: ArrayBuffer): any {
         const box = Box.fromUint8Array(new Uint8Array(data), nacl.box.nonceLength);
-        let message = this.signaling.decryptPeerMessage(box);
+        const message = this.signaling.decryptPeerMessage(box);
         if (message.type !== 'data') {
             console.error('Data messages must have message type set to "data", not "' + message.type + '".');
             throw 'bad-message-type';
@@ -209,7 +209,7 @@ export class SaltyRTC implements saltyrtc.SaltyRTC {
      * event handler, it will be completely removed after running once.
      */
     public once(event: string | string[], handler: saltyrtc.SaltyEventHandler): void {
-        let onceHandler: saltyrtc.SaltyEventHandler = (ev: saltyrtc.SaltyRTCEvent) => {
+        const onceHandler: saltyrtc.SaltyEventHandler = (ev: saltyrtc.SaltyRTCEvent) => {
             try {
                 handler(ev);
             } catch (e) {
@@ -237,7 +237,7 @@ export class SaltyRTC implements saltyrtc.SaltyRTC {
      */
     public emit(event: saltyrtc.SaltyRTCEvent) {
         console.debug('SaltyRTC: New event:', event.type);
-        let handlers = this.eventRegistry.get(event.type);
+        const handlers = this.eventRegistry.get(event.type);
         for (let handler of handlers) {
             try {
                 this.callHandler(handler, event);
@@ -253,7 +253,7 @@ export class SaltyRTC implements saltyrtc.SaltyRTC {
      * If the handler returns `false`, unregister it.
      */
     private callHandler(handler: saltyrtc.SaltyEventHandler, event: saltyrtc.SaltyRTCEvent) {
-        let response = handler(event);
+        const response = handler(event);
         if (response === false) {
             this.eventRegistry.unregister(event.type, handler);
         }
