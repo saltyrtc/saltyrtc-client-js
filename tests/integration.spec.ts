@@ -422,7 +422,6 @@ export default () => { describe('Integration Tests', function() {
             connections.responder.ondatachannel = (e: RTCDataChannelEvent) => {
                 // The receiver should transparently decrypt received data.
                 let receiverDc = this.responder.wrapDataChannel(e.channel);
-                console.log(receiverDc);
                 receiverDc.onmessage = (e: RTCMessageEvent) => {
                     expect(e.data).toEqual('enigma');
                     done();
