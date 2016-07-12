@@ -1105,7 +1105,7 @@ export class Signaling {
     }
 
     /**
-     * Do the handover from WebSocket to WebRTC DataChannel.
+     * Initiate the handover from WebSocket to WebRTC DataChannel.
      */
     public handover(pc: RTCPeerConnection): Promise<{}> {
         console.debug(this.logTag, 'Starting handover');
@@ -1120,6 +1120,7 @@ export class Signaling {
             this.dc.onopen = (ev: Event) => {
                 this.ws.close(CloseCode.Handover);
                 console.info(this.logTag, 'Handover to data channel finished');
+                this.signalingChannel = 'datachannel';
                 this.client.emit({type: 'handover'});
                 resolve();
             };
