@@ -216,7 +216,7 @@ export default () => { describe('Integration Tests', function() {
             // Receive answer
             function receiveAnswer(): Promise<string> {
                 return new Promise((resolve) => {
-                    salty.once('data:answer', (message: saltyrtc.Data) => {
+                    salty.once('data:answer', (message: saltyrtc.messages.Data) => {
                         resolve(message.data);
                     });
                 });
@@ -236,7 +236,7 @@ export default () => { describe('Integration Tests', function() {
             // Receive offer
             function receiveOffer(): Promise<string> {
                 return new Promise((resolve) => {
-                    salty.once('data:offer', (message: saltyrtc.Data) => {
+                    salty.once('data:offer', (message: saltyrtc.messages.Data) => {
                         resolve(message.data);
                     });
                 });
@@ -272,7 +272,7 @@ export default () => { describe('Integration Tests', function() {
             pc.onicecandidateerror = (e: RTCPeerConnectionIceErrorEvent) => {
                 console.error(logTag, 'ICE candidate error:', e);
             };
-            salty.on('data:candidate', (message: saltyrtc.Data) => {
+            salty.on('data:candidate', (message: saltyrtc.messages.Data) => {
                 pc.addIceCandidate(new RTCIceCandidate(message.data));
             });
         }
@@ -309,7 +309,7 @@ export default () => { describe('Integration Tests', function() {
             };
 
             // Do responder flow
-            responderConn.onnegotiationneeded =(e: Event) => {
+            responderConn.onnegotiationneeded = (e: Event) => {
                 responderFlow(responderConn, this.responder).then(
                     (value) => console.debug('Responder flow successful'),
                     (error) => console.error('Responder flow failed', error)
