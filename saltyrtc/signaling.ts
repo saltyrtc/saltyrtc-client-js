@@ -634,10 +634,10 @@ export class Signaling {
      * WebSocket onclose handler.
      */
     private onClose = (ev: CloseEvent) => {
-        console.info(this.logTag, 'Closed WebSocket connection');
         if (ev.code === CloseCode.Handover) {
-            console.info(this.logTag, 'Handover to data channel');
+            console.info(this.logTag, 'Closed WebSocket connection due to handover');
         } else {
+            console.info(this.logTag, 'Closed WebSocket connection');
             this.state = 'closed';
             const log = (reason) => console.error(this.logTag, 'Server closed connection:', reason);
             switch (ev.code) {
