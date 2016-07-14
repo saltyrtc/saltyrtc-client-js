@@ -32,24 +32,29 @@ export abstract class Nonce {
  *
  * Nonce structure:
  *
- * |CCCCCCCCCCCCCCCC|OOOO|QQQQ|
+ * |CCCCCCCCCCCCCCCC|DD|OO|QQQQ|
  *
  * - C: Cookie (16 byte)
- * - O: Overflow number (4 bytes)
+ * - D: Data channel id (2 bytes)
+ * - O: Overflow number (2 bytes)
  * - Q: Sequence number (4 bytes)
  */
 export class DataChannelNonce extends Nonce {
+    protected _channelId: number;
 
-    constructor(cookie: Cookie, overflow: number, sequenceNumber: number) {
+    constructor(cookie: Cookie, channelId: number, overflow: number, sequenceNumber: number) {
         super(cookie, overflow, sequenceNumber);
+        this._channelId = channelId;
     }
+
+    get channelId() { return this._channelId; }
 
     /**
      * Create a nonce from an ArrayBuffer.
      *
      * If packet is not exactly 24 bytes long, throw an exception.
      */
-    public static fromArrayBuffer(packet: ArrayBuffer): Nonce {
+    public static fromArrayBuffer(packet: ArrayBuffer): DataChannelNonce {
         if (packet.byteLength != 24) {
             throw 'bad-packet-length';
         }
@@ -59,10 +64,11 @@ export class DataChannelNonce extends Nonce {
 
         // Parse and return nonce
         const cookie = new Cookie(new Uint8Array(packet, 0, 16));
-        const overflow = view.getUint32(16);
+        const channelId = view.getUint16(16);
+        const overflow = view.getUint16(18);
         const sequenceNumber = view.getUint32(20);
 
-        return new DataChannelNonce(cookie, overflow, sequenceNumber);
+        return new DataChannelNonce(cookie, channelId, overflow, sequenceNumber);
     }
 
     /**
@@ -75,7 +81,8 @@ export class DataChannelNonce extends Nonce {
         uint8view.set(this._cookie.bytes);
 
         const view = new DataView(buf);
-        view.setUint32(16, this._overflow);
+        view.setUint16(16, this._channelId);
+        view.setUint16(18, this._overflow);
         view.setUint32(20, this._sequenceNumber);
 
         return buf;
@@ -97,7 +104,7 @@ export class DataChannelNonce extends Nonce {
  * - C: Cookie (16 byte)
  * - S: Source byte (1 byte)
  * - D: Destination byte (1 byte)
- * - O: Overflow number (4 bytes)
+ * - O: Overflow number (2 bytes)
  * - Q: Sequence number (4 bytes)
  */
 export class SignalingChannelNonce extends Nonce {
