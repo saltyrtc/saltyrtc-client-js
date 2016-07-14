@@ -149,7 +149,7 @@ export class Signaling {
 
     // Connection state
     public state: State = 'new';
-    public signalingChannel: 'websocket' | 'datachannel' = 'websocket';
+    public signalingChannel: saltyrtc.SignalingChannel = 'websocket';
 
     // Main class
     private client: SaltyRTC;

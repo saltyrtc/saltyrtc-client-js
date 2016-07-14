@@ -94,6 +94,13 @@ export class SaltyRTC implements saltyrtc.SaltyRTC {
     }
 
     /**
+     * Return the signaling channel.
+     */
+    public get signalingChannel(): saltyrtc.SignalingChannel {
+        return this.signaling.signalingChannel;
+    }
+
+    /**
      * Return the public permanent key as Uint8Array.
      */
     public get permanentKeyBytes(): Uint8Array {

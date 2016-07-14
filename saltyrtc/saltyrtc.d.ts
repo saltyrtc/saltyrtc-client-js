@@ -42,6 +42,8 @@ declare namespace saltyrtc {
 
     type State = 'new' | 'ws-connecting' | 'server-handshake' | 'peer-handshake' | 'open' | 'closing' | 'closed';
 
+    type SignalingChannel = 'websocket' | 'datachannel';
+
     interface SaltyRTCEvent {
         type: string;
         data?: any;
@@ -82,6 +84,7 @@ declare namespace saltyrtc {
         asResponder(initiatorPubKey: Uint8Array, authToken: Uint8Array): SaltyRTC;
 
         state: State;
+        signalingChannel: SignalingChannel;
 
         permanentKeyBytes: Uint8Array;
         permanentKeyHex: string;
