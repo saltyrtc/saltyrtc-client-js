@@ -142,27 +142,6 @@ export class SaltyRTC implements saltyrtc.SaltyRTC {
     }
 
     /**
-     * Send data to the peer.
-     *
-     * Note that you can only send primitive types or plain dict-like objects.
-     * If you want to send custom typed objects, convert them to plain objects.
-     *
-     * If you want to send data through a specific data channel, pass it in.
-     *
-     * If you don't want to set a dataType, pass it in as `undefined`.
-     */
-    public sendData(dataType: string, data: any, dc?: RTCDataChannel) {
-        const dataMessage: saltyrtc.messages.Data = {
-            type: 'data',
-            data: data,
-        }
-        if (dataType !== undefined) {
-            dataMessage.data_type = dataType;
-        }
-        this.signaling.sendData(dataMessage, dc);
-    }
-
-    /**
      * Decrypt data from a peer.
      *
      * If data message has a type other than "data", a 'bad-message-type' error
@@ -179,6 +158,28 @@ export class SaltyRTC implements saltyrtc.SaltyRTC {
     }
 
     /**
+     * Send signaling data to the peer.
+     *
+     * Note that you can only send primitive types or plain dict-like objects.
+     * If you want to send custom typed objects, convert them to plain objects.
+     *
+     * If you want to send data through a specific data channel, pass it in.
+     *
+     * If you don't want to set a dataType, pass it in as `undefined`.
+     */
+    public sendSignalingData(dataType: string, data: any) {
+        const dataMessage: saltyrtc.messages.Data = {
+            type: 'data',
+            data: data,
+        }
+        if (dataType !== undefined) {
+            dataMessage.data_type = dataType;
+        }
+        this.signaling.sendSignalingData(dataMessage);
+    }
+
+
+    /**
      * Do the handover from WebSocket to WebRTC DataChannel.
      */
     public handover(pc: RTCPeerConnection): Promise<{}> {
@@ -189,7 +190,7 @@ export class SaltyRTC implements saltyrtc.SaltyRTC {
      * Wrap a WebRTC data channel.
      */
     public wrapDataChannel(dc: RTCDataChannel): SecureDataChannel {
-        return new SecureDataChannel(dc, this);
+        return new SecureDataChannel(dc, this.signaling);
     }
 
     /**

@@ -13,7 +13,8 @@
 import { KeyStore, AuthToken, Box } from "./keystore";
 import { Cookie, CookiePair } from "./cookie";
 import { SaltyRTC } from "./client";
-import { SignalingChannelNonce as Nonce } from "./nonce";
+import { SignalingChannelNonce, DataChannelNonce } from "./nonce";
+import { SecureDataChannel } from "./datachannel";
 import { concat, randomUint32, byteToHex, u8aToHex } from "./utils";
 
 /**
@@ -52,7 +53,7 @@ interface SignalingMessage {
 
 interface Packet {
     message: saltyrtc.Message,
-    nonce: Nonce,
+    nonce: SignalingChannelNonce,
 }
 
 class CombinedSequence {
@@ -331,7 +332,7 @@ export class Signaling {
         { // Process server-hello
 
             // First packet is unencrypted. Decode it directly.
-            const nonce = Nonce.fromArrayBuffer(buffer.slice(0, 24));
+            const nonce = SignalingChannelNonce.fromArrayBuffer(buffer.slice(0, 24));
             const payload = new Uint8Array(buffer.slice(24));
             const serverHello = this.msgpackDecode(payload) as saltyrtc.messages.ServerHello;
 
@@ -387,8 +388,8 @@ export class Signaling {
             const decrypted = this.permanentKey.decrypt(box, this.serverKey);
 
             // Now that the nonce integrity is guaranteed by decrypting,
-            // create a `Nonce` instance.
-            const nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
+            // create a `SignalingChannelNonce` instance.
+            const nonce = SignalingChannelNonce.fromArrayBuffer(box.nonce.buffer);
 
             // Validate nonce and set proper address.
             if (this.role == 'initiator') {
@@ -485,7 +486,7 @@ export class Signaling {
      * - bad-nonce-source
      * - bad-nonce-destination
      */
-    private validateNonce(nonce: Nonce, destination?: number, source?: number): void {
+    private validateNonce(nonce: SignalingChannelNonce, destination?: number, source?: number): void {
         // Validate destination
         if (destination !== undefined && nonce.destination !== destination) {
             console.error(this.logTag, 'Nonce destination is', nonce.destination, 'but we\'re', this.address);
@@ -551,7 +552,8 @@ export class Signaling {
         }
 
         // Create nonce
-        const nonce = new Nonce(this.cookiePair.ours, csn.overflow, csn.sequenceNumber, this.address, receiver);
+        const nonce = new SignalingChannelNonce(
+            this.cookiePair.ours, csn.overflow, csn.sequenceNumber, this.address, receiver);
         const nonceBytes = new Uint8Array(nonce.toArrayBuffer());
 
         // Encode message
@@ -589,6 +591,52 @@ export class Signaling {
         } else {
             return concat(nonceBytes, data);
         }
+    }
+
+    /**
+     * Get the session key of the peer.
+     */
+    private get peerSessionKey(): Uint8Array {
+        if (this.role == 'initiator') {
+            return this.responder.sessionKey;
+        } else {
+            return this.initiatorSessionKey;
+        }
+    }
+
+    /**
+     * Encrypt arbitrary data for the peer using the session keys.
+     */
+    public encryptData(data: ArrayBuffer, sdc: SecureDataChannel): Box {
+        // Choose proper CSN
+        let csn;
+        if (this.role == 'initiator') {
+            csn = this.responder.combinedSequence.next();
+        } else {
+            csn = this.initiatorCombinedSequence.next();
+        }
+
+        // Create nonce
+        const nonce = new DataChannelNonce(
+            this.cookiePair.ours,
+            sdc.id,
+            csn.overflow,
+            csn.sequenceNumber
+        );
+
+        // Encrypt
+        return this.sessionKey.encrypt(
+            new Uint8Array(data),
+            new Uint8Array(nonce.toArrayBuffer()),
+            this.peerSessionKey
+        );
+    }
+
+    /**
+     * Decrypt data from the peer using the session keys.
+     */
+    public decryptData(box: Box): ArrayBuffer {
+        return this.sessionKey.decrypt(box, this.peerSessionKey).buffer;
     }
 
     /**
@@ -708,7 +756,7 @@ export class Signaling {
         // Peek at nonce.
         // Important: At this point the nonce is not yet authenticated,
         // so don't trust it yet!
-        const unsafeNonce = Nonce.fromArrayBuffer(buffer.slice(0, 24));
+        const unsafeNonce = SignalingChannelNonce.fromArrayBuffer(buffer.slice(0, 24));
         this.validateNonce(unsafeNonce, this.address);
 
         // Dispatch messages according to source.
@@ -768,7 +816,7 @@ export class Signaling {
             }
 
             // Get nonce
-            const nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
+            const nonce = SignalingChannelNonce.fromArrayBuffer(box.nonce.buffer);
 
             // Decode message
             const message: saltyrtc.Message = this.decodeMessage(decrypted);
@@ -972,7 +1020,7 @@ export class Signaling {
 
         // Parse data
         const box = Box.fromUint8Array(new Uint8Array(ev.data), nacl.box.nonceLength);
-        const nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
+        const nonce = SignalingChannelNonce.fromArrayBuffer(box.nonce.buffer);
 
         // Validate nonce (excluding source byte)
         this.validateNonce(nonce, this.address);
@@ -1046,7 +1094,7 @@ export class Signaling {
             return this.decodeMessage(decrypted);
         } catch(e) {
             if (e === 'decryption-failed') {
-                const nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
+                const nonce = SignalingChannelNonce.fromArrayBuffer(box.nonce.buffer);
                 throw new Error('Could not decrypt peer message from ' + byteToHex(nonce.source));
             } else {
                 throw e;
@@ -1071,11 +1119,9 @@ export class Signaling {
     }
 
     /**
-     * Send a data message to the peer, encrypted with the session key.
-     *
-     * TODO: Separate cookie / CSN for every DC
+     * Send a signaling data message to the peer, encrypted with the session key.
      */
-    public sendData(data: saltyrtc.messages.Data, dc?: RTCDataChannel) {
+    public sendSignalingData(data: saltyrtc.messages.Data) {
         if (this.state !== 'open') {
             console.error(this.logTag, 'Trying to send a message, but connection state is', this.state);
             throw 'bad-state';
@@ -1086,21 +1132,16 @@ export class Signaling {
 
         // Send message
         const packet: Uint8Array = this.buildPacket(data, peerAddress);
-        if (dc === undefined) {
-            console.debug(this.logTag, 'Sending', data.data_type, 'data message through', this.signalingChannel);
-            switch (this.signalingChannel) {
-                case 'websocket':
-                    this.ws.send(packet);
-                    break;
-                case 'datachannel':
-                    this.dc.send(packet);
-                    break;
-                default:
-                    throw new Error('Invalid signaling channel: ' + this.signalingChannel);
-            }
-        } else {
-            console.debug(this.logTag, 'Sending', data.data_type, 'data message through custom datachannel', dc.id);
-            dc.send(packet);
+        console.debug(this.logTag, 'Sending', data.data_type, 'data message through', this.signalingChannel);
+        switch (this.signalingChannel) {
+            case 'websocket':
+                this.ws.send(packet);
+                break;
+            case 'datachannel':
+                this.dc.send(packet);
+                break;
+            default:
+                throw new Error('Invalid signaling channel: ' + this.signalingChannel);
         }
     }
 

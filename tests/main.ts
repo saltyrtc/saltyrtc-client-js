@@ -5,6 +5,7 @@ import test_cookie from "./cookie.spec";
 import test_signaling from "./signaling.spec";
 import test_eventregistry from "./eventregistry.spec";
 import test_client from "./client.spec";
+import test_datachannel from "./datachannel.spec";
 import test_integration from "./integration.spec";
 
 var counter = 1;
@@ -17,4 +18,5 @@ test_cookie();
 test_signaling();
 test_eventregistry();
 test_client();
+test_datachannel();
 test_integration();

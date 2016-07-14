@@ -10,7 +10,7 @@
 
 import { KeyStore, Box } from "./keystore";
 import { Chunkifier, Unchunkifier } from "./chunkifier";
-import { SaltyRTC } from "./client";
+import { Signaling } from "./signaling";
 
 
 /**
@@ -20,27 +20,66 @@ import { SaltyRTC } from "./client";
  */
 export class SecureDataChannel implements saltyrtc.SecureDataChannel {
     private dc: RTCDataChannel;
-    private saltyrtc: SaltyRTC;
+    private signaling: Signaling;
     private _onmessage: saltyrtc.MessageEventHandler;
     private logTag = 'SecureDataChannel:';
 
-    constructor(dc: RTCDataChannel, saltyrtc: SaltyRTC) {
+    constructor(dc: RTCDataChannel, signaling: Signaling) {
         if (dc.binaryType !== 'arraybuffer') {
             throw new Error('Currently SaltyRTC can only handle data channels ' +
                             'with `binaryType` set to `arraybuffer`.');
         }
         this.dc = dc;
-        this.saltyrtc = saltyrtc;
+        this.signaling = signaling;
         this.dc.onmessage = this.onEncryptedMessage;
     }
 
     public send(data: string | Blob | ArrayBuffer | ArrayBufferView) {
-        this.saltyrtc.sendData('dc-' + this.dc.id.toString(), data, this.dc);
+        let buffer: ArrayBuffer;
+        if (typeof data === 'string') {
+            throw new Error('SecureDataChannel can only handle binary data.');
+        } else if (data instanceof Blob) {
+            throw new Error('SecureDataChannel does not currently support Blob data. ' +
+                            'Please pass in an ArrayBuffer or a typed array (e.g. Uint8Array).');
+        } else if (data instanceof Int8Array ||
+                   data instanceof Uint8ClampedArray ||
+                   data instanceof Int16Array ||
+                   data instanceof Uint16Array ||
+                   data instanceof Int32Array ||
+                   data instanceof Uint32Array ||
+                   data instanceof Float32Array ||
+                   data instanceof Float64Array ||
+                   data instanceof DataView) {
+            const start = data.byteOffset || 0;
+            const end = start + (data.byteLength || data.buffer.byteLength);
+            buffer = data.buffer.slice(start, end);
+        } else if (data instanceof Uint8Array) {
+            buffer = data.buffer;
+        } else if (data instanceof ArrayBuffer) {
+            buffer = data;
+        } else {
+            throw new Error('Unknown data type. Please pass in an ArrayBuffer ' +
+                            'or a typed array (e.g. Uint8Array).');
+        }
+        const box: Box = this.signaling.encryptData(buffer, this);
+        this.dc.send(box.toUint8Array());
     }
 
     private onEncryptedMessage = (event: RTCMessageEvent) => {
         // If _onmessage is not defined, exit immediately.
         if (this._onmessage === undefined) {
+            return;
+        }
+
+        // If type is not supported, exit immediately
+        if (event.data instanceof Blob) {
+            console.warn(this.logTag, 'Received message in blob format, which is not currently supported.');
+            return;
+        } else if (typeof event.data == 'string') {
+            console.warn(this.logTag, 'Received message in string format, which is not currently supported.');
+            return;
+        } else if (!(event.data instanceof ArrayBuffer)) {
+            console.warn(this.logTag, 'Received message in unsupported format. Please send ArrayBuffer objects.');
             return;
         }
 
@@ -52,7 +91,8 @@ export class SecureDataChannel implements saltyrtc.SecureDataChannel {
 
         // Overwrite data with decoded data
         console.debug(this.logTag, 'Decrypt data...');
-        fakeEvent['data'] = this.saltyrtc.decryptData(event.data);
+        const box = Box.fromUint8Array(new Uint8Array(event.data), nacl.box.nonceLength);
+        fakeEvent['data'] = this.signaling.decryptData(box);
 
         // Call original handler
         this._onmessage.bind(this.dc)(fakeEvent);

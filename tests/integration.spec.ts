@@ -92,16 +92,16 @@ export default () => { describe('Integration Tests', function() {
         });
 
         /**
-         * Send round-trip custom data.
+         * Send round-trip custom signaling data.
          */
-        it('sending data', async (done) => {
+        it('sending signaling data', async (done) => {
             expect(this.initiator.state).toEqual('new');
             expect(this.responder.state).toEqual('new');
             await this.connectBoth(this.initiator, this.responder);
             this.responder.on('data:fondue', (msg) => {
                 expect(msg.type).toBe('data:fondue');
                 expect(msg.data).toBe('Your fondue is ready!');
-                this.responder.sendData('thanks', ['merci', 'danke', 'grazie'])
+                this.responder.sendSignalingData('thanks', ['merci', 'danke', 'grazie'])
             });
             this.initiator.on('data:thanks', (msg) => {
                 expect(msg.type).toBe('data:thanks');
@@ -110,7 +110,7 @@ export default () => { describe('Integration Tests', function() {
                 expect(msg.data[2]).toBe('grazie');
                 done();
             });
-            this.initiator.sendData('fondue', 'Your fondue is ready!');
+            this.initiator.sendSignalingData('fondue', 'Your fondue is ready!');
         });
 
         it('disconnect before peer handshake', async (done) => {
@@ -211,7 +211,7 @@ export default () => { describe('Integration Tests', function() {
             let offer: RTCSessionDescription = await pc.createOffer();
             await pc.setLocalDescription(offer);
             console.debug('Initiator: Created offer, set local description');
-            salty.sendData('offer', offer.sdp);
+            salty.sendSignalingData('offer', offer.sdp);
 
             // Receive answer
             function receiveAnswer(): Promise<string> {
@@ -250,7 +250,7 @@ export default () => { describe('Integration Tests', function() {
             let answer: RTCSessionDescription = await pc.createAnswer();
             await pc.setLocalDescription(answer);
             console.debug('Initiator: Created answer, set local description');
-            salty.sendData('answer', answer.sdp);
+            salty.sendSignalingData('answer', answer.sdp);
         }
 
         /**
@@ -262,7 +262,7 @@ export default () => { describe('Integration Tests', function() {
             console.debug(logTag, 'Setting up ICE candidate handling');
             pc.onicecandidate = (e: RTCIceCandidateEvent) => {
                 if (e.candidate) {
-                    salty.sendData('candidate', {
+                    salty.sendSignalingData('candidate', {
                         candidate: e.candidate.candidate,
                         sdpMid: e.candidate.sdpMid,
                         sdpMLineIndex: e.candidate.sdpMLineIndex,
@@ -398,14 +398,14 @@ export default () => { describe('Integration Tests', function() {
                     connections.responder.ondatachannel = (e: RTCDataChannelEvent) => {
                         // The receiver should get encrypted data.
                         e.channel.onmessage = (e: RTCMessageEvent) => {
-                            expect(e.data).not.toEqual('enigma');
+                            expect(e.data).not.toEqual(new Uint16Array([1, 1337, 9]));
                             resolve();
                         };
                     };
                     let dc = connections.initiator.createDataChannel('dc2');
                     dc.binaryType = 'arraybuffer';
                     let safedc = this.initiator.wrapDataChannel(dc);
-                    safedc.send('enigma');
+                    safedc.send(new Uint8Array([1, 1337, 9]));
                 });
             }
             await testEncrypted();
@@ -420,20 +420,22 @@ export default () => { describe('Integration Tests', function() {
                 responder: RTCPeerConnection,
             } = await setupPeerConnection.bind(this)();
 
+            const buf = new Uint8Array(nacl.randomBytes(32)).buffer;
+
             // Wrap data channel
             connections.responder.ondatachannel = (e: RTCDataChannelEvent) => {
                 // The receiver should transparently decrypt received data.
                 e.channel.binaryType = 'arraybuffer';
                 let receiverDc = this.responder.wrapDataChannel(e.channel);
                 receiverDc.onmessage = (e: RTCMessageEvent) => {
-                    expect(e.data).toEqual('enigma');
+                    expect(e.data).toEqual(buf);
                     done();
                 };
             };
             let dc = connections.initiator.createDataChannel('dc2');
             dc.binaryType = 'arraybuffer';
             let safedc = this.initiator.wrapDataChannel(dc);
-            safedc.send('enigma');
+            safedc.send(buf);
         });
 
     });

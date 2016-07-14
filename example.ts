@@ -23,7 +23,7 @@ async function initiatorFlow(pc: RTCPeerConnection, salty: SaltyRTC): Promise<vo
     // Send offer
     let offer: RTCSessionDescription = await pc.createOffer();
     await pc.setLocalDescription(offer);
-    salty.sendData('offer', offer.sdp);
+    salty.sendSignalingData('offer', offer.sdp);
 
     // Receive answer
     function receiveAnswer(): Promise<string> {
