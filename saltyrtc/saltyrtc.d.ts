@@ -94,7 +94,7 @@ declare namespace saltyrtc {
         connect(): void;
         disconnect(): void;
         sendSignalingData(dataType: string, data: any): void;
-        decryptData(data: ArrayBuffer): any;
+        decryptSignalingData(data: ArrayBuffer): any;
         handover(pc: RTCPeerConnection): Promise<{}>;
         wrapDataChannel(dc: RTCDataChannel): SecureDataChannel;
 
