@@ -636,7 +636,15 @@ export class Signaling {
      * Decrypt data from the peer using the session keys.
      */
     public decryptData(box: Box): ArrayBuffer {
-        return this.sessionKey.decrypt(box, this.peerSessionKey).buffer;
+        const decryptedBytes = this.sessionKey.decrypt(box, this.peerSessionKey);
+
+        // We need to return an ArrayBuffer, but we can't directly return
+        // `decryptedBytes.buffer` because the `Uint8Array` could be a view
+        // into the underlying buffer. Therefore we return a view into the
+        // ArrayBuffer instead.
+        const start = decryptedBytes.byteOffset;
+        const end = start + decryptedBytes.byteLength;
+        return decryptedBytes.buffer.slice(start, end);
     }
 
     /**

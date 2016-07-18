@@ -77,6 +77,24 @@ export default () => { describe('signaling', function() {
 
         });
 
+        describe('decrypt data', () => {
+
+            it('will decrypt data encrypted with the session key', () => {
+                const ourSessionKey = new KeyStore();
+                const peerSessionKey = new KeyStore();
+                this.sig.sessionKey = ourSessionKey;
+                this.sig.__defineGetter__('peerSessionKey', () => peerSessionKey.publicKeyBytes);
+
+                // Encrypt
+                const plain = new Uint8Array([1, 3, 3, 7]);
+                const box: Box = peerSessionKey.encrypt(plain, nacl.randomBytes(24), ourSessionKey.publicKeyBytes);
+
+                // Decrypt
+                const decrypted = this.sig.decryptData(box);
+                expect(new Uint8Array(decrypted)).toEqual(plain);
+            });
+        });
+
     });
 
 }); }
