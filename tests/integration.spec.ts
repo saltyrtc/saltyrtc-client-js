@@ -370,12 +370,12 @@ export default () => { describe('Integration Tests', function() {
                 expect(e.data).toEqual('saluton!');
 
                 // Make sure websocket is closed by now
-                // (give it 1s time)
+                // (give it some time)
                 setTimeout(() => {
                     expect(((this.initiator.signaling as any).ws as WebSocket).readyState).toBe(WebSocket.CLOSED);
                     expect(((this.responder.signaling as any).ws as WebSocket).readyState).toBe(WebSocket.CLOSED);
                     done();
-                }, 1000);
+                }, 1200);
             };
             initiatorDc.send('bonan tagon.');
         });
