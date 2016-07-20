@@ -189,16 +189,10 @@ export class SaltyRTC implements saltyrtc.SaltyRTC {
     /**
      * Do the handover from WebSocket to WebRTC DataChannel.
      *
-     * The caller must ensure that the `RTCPeerConnection` being passed in has
-     * already finished the ICE setup (iceConnectionState == 'completed').
-     * Otherwise, the promise will be rejected.
-     *
      * Possible promise rejections errors:
      *
-     * - peer-connection-not-ready: The peer connection iceConnectionState is not 'completed'
      * - connection-error: A data channel error occured.
      * - connection-closed: The data channel was closed.
-     *
      */
     public handover(pc: RTCPeerConnection): Promise<{}> {
         return this.signaling.handover(pc);

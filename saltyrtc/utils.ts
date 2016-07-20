@@ -94,3 +94,28 @@ export function concat(...arrays: Uint8Array[]): Uint8Array {
     }
     return result;
 }
+
+
+/**
+ * Wait for a condition.
+ *
+ * @param test a function that tests whether the condition has been met.
+ * @param delay_ms wait duration between retries.
+ * @param retries number of times to retry.
+ * @param success the success callback.
+ * @param error the error callback.
+ */
+export function waitFor(test: () => boolean, delay_ms: number, retries: number, success: () => any, error: () => any) {
+    // If condition is not yet met, decrease number of retries and retry
+    if (test() === false) {
+        if (retries === 1) { // This is the last retry
+            error();
+        } else {
+            setTimeout(() => waitFor(test, delay_ms, retries - 1, success, error), delay_ms);
+        }
+        return;
+    }
+
+    // Otherwise, run success callback.
+    success();
+}

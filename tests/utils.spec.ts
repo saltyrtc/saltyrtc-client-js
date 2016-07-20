@@ -1,6 +1,6 @@
 /// <reference path="jasmine.d.ts" />
 
-import { u8aToHex, hexToU8a, randomString, concat, randomUint32, byteToHex } from "../saltyrtc/utils";
+import { u8aToHex, hexToU8a, randomString, concat, randomUint32, byteToHex, waitFor } from "../saltyrtc/utils";
 
 export default () => { describe('utils', function() {
 
@@ -100,6 +100,36 @@ export default () => { describe('utils', function() {
 
         it('converts 255 to 0xff', () => {
             expect(byteToHex(255)).toEqual('0xff');
+        });
+
+    });
+
+    describe('waitFor', function() {
+
+        it('retries until the condition is met', async (done) => {
+            let i = 3;
+            // To test, this condition has a side effect.
+            // It will return true the 4th time it is called.
+            const test = () => {
+                i--;
+                return i < 0;
+            }
+            waitFor(test, 20, 10, () => {
+                expect(i).toBe(-1);
+                done();
+            }, done.fail);
+        });
+
+        it('fails if the condition is not met', async (done) => {
+            let tries = 0;
+            const test = () => {
+                tries += 1;
+                return false;
+            }
+            waitFor(test, 20, 3, done.fail, () => {
+                expect(tries).toBe(3);
+                done();
+            });
         });
 
     });

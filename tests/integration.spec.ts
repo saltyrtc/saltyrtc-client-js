@@ -275,6 +275,10 @@ export default () => { describe('Integration Tests', function() {
             salty.on('data:candidate', (message: saltyrtc.messages.Data) => {
                 pc.addIceCandidate(new RTCIceCandidate(message.data));
             });
+            pc.oniceconnectionstatechange = (e: Event) => {
+                console.debug(logTag, 'ICE connection state changed to', pc.iceConnectionState);
+                console.debug(logTag, 'ICE gathering state changed to', pc.iceGatheringState);
+            }
         }
 
         function connect(salty: SaltyRTC): Promise<{}> {
@@ -364,7 +368,14 @@ export default () => { describe('Integration Tests', function() {
             initiatorDc.onmessage = (e: RTCMessageEvent) => {
                 console.log('Initiator: Received dc message!');
                 expect(e.data).toEqual('saluton!');
-                done();
+
+                // Make sure websocket is closed by now
+                // (give it some time)
+                setTimeout(() => {
+                    expect(((this.initiator.signaling as any).ws as WebSocket).readyState).toBe(WebSocket.CLOSED);
+                    expect(((this.responder.signaling as any).ws as WebSocket).readyState).toBe(WebSocket.CLOSED);
+                    done();
+                }, 1200);
             };
             initiatorDc.send('bonan tagon.');
         });
