@@ -368,7 +368,14 @@ export default () => { describe('Integration Tests', function() {
             initiatorDc.onmessage = (e: RTCMessageEvent) => {
                 console.log('Initiator: Received dc message!');
                 expect(e.data).toEqual('saluton!');
-                done();
+
+                // Make sure websocket is closed by now
+                // (give it 1s time)
+                setTimeout(() => {
+                    expect(((this.initiator.signaling as any).ws as WebSocket).readyState).toBe(WebSocket.CLOSED);
+                    expect(((this.responder.signaling as any).ws as WebSocket).readyState).toBe(WebSocket.CLOSED);
+                    done();
+                }, 1000);
             };
             initiatorDc.send('bonan tagon.');
         });

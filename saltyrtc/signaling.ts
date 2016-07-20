@@ -1176,6 +1176,8 @@ export class Signaling {
             this.dc.onopen = (ev: Event) => {
                 // Data channel is open.
                 console.info(this.logTag, 'Handover to data channel finished');
+                this.signalingChannel = 'datachannel';
+                this.client.emit({type: 'handover'});
 
                 // Now we wait until the ICE gathering is finished
                 // to close the websocket. (Otherwise the pending ICE candidates
@@ -1192,8 +1194,6 @@ export class Signaling {
                     const linger_ms = 500;
                     window.setTimeout(() => {
                         this.ws.close(CloseCode.Handover);
-                        this.signalingChannel = 'datachannel';
-                        this.client.emit({type: 'handover'});
                         resolve();
                     }, linger_ms);
                 };
