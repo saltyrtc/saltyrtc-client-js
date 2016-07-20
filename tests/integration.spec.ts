@@ -275,6 +275,10 @@ export default () => { describe('Integration Tests', function() {
             salty.on('data:candidate', (message: saltyrtc.messages.Data) => {
                 pc.addIceCandidate(new RTCIceCandidate(message.data));
             });
+            pc.oniceconnectionstatechange = (e: Event) => {
+                console.debug(logTag, 'ICE connection state changed to', pc.iceConnectionState);
+                console.debug(logTag, 'ICE gathering state changed to', pc.iceGatheringState);
+            }
         }
 
         function connect(salty: SaltyRTC): Promise<{}> {
