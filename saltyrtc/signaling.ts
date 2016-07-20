@@ -1179,26 +1179,23 @@ export class Signaling {
                 this.signalingChannel = 'datachannel';
                 this.client.emit({type: 'handover'});
 
-                // Now we wait until the ICE gathering is finished
+                // Now we wait until the peer connection is connected
                 // to close the websocket. (Otherwise the pending ICE candidates
                 // would need to be re-sent through the data channel.)
                 // If the condition is not met after all attempts, simply close the websocket anyways.
-                const retries = 16; // Number of times to re-check the state
+                const retries = 10; // Number of times to re-check the state
                 const delay_ms = 500; // Delay between tries
-                const test = () => {
-                    return (pc.iceConnectionState === 'connected' || pc.iceConnectionState == 'completed')
-                         && pc.iceGatheringState === 'complete';
-                }
+                const linger_ms = 500; // Additional delay before actually closing websocket
+                const test = () => pc.connectionState === 'connected';
                 const closeWs = () => {
                     // Let the peer connection linger for a short while, then close the websocket
-                    const linger_ms = 500;
                     window.setTimeout(() => {
                         this.ws.close(CloseCode.Handover);
                         resolve();
                     }, linger_ms);
                 };
                 waitFor(test, delay_ms, retries, closeWs, () => {
-                    console.warn(this.logTag, "ICE connection doesn't seem completely ready yet.",
+                    console.warn(this.logTag, "Peer connection doesn't seem completely ready yet.",
                                               "Closing WebSocket anyways.");
                     closeWs();
                 });

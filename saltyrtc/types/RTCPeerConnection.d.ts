@@ -231,36 +231,17 @@ interface RTCPeerConnectionErrorCallback {
   (errorInformation: DOMError): void;
 }
 
-// TODO(1)
-declare enum RTCIceGatheringState {
-  // http://dev.w3.org/2011/webrtc/editor/webrtc.html#rtcicegatheringstate-enum
-  'new',
-  'gathering',
-  'complete'
-}
+// https://www.w3.org/TR/webrtc/#rtcpeerconnectionstate-enum
+type RTCPeerConnectionState  = 'new' | 'connecting' | 'connected' | 'disconnected' | 'failed' | 'closed';
 
-// TODO(1)
-declare enum RTCIceConnectionState {
-  // http://dev.w3.org/2011/webrtc/editor/webrtc.html#idl-def-RTCIceConnectionState
-  'new',
-  'checking',
-  'connected',
-  'completed',
-  'failed',
-  'disconnected',
-  'closed'
-}
+// https://www.w3.org/TR/webrtc/#rtcicegatheringstate-enum
+type RTCIceGatheringState = 'new' | 'gathering' | 'complete';
 
-// TODO(1)
-declare enum RTCSignalingState {
-  // http://dev.w3.org/2011/webrtc/editor/webrtc.html#idl-def-RTCSignalingState
-  'stable',
-  'have-local-offer',
-  'have-remote-offer',
-  'have-local-pranswer',
-  'have-remote-pranswer',
-  'closed'
-}
+// https://www.w3.org/TR/webrtc/#rtciceconnectionstate-enum
+type RTCIceConnectionState = 'new' | 'checking' | 'connected' | 'completed' | 'failed' | 'disconnected' | 'closed';
+
+// https://www.w3.org/TR/webrtc/#rtcsignalingstate-enum
+type RTCSignalingState = 'stable' | 'have-local-offer' | 'have-remote-offer' | 'have-local-pranswer' | 'have-remote-pranswer';
 
 // This is based on the current implementation of WebRtc in Chrome; the spec is
 // a little unclear on this.
@@ -303,15 +284,16 @@ interface RTCPeerConnection {
                         failureCallback?: RTCPeerConnectionErrorCallback): void;
   localDescription: RTCSessionDescription;
   remoteDescription: RTCSessionDescription;
-  signalingState: string; // RTCSignalingState; see TODO(1)
   updateIce(configuration?: RTCConfiguration,
             constraints?: RTCMediaConstraints): void;
   addIceCandidate(candidate: RTCIceCandidate): Promise<void>;
   addIceCandidate(candidate:RTCIceCandidate,
                   successCallback:() => void,
                   failureCallback:RTCPeerConnectionErrorCallback): void;
-  iceGatheringState: string;  // RTCIceGatheringState; see TODO(1)
-  iceConnectionState: string;  // RTCIceConnectionState; see TODO(1)
+  signalingState: RTCSignalingState;
+  iceGatheringState: RTCIceGatheringState;
+  iceConnectionState: RTCIceConnectionState;
+  connectionState: RTCPeerConnectionState;
   getLocalStreams(): MediaStream[];
   getRemoteStreams(): MediaStream[];
   createDataChannel(label?: string,
