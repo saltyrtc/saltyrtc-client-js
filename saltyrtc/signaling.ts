@@ -1155,17 +1155,30 @@ export class Signaling {
 
     /**
      * Initiate the handover from WebSocket to WebRTC DataChannel.
+     *
+     * Possible promise rejections errors:
+     *
+     * - peer-connection-not-ready: The peer connection iceConnectionState is not 'completed'
+     * - connection-error: A data channel error occured.
+     * - connection-closed: The data channel was closed.
+     *
      */
     public handover(pc: RTCPeerConnection): Promise<{}> {
-        console.debug(this.logTag, 'Starting handover');
-        // TODO (https://github.com/saltyrtc/saltyrtc-meta/issues/3): Negotiate channel id
-        this.dc = pc.createDataChannel('saltyrtc', {
-            id: 0,
-            negotiated: true,
-            ordered: true,
-            protocol: this.ws.protocol,
-        });
         return new Promise((resolve, reject) => {
+            // Ensure ICE connection state is COMPLETED
+            if (pc.iceConnectionState != 'completed') {
+                reject('peer-connection-not-ready');
+                throw new Error("RTCPeerConnection iceConnectionState is not 'completed'");
+            }
+
+            console.debug(this.logTag, 'Starting handover');
+            // TODO (https://github.com/saltyrtc/saltyrtc-meta/issues/3): Negotiate channel id
+            this.dc = pc.createDataChannel('saltyrtc', {
+                id: 0,
+                negotiated: true,
+                ordered: true,
+                protocol: this.ws.protocol,
+            });
             this.dc.onopen = (ev: Event) => {
                 this.ws.close(CloseCode.Handover);
                 console.info(this.logTag, 'Handover to data channel finished');
