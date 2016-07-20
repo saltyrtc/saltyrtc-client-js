@@ -15,7 +15,7 @@ import { Cookie, CookiePair } from "./cookie";
 import { SaltyRTC } from "./client";
 import { SignalingChannelNonce, DataChannelNonce } from "./nonce";
 import { SecureDataChannel } from "./datachannel";
-import { concat, randomUint32, byteToHex, u8aToHex } from "./utils";
+import { concat, randomUint32, byteToHex, u8aToHex, waitFor } from "./utils";
 
 /**
  * Possible states for SaltyRTC connection.
@@ -1158,33 +1158,50 @@ export class Signaling {
      *
      * Possible promise rejections errors:
      *
-     * - peer-connection-not-ready: The peer connection iceConnectionState is not 'completed'
      * - connection-error: A data channel error occured.
      * - connection-closed: The data channel was closed.
-     *
      */
     public handover(pc: RTCPeerConnection): Promise<{}> {
-        return new Promise((resolve, reject) => {
-            // Ensure ICE connection state is COMPLETED
-            if (pc.iceConnectionState != 'completed') {
-                reject('peer-connection-not-ready');
-                throw new Error("RTCPeerConnection iceConnectionState is not 'completed'");
-            }
-
             console.debug(this.logTag, 'Starting handover');
-            // TODO (https://github.com/saltyrtc/saltyrtc-meta/issues/3): Negotiate channel id
-            this.dc = pc.createDataChannel('saltyrtc', {
-                id: 0,
-                negotiated: true,
-                ordered: true,
-                protocol: this.ws.protocol,
-            });
+
+        // TODO (https://github.com/saltyrtc/saltyrtc-meta/issues/3): Negotiate channel id
+        this.dc = pc.createDataChannel('saltyrtc', {
+            id: 0,
+            negotiated: true,
+            ordered: true,
+            protocol: this.ws.protocol,
+        });
+
+        return new Promise((resolve, reject) => {
             this.dc.onopen = (ev: Event) => {
-                this.ws.close(CloseCode.Handover);
+                // Data channel is open.
                 console.info(this.logTag, 'Handover to data channel finished');
-                this.signalingChannel = 'datachannel';
-                this.client.emit({type: 'handover'});
-                resolve();
+
+                // Now we wait until the ICE gathering is finished
+                // to close the websocket. (Otherwise the pending ICE candidates
+                // would need to be re-sent through the data channel.)
+                // If the condition is not met after all attempts, simply close the websocket anyways.
+                const retries = 16; // Number of times to re-check the state
+                const delay_ms = 500; // Delay between tries
+                const test = () => {
+                    return (pc.iceConnectionState === 'connected' || pc.iceConnectionState == 'completed')
+                         && pc.iceGatheringState === 'complete';
+                }
+                const closeWs = () => {
+                    // Let the peer connection linger for a short while, then close the websocket
+                    const linger_ms = 500;
+                    window.setTimeout(() => {
+                        this.ws.close(CloseCode.Handover);
+                        this.signalingChannel = 'datachannel';
+                        this.client.emit({type: 'handover'});
+                        resolve();
+                    }, linger_ms);
+                };
+                waitFor(test, delay_ms, retries, closeWs, () => {
+                    console.warn(this.logTag, "ICE connection doesn't seem completely ready yet.",
+                                              "Closing WebSocket anyways.");
+                    closeWs();
+                });
             };
             this.dc.onerror = (ev: Event) => {
                 console.error(this.logTag, 'Data channel error:', ev);
