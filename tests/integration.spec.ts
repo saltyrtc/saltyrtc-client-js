@@ -375,7 +375,7 @@ export default () => { describe('Integration Tests', function() {
                     expect(((this.initiator.signaling as any).ws as WebSocket).readyState).toBe(WebSocket.CLOSED);
                     expect(((this.responder.signaling as any).ws as WebSocket).readyState).toBe(WebSocket.CLOSED);
                     done();
-                }, 1200);
+                }, 1500);
             };
             initiatorDc.send('bonan tagon.');
         });

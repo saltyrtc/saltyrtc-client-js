@@ -5,9 +5,14 @@ import { SaltyRTC } from "../saltyrtc/client";
 import { KeyStore } from "../saltyrtc/keystore";
 
 class FakeSaltyRTC {
+    events = [];
+
     onConnected(ev) {}
     onConnectionError(ev) {}
     onConnectionClosed(ev) {}
+    emit(ev) {
+        this.events.push(ev);
+    }
 }
 
 class FakeWebSocket {
@@ -75,6 +80,15 @@ export default () => { describe('signaling', function() {
                 expect((this.sig as any).state).toEqual('ws-connecting');
             });
 
+            it('emits state-change events', () => {
+                expect(this.fakeSaltyRTC.events.length).toEqual(0);
+                this.sig.connect();
+                expect(this.fakeSaltyRTC.events).toEqual([
+                    {type: 'state-change', data: 'new'},
+                    {type: 'state-change', data: 'ws-connecting'},
+                ]);
+            });
+
         });
 
         describe('decrypt data', () => {
@@ -87,12 +101,13 @@ export default () => { describe('signaling', function() {
 
                 // Encrypt
                 const plain = new Uint8Array([1, 3, 3, 7]);
-                const box: Box = peerSessionKey.encrypt(plain, nacl.randomBytes(24), ourSessionKey.publicKeyBytes);
+                const box: saltyrtc.Box = peerSessionKey.encrypt(plain, nacl.randomBytes(24), ourSessionKey.publicKeyBytes);
 
                 // Decrypt
                 const decrypted = this.sig.decryptData(box);
                 expect(new Uint8Array(decrypted)).toEqual(plain);
             });
+
         });
 
     });
