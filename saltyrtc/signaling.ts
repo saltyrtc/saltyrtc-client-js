@@ -123,9 +123,6 @@ class Responder {
 
 /**
  * Signaling class.
- *
- * Note: This class currently assumes the side of the initiator. Responder will
- * need to be added later on.
  */
 export class Signaling {
     static SALTYRTC_WS_SUBPROTOCOL = 'saltyrtc-1.0';
@@ -148,7 +145,7 @@ export class Signaling {
     };
 
     // Connection state
-    public state: State = 'new';
+    private _state: State = 'new';
     public signalingChannel: saltyrtc.SignalingChannel = 'websocket';
 
     // Main class
@@ -203,6 +200,23 @@ export class Signaling {
             this.role = 'initiator';
             this.logTag = 'Initiator:';
         }
+    }
+
+    /**
+     * Register a signaling state change.
+     */
+    public set state(newState: saltyrtc.State) {
+        this._state = newState;
+
+        // Notify listeners
+        this.client.emit({type: 'state-change', data: newState});
+    }
+
+    /**
+     * Return current state.
+     */
+    public get state(): saltyrtc.State {
+        return this._state;
     }
 
     /**

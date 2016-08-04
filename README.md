@@ -44,6 +44,7 @@ And you can register callbacks for certain events:
 
 The following events are available:
 
+ - `state-change(saltyrtc.State)`: The signaling state changed.
  - `new-responder(responderId)`: A responder has connected. This event is only dispatched for the initiator.
  - `connected(void)`: Handshake has been completed, we're connected!
  - `handover(void)`: The handover to the data channel is done.
