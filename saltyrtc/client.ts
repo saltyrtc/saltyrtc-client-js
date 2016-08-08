@@ -8,10 +8,10 @@
 /// <reference path='saltyrtc.d.ts' />
 
 import { KeyStore, AuthToken, Box } from "./keystore";
-import { Signaling, State } from "./signaling";
+import { Signaling, InitiatorSignaling, ResponderSignaling } from "./signaling";
 import { SecureDataChannel } from "./datachannel";
 import { EventRegistry } from "./eventregistry";
-import { u8aToHex, hexToU8a } from "./utils";
+import { u8aToHex } from "./utils";
 
 
 /**
@@ -59,7 +59,7 @@ export class SaltyRTC implements saltyrtc.SaltyRTC {
      */
     public asInitiator(): SaltyRTC {
         // Initialize signaling class
-        this._signaling = new Signaling(this, this.host, this.port, this.permanentKey);
+        this._signaling = new InitiatorSignaling(this, this.host, this.port, this.permanentKey);
 
         // Return self
         return this;
@@ -73,7 +73,7 @@ export class SaltyRTC implements saltyrtc.SaltyRTC {
         const token = new AuthToken(authToken);
 
         // Initialize signaling class
-        this._signaling = new Signaling(this, this.host, this.port, this.permanentKey, initiatorPubKey, token);
+        this._signaling = new ResponderSignaling(this, this.host, this.port, this.permanentKey, initiatorPubKey, token);
 
         // Return self
         return this;
@@ -89,7 +89,7 @@ export class SaltyRTC implements saltyrtc.SaltyRTC {
     /**
      * Return the signaling state.
      */
-    public get state(): State {
+    public get state(): saltyrtc.State {
         return this.signaling.state;
     }
 
@@ -178,7 +178,7 @@ export class SaltyRTC implements saltyrtc.SaltyRTC {
         const dataMessage: saltyrtc.messages.Data = {
             type: 'data',
             data: data,
-        }
+        };
         if (dataType !== undefined) {
             dataMessage.data_type = dataType;
         }
