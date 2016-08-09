@@ -115,7 +115,7 @@ export class ResponderSignaling extends Signaling {
             const msg: saltyrtc.Message = this.decodeMessage(payload);
             switch (msg.type) {
                 case 'new-initiator':
-                    console.log(this.logTag, 'Received new-initiator');
+                    console.debug(this.logTag, 'Received new-initiator');
                     this.handleNewInitiator(msg as saltyrtc.messages.NewInitiator);
                     break;
                 default:
@@ -152,7 +152,7 @@ export class ResponderSignaling extends Signaling {
                     this.sendAuth(nonce);
                     // We're connected!
                     this.state = 'open';
-                    console.log(this.logTag, 'Peer handshake done');
+                    console.info(this.logTag, 'Peer handshake done');
                     this.client.emit({type: 'connected'}); // TODO: Can we get rid of this event?
                     break;
                 default:

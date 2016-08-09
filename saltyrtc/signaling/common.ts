@@ -245,7 +245,7 @@ export abstract class Signaling {
     };
 
     protected onMessage = (ev: MessageEvent) => {
-        console.info(this.logTag, 'New message (' + (ev.data as ArrayBuffer).byteLength + ' bytes)');
+        console.debug(this.logTag, 'New message (' + (ev.data as ArrayBuffer).byteLength + ' bytes)');
         try {
             // Parse buffer
             const box: Box = Box.fromUint8Array(new Uint8Array(ev.data), SignalingChannelNonce.TOTAL_LENGTH);
@@ -299,7 +299,7 @@ export abstract class Signaling {
                 if (msg.type !== 'server-hello') {
                     throw new ProtocolError('Expected server-hello message, but got ' + msg.type);
                 }
-                console.log(this.logTag, "Received server-hello");
+                console.debug(this.logTag, 'Received server-hello');
                 // TODO: Validate nonce
                 this.handleServerHello(msg as saltyrtc.messages.ServerHello, nonce);
                 this.sendClientHello();
@@ -312,7 +312,7 @@ export abstract class Signaling {
                 if (msg.type !== 'server-auth') {
                     throw new ProtocolError('Expected server-auth message, but got ' + msg.type);
                 }
-                console.log(this.logTag, "Received server-auth");
+                console.debug(this.logTag, "Received server-auth");
                 // TODO: Validate nonce
                 this.handleServerAuth(msg as saltyrtc.messages.ServerAuth, nonce);
             case 'done':
@@ -325,7 +325,7 @@ export abstract class Signaling {
         // Check if we're done yet
         if (this.serverHandshakeState === 'done') {
             this.state = 'peer-handshake';
-            console.log(this.logTag, 'Server handshake done');
+            console.debug(this.logTag, 'Server handshake done');
             this.initPeerHandshake();
         }
     }
@@ -364,11 +364,11 @@ export abstract class Signaling {
 
             switch (msg.type) {
                 case 'data':
-                    console.log(this.logTag, 'Received data');
+                    console.debug(this.logTag, 'Received data');
                     this.handleData(msg as saltyrtc.messages.Data);
                     break;
                 case 'restart':
-                    console.log(this.logTag, 'Received restart');
+                    console.debug(this.logTag, 'Received restart');
                     this.handleRestart(msg as saltyrtc.messages.Restart);
                     break;
                 default:
