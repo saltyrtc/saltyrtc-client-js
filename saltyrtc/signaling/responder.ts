@@ -15,7 +15,7 @@ import { Initiator } from "../peers";
 import { ProtocolError, InternalError } from "../exceptions";
 import { u8aToHex, byteToHex } from "../utils";
 import { Signaling } from "./common";
-import { decryptKeystore, decryptAuthtoken } from "./helpers";
+import { decryptKeystore } from "./helpers";
 
 export class ResponderSignaling extends Signaling {
 
@@ -136,7 +136,7 @@ export class ResponderSignaling extends Signaling {
             let msg: saltyrtc.Message;
             switch (this.initiator.handshakeState) {
                 case 'new':
-                    throw new ProtocolError('Unexpected ' + msg.type + ' message');
+                    throw new ProtocolError('Unexpected peer handshake message');
                 case 'token-sent':
                     // Expect key message
                     msg = this.decodeMessage(payload, 'key', true);

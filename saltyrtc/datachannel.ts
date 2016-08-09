@@ -8,8 +8,7 @@
 /// <reference path="types/RTCPeerConnection.d.ts" />
 /// <reference path="saltyrtc.d.ts" />
 
-import { KeyStore, Box } from "./keystore";
-import { Chunkifier, Unchunkifier } from "./chunkifier";
+import { Box } from "./keystore";
 import { Signaling } from "./signaling";
 
 
@@ -96,7 +95,7 @@ export class SecureDataChannel implements saltyrtc.SecureDataChannel {
 
         // Call original handler
         this._onmessage.bind(this.dc)(fakeEvent);
-    }
+    };
 
     // Readonly attributes
     get label(): string { return this.dc.label; }

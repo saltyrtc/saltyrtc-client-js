@@ -8,7 +8,7 @@
 /// <reference path='saltyrtc.d.ts' />
 /// <reference path='types/tweetnacl.d.ts' />
 
-import { u8aToHex, hexToU8a } from "./utils";
+import { u8aToHex } from "./utils";
 
 /**
  * A `Box` contains a nonce and encrypted data.
