@@ -34,3 +34,11 @@ export function decryptAuthtoken(box: Box, authToken: AuthToken, msgType: string
         } else { throw e; }
     }
 }
+
+
+/**
+ * Return `true` if receiver byte is a valid responder id (in the range 0x02-0xff).
+ */
+export function isResponderId(receiver: number): boolean {
+    return receiver >= 0x02 && receiver <= 0xff;
+}

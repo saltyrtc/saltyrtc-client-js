@@ -15,7 +15,7 @@ import { Initiator } from "../peers";
 import { ProtocolError, InternalError } from "../exceptions";
 import { u8aToHex, byteToHex } from "../utils";
 import { Signaling } from "./common";
-import { decryptKeystore } from "./helpers";
+import { decryptKeystore, isResponderId } from "./helpers";
 
 export class ResponderSignaling extends Signaling {
 
@@ -49,7 +49,7 @@ export class ResponderSignaling extends Signaling {
             return this.serverCsn.next();
         } else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR) {
             return this.initiator.csn.next();
-        } else if (this.isResponderId(receiver)) {
+        } else if (isResponderId(receiver)) {
             throw new ProtocolError('Responder may not send messages to other responders: ' + receiver);
         } else {
             throw new ProtocolError('Bad receiver byte: ' + receiver);
@@ -62,7 +62,7 @@ export class ResponderSignaling extends Signaling {
     protected encryptForPeer(receiver: number, messageType: string,
                              payload: Uint8Array, nonceBytes: Uint8Array): Box {
         // Validate receiver
-        if (this.isResponderId(receiver)) {
+        if (isResponderId(receiver)) {
             throw new ProtocolError('Responder may not encrypt messages for other responders: ' + receiver);
         } else if (receiver !== Signaling.SALTYRTC_ADDR_INITIATOR) {
             throw new ProtocolError('Bad receiver byte: ' + receiver);

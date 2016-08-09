@@ -14,7 +14,7 @@ import { SignalingChannelNonce } from "../nonce";
 import { Responder } from "../peers";
 import { ProtocolError, InternalError } from "../exceptions";
 import { Signaling } from "./common";
-import { decryptKeystore, decryptAuthtoken } from "./helpers";
+import { decryptKeystore, decryptAuthtoken, isResponderId } from "./helpers";
 import { byteToHex } from "../utils";
 
 export class InitiatorSignaling extends Signaling {
@@ -48,7 +48,7 @@ export class InitiatorSignaling extends Signaling {
             return this.serverCsn.next();
         } else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR) {
             throw new ProtocolError('Initiator cannot send messages to initiator');
-        } else if (this.isResponderId(receiver)) {
+        } else if (isResponderId(receiver)) {
             if (this.state === 'open') {
                 return this.responder.csn.next();
             } else if (this.responders.has(receiver)) {
@@ -69,7 +69,7 @@ export class InitiatorSignaling extends Signaling {
         // Validate receiver
         if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR) {
             throw new ProtocolError('Initiator cannot encrypt messages for initiator');
-        } else if (!this.isResponderId(receiver)) {
+        } else if (!isResponderId(receiver)) {
             throw new ProtocolError('Bad receiver byte: ' + receiver);
         }
 
@@ -132,7 +132,7 @@ export class InitiatorSignaling extends Signaling {
             }
 
         // Handle peer messages
-        } else if (this.isResponderId(nonce.source)) {
+        } else if (isResponderId(nonce.source)) {
             // Get responder instance
             const responder: Responder = this.responders.get(nonce.source);
             if (responder === null) {

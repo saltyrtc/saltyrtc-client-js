@@ -18,6 +18,7 @@ import { CombinedSequence, NextCombinedSequence } from "../csn";
 import { SecureDataChannel } from "../datachannel";
 import { ProtocolError, InternalError } from "../exceptions";
 import { concat, byteToHex } from "../utils";
+import { isResponderId } from "./helpers";
 
 const enum CloseCode {
     // Normal closing of WebSocket
@@ -454,13 +455,6 @@ export abstract class Signaling {
     protected abstract getNextCsn(receiver: number): NextCombinedSequence;
 
     /**
-     * Return `true` if receiver byte is a valid responder id (in the range 0x02-0xff).
-     */
-    protected isResponderId(receiver: number): boolean {
-        return receiver >= 0x02 && receiver <= 0xff;
-    }
-
-    /**
      * Validate destination and optionally source of nonce.
      *
      * Possible exceptions:
@@ -551,7 +545,7 @@ export abstract class Signaling {
         let box;
         if (receiver === Signaling.SALTYRTC_ADDR_SERVER) {
             box = this.encryptForServer(data, nonceBytes);
-        } else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR || this.isResponderId(receiver)) {
+        } else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR || isResponderId(receiver)) {
             box = this.encryptForPeer(receiver, message.type, data, nonceBytes);
         } else {
             throw new ProtocolError('Bad receiver byte: ' + receiver);
