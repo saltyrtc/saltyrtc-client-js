@@ -34,19 +34,3 @@ export function decryptAuthtoken(box: Box, authToken: AuthToken, msgType: string
         } else { throw e; }
     }
 }
-
-/**
- * Decode a message. Convert errors during decoding to an appropriate ProtocolError.
- */
-export function decode(decrypted: Uint8Array, msgType: saltyrtc.messages.MessageType, enforce=false): saltyrtc.Message {
-    try {
-        const expectedType = enforce ? msgType : undefined;
-        return this.decodeMessage(decrypted, expectedType);
-    } catch (e) {
-        if (e === 'bad-message') {
-            throw new ProtocolError('Received malformed ' + msgType + ' message')
-        } else if (e === 'bad-message-type') {
-            throw new ProtocolError('Received message with wrong type.');
-        }
-    }
-}

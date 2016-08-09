@@ -269,10 +269,10 @@ export abstract class Signaling {
             }
         } catch(e) {
             if (e instanceof ProtocolError) {
-                console.error(this.logTag, 'Protocol error:', (e as ProtocolError).message);
+                console.warn(this.logTag, 'Protocol error. Resetting connection.');
                 this.resetConnection(CloseCode.ProtocolError);
             } else if (e instanceof InternalError) {
-                console.error(this.logTag, 'Internal error:', (e as InternalError).message);
+                console.warn(this.logTag, 'Internal error. Resetting connection.');
                 this.resetConnection(CloseCode.InternalError);
             }
             throw e;
@@ -292,7 +292,7 @@ export abstract class Signaling {
         }
 
         // Handle message
-        const msg: saltyrtc.Message = this.decodeMessage(payload);
+        const msg: saltyrtc.Message = this.decodeMessage(payload, 'server handshake');
         switch (this.serverHandshakeState) {
             case 'new':
                 // Expect server-hello
@@ -315,6 +315,7 @@ export abstract class Signaling {
                 console.debug(this.logTag, "Received server-auth");
                 // TODO: Validate nonce
                 this.handleServerAuth(msg as saltyrtc.messages.ServerAuth, nonce);
+                break;
             case 'done':
                 throw new InternalError('Received server handshake message even though ' +
                     'server handshake state is set to \'done\'');
@@ -408,6 +409,7 @@ export abstract class Signaling {
         const packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
         console.debug(this.logTag, 'Sending client-auth');
         this.ws.send(packet);
+        this.serverHandshakeState = 'auth-sent';
     }
 
     /**
@@ -498,28 +500,23 @@ export abstract class Signaling {
     /**
      * Decode the decrypted message and validate type.
      *
-     * If the type is specified and does not match the message, throw an
-     * exception.
+     * If decoding fails, throw a `ProtocolError`.
      *
-     * Possible exceptions:
-     * - bad-message
-     * - bad-message-type
-     *
-     * TODO: Can we replace this with the `helpers.decode` implementation?
+     * If `enforce` is set to true and the actual type does not match the
+     * expected type, throw a `ProtocolError`.
      */
-    protected decodeMessage(data: Uint8Array, type?: saltyrtc.messages.MessageType): saltyrtc.Message {
+    protected decodeMessage(data: Uint8Array,expectedType: saltyrtc.messages.MessageType | string,
+                            enforce=false): saltyrtc.Message {
         // Decode
         const msg = this.msgpackDecode(data) as saltyrtc.Message;
 
-        if (typeof msg.type === 'undefined') {
-            console.error(this.logTag, 'Failed to decode msgpack data.');
-            throw 'bad-message';
+        if (msg.type === undefined) {
+            throw new ProtocolError('Malformed ' + expectedType + ' message: Failed to decode msgpack data.');
         }
 
         // Validate type
-        if (typeof type !== 'undefined' && msg.type !== type) {
-            console.error(this.logTag, 'Invalid', type, 'message, bad type:', msg);
-            throw 'bad-message-type';
+        if (enforce && expectedType !== undefined && msg.type !== expectedType) {
+            throw new ProtocolError('Invalid ' + expectedType + ' message, bad type: ' + msg);
         }
 
         return msg;
@@ -666,14 +663,12 @@ export abstract class Signaling {
     public decryptPeerMessage(box: Box): saltyrtc.Message {
         try {
             const decrypted = this.sessionKey.decrypt(box, this.getPeerSessionKey());
-            return this.decodeMessage(decrypted);
+            return this.decodeMessage(decrypted, 'peer');
         } catch(e) {
             if (e === 'decryption-failed') {
                 const nonce = SignalingChannelNonce.fromArrayBuffer(box.nonce.buffer);
                 throw new ProtocolError('Could not decrypt peer message from ' + byteToHex(nonce.source));
-            } else {
-                throw e;
-            }
+            } else { throw e; }
         }
     }
 
@@ -683,13 +678,11 @@ export abstract class Signaling {
     public decryptServerMessage(box: Box): saltyrtc.Message {
         try {
             const decrypted = this.permanentKey.decrypt(box, this.serverKey);
-            return this.decodeMessage(decrypted);
+            return this.decodeMessage(decrypted, 'server');
         } catch(e) {
             if (e === 'decryption-failed') {
                 throw new ProtocolError('Could not decrypt server message');
-            } else {
-                throw e;
-            }
+            } else { throw e; }
         }
     }
 

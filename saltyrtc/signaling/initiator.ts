@@ -14,7 +14,7 @@ import { SignalingChannelNonce } from "../nonce";
 import { Responder } from "../peers";
 import { ProtocolError, InternalError } from "../exceptions";
 import { Signaling } from "./common";
-import { decryptKeystore, decryptAuthtoken, decode } from "./helpers";
+import { decryptKeystore, decryptAuthtoken } from "./helpers";
 import { byteToHex } from "../utils";
 
 export class InitiatorSignaling extends Signaling {
@@ -121,7 +121,7 @@ export class InitiatorSignaling extends Signaling {
             // Try to decrypt data accordingly.
             payload = decryptKeystore(box, this.permanentKey, this.serverKey, 'server');
 
-            const msg: saltyrtc.Message = this.decodeMessage(payload);
+            const msg: saltyrtc.Message = this.decodeMessage(payload, 'server');
             switch (msg.type) {
                 case 'new-responder':
                     console.debug(this.logTag, 'Received new-responder');
@@ -145,7 +145,7 @@ export class InitiatorSignaling extends Signaling {
                 case 'new':
                     // Expect token message, encrypted with authentication token
                     payload = decryptAuthtoken(box, this.authToken, 'token');
-                    msg = decode(payload, 'token', true);
+                    msg = this.decodeMessage(payload, 'token', true);
                     console.debug(this.logTag, 'Received token');
                     this.handleToken(msg as saltyrtc.messages.Token, responder);
                     this.sendKey(responder);
@@ -153,7 +153,7 @@ export class InitiatorSignaling extends Signaling {
                 case 'token-received':
                     // Expect key message, encrypted with our permanent key
                     payload = decryptKeystore(box, this.permanentKey, responder.permanentKey, 'key');
-                    msg = decode(payload, 'key', true);
+                    msg = this.decodeMessage(payload, 'key', true);
                     console.debug(this.logTag, 'Received key');
                     this.handleKey(msg as saltyrtc.messages.Key, responder);
                     this.sendAuth(responder, nonce);
@@ -163,7 +163,7 @@ export class InitiatorSignaling extends Signaling {
                     // Note: The session key related to the responder is
                     // responder.keyStore, not this.sessionKey!
                     payload = decryptKeystore(box, responder.keyStore, responder.sessionKey, 'auth');
-                    msg = decode(payload, 'auth', true);
+                    msg = this.decodeMessage(payload, 'auth', true);
                     console.debug(this.logTag, 'Received auth');
                     this.handleAuth(msg as saltyrtc.messages.Auth, responder);
                     this.dropResponders();
@@ -203,6 +203,8 @@ export class InitiatorSignaling extends Signaling {
             this.client.emit({type: 'new-responder', data: id});
         }
         console.debug(this.logTag, this.responders.size, 'responders connected');
+
+        this.serverHandshakeState = 'done';
     }
 
     protected initPeerHandshake(): void {

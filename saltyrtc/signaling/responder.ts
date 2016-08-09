@@ -11,12 +11,11 @@ import { SaltyRTC } from "../client";
 import { KeyStore, AuthToken, Box } from "../keystore";
 import { SignalingChannelNonce } from "../nonce";
 import { NextCombinedSequence } from "../csn";
-import { Cookie } from "../cookie";
 import { Initiator } from "../peers";
 import { ProtocolError, InternalError } from "../exceptions";
 import { u8aToHex, byteToHex } from "../utils";
 import { Signaling } from "./common";
-import { decryptKeystore, decryptAuthtoken, decode } from "./helpers";
+import { decryptKeystore, decryptAuthtoken } from "./helpers";
 
 export class ResponderSignaling extends Signaling {
 
@@ -112,7 +111,7 @@ export class ResponderSignaling extends Signaling {
             // Try to decrypt data accordingly.
             payload = decryptKeystore(box, this.permanentKey, this.serverKey, 'server');
 
-            const msg: saltyrtc.Message = this.decodeMessage(payload);
+            const msg: saltyrtc.Message = this.decodeMessage(payload, 'server');
             switch (msg.type) {
                 case 'new-initiator':
                     console.debug(this.logTag, 'Received new-initiator');
@@ -140,14 +139,14 @@ export class ResponderSignaling extends Signaling {
                     throw new ProtocolError('Unexpected ' + msg.type + ' message');
                 case 'token-sent':
                     // Expect key message
-                    msg = decode(payload, 'key', true);
+                    msg = this.decodeMessage(payload, 'key', true);
                     this.handleKey(msg as saltyrtc.messages.Key);
                     this.sessionKey = new KeyStore();
                     this.sendKey();
                     break;
                 case 'key-sent':
                     // Expect auth message
-                    msg = decode(payload, 'auth', true);
+                    msg = this.decodeMessage(payload, 'auth', true);
                     this.handleAuth(msg as saltyrtc.messages.Auth);
                     this.sendAuth(nonce);
                     // We're connected!
@@ -190,6 +189,8 @@ export class ResponderSignaling extends Signaling {
 
         this.initiator.connected = msg.initiator_connected;
         console.debug(this.logTag, 'Initiator', this.initiator.connected ? '' : 'not', 'connected');
+
+        this.serverHandshakeState = 'done';
     }
 
     /**
