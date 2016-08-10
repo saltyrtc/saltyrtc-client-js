@@ -361,8 +361,14 @@ export abstract class Signaling {
 
         // Process peer messages
         } else {
-            msg = this.decryptPeerMessage(box);
-            // TODO: Catch problems?
+            try {
+                msg = this.decryptPeerMessage(box, false);
+            } catch (e) {
+                if (e === 'decryption-failed') {
+                    console.warn(this.logTag, 'Could not decrypt peer message from', byteToHex(nonce.source));
+                    return;
+                } else { throw e; }
+            }
 
             switch (msg.type) {
                 case 'data':
@@ -652,14 +658,17 @@ export abstract class Signaling {
     /**
      * Decrypt and decode a P2P message, encrypted with the session key.
      *
+     * When `convertErrors` is set to `true`, decryption errors will be
+     * converted to a `ProtocolError`.
+     *
      * TODO: Separate cookie / csn per data channel.
      */
-    public decryptPeerMessage(box: Box): saltyrtc.Message {
+    public decryptPeerMessage(box: Box, convertErrors=true): saltyrtc.Message {
         try {
             const decrypted = this.sessionKey.decrypt(box, this.getPeerSessionKey());
             return this.decodeMessage(decrypted, 'peer');
         } catch(e) {
-            if (e === 'decryption-failed') {
+            if (convertErrors === true && e === 'decryption-failed') {
                 const nonce = SignalingChannelNonce.fromArrayBuffer(box.nonce.buffer);
                 throw new ProtocolError('Could not decrypt peer message from ' + byteToHex(nonce.source));
             } else { throw e; }

@@ -153,10 +153,12 @@ export class SaltyRTC implements saltyrtc.SaltyRTC {
      *
      * If data message has a type other than "data", a 'bad-message-type' error
      * is thrown.
+     *
+     * If decryption fails, a 'decryption-failed' error is thrown.
      */
     public decryptSignalingData(data: ArrayBuffer): any {
         const box = Box.fromUint8Array(new Uint8Array(data), nacl.box.nonceLength);
-        const message = this.signaling.decryptPeerMessage(box);
+        const message = this.signaling.decryptPeerMessage(box, false);
         if (message.type !== 'data') {
             console.error('Data messages must have message type set to "data", not "' + message.type + '".');
             throw 'bad-message-type';
