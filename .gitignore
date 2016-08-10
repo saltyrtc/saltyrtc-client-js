@@ -9,3 +9,4 @@ saltyrtc.crt
 saltyrtc.csr
 saltyrtc.key
 saltyrtc-server-python/
+.idea/

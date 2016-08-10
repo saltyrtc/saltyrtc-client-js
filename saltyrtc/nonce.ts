@@ -15,6 +15,8 @@ export abstract class Nonce {
     protected _overflow: number;
     protected _sequenceNumber: number;
 
+    public static TOTAL_LENGTH = 24;
+
     constructor(cookie: Cookie, overflow: number, sequenceNumber: number) {
         this._cookie = cookie;
         this._overflow = overflow;
@@ -55,7 +57,7 @@ export class DataChannelNonce extends Nonce {
      * If packet is not exactly 24 bytes long, throw an exception.
      */
     public static fromArrayBuffer(packet: ArrayBuffer): DataChannelNonce {
-        if (packet.byteLength != 24) {
+        if (packet.byteLength != Nonce.TOTAL_LENGTH) {
             throw 'bad-packet-length';
         }
 
@@ -75,7 +77,7 @@ export class DataChannelNonce extends Nonce {
      * Return an ArrayBuffer containing the nonce data.
      */
     public toArrayBuffer(): ArrayBuffer {
-        const buf = new ArrayBuffer(24);
+        const buf = new ArrayBuffer(Nonce.TOTAL_LENGTH);
 
         const uint8view = new Uint8Array(buf);
         uint8view.set(this._cookie.bytes);
@@ -128,7 +130,7 @@ export class SignalingChannelNonce extends Nonce {
      * If packet is not exactly 24 bytes long, throw an exception.
      */
     public static fromArrayBuffer(packet: ArrayBuffer): SignalingChannelNonce {
-        if (packet.byteLength != 24) {
+        if (packet.byteLength != this.TOTAL_LENGTH) {
             throw 'bad-packet-length';
         }
 
@@ -149,7 +151,7 @@ export class SignalingChannelNonce extends Nonce {
      * Return an ArrayBuffer containing the signaling nonce data.
      */
     public toArrayBuffer(): ArrayBuffer {
-        const buf = new ArrayBuffer(24);
+        const buf = new ArrayBuffer(Nonce.TOTAL_LENGTH);
 
         const uint8view = new Uint8Array(buf);
         uint8view.set(this._cookie.bytes);

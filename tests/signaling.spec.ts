@@ -1,6 +1,6 @@
 /// <reference path="jasmine.d.ts" />
 
-import { Signaling, State } from "../saltyrtc/signaling";
+import { Signaling, InitiatorSignaling } from "../saltyrtc/signaling";
 import { SaltyRTC } from "../saltyrtc/client";
 import { KeyStore } from "../saltyrtc/keystore";
 
@@ -42,7 +42,7 @@ export default () => { describe('signaling', function() {
         beforeEach(() => {
             this.fakeSaltyRTC = new FakeSaltyRTC() as any as SaltyRTC;
             this.keyStore = new KeyStore();
-            this.sig = new Signaling(this.fakeSaltyRTC, '127.0.0.1', 8765, this.keyStore);
+            this.sig = new InitiatorSignaling(this.fakeSaltyRTC, '127.0.0.1', 8765, this.keyStore);
         });
 
         describe('connect', () => {
@@ -68,10 +68,10 @@ export default () => { describe('signaling', function() {
 
             it('registers error handlers', () => {
                 this.sig.connect();
-                expect((this.sig as any).ws.eventListeners['open']).toEqual([this.sig.onOpen]);
-                expect((this.sig as any).ws.eventListeners['error']).toEqual([this.sig.onError]);
-                expect((this.sig as any).ws.eventListeners['close']).toEqual([this.sig.onClose]);
-                expect((this.sig as any).ws.eventListeners['message']).toEqual([this.sig.onInitServerHandshake]);
+                expect((this.sig as any).ws.eventListeners['open']).toEqual([(this.sig as any).onOpen]);
+                expect((this.sig as any).ws.eventListeners['error']).toEqual([(this.sig as any).onError]);
+                expect((this.sig as any).ws.eventListeners['close']).toEqual([(this.sig as any).onClose]);
+                expect((this.sig as any).ws.eventListeners['message']).toEqual([(this.sig as any).onMessage]);
             });
 
             it('sets the correct state', () => {
@@ -96,8 +96,8 @@ export default () => { describe('signaling', function() {
             it('will decrypt data encrypted with the session key', () => {
                 const ourSessionKey = new KeyStore();
                 const peerSessionKey = new KeyStore();
-                this.sig.sessionKey = ourSessionKey;
-                this.sig.__defineGetter__('peerSessionKey', () => peerSessionKey.publicKeyBytes);
+                (this.sig as any).sessionKey = ourSessionKey;
+                (this.sig as any).getPeerSessionKey = () => peerSessionKey.publicKeyBytes;
 
                 // Encrypt
                 const plain = new Uint8Array([1, 3, 3, 7]);
