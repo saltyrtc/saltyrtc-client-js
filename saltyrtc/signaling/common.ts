@@ -45,7 +45,7 @@ const enum CloseCode {
  * Signaling base class.
  */
 export abstract class Signaling {
-    static SALTYRTC_WS_SUBPROTOCOL = 'saltyrtc-1.0';
+    static SALTYRTC_WS_SUBPROTOCOL = 'v0.saltyrtc.org';
     static SALTYRTC_ADDR_UNKNOWN = 0x00;
     static SALTYRTC_ADDR_SERVER = 0x00;
     static SALTYRTC_ADDR_INITIATOR = 0x01;
@@ -287,8 +287,10 @@ export abstract class Signaling {
         // Decrypt if necessary
         let payload: Uint8Array;
         if (this.serverHandshakeState === 'new') {
+            // The very first message is unencrypted
             payload = box.data;
         } else {
+            // Later, they're encrypted with our permanent key and the server key
             payload = this.permanentKey.decrypt(box, this.serverKey);
         }
 
