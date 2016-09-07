@@ -5,6 +5,7 @@ import { Signaling } from "../saltyrtc/signaling";
 import { Box } from "../saltyrtc/keystore";
 
 const NONCE_LENGTH = 4;
+const CHUNK_HEADER_LENGTH = 9;
 
 class FakeDataChannel {
     public binaryType = 'arraybuffer';
@@ -43,7 +44,7 @@ export default () => { describe('datachannel', function() {
             it('can send Uint8Arrays', () => {
                 const data = new Uint8Array([1, 2, 3, 4]);
                 this.fakeDc.send = (sending: Uint8Array) => {
-                    expect(sending.slice(NONCE_LENGTH)).toEqual(data);
+                    expect(sending.slice(NONCE_LENGTH + CHUNK_HEADER_LENGTH)).toEqual(data);
                 };
                 this.sdc.send(data);
             });
@@ -51,7 +52,7 @@ export default () => { describe('datachannel', function() {
             it('can send Uint16Arrays', () => {
                 const data = new Uint16Array([258, 772]);
                 this.fakeDc.send = (sending: Uint8Array) => {
-                    const u16arr = new Uint16Array(sending.buffer.slice(NONCE_LENGTH));
+                    const u16arr = new Uint16Array(sending.buffer.slice(NONCE_LENGTH + CHUNK_HEADER_LENGTH));
                     expect(u16arr).toEqual(data);
                 };
                 this.sdc.send(data);
@@ -60,7 +61,7 @@ export default () => { describe('datachannel', function() {
             it('can send Int32Arrays', () => {
                 const data = new Int32Array([1024, -2048]);
                 this.fakeDc.send = (sending: Uint8Array) => {
-                    const i32arr = new Int32Array(sending.buffer.slice(NONCE_LENGTH));
+                    const i32arr = new Int32Array(sending.buffer.slice(NONCE_LENGTH + CHUNK_HEADER_LENGTH));
                     expect(i32arr).toEqual(data);
                 };
                 this.sdc.send(data);
@@ -69,7 +70,7 @@ export default () => { describe('datachannel', function() {
             it('can send Float64Arrays', () => {
                 const data = new Float64Array([Math.PI, Math.E]);
                 this.fakeDc.send = (sending: Uint8Array) => {
-                    const f64arr = new Float64Array(sending.buffer.slice(NONCE_LENGTH));
+                    const f64arr = new Float64Array(sending.buffer.slice(NONCE_LENGTH + CHUNK_HEADER_LENGTH));
                     expect(f64arr).toEqual(data);
                 };
                 this.sdc.send(data);
@@ -79,7 +80,7 @@ export default () => { describe('datachannel', function() {
                 const data = new Uint8Array([1, 2, 3, 4, 5, 6]);
                 const view = new DataView(data.buffer, 2, 3);
                 this.fakeDc.send = (sending: Uint8Array) => {
-                    expect(sending.slice(NONCE_LENGTH)).toEqual(new Uint8Array([3, 4, 5]));
+                    expect(sending.slice(NONCE_LENGTH + CHUNK_HEADER_LENGTH)).toEqual(new Uint8Array([3, 4, 5]));
                 };
                 this.sdc.send(view);
             });
@@ -87,7 +88,7 @@ export default () => { describe('datachannel', function() {
             it('can send ArrayBuffers', () => {
                 const data = new Uint8Array([1, 2, 3, 4]);
                 this.fakeDc.send = (sending: Uint8Array) => {
-                    expect(sending.slice(NONCE_LENGTH)).toEqual(data);
+                    expect(sending.slice(NONCE_LENGTH + CHUNK_HEADER_LENGTH)).toEqual(data);
                 };
                 this.sdc.send(data.buffer);
             });

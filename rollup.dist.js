@@ -2,7 +2,7 @@ import babel from 'rollup-plugin-babel';
 import uglify from 'rollup-plugin-uglify';
 
 export default {
-    entry: 'build/es2015/main.js',
+    entry: 'build/es2015/saltyrtc/main.js',
     dest: 'dist/saltyrtc.min.js',
     format: 'iife',
     moduleName: 'saltyrtc',

@@ -1,0 +1,3 @@
+[submodule "libs/chunked-dc-js"]
+	path = libs/chunked-dc-js
+	url = https://github.com/saltyrtc/chunked-dc-js

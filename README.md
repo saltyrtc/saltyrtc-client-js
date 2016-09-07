@@ -55,6 +55,10 @@ The following events are available:
 
 ## Development
 
+Fetch git submodules:
+
+    $ git submodule update --init
+
 Install dependencies with npm (or alternatively install them manually):
 
     $ npm install

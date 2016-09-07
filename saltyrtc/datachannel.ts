@@ -10,6 +10,7 @@
 
 import { Box } from "./keystore";
 import { Signaling } from "./signaling";
+import { Chunker, Unchunker } from "../libs/chunked-dc-js/src/main";
 
 
 /**
@@ -19,9 +20,18 @@ import { Signaling } from "./signaling";
  */
 export class SecureDataChannel implements saltyrtc.SecureDataChannel {
     private dc: RTCDataChannel;
+
     private signaling: Signaling;
     private _onmessage: saltyrtc.MessageEventHandler;
     private logTag = 'SecureDataChannel:';
+
+    // Chunking
+    private static CHUNK_SIZE = 16000;
+    private static CHUNK_COUNT_GC = 32;
+    private static CHUNK_MAX_AGE = 60000;
+    private messageNumber = 0;
+    private chunkCount = 0;
+    private unchunker = new Unchunker();
 
     constructor(dc: RTCDataChannel, signaling: Signaling) {
         if (dc.binaryType !== 'arraybuffer') {
@@ -30,10 +40,16 @@ export class SecureDataChannel implements saltyrtc.SecureDataChannel {
         }
         this.dc = dc;
         this.signaling = signaling;
-        this.dc.onmessage = this.onEncryptedMessage;
+
+        // Incoming dc messages are sent to the unchunker
+        this.dc.onmessage = this.onChunk;
+
+        // Complete chunks are handled
+        this.unchunker.onMessage = this.onEncryptedMessage;
     }
 
     public send(data: string | Blob | ArrayBuffer | ArrayBufferView) {
+        // Validate input data
         let buffer: ArrayBuffer;
         if (typeof data === 'string') {
             throw new Error('SecureDataChannel can only handle binary data.');
@@ -60,15 +76,20 @@ export class SecureDataChannel implements saltyrtc.SecureDataChannel {
             throw new Error('Unknown data type. Please pass in an ArrayBuffer ' +
                             'or a typed array (e.g. Uint8Array).');
         }
+
+        // Encrypt data
         const box: Box = this.signaling.encryptData(buffer, this);
-        this.dc.send(box.toUint8Array());
+        const encryptedBytes: Uint8Array = box.toUint8Array();
+
+        // Split into chunks
+        const chunker = new Chunker(this.messageNumber++, encryptedBytes, SecureDataChannel.CHUNK_SIZE);
+        for (let chunk of chunker) {
+            this.dc.send(chunk);
+        }
     }
 
-    private onEncryptedMessage = (event: RTCMessageEvent) => {
-        // If _onmessage is not defined, exit immediately.
-        if (this._onmessage === undefined) {
-            return;
-        }
+    private onChunk = (event: RTCMessageEvent) => {
+        console.debug('Received chunk');
 
         // If type is not supported, exit immediately
         if (event.data instanceof Blob) {
@@ -82,15 +103,31 @@ export class SecureDataChannel implements saltyrtc.SecureDataChannel {
             return;
         }
 
-        // Event object is read-only, so we need to clone it.
+        // Register chunk
+        this.unchunker.add(event.data as ArrayBuffer, event);
+
+        // Clean up old chunks regularly
+        if (this.chunkCount++ > SecureDataChannel.CHUNK_COUNT_GC) {
+            this.unchunker.gc(SecureDataChannel.CHUNK_MAX_AGE);
+            this.chunkCount = 0;
+        }
+    };
+
+    private onEncryptedMessage = (data: Uint8Array, context: MessageEvent[]) => {
+        // If _onmessage is not defined, exit immediately.
+        if (this._onmessage === undefined) {
+            return;
+        }
+
+        // Create a new MessageEvent instance based on the context of the final chunk.
         const fakeEvent = {};
-        for (let x in event) {
+        for (let x in context[context.length - 1]) {
             fakeEvent[x] = event[x];
         }
 
         // Overwrite data with decoded data
         console.debug(this.logTag, 'Decrypt data...');
-        const box = Box.fromUint8Array(new Uint8Array(event.data), nacl.box.nonceLength);
+        const box = Box.fromUint8Array(new Uint8Array(data), nacl.box.nonceLength);
         fakeEvent['data'] = this.signaling.decryptData(box);
 
         // Call original handler
