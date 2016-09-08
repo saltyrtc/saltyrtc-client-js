@@ -120,9 +120,10 @@ export class SecureDataChannel implements saltyrtc.SecureDataChannel {
         }
 
         // Create a new MessageEvent instance based on the context of the final chunk.
+        const realEvent = context[context.length - 1];
         const fakeEvent = {};
-        for (let x in context[context.length - 1]) {
-            fakeEvent[x] = event[x];
+        for (let x in realEvent) {
+            fakeEvent[x] = realEvent[x];
         }
 
         // Overwrite data with decoded data
