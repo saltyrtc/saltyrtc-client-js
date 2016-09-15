@@ -96,6 +96,8 @@ declare namespace saltyrtc {
         permanentKeyHex: string;
         authTokenBytes: Uint8Array;
         authTokenHex: string;
+        peerPermanentKeyBytes: Uint8Array;
+        peerPermanentKeyHex: string;
 
         connect(): void;
         disconnect(): void;
