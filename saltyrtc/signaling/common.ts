@@ -246,7 +246,7 @@ export abstract class Signaling {
     };
 
     protected onMessage = (ev: MessageEvent) => {
-        console.debug(this.logTag, 'New message (' + (ev.data as ArrayBuffer).byteLength + ' bytes)');
+        console.debug(this.logTag, 'New ws message (' + (ev.data as ArrayBuffer).byteLength + ' bytes)');
         try {
             // Parse buffer
             const box: Box = Box.fromUint8Array(new Uint8Array(ev.data), SignalingChannelNonce.TOTAL_LENGTH);
@@ -757,6 +757,32 @@ export abstract class Signaling {
                 console.info(this.logTag, 'Closed DataChannel connection');
                 this.client.emit({type: 'connection-closed', data: ev});
                 reject('connection-closed');
+            };
+            this.dc.onmessage = (ev: RTCMessageEvent) => {
+                console.debug(this.logTag, 'New dc message (' + (ev.data as ArrayBuffer).byteLength + ' bytes)');
+                try {
+                    // Parse buffer
+                    const box: Box = Box.fromUint8Array(new Uint8Array(ev.data), SignalingChannelNonce.TOTAL_LENGTH);
+
+                    // Parse nonce
+                    const nonce: SignalingChannelNonce = SignalingChannelNonce.fromArrayBuffer(box.nonce.buffer);
+
+                    // Dispatch message
+                    if (this.state != 'open') {
+                        console.warn(this.logTag, 'Received dc message in', this.state, 'signaling state. Ignoring.');
+                        return;
+                    }
+                    this.onPeerMessage(box, nonce);
+                } catch(e) {
+                    if (e instanceof ProtocolError) {
+                        console.warn(this.logTag, 'Protocol error. Resetting connection.');
+                        this.resetConnection(CloseCode.ProtocolError);
+                    } else if (e instanceof InternalError) {
+                        console.warn(this.logTag, 'Internal error. Resetting connection.');
+                        this.resetConnection(CloseCode.InternalError);
+                    }
+                    throw e;
+                }
             };
         });
     }

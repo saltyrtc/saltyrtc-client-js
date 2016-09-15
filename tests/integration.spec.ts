@@ -348,7 +348,7 @@ export default () => { describe('Integration Tests', function() {
                 initiator: initiatorConn,
                 responder: responderConn,
             }
-        };
+        }
 
         it('setting up a peer connection', async (done) => {
             await setupPeerConnection.bind(this)();
@@ -449,6 +449,29 @@ export default () => { describe('Integration Tests', function() {
             safedc.send(buf);
         });
 
+
+        it('onmessage handler on data channel after handover', async (done) => {
+            // Set up peer connection
+            let connections: {
+                initiator: RTCPeerConnection,
+                responder: RTCPeerConnection,
+            } = await setupPeerConnection.bind(this)();
+
+            // Send data
+            this.responder.on('data:fondue', (msg) => {
+                expect(msg.type).toBe('data:fondue');
+                expect(msg.data).toBe('Your fondue is ready!');
+                this.responder.sendSignalingData('thanks', ['merci', 'danke', 'grazie'])
+            });
+            this.initiator.on('data:thanks', (msg) => {
+                expect(msg.type).toBe('data:thanks');
+                expect(msg.data[0]).toBe('merci');
+                expect(msg.data[1]).toBe('danke');
+                expect(msg.data[2]).toBe('grazie');
+                done();
+            });
+            this.initiator.sendSignalingData('fondue', 'Your fondue is ready!');
+        });
     });
 
 }); }
