@@ -72,7 +72,7 @@ export abstract class Signaling {
     // Main class
     protected client: SaltyRTC;
 
-    // Keys
+    // Own keys
     protected serverKey: Uint8Array = null;
     protected permanentKey: KeyStore;
     protected sessionKey: KeyStore = null;
@@ -127,6 +127,13 @@ export abstract class Signaling {
      */
     public get authTokenBytes(): Uint8Array {
         return this.authToken.keyBytes;
+    }
+
+    /**
+     * Return the auth token as Uint8Array.
+     */
+    public get peerPermanentKeyBytes(): Uint8Array {
+        return this.getPeerPermanentKey();
     }
 
     /**
@@ -587,6 +594,13 @@ export abstract class Signaling {
      * May return null if peer is not yet set.
      */
     protected abstract getPeerSessionKey(): Uint8Array;
+
+    /**
+     * Get the permanent key of the peer.
+     *
+     * May return null if peer is not yet set.
+     */
+    protected abstract getPeerPermanentKey(): Uint8Array;
 
     /**
      * Encrypt arbitrary data for the peer using the session keys.

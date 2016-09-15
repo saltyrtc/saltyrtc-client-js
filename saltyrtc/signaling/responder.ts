@@ -96,6 +96,13 @@ export class ResponderSignaling extends Signaling {
         return null;
     }
 
+    protected getPeerPermanentKey(): Uint8Array {
+        if (this.initiator !== null) {
+            return this.initiator.permanentKey;
+        }
+        return null;
+    }
+
     protected onPeerHandshakeMessage(box: Box, nonce: SignalingChannelNonce): void {
         // Validate nonce destination
         // TODO: Can we do this earlier?

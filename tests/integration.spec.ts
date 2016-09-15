@@ -196,6 +196,14 @@ export default () => { describe('Integration Tests', function() {
             done();
         });
 
+        it('getting peer permanent key', async (done) => {
+            await this.connectBoth(this.initiator, this.responder);
+            expect(this.initiator.peerPermanentKeyBytes).toEqual(this.responder.permanentKeyBytes);
+            expect(this.responder.peerPermanentKeyBytes).toEqual(this.initiator.permanentKeyBytes);
+            expect(this.initiator.peerPermanentKeyHex).toEqual(this.responder.permanentKeyHex);
+            expect(this.responder.peerPermanentKeyHex).toEqual(this.initiator.permanentKeyHex);
+            done();
+        });
 
     });
 
@@ -418,7 +426,7 @@ export default () => { describe('Integration Tests', function() {
                     let safedc = this.initiator.wrapDataChannel(dc);
                     safedc.send(new Uint8Array([1, 1337, 9]));
                 });
-            }
+            };
             await testEncrypted();
             console.info('Encrypted test done');
 
@@ -449,7 +457,6 @@ export default () => { describe('Integration Tests', function() {
             safedc.send(buf);
         });
 
-
         it('onmessage handler on data channel after handover', async (done) => {
             // Set up peer connection
             let connections: {
@@ -472,6 +479,7 @@ export default () => { describe('Integration Tests', function() {
             });
             this.initiator.sendSignalingData('fondue', 'Your fondue is ready!');
         });
+
     });
 
 }); }

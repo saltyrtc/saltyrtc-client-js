@@ -129,6 +129,20 @@ export class SaltyRTC implements saltyrtc.SaltyRTC {
     }
 
     /**
+     * Return the peer permanent key as Uint8Array.
+     */
+    public get peerPermanentKeyBytes(): Uint8Array {
+        return this.signaling.peerPermanentKeyBytes;
+    }
+
+    /**
+     * Return the peer permanent key as hex string.
+     */
+    public get peerPermanentKeyHex(): string {
+        return u8aToHex(this.signaling.peerPermanentKeyBytes);
+    }
+
+    /**
      * Connect to the SaltyRTC server.
      *
      * This method is asynchronous. To get notified when the connection is up
