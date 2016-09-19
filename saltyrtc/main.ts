@@ -8,6 +8,6 @@
  */
 import "../node_modules/babel-polyfill/dist/polyfill";
 
-export { SaltyRTC } from "./client";
+export { SaltyRTCBuilder } from "./client";
 export { KeyStore, Box } from "./keystore";
 export { SecureDataChannel } from "./datachannel";

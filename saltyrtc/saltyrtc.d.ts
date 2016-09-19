@@ -78,11 +78,18 @@ declare namespace saltyrtc {
         dispatchEvent(e: Event): boolean;
     }
 
-    interface SaltyRTC {
-        //constructor(permanentKey: KeyStore, host: string, port?: number);
-        asInitiator(): SaltyRTC;
-        asResponder(initiatorPubKey: Uint8Array, authToken: Uint8Array): SaltyRTC;
+    interface SaltyRTCBuilder {
+        constructor();
 
+        connectTo(host: string, port: number = 8765): SaltyRTCBuilder;
+        withKeyStore(keyStore: KeyStore): SaltyRTCBuilder;
+        initiatorInfo(initiatorPublicKey: Uint8Array, authToken: Uint8Array): SaltyRTCBuilder;
+
+        asInitiator(): SaltyRTC;
+        asResponder(): SaltyRTC;
+    }
+
+    interface SaltyRTC {
         state: State;
         signalingChannel: SignalingChannel;
 

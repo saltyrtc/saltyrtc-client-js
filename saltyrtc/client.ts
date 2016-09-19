@@ -14,11 +14,127 @@ import { EventRegistry } from "./eventregistry";
 import { u8aToHex } from "./utils";
 
 
+export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
+    private hasConnectionInfo = false;
+    private hasKeyStore = false;
+    private hasInitiatorInfo = false;
+
+    private host: string;
+    private port: number;
+    private keyStore: KeyStore;
+    private initiatorPublicKey: Uint8Array;
+    private authToken: Uint8Array;
+
+    /**
+     * Validate the SaltyRTC host. Throw an `Error` if it's invalid.
+     */
+    private validateHost(host: string): void {
+        if (host.endsWith('/')) {
+            throw new Error('SaltyRTC host may not end with a slash');
+        }
+        if (host.indexOf('//') !== -1) {
+            throw new Error('SaltyRTC host should not contain protocol');
+        }
+    }
+
+    /**
+     * Assert that a keystore has been set.
+     */
+    private requireKeyStore(): void {
+        if (!this.hasKeyStore) {
+            throw new Error("Keys not set yet. Please call .withKeyStore method first.");
+        }
+    }
+
+    /**
+     * Assert that connection info has been set.
+     */
+    private requireConnectionInfo(): void {
+        if (!this.hasConnectionInfo) {
+            throw new Error("Connection info not set yet. Please call .connectTo method first.");
+        }
+    }
+
+    /**
+     * Assert that initiator info has been set.
+     */
+    private requireInitiatorInfo(): void {
+        if (!this.hasInitiatorInfo) {
+            throw new Error("Initiator info not set yet. Please call .initiatorInfo method first.");
+        }
+    }
+
+    /**
+     * Set SaltyRTC signalling server connection info.
+     *
+     * @param host The SaltyRTC server host.
+     * @param port The SaltyRTC server port. Default 8765.
+     * @throws Error if the host string is invalid.
+     */
+    public connectTo(host: string, port: number = 8765): SaltyRTCBuilder {
+        this.validateHost(host);
+        this.host = host;
+        this.port = port;
+        this.hasConnectionInfo = true;
+        return this;
+    }
+
+    /**
+     * Set the key store. This can be either a new `KeyStore` instance, or a saved one if you
+     * intend to use trusted keys.
+     *
+     * @param keyStore The KeyStore instance containing the public and private permanent key to use.
+     */
+    public withKeyStore(keyStore: KeyStore): SaltyRTCBuilder {
+        this.keyStore = keyStore;
+        this.hasKeyStore = true;
+        return this;
+    }
+
+    /**
+     * Set initiator connection info transferred via a secure data channel.
+     *
+     * @param initiatorPublicKey The public key of the initiator.
+     * @param authToken The secret auth token.
+     */
+    public initiatorInfo(initiatorPublicKey: Uint8Array, authToken: Uint8Array): SaltyRTCBuilder {
+        this.initiatorPublicKey = initiatorPublicKey;
+        this.authToken = authToken;
+        this.hasInitiatorInfo = true;
+        return this;
+    }
+
+    /**
+     * Return a SaltyRTC instance configured as initiator.
+     * @throws Error if key or connection info haven't been set yet.
+     * @returns {SaltyRTC}
+     */
+    public asInitiator(): SaltyRTC {
+        this.requireConnectionInfo();
+        this.requireKeyStore();
+        return new SaltyRTC(this.keyStore, this.host, this.port)
+            .asInitiator();
+    }
+
+    /**
+     * Return a SaltyRTC instance configured as responder.
+     * @throws Error if key or connection info or initiator info haven't been set yet.
+     * @returns {SaltyRTC}
+     */
+    public asResponder(): SaltyRTC {
+        this.requireConnectionInfo();
+        this.requireKeyStore();
+        this.requireInitiatorInfo();
+        return new SaltyRTC(this.keyStore, this.host, this.port)
+            .asResponder(this.initiatorPublicKey, this.authToken);
+    }
+}
+
 /**
  * The main class used to create a P2P connection through a SaltyRTC signaling
  * server.
  */
-export class SaltyRTC implements saltyrtc.SaltyRTC {
+class SaltyRTC implements saltyrtc.SaltyRTC {
     private host: string;
     private port: number;
     private permanentKey: KeyStore;
@@ -28,21 +144,13 @@ export class SaltyRTC implements saltyrtc.SaltyRTC {
     /**
      * Create a new SaltyRTC instance.
      */
-    constructor(permanentKey: KeyStore, host: string, port: number = 8765) {
+    constructor(permanentKey: KeyStore, host: string, port: number) {
         // Validate arguments
         if (permanentKey === undefined) {
             throw new Error('SaltyRTC must be initialized with a permanent key');
         }
         if (host === undefined) {
             throw new Error('SaltyRTC must be initialized with a target host');
-        }
-
-        // Validate data
-        if (host.endsWith('/')) {
-            throw new Error('SaltyRTC host may not end with a slash');
-        }
-        if (host.indexOf('//') !== -1) {
-            throw new Error('SaltyRTC host should not contain protocol');
         }
 
         // Store properties
