@@ -18,14 +18,16 @@ First, create a keypair:
 
     let permanentKey = new saltyrtc.KeyStore();
 
-Then, create a SaltyRTC instance:
+Then, create a SaltyRTCBuilder instance:
 
-    let salty = new saltyrtc.SaltyRTC(permanentKey, saltyrtcHost, saltyrtcPort)
+    let builder = new saltyrtc.SaltyRTCBuilder()
+        .connectTo(saltyrtcHost, saltyrtcPort)
+        .withKeyStore(permanentKey);
 
 Depending on whether you're the initiator or the responder, initialize the SaltyRTC instance:
 
-    let initiator = salty.asInitiator();
-    let responder = salty.asResponder(permanentKey.publicKeyBytes, initiator.authTokenBytes);
+    let initiator = builder.asInitiator();
+    let responder = builder.initiatorInfo(permanentKey.publicKeyBytes, initiator.authTokenBytes).asResponder();
 
 Now you can connect both sides:
 

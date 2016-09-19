@@ -1,7 +1,7 @@
 /// <reference path="jasmine.d.ts" />
 
 import { sleep } from "./utils";
-import { SaltyRTC } from "../saltyrtc/client";
+import { SaltyRTCBuilder } from "../saltyrtc/client";
 import { KeyStore } from "../saltyrtc/keystore";
 
 export default () => { describe('client', function() {
@@ -19,7 +19,10 @@ export default () => { describe('client', function() {
         describe('events', function() {
 
             beforeEach(() => {
-                this.sc = new SaltyRTC(new KeyStore(), 'localhost');
+                this.sc = new SaltyRTCBuilder()
+                    .connectTo('localhost')
+                    .withKeyStore(new KeyStore())
+                    .asInitiator();
             });
 
             it('can emit events', async (done) => {

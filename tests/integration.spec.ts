@@ -8,20 +8,23 @@
 
 import { Config } from "./config";
 import { sleep } from "./utils";
-import { SaltyRTC, KeyStore } from "../saltyrtc/main";
+import { SaltyRTCBuilder, KeyStore } from "../saltyrtc/main";
 
 export default () => { describe('Integration Tests', function() {
 
     beforeEach(() => {
-        this.initiator = new SaltyRTC(new KeyStore(),
-                                      Config.SALTYRTC_HOST,
-                                      Config.SALTYRTC_PORT).asInitiator();
+        this.initiator = new SaltyRTCBuilder()
+            .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+            .withKeyStore(new KeyStore())
+            .asInitiator();
 
         let pubKey = this.initiator.permanentKeyBytes;
         let authToken = this.initiator.authTokenBytes;
-        this.responder = new SaltyRTC(new KeyStore(),
-                                      Config.SALTYRTC_HOST,
-                                      Config.SALTYRTC_PORT).asResponder(pubKey, authToken);
+        this.responder = new SaltyRTCBuilder()
+            .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+            .withKeyStore(new KeyStore())
+            .initiatorInfo(pubKey, authToken)
+            .asResponder();
 
         // Helper function. Connect both clients and resolve once they're both connected.
         this.connectBoth = (a, b) => {
@@ -145,12 +148,16 @@ export default () => { describe('Integration Tests', function() {
             // Create two responders
             const pubKey = this.initiator.permanentKeyBytes;
             const authToken = this.initiator.authTokenBytes;
-            let responder1 = new SaltyRTC(new KeyStore(),
-                                          Config.SALTYRTC_HOST,
-                                          Config.SALTYRTC_PORT).asResponder(pubKey, authToken);
-            let responder2 = new SaltyRTC(new KeyStore(),
-                                          Config.SALTYRTC_HOST,
-                                          Config.SALTYRTC_PORT).asResponder(pubKey, authToken);
+            let responder1 = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withKeyStore(new KeyStore())
+                .initiatorInfo(pubKey, authToken)
+                .asResponder();
+            let responder2 = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withKeyStore(new KeyStore())
+                .initiatorInfo(pubKey, authToken)
+                .asResponder();
             expect(responder1.state).toEqual('new');
             expect(responder2.state).toEqual('new');
 
