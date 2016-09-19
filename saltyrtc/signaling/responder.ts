@@ -7,7 +7,6 @@
 
 /// <reference path='../saltyrtc.d.ts' />
 
-import { SaltyRTC } from "../client";
 import { KeyStore, AuthToken, Box } from "../keystore";
 import { SignalingChannelNonce } from "../nonce";
 import { NextCombinedSequence } from "../csn";
@@ -27,14 +26,19 @@ export class ResponderSignaling extends Signaling {
     /**
      * Create a new responder signaling instance.
      */
-    constructor(client: SaltyRTC, host: string, port: number,
+    constructor(client: saltyrtc.SaltyRTC, host: string, port: number,
                 permanentKey: KeyStore,
                 initiatorPubKey: Uint8Array,
-                authToken: AuthToken) {
-        super(client, host, port, permanentKey);
+                authToken?: AuthToken) {
+        super(client, host, port, permanentKey, authToken === undefined ? initiatorPubKey : undefined);
         this.role = 'responder';
         this.initiator = new Initiator(initiatorPubKey);
-        this.authToken = authToken;
+        if (authToken !== undefined) {
+            this.authToken = authToken;
+        } else {
+            // If we trust the initiator, don't send a token message
+            this.initiator.handshakeState = 'token-sent';
+        }
     }
 
     /**

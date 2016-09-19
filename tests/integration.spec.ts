@@ -212,11 +212,45 @@ export default () => { describe('Integration Tests', function() {
             done();
         });
 
+        it('using trusted keys to connect', async (done) => {
+            // Generate keys
+            const oldInitiator = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withKeyStore(new KeyStore())
+                .asInitiator();
+            const oldResponder = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withKeyStore(new KeyStore())
+                .initiatorInfo(oldInitiator.permanentKeyBytes, oldInitiator.authTokenBytes)
+                .asResponder();
+            const initiatorPublicKey = oldInitiator.permanentKeyBytes;
+            const responderPublicKey = oldResponder.permanentKeyBytes;
+
+            // Create keystores from "stored" keypairs
+            const initiatorKeystore = new KeyStore(oldInitiator.keystore.keypair);
+            const responderKeystore = new KeyStore(oldResponder.keystore.keypair);
+
+            // Use trusted keys to connect
+            const initiator = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withKeyStore(initiatorKeystore)
+                .withTrustedPeerKey(responderPublicKey)
+                .asInitiator();
+            const responder = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withKeyStore(responderKeystore)
+                .withTrustedPeerKey(initiatorPublicKey)
+                .asResponder();
+
+            await this.connectBoth(initiator, responder);
+
+        });
+
     });
 
     describe('WebRTC', () => {
 
-        async function initiatorFlow(pc: RTCPeerConnection, salty: SaltyRTC): Promise<void> {
+        async function initiatorFlow(pc: RTCPeerConnection, salty: saltyrtc.SaltyRTC): Promise<void> {
             // Validate
             if (salty.state !== 'open') {
                 throw new Error('SaltyRTC instance is not connected');
@@ -242,7 +276,7 @@ export default () => { describe('Integration Tests', function() {
             console.debug('Initiator: Received answer, set remote description');
         }
 
-        async function responderFlow(pc: RTCPeerConnection, salty: SaltyRTC): Promise<void> {
+        async function responderFlow(pc: RTCPeerConnection, salty: saltyrtc.SaltyRTC): Promise<void> {
             // Validate
             if (salty.state !== 'open') {
                 throw new Error('SaltyRTC instance is not connected');
@@ -271,7 +305,7 @@ export default () => { describe('Integration Tests', function() {
         /**
          * Set up transmission and processing of ICE candidates.
          */
-        function setupIceCandidateHandling(pc: RTCPeerConnection, salty: SaltyRTC) {
+        function setupIceCandidateHandling(pc: RTCPeerConnection, salty: saltyrtc.SaltyRTC) {
             let role = (salty as any).signaling.role;
             let logTag = role.charAt(0).toUpperCase() + role.slice(1) + ':';
             console.debug(logTag, 'Setting up ICE candidate handling');
@@ -296,7 +330,7 @@ export default () => { describe('Integration Tests', function() {
             }
         }
 
-        function connect(salty: SaltyRTC): Promise<{}> {
+        function connect(salty: saltyrtc.SaltyRTC): Promise<{}> {
             return new Promise((resolve) => {
                 salty.once('connected', () => {
                     resolve();
