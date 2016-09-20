@@ -143,8 +143,8 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
         this.requireConnectionInfo();
         this.requireKeyStore();
         if (this.hasTrustedPeerKey) {
-            return new SaltyRTC(this.keyStore, this.host, this.port)
-                .asResponder(this.peerTrustedKey);
+            return new SaltyRTC(this.keyStore, this.host, this.port, this.peerTrustedKey)
+                .asResponder();
         } else {
             this.requireInitiatorInfo();
             return new SaltyRTC(this.keyStore, this.host, this.port)
@@ -207,7 +207,7 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     /**
      * Initialize SaltyRTC instance as responder.
      */
-    public asResponder(initiatorPubKey: Uint8Array, authToken?: Uint8Array): SaltyRTC {
+    public asResponder(initiatorPubKey?: Uint8Array, authToken?: Uint8Array): SaltyRTC {
         if (this.peerTrustedKey !== null) {
             // Initialize signaling class
             this._signaling = new ResponderSignaling(this, this.host, this.port, this.permanentKey, this.peerTrustedKey);
