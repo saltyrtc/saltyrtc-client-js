@@ -210,7 +210,10 @@ export class ResponderSignaling extends Signaling {
     private handleNewInitiator(msg: saltyrtc.messages.NewInitiator): void {
         // A new initiator connected.
         this.initiator.connected = true;
-        this.sendToken();
+        // Only send token if we don't trust the initiator.
+        if (this.peerTrustedKey === null) {
+            this.sendToken();
+        }
     }
 
     /**
@@ -221,7 +224,10 @@ export class ResponderSignaling extends Signaling {
      */
     protected initPeerHandshake(): void {
         if (this.initiator.connected) {
-            this.sendToken();
+            // Only send token if we don't trust the initiator.
+            if (this.peerTrustedKey === null) {
+                this.sendToken();
+            }
         }
     }
 

@@ -115,6 +115,47 @@ export class InitiatorSignaling extends Signaling {
         return null;
     }
 
+    /**
+     * Store a new responder.
+     *
+     * If we trust the responder, send our session key.
+     *
+     * @throws ProtocolError if the responder id matches our own address.
+     */
+    protected processNewResponder(responderId: number): void {
+        if (!this.responders.has(responderId)) {
+            // Check for address conflict
+            if (responderId === this.address) {
+                throw new ProtocolError('Responder id matches own address.');
+            }
+
+            // Create responder instance
+            const responder = new Responder(responderId);
+
+            // If we trust the responder...
+            if (this.peerTrustedKey !== null) {
+                // ...don't expect a token message.
+                responder.handshakeState = 'token-received';
+
+                // Set the public permanent key.
+                responder.permanentKey = this.peerTrustedKey;
+            }
+
+            // Store responder
+            this.responders.set(responderId, responder);
+
+            // Notify listeners
+            this.client.emit({type: 'new-responder', data: responderId});
+
+            // If we trust teh responder, send our session key directly.
+            if (this.peerTrustedKey !== null) {
+                this.sendKey(responder);
+            }
+        } else {
+            console.warn(this.logTag, 'Got new-responder message for an already known responder.');
+        }
+    }
+
     protected onPeerHandshakeMessage(box: Box, nonce: SignalingChannelNonce): void {
         // Validate nonce destination
         // TODO: Can we do this earlier?
@@ -161,7 +202,19 @@ export class InitiatorSignaling extends Signaling {
                     break;
                 case 'token-received':
                     // Expect key message, encrypted with our permanent key
-                    payload = decryptKeystore(box, this.permanentKey, responder.permanentKey, 'key');
+                    const peerPublicKey = this.peerTrustedKey || responder.permanentKey;
+                    try {
+                        payload = decryptKeystore(box, this.permanentKey, peerPublicKey, 'key');
+                    } catch (e) {
+                        if (e instanceof ProtocolError && this.peerTrustedKey !== null) {
+                            // Decryption failed.
+                            // We trust a responder, but this particular responder used a different key.
+                            console.debug(this.logTag, 'Decrypting key message failed.');
+                            this.dropResponder(responder.id);
+                            break;
+                        }
+                        throw e;
+                    }
                     msg = this.decodeMessage(payload, 'key', true);
                     console.debug(this.logTag, 'Received key');
                     this.handleKey(msg as saltyrtc.messages.Key, responder);
@@ -203,13 +256,7 @@ export class InitiatorSignaling extends Signaling {
         // Store responders
         this.responders = new Map<number, Responder>();
         for (let id of msg.responders) {
-            // Make sure that responder id is different from own id
-            if (id === this.address) {
-                console.error(this.logTag, 'Responder id matches own address.');
-                throw 'address-conflict';
-            }
-            this.responders.set(id, new Responder(id));
-            this.client.emit({type: 'new-responder', data: id});
+            this.processNewResponder(id);
         }
         console.debug(this.logTag, this.responders.size, 'responders connected');
 
@@ -225,15 +272,7 @@ export class InitiatorSignaling extends Signaling {
      */
     private handleNewResponder(msg: saltyrtc.messages.NewResponder): void {
         // A new responder wants to connect. Store id.
-        if (!this.responders.has(msg.id)) {
-            if (msg.id === this.address) {
-                throw new ProtocolError('Responder id matches own address.');
-            }
-            this.responders.set(msg.id, new Responder(msg.id));
-            this.client.emit({type: 'new-responder', data: msg.id});
-        } else {
-            console.warn(this.logTag, 'Got new-responder message for an already known responder.');
-        }
+        this.processNewResponder(msg.id);
     }
 
     /**
@@ -309,7 +348,6 @@ export class InitiatorSignaling extends Signaling {
         console.debug(this.logTag, 'Dropping', this.responders.size, 'other responders.');
         for (let id of this.responders.keys()) {
             this.dropResponder(id);
-            this.responders.delete(id);
         }
     }
 
@@ -325,5 +363,6 @@ export class InitiatorSignaling extends Signaling {
         const packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
         console.debug(this.logTag, 'Sending drop-responder', byteToHex(responderId));
         this.ws.send(packet);
+        this.responders.delete(responderId);
     }
 }

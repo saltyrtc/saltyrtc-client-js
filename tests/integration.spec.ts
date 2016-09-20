@@ -242,8 +242,14 @@ export default () => { describe('Integration Tests', function() {
                 .withTrustedPeerKey(initiatorPublicKey)
                 .asResponder();
 
+            expect(initiator.state).toEqual('new');
+            expect(responder.state).toEqual('new');
+
             await this.connectBoth(initiator, responder);
 
+            expect(initiator.state).toEqual('open');
+            expect(responder.state).toEqual('open');
+            done();
         });
 
     });

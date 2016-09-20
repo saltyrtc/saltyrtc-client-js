@@ -29,6 +29,11 @@ Depending on whether you're the initiator or the responder, initialize the Salty
     let initiator = builder.asInitiator();
     let responder = builder.initiatorInfo(permanentKey.publicKeyBytes, initiator.authTokenBytes).asResponder();
 
+You can also use trusted keys to connect:
+
+    let trustingInitiator = builder.withTrustedPeerKey(responderKey).asInitiator();
+    let trustingResponder = builder.withTrustedPeerKey(initiatorKey).asResponder();
+
 Now you can connect both sides:
 
     initiator.connect()
