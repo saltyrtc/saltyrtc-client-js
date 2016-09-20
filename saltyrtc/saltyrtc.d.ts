@@ -205,7 +205,7 @@ declare namespace saltyrtc.messages {
 declare namespace saltyrtc.static {
 
     interface KeyStore {
-        new(): saltyrtc.KeyStore;
+        new(publicKey?: Uint8Array, secretKey?: Uint8Array): saltyrtc.KeyStore;
     }
 
     interface SaltyRTCBuilder {

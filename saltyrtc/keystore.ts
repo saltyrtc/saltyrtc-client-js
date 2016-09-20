@@ -84,13 +84,16 @@ export class KeyStore implements saltyrtc.KeyStore {
     // The NaCl key pair
     private _keyPair: nacl.KeyPair;
 
-    constructor(keyPair?: nacl.KeyPair) {
+    constructor(publicKey?: Uint8Array, secretKey?: Uint8Array) {
         // Create new key pair if necessary
-        if (keyPair == undefined) {
+        if (publicKey === undefined || secretKey === undefined) {
             this._keyPair = nacl.box.keyPair();
             console.debug('KeyStore: New public key:', u8aToHex(this._keyPair.publicKey));
         } else {
-            this._keyPair = keyPair;
+            this._keyPair = {
+                publicKey: publicKey,
+                secretKey: secretKey,
+            };
             console.debug('KeyStore: Restored public key:', u8aToHex(this._keyPair.publicKey));
         }
     }
