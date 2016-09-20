@@ -19,7 +19,6 @@ declare namespace saltyrtc {
     }
 
     interface KeyStore {
-        //constructor();
         publicKeyHex: string;
         publicKeyBytes: Uint8Array;
         secretKeyHex: string;
@@ -203,7 +202,19 @@ declare namespace saltyrtc.messages {
 
 }
 
+declare namespace saltyrtc.static {
+
+    interface KeyStore {
+        new(): saltyrtc.KeyStore;
+    }
+
+    interface SaltyRTCBuilder {
+        new(): saltyrtc.SaltyRTCBuilder;
+    }
+
+}
+
 declare var saltyrtc: {
-    KeyStore: saltyrtc.KeyStore,
-    SaltyRTCBuilder: saltyrtc.SaltyRTCBuilder,
+    KeyStore: saltyrtc.static.KeyStore,
+    SaltyRTCBuilder: saltyrtc.static.SaltyRTCBuilder,
 };
