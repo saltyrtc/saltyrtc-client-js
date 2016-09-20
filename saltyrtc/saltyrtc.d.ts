@@ -202,3 +202,8 @@ declare namespace saltyrtc.messages {
     }
 
 }
+
+declare var saltyrtc: {
+    KeyStore: saltyrtc.KeyStore,
+    SaltyRTCBuilder: saltyrtc.SaltyRTCBuilder,
+};
