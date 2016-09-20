@@ -247,7 +247,7 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     /**
      * Return the keystore containing the personal permanent key private/public keypair.
      */
-    public get keystore(): KeyStore {
+    public get keyStore(): KeyStore {
         return this.permanentKey;
     }
 

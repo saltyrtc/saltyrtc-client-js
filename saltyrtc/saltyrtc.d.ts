@@ -92,6 +92,7 @@ declare namespace saltyrtc {
         state: State;
         signalingChannel: SignalingChannel;
 
+        keyStore: KeyStore;
         permanentKeyBytes: Uint8Array;
         permanentKeyHex: string;
         authTokenBytes: Uint8Array;
