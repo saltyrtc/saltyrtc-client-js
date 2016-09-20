@@ -81,6 +81,7 @@ declare namespace saltyrtc {
     interface SaltyRTCBuilder {
         connectTo(host: string, port: number): SaltyRTCBuilder;
         withKeyStore(keyStore: KeyStore): SaltyRTCBuilder;
+        withTrustedPeerKey(peerTrustedKey: Uint8Array): SaltyRTCBuilder;
         initiatorInfo(initiatorPublicKey: Uint8Array, authToken: Uint8Array): SaltyRTCBuilder;
 
         asInitiator(): SaltyRTC;
