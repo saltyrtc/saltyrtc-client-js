@@ -84,31 +84,43 @@ export class KeyStore implements saltyrtc.KeyStore {
     // The NaCl key pair
     private _keyPair: nacl.KeyPair;
 
-    constructor() {
-        // Create new key pair
-        this._keyPair = nacl.box.keyPair();
-        console.debug('KeyStore: Public key:', u8aToHex(this._keyPair.publicKey));
+    constructor(keyPair?: nacl.KeyPair) {
+        // Create new key pair if necessary
+        if (keyPair == undefined) {
+            this._keyPair = nacl.box.keyPair();
+            console.debug('KeyStore: New public key:', u8aToHex(this._keyPair.publicKey));
+        } else {
+            this._keyPair = keyPair;
+            console.debug('KeyStore: Restored public key:', u8aToHex(this._keyPair.publicKey));
+        }
     }
 
     /**
      * Return the public key as hex string.
      */
-    get publicKeyHex() { return u8aToHex(this._keyPair.publicKey); }
+    get publicKeyHex(): string { return u8aToHex(this._keyPair.publicKey); }
 
     /**
      * Return the public key as Uint8Array.
      */
-    get publicKeyBytes() { return this._keyPair.publicKey; }
+    get publicKeyBytes(): Uint8Array { return this._keyPair.publicKey; }
 
     /**
      * Return the secret key as hex string.
      */
-    get secretKeyHex() { return u8aToHex(this._keyPair.secretKey); }
+    get secretKeyHex(): string { return u8aToHex(this._keyPair.secretKey); }
 
     /**
      * Return the secret key as Uint8Array.
      */
-    get secretKeyBytes() { return this._keyPair.secretKey; }
+    get secretKeyBytes(): Uint8Array { return this._keyPair.secretKey; }
+
+    /**
+     * Return the full keypair.
+     */
+    get keypair(): nacl.KeyPair {
+        return this._keyPair;
+    }
 
     /**
      * Encrypt data for the peer.

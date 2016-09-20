@@ -1,8 +1,8 @@
 /// <reference path="jasmine.d.ts" />
+/// <reference path="../saltyrtc/saltyrtc.d.ts" />
 
-import { Signaling, InitiatorSignaling } from "../saltyrtc/signaling";
-import { SaltyRTC } from "../saltyrtc/client";
-import { KeyStore } from "../saltyrtc/keystore";
+import { Signaling, InitiatorSignaling, ResponderSignaling} from "../saltyrtc/signaling";
+import { KeyStore, AuthToken } from "../saltyrtc/keystore";
 
 class FakeSaltyRTC {
     events = [];
@@ -40,9 +40,45 @@ export default () => { describe('signaling', function() {
     describe('Signaling', function() {
 
         beforeEach(() => {
-            this.fakeSaltyRTC = new FakeSaltyRTC() as any as SaltyRTC;
+            this.fakeSaltyRTC = new FakeSaltyRTC() as any as saltyrtc.SaltyRTC;
             this.keyStore = new KeyStore();
             this.sig = new InitiatorSignaling(this.fakeSaltyRTC, '127.0.0.1', 8765, this.keyStore);
+        });
+
+        describe('construct', () => {
+
+            it('successfully create untrusted InitiatorSignaling instance', () => {
+                const sig = new InitiatorSignaling(this.fakeSaltyRTC, '127.0.0.1', 8765, this.keyStore);
+                expect(sig.authTokenBytes).not.toBeNull();
+                expect(sig.authTokenBytes.length).toEqual(32);
+                expect((sig as any).peerTrustedKey).toBeNull();
+            });
+
+            it('successfully create trusted InitiatorSignaling instance', () => {
+                const trustedKey = nacl.randomBytes(32);
+                const sig = new InitiatorSignaling(this.fakeSaltyRTC, '127.0.0.1', 8765, this.keyStore, trustedKey);
+                expect(sig.authTokenBytes).toBeNull();
+                expect((sig as any).peerTrustedKey).toEqual(trustedKey);
+            });
+
+            it('successfully create untrusted ResponderSignaling instance', () => {
+                const initiatorPubkey = nacl.randomBytes(32);
+                const authToken = new AuthToken();
+                const sig = new ResponderSignaling(this.fakeSaltyRTC, '127.0.0.1', 8765, this.keyStore,
+                    initiatorPubkey, authToken);
+                expect(sig.authTokenBytes).not.toBeNull();
+                expect((sig as any).initiator.handshakeState).toEqual('new');
+                expect((sig as any).peerTrustedKey).toBeNull();
+            });
+
+            it('successfully create trusted ResponderSignaling instance', () => {
+                const trustedKey = nacl.randomBytes(32);
+                const sig = new ResponderSignaling(this.fakeSaltyRTC, '127.0.0.1', 8765, this.keyStore, trustedKey);
+                expect(sig.authTokenBytes).toBeNull();
+                expect((sig as any).initiator.handshakeState).toEqual('token-sent');
+                expect((sig as any).peerTrustedKey).toEqual(trustedKey);
+            });
+
         });
 
         describe('connect', () => {

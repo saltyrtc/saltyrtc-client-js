@@ -44,6 +44,8 @@ declare namespace saltyrtc {
 
     type SignalingChannel = 'websocket' | 'datachannel';
 
+    type SignalingRole = 'initiator' | 'responder';
+
     interface SaltyRTCEvent {
         type: string;
         data?: any;
@@ -54,7 +56,6 @@ declare namespace saltyrtc {
     type MessageEventHandler = (event: RTCMessageEvent) => void;
 
     interface SecureDataChannel extends RTCDataChannel {
-        //constructor(dc: RTCDataChannel, saltyrtc: SaltyRTC);
         send(data: string | Blob | ArrayBuffer | ArrayBufferView): void;
         label: string;
         ordered: boolean;
@@ -79,9 +80,7 @@ declare namespace saltyrtc {
     }
 
     interface SaltyRTCBuilder {
-        constructor();
-
-        connectTo(host: string, port: number = 8765): SaltyRTCBuilder;
+        connectTo(host: string, port: number): SaltyRTCBuilder;
         withKeyStore(keyStore: KeyStore): SaltyRTCBuilder;
         initiatorInfo(initiatorPublicKey: Uint8Array, authToken: Uint8Array): SaltyRTCBuilder;
 

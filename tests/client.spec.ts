@@ -6,6 +6,57 @@ import { KeyStore } from "../saltyrtc/keystore";
 
 export default () => { describe('client', function() {
 
+    describe('SaltyRTCBuilder', function() {
+
+        it('can construct an untrusted initiator', () => {
+            const salty = new SaltyRTCBuilder()
+                .connectTo('localhost')
+                .withKeyStore(new KeyStore())
+                .asInitiator();
+            expect(((salty as any).signaling as any).role).toEqual('initiator');
+            expect(((salty as any).signaling as any).peerTrustedKey).toBeNull();
+        });
+
+        it('can construct a trusted initiator', () => {
+            const trustedKey = nacl.randomBytes(32);
+            const salty = new SaltyRTCBuilder()
+                .connectTo('localhost')
+                .withKeyStore(new KeyStore())
+                .withTrustedPeerKey(trustedKey)
+                .asInitiator();
+            expect(((salty as any).signaling as any).role).toEqual('initiator');
+            expect(((salty as any).signaling as any).peerTrustedKey).toEqual(trustedKey);
+        });
+
+        it('can construct an untrusted responder', () => {
+            const pubKey = nacl.randomBytes(32);
+            const authToken = nacl.randomBytes(32);
+            const salty = new SaltyRTCBuilder()
+                .connectTo('localhost')
+                .withKeyStore(new KeyStore())
+                .initiatorInfo(pubKey, authToken)
+                .asResponder();
+            expect(((salty as any).signaling as any).role).toEqual('responder');
+            expect(((salty as any).signaling as any).initiator.permanentKey).toEqual(pubKey);
+            expect(((salty as any).signaling as any).authToken.keyBytes).toEqual(authToken);
+            expect(((salty as any).signaling as any).peerTrustedKey).toBeNull();
+        });
+
+        it('can construct a trusted responder', () => {
+            const trustedKey = nacl.randomBytes(32);
+            const salty = new SaltyRTCBuilder()
+                .connectTo('localhost')
+                .withKeyStore(new KeyStore())
+                .withTrustedPeerKey(trustedKey)
+                .asResponder();
+            expect(((salty as any).signaling as any).role).toEqual('responder');
+            expect(((salty as any).signaling as any).peerTrustedKey).toEqual(trustedKey);
+            expect(((salty as any).signaling as any).initiator.permanentKey).toEqual(trustedKey);
+            expect(((salty as any).signaling as any).authToken).toBeNull();
+        });
+
+    });
+
     describe('SaltyRTC', function() {
 
         /*it('wrapDataChannel() acts as a proxy', () => {

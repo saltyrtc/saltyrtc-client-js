@@ -12,7 +12,6 @@
 
 import { KeyStore, AuthToken, Box } from "../keystore";
 import { Cookie, CookiePair } from "../cookie";
-import { SaltyRTC } from "../client";
 import { SignalingChannelNonce, DataChannelNonce } from "../nonce";
 import { CombinedSequence, NextCombinedSequence } from "../csn";
 import { SecureDataChannel } from "../datachannel";
@@ -70,16 +69,17 @@ export abstract class Signaling {
     public signalingChannel: saltyrtc.SignalingChannel = 'websocket';
 
     // Main class
-    protected client: SaltyRTC;
+    protected client: saltyrtc.SaltyRTC;
 
-    // Own keys
+    // Keys
     protected serverKey: Uint8Array = null;
     protected permanentKey: KeyStore;
     protected sessionKey: KeyStore = null;
-    protected authToken: AuthToken = new AuthToken();
+    protected authToken: AuthToken = null;
+    protected peerTrustedKey: Uint8Array = null;
 
     // Signaling
-    protected role: 'initiator' | 'responder' = null;
+    protected role: saltyrtc.SignalingRole = null;
     protected logTag: string = 'Signaling:';
     protected address: number = Signaling.SALTYRTC_ADDR_UNKNOWN;
     protected cookiePair: CookiePair = null;
@@ -88,12 +88,15 @@ export abstract class Signaling {
     /**
      * Create a new signaling instance.
      */
-    constructor(client: SaltyRTC, host: string, port: number,
-                permanentKey: KeyStore) {
+    constructor(client: saltyrtc.SaltyRTC, host: string, port: number,
+                permanentKey: KeyStore, peerTrustedKey?: Uint8Array) {
         this.client = client;
         this.permanentKey = permanentKey;
         this.host = host;
         this.port = port;
+        if (peerTrustedKey !== undefined) {
+            this.peerTrustedKey = peerTrustedKey;
+        }
     }
 
     /**
@@ -123,14 +126,17 @@ export abstract class Signaling {
     }
 
     /**
-     * Return the auth token as Uint8Array.
+     * Return the auth token as Uint8Array, or null if no auth token is initialized.
      */
     public get authTokenBytes(): Uint8Array {
-        return this.authToken.keyBytes;
+        if (this.authToken !== null) {
+            return this.authToken.keyBytes;
+        }
+        return null;
     }
 
     /**
-     * Return the auth token as Uint8Array.
+     * Return the peer permanent key as Uint8Array.
      */
     public get peerPermanentKeyBytes(): Uint8Array {
         return this.getPeerPermanentKey();

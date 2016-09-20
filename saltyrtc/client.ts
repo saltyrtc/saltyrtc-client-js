@@ -18,12 +18,14 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
     private hasConnectionInfo = false;
     private hasKeyStore = false;
     private hasInitiatorInfo = false;
+    private hasTrustedPeerKey = false;
 
     private host: string;
     private port: number;
     private keyStore: KeyStore;
     private initiatorPublicKey: Uint8Array;
     private authToken: Uint8Array;
+    private peerTrustedKey: Uint8Array;
 
     /**
      * Validate the SaltyRTC host. Throw an `Error` if it's invalid.
@@ -92,6 +94,17 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
     }
 
     /**
+     * Set the trusted public key of the peer.
+     *
+     * @param keyStore The KeyStore instance containing the public and private permanent key to use.
+     */
+    public withTrustedPeerKey(peerTrustedKey: Uint8Array): SaltyRTCBuilder {
+        this.peerTrustedKey = peerTrustedKey;
+        this.hasTrustedPeerKey = true;
+        return this;
+    }
+
+    /**
      * Set initiator connection info transferred via a secure data channel.
      *
      * @param initiatorPublicKey The public key of the initiator.
@@ -112,8 +125,13 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
     public asInitiator(): SaltyRTC {
         this.requireConnectionInfo();
         this.requireKeyStore();
-        return new SaltyRTC(this.keyStore, this.host, this.port)
-            .asInitiator();
+        if (this.hasTrustedPeerKey) {
+            return new SaltyRTC(this.keyStore, this.host, this.port, this.peerTrustedKey)
+                .asInitiator();
+        } else {
+            return new SaltyRTC(this.keyStore, this.host, this.port)
+                .asInitiator();
+        }
     }
 
     /**
@@ -124,9 +142,14 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
     public asResponder(): SaltyRTC {
         this.requireConnectionInfo();
         this.requireKeyStore();
-        this.requireInitiatorInfo();
-        return new SaltyRTC(this.keyStore, this.host, this.port)
-            .asResponder(this.initiatorPublicKey, this.authToken);
+        if (this.hasTrustedPeerKey) {
+            return new SaltyRTC(this.keyStore, this.host, this.port, this.peerTrustedKey)
+                .asResponder();
+        } else {
+            this.requireInitiatorInfo();
+            return new SaltyRTC(this.keyStore, this.host, this.port)
+                .asResponder(this.initiatorPublicKey, this.authToken);
+        }
     }
 }
 
@@ -138,13 +161,14 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     private host: string;
     private port: number;
     private permanentKey: KeyStore;
+    private peerTrustedKey: Uint8Array = null;
     private _signaling: Signaling = null;
     private eventRegistry: EventRegistry;
 
     /**
      * Create a new SaltyRTC instance.
      */
-    constructor(permanentKey: KeyStore, host: string, port: number) {
+    constructor(permanentKey: KeyStore, host: string, port: number, peerTrustedKey?: Uint8Array) {
         // Validate arguments
         if (permanentKey === undefined) {
             throw new Error('SaltyRTC must be initialized with a permanent key');
@@ -157,6 +181,9 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
         this.host = host;
         this.port = port;
         this.permanentKey = permanentKey;
+        if (peerTrustedKey !== undefined) {
+            this.peerTrustedKey = peerTrustedKey;
+        }
 
         // Create new event registry
         this.eventRegistry = new EventRegistry();
@@ -167,7 +194,11 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
      */
     public asInitiator(): SaltyRTC {
         // Initialize signaling class
-        this._signaling = new InitiatorSignaling(this, this.host, this.port, this.permanentKey);
+        if (this.peerTrustedKey !== null) {
+            this._signaling = new InitiatorSignaling(this, this.host, this.port, this.permanentKey, this.peerTrustedKey);
+        } else {
+            this._signaling = new InitiatorSignaling(this, this.host, this.port, this.permanentKey);
+        }
 
         // Return self
         return this;
@@ -176,12 +207,17 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     /**
      * Initialize SaltyRTC instance as responder.
      */
-    public asResponder(initiatorPubKey: Uint8Array, authToken: Uint8Array): SaltyRTC {
-        // Create AuthToken instance
-        const token = new AuthToken(authToken);
+    public asResponder(initiatorPubKey?: Uint8Array, authToken?: Uint8Array): SaltyRTC {
+        if (this.peerTrustedKey !== null) {
+            // Initialize signaling class
+            this._signaling = new ResponderSignaling(this, this.host, this.port, this.permanentKey, this.peerTrustedKey);
+        } else {
+            // Create AuthToken instance
+            const token = new AuthToken(authToken);
 
-        // Initialize signaling class
-        this._signaling = new ResponderSignaling(this, this.host, this.port, this.permanentKey, initiatorPubKey, token);
+            // Initialize signaling class
+            this._signaling = new ResponderSignaling(this, this.host, this.port, this.permanentKey, initiatorPubKey, token);
+        }
 
         // Return self
         return this;
@@ -206,6 +242,13 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
      */
     public get signalingChannel(): saltyrtc.SignalingChannel {
         return this.signaling.signalingChannel;
+    }
+
+    /**
+     * Return the keystore containing the personal permanent key private/public keypair.
+     */
+    public get keystore(): KeyStore {
+        return this.permanentKey;
     }
 
     /**
