@@ -11,8 +11,8 @@ import { Box, KeyStore, AuthToken } from "../keystore";
 /**
  * Decrypt a KeyStore. Convert errors during decryption to an appropriate ProtocolError.
  */
-export function decryptKeystore(box: Box, keyStore: KeyStore, otherKey: Uint8Array,
-                                  msgType?: string): Uint8Array {
+export function decryptKeystore(box: saltyrtc.Box, keyStore: KeyStore, otherKey: Uint8Array,
+                                msgType?: string): Uint8Array {
     try {
         return keyStore.decrypt(box, otherKey);
     } catch (e) {
@@ -25,7 +25,7 @@ export function decryptKeystore(box: Box, keyStore: KeyStore, otherKey: Uint8Arr
 /**
  * Decrypt an AuthToken. Convert errors during decryption to an appropriate ProtocolError.
  */
-export function decryptAuthtoken(box: Box, authToken: AuthToken, msgType: string): Uint8Array {
+export function decryptAuthtoken(box: saltyrtc.Box, authToken: AuthToken, msgType: string): Uint8Array {
     try {
         return authToken.decrypt(box);
     } catch (e) {

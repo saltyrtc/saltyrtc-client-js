@@ -128,7 +128,7 @@ export class KeyStore implements saltyrtc.KeyStore {
     /**
      * Encrypt data for the peer.
      */
-    public encrypt(bytes: Uint8Array, nonce: Uint8Array, otherKey: Uint8Array): Box {
+    public encrypt(bytes: Uint8Array, nonce: Uint8Array, otherKey: Uint8Array): saltyrtc.Box {
         const encrypted = nacl.box(bytes, nonce, otherKey, this._keyPair.secretKey);
         return new Box(nonce, encrypted, nacl.box.nonceLength);
     }
@@ -136,7 +136,7 @@ export class KeyStore implements saltyrtc.KeyStore {
     /**
      * Decrypt data from the peer.
      */
-    public decrypt(box: Box, otherKey: Uint8Array): Uint8Array {
+    public decrypt(box: saltyrtc.Box, otherKey: Uint8Array): Uint8Array {
         // Decrypt data
         const data = nacl.box.open(box.data, box.nonce, otherKey, this._keyPair.secretKey);
         if (data === false) {
@@ -178,7 +178,7 @@ export class AuthToken implements saltyrtc.AuthToken {
     /**
      * Encrypt data using the shared auth token.
      */
-    public encrypt(bytes: Uint8Array, nonce: Uint8Array): Box {
+    public encrypt(bytes: Uint8Array, nonce: Uint8Array): saltyrtc.Box {
         const encrypted = nacl.secretbox(bytes, nonce, this._authToken);
         return new Box(nonce, encrypted, nacl.secretbox.nonceLength);
     }
@@ -186,7 +186,7 @@ export class AuthToken implements saltyrtc.AuthToken {
     /**
      * Decrypt data using the shared auth token.
      */
-    public decrypt(box: Box): Uint8Array {
+    public decrypt(box: saltyrtc.Box): Uint8Array {
         const data = nacl.secretbox.open(box.data, box.nonce, this._authToken);
         if (data === false) {
             throw 'decryption-failed'

@@ -16,6 +16,7 @@ import { SignalingChannelNonce, DataChannelNonce } from "../nonce";
 import { CombinedSequence, NextCombinedSequence } from "../csn";
 import { SecureDataChannel } from "../datachannel";
 import { ProtocolError, InternalError } from "../exceptions";
+import { SignalingError, ConnectionError } from "../exceptions";
 import { concat, byteToHex } from "../utils";
 import { isResponderId } from "./helpers";
 
@@ -43,7 +44,7 @@ const enum CloseCode {
 /**
  * Signaling base class.
  */
-export abstract class Signaling {
+export abstract class Signaling implements saltyrtc.Signaling {
     static SALTYRTC_WS_SUBPROTOCOL = 'v0.saltyrtc.org';
     static SALTYRTC_ADDR_UNKNOWN = 0x00;
     static SALTYRTC_ADDR_SERVER = 0x00;
@@ -64,9 +65,12 @@ export abstract class Signaling {
     };
 
     // Connection state
-    protected _state: saltyrtc.SignalingState = 'new';
+    protected state: saltyrtc.SignalingState = 'new';
     protected serverHandshakeState: 'new' | 'hello-sent' | 'auth-sent' | 'done' = 'new';
-    public signalingChannel: saltyrtc.SignalingChannel = 'websocket';
+    public handoverState: saltyrtc.HandoverState = {
+        local: false,
+        peer: false,
+    };
 
     // Main class
     protected client: saltyrtc.SaltyRTC;
@@ -79,7 +83,8 @@ export abstract class Signaling {
     protected peerTrustedKey: Uint8Array = null;
 
     // Signaling
-    protected role: saltyrtc.SignalingRole = null;
+    public role: saltyrtc.SignalingRole = null;
+    public signalingChannel: saltyrtc.SignalingChannel = 'websocket';
     protected logTag: string = 'Signaling:';
     protected address: number = Signaling.SALTYRTC_ADDR_UNKNOWN;
     protected cookiePair: CookiePair = null;
@@ -105,7 +110,7 @@ export abstract class Signaling {
      * TODO: Regular methods would probably be better.
      */
     public setState(newState: saltyrtc.SignalingState): void {
-        this._state = newState;
+        this.state = newState;
 
         // Notify listeners
         this.client.emit({type: 'state-change', data: newState});
@@ -115,7 +120,7 @@ export abstract class Signaling {
      * Return current state.
      */
     public getState(): saltyrtc.SignalingState {
-        return this._state;
+        return this.state;
     }
 
     /**
@@ -262,7 +267,7 @@ export abstract class Signaling {
         console.debug(this.logTag, 'New ws message (' + (ev.data as ArrayBuffer).byteLength + ' bytes)');
         try {
             // Parse buffer
-            const box: Box = Box.fromUint8Array(new Uint8Array(ev.data), SignalingChannelNonce.TOTAL_LENGTH);
+            const box: saltyrtc.Box = Box.fromUint8Array(new Uint8Array(ev.data), SignalingChannelNonce.TOTAL_LENGTH);
 
             // Parse nonce
             const nonce: SignalingChannelNonce = SignalingChannelNonce.fromArrayBuffer(box.nonce.buffer);
@@ -276,7 +281,7 @@ export abstract class Signaling {
                     this.onPeerHandshakeMessage(box, nonce);
                     break;
                 case 'open':
-                    this.onPeerMessage(box, nonce);
+                    this.onSignalingMessage(box, nonce);
                     break;
                 default:
                     console.warn(this.logTag, 'Received message in', this.getState(), 'signaling state. Ignoring.');
@@ -296,7 +301,7 @@ export abstract class Signaling {
     /**
      * Handle messages received during server handshake.
      */
-    protected onServerHandshakeMessage(box: Box, nonce: SignalingChannelNonce): void {
+    protected onServerHandshakeMessage(box: saltyrtc.Box, nonce: SignalingChannelNonce): void {
         // Decrypt if necessary
         let payload: Uint8Array;
         if (this.serverHandshakeState === 'new') {
@@ -350,53 +355,63 @@ export abstract class Signaling {
     /**
      * Handle messages received during peer handshake.
      */
-    protected abstract onPeerHandshakeMessage(box: Box, nonce: SignalingChannelNonce): void;
+    protected abstract onPeerHandshakeMessage(box: saltyrtc.Box, nonce: SignalingChannelNonce): void;
 
     /**
      * Handle messages received from peer *after* the handshake is done.
-     *
-     * Note that although this method is called `onPeerMessage`, it's still
-     * possible that server messages arrive, e.g. a `send-error` message.
      */
-    protected onPeerMessage(box: Box, nonce: SignalingChannelNonce): void {
+    protected onSignalingMessage(box: saltyrtc.Box, nonce: SignalingChannelNonce): void {
         // TODO: Validate nonce?
-
-        let msg: saltyrtc.Message;
-
-        // Process server messages
+        console.debug('Message received');
         if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
-            msg = this.decryptServerMessage(box);
-            // TODO: Catch problems?
-
-            if (msg.type === 'send-error') {
-                this.handleSendError(msg as saltyrtc.messages.SendError);
-            } else {
-                console.warn(this.logTag, 'Invalid server message type:', msg.type);
-            }
-
-        // Process peer messages
+            this.onSignalingServerMessage(box);
         } else {
+            // TODO: Do we need to validate the sender id or does that happen deeper down?
+            let decrypted: Uint8Array;
             try {
-                msg = this.decryptPeerMessage(box, false);
+                decrypted = this.decryptFromPeer(box);
             } catch (e) {
                 if (e === 'decryption-failed') {
                     console.warn(this.logTag, 'Could not decrypt peer message from', byteToHex(nonce.source));
                     return;
                 } else { throw e; }
             }
+            this.onSignalingPeerMessage(decrypted);
+        }
+    }
 
-            switch (msg.type) {
-                case 'data':
-                    console.debug(this.logTag, 'Received data');
-                    this.handleData(msg as saltyrtc.messages.Data);
-                    break;
-                case 'restart':
-                    console.debug(this.logTag, 'Received restart');
-                    this.handleRestart(msg as saltyrtc.messages.Restart);
-                    break;
-                default:
-                    console.warn(this.logTag, 'Received message with invalid type from peer:', msg.type);
-            }
+    protected onSignalingServerMessage(box: saltyrtc.Box): void {
+        const msg: saltyrtc.Message = this.decryptServerMessage(box);
+        // TODO: Catch problems?
+
+        if (msg.type === 'send-error') {
+            this.handleSendError(msg as saltyrtc.messages.SendError);
+        } else {
+            console.warn(this.logTag, 'Invalid server message type:', msg.type);
+        }
+    }
+
+    /**
+     * Signaling message received from peer *after* the handshake is done.
+     *
+     * @param decrypted Decrypted bytes from the peer.
+     * @throws ProtocolError if the message is invalid.
+     */
+    public onSignalingPeerMessage(decrypted: Uint8Array): void {
+        let msg: saltyrtc.Message = this.decodeMessage(decrypted);
+
+        if (msg.type === 'close') {
+            console.debug('Received close');
+            // TODO: Handle
+        } else if (msg.type === 'data') {
+            console.debug(this.logTag, 'Received data');
+            this.handleData(msg as saltyrtc.messages.Data);
+        } else if (msg.type === 'restart') {
+            console.debug(this.logTag, 'Received restart');
+            this.handleRestart(msg as saltyrtc.messages.Restart);
+        } else {
+            // TODO: Check if message is a task message
+            console.warn(this.logTag, 'Received message with invalid type from peer:', msg.type);
         }
     }
 
@@ -519,8 +534,10 @@ export abstract class Signaling {
      *
      * If `enforce` is set to true and the actual type does not match the
      * expected type, throw a `ProtocolError`.
+     *
+     * @throws ProtocolError
      */
-    protected decodeMessage(data: Uint8Array,expectedType: saltyrtc.messages.MessageType | string,
+    protected decodeMessage(data: Uint8Array, expectedType?: saltyrtc.messages.MessageType | string,
                             enforce=false): saltyrtc.Message {
         // Decode
         const msg = this.msgpackDecode(data) as saltyrtc.Message;
@@ -565,9 +582,9 @@ export abstract class Signaling {
         // Otherwise, encrypt packet
         let box;
         if (receiver === Signaling.SALTYRTC_ADDR_SERVER) {
-            box = this.encryptForServer(data, nonceBytes);
+            box = this.encryptHandshakeDataForServer(data, nonceBytes);
         } else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR || isResponderId(receiver)) {
-            box = this.encryptForPeer(receiver, message.type, data, nonceBytes);
+            box = this.encryptHandshakeDataForPeer(receiver, message.type, data, nonceBytes);
         } else {
             throw new ProtocolError('Bad receiver byte: ' + receiver);
         }
@@ -577,15 +594,15 @@ export abstract class Signaling {
     /**
      * Encrypt data for the server.
      */
-    protected encryptForServer(payload: Uint8Array, nonceBytes: Uint8Array): Box {
+    protected encryptHandshakeDataForServer(payload: Uint8Array, nonceBytes: Uint8Array): saltyrtc.Box {
         return this.permanentKey.encrypt(payload, nonceBytes, this.serverKey);
     }
 
     /**
      * Encrypt data for the specified peer.
      */
-    protected abstract encryptForPeer(receiver: number, messageType: string,
-                                      payload: Uint8Array, nonceBytes: Uint8Array): Box;
+    protected abstract encryptHandshakeDataForPeer(receiver: number, messageType: string,
+                                                   payload: Uint8Array, nonceBytes: Uint8Array): saltyrtc.Box;
 
     /**
      * Get the address of the peer.
@@ -611,7 +628,7 @@ export abstract class Signaling {
     /**
      * Encrypt arbitrary data for the peer using the session keys.
      */
-    public encryptData(data: ArrayBuffer, sdc: SecureDataChannel): Box {
+    public encryptData(data: ArrayBuffer, sdc: SecureDataChannel): saltyrtc.Box {
         // Choose proper CSN
         let csn: NextCombinedSequence;
         try {
@@ -643,7 +660,7 @@ export abstract class Signaling {
     /**
      * Decrypt data from the peer using the session keys.
      */
-    public decryptData(box: Box): ArrayBuffer {
+    public decryptData(box: saltyrtc.Box): ArrayBuffer {
         const decryptedBytes = this.sessionKey.decrypt(box, this.getPeerSessionKey());
 
         // We need to return an ArrayBuffer, but we can't directly return
@@ -663,7 +680,7 @@ export abstract class Signaling {
      * - Set `this.status` to `new`
      * - Reset the server combined sequence
      */
-    protected resetConnection(closeCode: CloseCode = CloseCode.ClosingNormal): void {
+    public resetConnection(closeCode = CloseCode.ClosingNormal): void {
         this.setState('new');
         this.serverCsn = new CombinedSequence();
 
@@ -685,7 +702,7 @@ export abstract class Signaling {
      *
      * TODO: Separate cookie / csn per data channel.
      */
-    public decryptPeerMessage(box: Box, convertErrors=true): saltyrtc.Message {
+    public decryptPeerMessage(box: saltyrtc.Box, convertErrors=true): saltyrtc.Message {
         try {
             const decrypted = this.sessionKey.decrypt(box, this.getPeerSessionKey());
             return this.decodeMessage(decrypted, 'peer');
@@ -700,7 +717,7 @@ export abstract class Signaling {
     /**
      * Decrypt and decode a server message.
      */
-    public decryptServerMessage(box: Box): saltyrtc.Message {
+    public decryptServerMessage(box: saltyrtc.Box): saltyrtc.Message {
         try {
             const decrypted = this.permanentKey.decrypt(box, this.serverKey);
             return this.decodeMessage(decrypted, 'server');
@@ -733,6 +750,64 @@ export abstract class Signaling {
             default:
                 throw new Error('Invalid signaling channel: ' + this.signalingChannel);
         }
+    }
+
+    /**
+     * Send binary data through the signaling channel.
+     *
+     * @throws ConnectionError if message cannot be sent due to a bad signaling state.
+     */
+    private send(payload: Uint8Array): void {
+        if (['server-handshake', 'peer-handshake', 'open'].indexOf(this.state) === -1) {
+            console.error('Trying to send message, but connection state is', this.state);
+            throw new ConnectionError("Bad signaling state, cannot send message");
+        }
+
+        if (this.handoverState.local === false) {
+            this.ws.send(payload);
+        } else {
+            // TODO: Send via task
+            // this.task.sendSignalingMessage(payload)
+        }
+    }
+
+    /**
+     * Send a task message through the signaling channel.
+     * @param msg The message to be sent.
+     * @throws SignalingError
+     */
+    public sendTaskMessage(msg: saltyrtc.messages.TaskMessage): void {
+        const receiver = this.getPeerAddress();
+        if (receiver === null) {
+            throw new SignalingError(CloseCode.InternalError, 'No peer address could be found');
+        }
+        const packet = this.buildPacket(msg, receiver);
+        this.send(packet);
+    }
+
+    /**
+     * Encrypt data for the peer using the session key and the specified nonce.
+     *
+     * This method should primarily be used by tasks.
+     */
+    public encryptForPeer(data: Uint8Array, nonce: Uint8Array): saltyrtc.Box {
+        return this.sessionKey.encrypt(data, nonce, this.getPeerSessionKey());
+    }
+
+    /**
+     * Decrypt data from the peer using the session key.
+     *
+     * This method should primarily be used by tasks.
+     */
+    public decryptFromPeer(box: saltyrtc.Box): Uint8Array {
+        return this.sessionKey.decrypt(box, this.getPeerSessionKey());
+    }
+
+    /**
+     * Send a close message to the peer.
+     */
+    public sendClose(reason: number): void {
+        // TODO: Implement
     }
 
     /**
@@ -782,7 +857,7 @@ export abstract class Signaling {
                 console.debug(this.logTag, 'New dc message (' + (ev.data as ArrayBuffer).byteLength + ' bytes)');
                 try {
                     // Parse buffer
-                    const box: Box = Box.fromUint8Array(new Uint8Array(ev.data), SignalingChannelNonce.TOTAL_LENGTH);
+                    const box: saltyrtc.Box = Box.fromUint8Array(new Uint8Array(ev.data), SignalingChannelNonce.TOTAL_LENGTH);
 
                     // Parse nonce
                     const nonce: SignalingChannelNonce = SignalingChannelNonce.fromArrayBuffer(box.nonce.buffer);
@@ -792,7 +867,7 @@ export abstract class Signaling {
                         console.warn(this.logTag, 'Received dc message in', this.getState(), 'signaling state. Ignoring.');
                         return;
                     }
-                    this.onPeerMessage(box, nonce);
+                    this.onSignalingMessage(box, nonce);
                 } catch(e) {
                     if (e instanceof ProtocolError) {
                         console.warn(this.logTag, 'Protocol error. Resetting connection.');

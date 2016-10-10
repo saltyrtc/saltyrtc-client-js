@@ -7,7 +7,7 @@
 
 /// <reference path='../saltyrtc.d.ts' />
 
-import { KeyStore, Box, AuthToken } from "../keystore";
+import { KeyStore, AuthToken } from "../keystore";
 import { NextCombinedSequence } from "../csn";
 import { SignalingChannelNonce } from "../nonce";
 import { Responder } from "../peers";
@@ -66,8 +66,8 @@ export class InitiatorSignaling extends Signaling {
     /**
      * Encrypt data for the responder.
      */
-    protected encryptForPeer(receiver: number, messageType: string,
-                             payload: Uint8Array, nonceBytes: Uint8Array): Box {
+    protected encryptHandshakeDataForPeer(receiver: number, messageType: string,
+                                          payload: Uint8Array, nonceBytes: Uint8Array): saltyrtc.Box {
         // Validate receiver
         if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR) {
             throw new ProtocolError('Initiator cannot encrypt messages for initiator');
@@ -156,7 +156,7 @@ export class InitiatorSignaling extends Signaling {
         }
     }
 
-    protected onPeerHandshakeMessage(box: Box, nonce: SignalingChannelNonce): void {
+    protected onPeerHandshakeMessage(box: saltyrtc.Box, nonce: SignalingChannelNonce): void {
         // Validate nonce destination
         // TODO: Can we do this earlier?
         if (nonce.destination != this.address) {

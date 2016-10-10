@@ -43,7 +43,7 @@ InternalError.prototype.constructor = InternalError;
  *
  * It will result in the connection closing with the specified error code.
  */
-class SignalingError extends Error {
+export class SignalingError extends Error {
     public closeCode: number;
     constructor(closeCode: number, message: string) {
         super(message);
@@ -56,7 +56,7 @@ class SignalingError extends Error {
 /**
  * Errors related to the network connection state.
  */
-class ConnectionError extends Error {
+export class ConnectionError extends Error {
     constructor(message: string) {
         super(message);
         this.message = message;

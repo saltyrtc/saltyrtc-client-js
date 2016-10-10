@@ -78,7 +78,7 @@ export class SecureDataChannel implements saltyrtc.SecureDataChannel {
         }
 
         // Encrypt data
-        const box: Box = this.signaling.encryptData(buffer, this);
+        const box: saltyrtc.Box = this.signaling.encryptData(buffer, this);
         const encryptedBytes: Uint8Array = box.toUint8Array();
 
         // Split into chunks

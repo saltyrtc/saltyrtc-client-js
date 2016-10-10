@@ -9,7 +9,6 @@
 
 declare namespace saltyrtc {
 
-    import TaskMessage = saltyrtc.messages.TaskMessage;
     interface Box {
         length: number;
         data: Uint8Array;
