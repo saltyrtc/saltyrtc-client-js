@@ -240,80 +240,80 @@ declare namespace saltyrtc.messages {
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#server-hello
     interface ServerHello extends SignalingMessage {
-        type: 'server-hello',
-        key: ArrayBuffer,
+        type: 'server-hello';
+        key: ArrayBuffer;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#client-hello
     interface ClientHello extends SignalingMessage {
-        type: 'client-hello',
-        key: ArrayBuffer,
+        type: 'client-hello';
+        key: ArrayBuffer;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#client-auth
     interface ClientAuth extends SignalingMessage {
-        type: 'client-auth',
-        your_cookie: ArrayBuffer,
+        type: 'client-auth';
+        your_cookie: ArrayBuffer;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#server-auth
     interface ServerAuth extends SignalingMessage {
-        type: 'server-auth',
-        your_cookie: ArrayBuffer,
-        initiator_connected?: boolean,
-        responders?: number[],
+        type: 'server-auth';
+        your_cookie: ArrayBuffer;
+        initiator_connected?: boolean;
+        responders?: number[];
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#new-initiator
     interface NewInitiator extends SignalingMessage {
-        type: 'new-initiator',
+        type: 'new-initiator';
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#new-responder
     interface NewResponder extends SignalingMessage {
-        type: 'new-responder',
-        id: number,
+        type: 'new-responder';
+        id: number;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#drop-responder
     interface DropResponder extends SignalingMessage {
-        type: 'drop-responder',
-        id: number,
+        type: 'drop-responder';
+        id: number;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#send-error
     interface SendError extends SignalingMessage {
-        type: 'send-error',
-        hash: ArrayBuffer,
+        type: 'send-error';
+        hash: ArrayBuffer;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#token
     interface Token extends SignalingMessage {
-        type: 'token',
-        key: ArrayBuffer,
+        type: 'token';
+        key: ArrayBuffer;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#key
     interface Key extends SignalingMessage {
-        type: 'key',
-        key: ArrayBuffer,
+        type: 'key';
+        key: ArrayBuffer;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#auth
     interface Auth extends SignalingMessage {
-        type: 'auth',
-        your_cookie: ArrayBuffer,
+        type: 'auth';
+        your_cookie: ArrayBuffer;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#restart
     interface Restart extends SignalingMessage {
-        type: 'restart',
+        type: 'restart';
     }
 
     interface Data extends SignalingMessage {
-        type: 'data',
-        data_type?: string,
-        data: any,
+        type: 'data';
+        data_type?: string;
+        data: any;
     }
 
     /**
@@ -338,6 +338,6 @@ declare namespace saltyrtc.static {
 }
 
 declare var saltyrtc: {
-    KeyStore: saltyrtc.static.KeyStore,
-    SaltyRTCBuilder: saltyrtc.static.SaltyRTCBuilder,
+    KeyStore: saltyrtc.static.KeyStore;
+    SaltyRTCBuilder: saltyrtc.static.SaltyRTCBuilder;
 };
