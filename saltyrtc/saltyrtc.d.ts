@@ -9,12 +9,11 @@
 
 declare namespace saltyrtc {
 
+    import TaskMessage = saltyrtc.messages.TaskMessage;
     interface Box {
-        //constructor(nonce: Uint8Array, data: Uint8Array, nonceLength: number);
         length: number;
         data: Uint8Array;
         nonce: Uint8Array;
-        //static fromUint8Array(array: Uint8Array, nonceLength: number): Box;
         toUint8Array(): Uint8Array;
     }
 
@@ -28,7 +27,6 @@ declare namespace saltyrtc {
     }
 
     interface AuthToken {
-        //constructor(bytes?: Uint8Array);
         keyBytes: Uint8Array;
         keyHex: string;
         encrypt(bytes: Uint8Array, nonce: Uint8Array): Box;
@@ -39,7 +37,9 @@ declare namespace saltyrtc {
         type: messages.MessageType,
     }
 
-    type State = 'new' | 'ws-connecting' | 'server-handshake' | 'peer-handshake' | 'open' | 'closing' | 'closed';
+    type SignalingState = 'new' | 'ws-connecting' | 'server-handshake' | 'peer-handshake' | 'open' | 'closing' | 'closed';
+
+    type HandoverState = {local: boolean, peer: boolean};
 
     type SignalingChannel = 'websocket' | 'datachannel';
 
@@ -53,6 +53,117 @@ declare namespace saltyrtc {
     type EventHandler = (event: Event) => void;
     type SaltyEventHandler = (event: SaltyRTCEvent) => boolean | void;
     type MessageEventHandler = (event: RTCMessageEvent) => void;
+
+    interface Signaling {
+        handoverState: HandoverState;
+        role: SignalingRole;
+
+        getState(): SignalingState;
+        setState(state: SignalingState): void;
+
+        /**
+         * Send a task message through the websocket.
+         */
+        sendTaskMessage(msg: messages.TaskMessage): void;
+
+        /**
+         * Encrypt data for the peer.
+         *
+         * @param data The bytes to be encrypted.
+         * @param nonce The bytes to be used as NaCl nonce.
+         */
+        encryptForPeer(data: Uint8Array, nonce: Uint8Array): Box;
+
+        /**
+         * Decrypt data from the peer.
+         *
+         * @param box The encrypted box.
+         */
+        decryptFromPeer(box: Box): Uint8Array;
+
+        /**
+         * Handle incoming signaling messages from the peer.
+         *
+         * This method can be used by tasks to pass in messages that arrived through their signaling channel.
+         *
+         * @param decryptedBytes The decrypted message bytes.
+         */
+        onSignalingPeerMessage(decryptedBytes: Uint8Array): void;
+
+        /**
+         * Send a close message to the peer.
+         *
+         * This method may only be called once the client-to-client handshakes has been completed.
+         *
+         * Note that sending a close message does not reset the connection. To do that,
+         * `resetConnection` needs to be called explicitly.
+         *
+         * @param reason The close code.
+         */
+        sendClose(reason: number): void;
+
+        /**
+         * Close and reset the connection with the specified close code.
+         * @param reason The close code to use.
+         */
+        resetConnection(reason: number): void;
+    }
+
+    interface Task {
+        /**
+         * Initialize the task with the task data from the peer.
+         *
+         * The task should keep track internally whether it has been initialized or not.
+         *
+         * @param signaling The signaling instance.
+         * @param data The data sent by the peer in the 'auth' message.
+         */
+        init(signaling: Signaling, data: Object): void;
+
+        /**
+         * Used by the signaling class to notify task that the peer handshake is over.
+         *
+         * This is the point where the task can take over.
+         */
+        onPeerHandshakeDone(): void;
+
+        /**
+         * This method is called by SaltyRTC when a task related message
+         * arrives through the WebSocket.
+         *
+         * @param message The deserialized MessagePack message.
+         */
+        onTaskMessage(message: messages.TaskMessage): void;
+
+        /**
+         * Send bytes through the task signaling channel.
+         *
+         * This method should only be called after the handover.
+         */
+        sendSignalingMessage(payload: Uint8Array);
+
+        /**
+         * Return the task protocol name.
+         */
+        getName(): String;
+
+        /**
+         * Return the list of supported message types.
+         *
+         * Incoming mssages with this type will be passed to the task.
+         */
+        getSupportedMessageTypes(): String[];
+
+        /**
+         * Return the task data used for negotiation in the `auth` message.
+         */
+        getData(): Object;
+
+        /**
+         * This method is called by the signaling class when sending and receiving 'close' messages.
+         */
+        close(reason: number): void;
+    }
 
     interface SecureDataChannel extends RTCDataChannel {
         send(data: string | Blob | ArrayBuffer | ArrayBufferView): void;
@@ -199,6 +310,9 @@ declare namespace saltyrtc.messages {
         type: 'data',
         data_type?: string,
         data: any,
+    }
+
+    interface TaskMessage extends Message {
     }
 
 }

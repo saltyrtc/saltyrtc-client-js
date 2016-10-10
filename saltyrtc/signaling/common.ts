@@ -64,7 +64,7 @@ export abstract class Signaling {
     };
 
     // Connection state
-    protected _state: saltyrtc.State = 'new';
+    protected _state: saltyrtc.SignalingState = 'new';
     protected serverHandshakeState: 'new' | 'hello-sent' | 'auth-sent' | 'done' = 'new';
     public signalingChannel: saltyrtc.SignalingChannel = 'websocket';
 
@@ -104,7 +104,7 @@ export abstract class Signaling {
      *
      * TODO: Regular methods would probably be better.
      */
-    public setState(newState: saltyrtc.State): void {
+    public setState(newState: saltyrtc.SignalingState): void {
         this._state = newState;
 
         // Notify listeners
@@ -114,7 +114,7 @@ export abstract class Signaling {
     /**
      * Return current state.
      */
-    public getState(): saltyrtc.State {
+    public getState(): saltyrtc.SignalingState {
         return this._state;
     }
 

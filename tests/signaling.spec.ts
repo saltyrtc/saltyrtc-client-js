@@ -111,9 +111,9 @@ export default () => { describe('signaling', function() {
             });
 
             it('sets the correct state', () => {
-                expect((this.sig as any).state).toEqual('new');
+                expect((this.sig as any).getState()).toEqual('new');
                 this.sig.connect();
-                expect((this.sig as any).state).toEqual('ws-connecting');
+                expect((this.sig as any).getState()).toEqual('ws-connecting');
             });
 
             it('emits state-change events', () => {
