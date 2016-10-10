@@ -226,19 +226,15 @@ export default () => { describe('Integration Tests', function() {
             const initiatorPublicKey = oldInitiator.permanentKeyBytes;
             const responderPublicKey = oldResponder.permanentKeyBytes;
 
-            // Create keystores from "stored" keypairs
-            const initiatorKeystore = new KeyStore(oldInitiator.keystore.keypair);
-            const responderKeystore = new KeyStore(oldResponder.keystore.keypair);
-
             // Use trusted keys to connect
             const initiator = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
-                .withKeyStore(initiatorKeystore)
+                .withKeyStore(oldInitiator.keyStore)
                 .withTrustedPeerKey(responderPublicKey)
                 .asInitiator();
             const responder = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
-                .withKeyStore(responderKeystore)
+                .withKeyStore(oldResponder.keyStore)
                 .withTrustedPeerKey(initiatorPublicKey)
                 .asResponder();
 
