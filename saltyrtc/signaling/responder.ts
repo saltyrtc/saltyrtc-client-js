@@ -26,11 +26,9 @@ export class ResponderSignaling extends Signaling {
     /**
      * Create a new responder signaling instance.
      */
-    constructor(client: saltyrtc.SaltyRTC, host: string, port: number,
-                permanentKey: KeyStore,
-                initiatorPubKey: Uint8Array,
-                authToken?: AuthToken) {
-        super(client, host, port, permanentKey, authToken === undefined ? initiatorPubKey : undefined);
+    constructor(client: saltyrtc.SaltyRTC, host: string, port: number, tasks: saltyrtc.Task[],
+                permanentKey: KeyStore, initiatorPubKey: Uint8Array, authToken?: AuthToken) {
+        super(client, host, port, tasks, permanentKey, authToken === undefined ? initiatorPubKey : undefined);
         this.role = 'responder';
         this.initiator = new Initiator(initiatorPubKey);
         if (authToken !== undefined) {

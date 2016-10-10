@@ -29,9 +29,9 @@ export class InitiatorSignaling extends Signaling {
     /**
      * Create a new initiator signaling instance.
      */
-    constructor(client: saltyrtc.SaltyRTC, host: string, port: number,
+    constructor(client: saltyrtc.SaltyRTC, host: string, port: number, tasks: saltyrtc.Task[],
                 permanentKey: KeyStore, responderTrustedKey?: Uint8Array) {
-        super(client, host, port, permanentKey, responderTrustedKey);
+        super(client, host, port, tasks, permanentKey, responderTrustedKey);
         this.role = 'initiator';
         if (responderTrustedKey === undefined) {
             this.authToken = new AuthToken();

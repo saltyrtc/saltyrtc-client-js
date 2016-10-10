@@ -4,11 +4,13 @@
 // Configure the server in `tests/config.ts`.
 
 /// <reference path="jasmine.d.ts" />
+/// <reference path="../saltyrtc/saltyrtc.d.ts" />
 /// <reference path="../saltyrtc/types/RTCPeerConnection.d.ts" />
 
 import { Config } from "./config";
 import { sleep } from "./utils";
 import { SaltyRTCBuilder, KeyStore } from "../saltyrtc/main";
+import { DummyTask } from "./testtasks";
 
 export default () => { describe('Integration Tests', function() {
 
@@ -16,7 +18,8 @@ export default () => { describe('Integration Tests', function() {
         this.initiator = new SaltyRTCBuilder()
             .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
             .withKeyStore(new KeyStore())
-            .asInitiator();
+            .usingTasks([new DummyTask()])
+            .asInitiator() as saltyrtc.SaltyRTC;
 
         let pubKey = this.initiator.permanentKeyBytes;
         let authToken = this.initiator.authTokenBytes;
@@ -24,7 +27,8 @@ export default () => { describe('Integration Tests', function() {
             .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
             .withKeyStore(new KeyStore())
             .initiatorInfo(pubKey, authToken)
-            .asResponder();
+            .usingTasks([new DummyTask()])
+            .asResponder() as saltyrtc.SaltyRTC;
 
         // Helper function. Connect both clients and resolve once they're both connected.
         this.connectBoth = (a, b) => {
@@ -152,11 +156,13 @@ export default () => { describe('Integration Tests', function() {
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
                 .withKeyStore(new KeyStore())
                 .initiatorInfo(pubKey, authToken)
+                .usingTasks([new DummyTask()])
                 .asResponder();
             let responder2 = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
                 .withKeyStore(new KeyStore())
                 .initiatorInfo(pubKey, authToken)
+                .usingTasks([new DummyTask()])
                 .asResponder();
             expect(responder1.state).toEqual('new');
             expect(responder2.state).toEqual('new');
@@ -217,11 +223,13 @@ export default () => { describe('Integration Tests', function() {
             const oldInitiator = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
                 .withKeyStore(new KeyStore())
+                .usingTasks([new DummyTask()])
                 .asInitiator();
             const oldResponder = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
                 .withKeyStore(new KeyStore())
                 .initiatorInfo(oldInitiator.permanentKeyBytes, oldInitiator.authTokenBytes)
+                .usingTasks([new DummyTask()])
                 .asResponder();
             const initiatorPublicKey = oldInitiator.permanentKeyBytes;
             const responderPublicKey = oldResponder.permanentKeyBytes;
@@ -231,11 +239,13 @@ export default () => { describe('Integration Tests', function() {
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
                 .withKeyStore(oldInitiator.keyStore)
                 .withTrustedPeerKey(responderPublicKey)
+                .usingTasks([new DummyTask()])
                 .asInitiator();
             const responder = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
                 .withKeyStore(oldResponder.keyStore)
                 .withTrustedPeerKey(initiatorPublicKey)
+                .usingTasks([new DummyTask()])
                 .asResponder();
 
             expect(initiator.state).toEqual('new');

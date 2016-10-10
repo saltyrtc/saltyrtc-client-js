@@ -75,6 +75,9 @@ export abstract class Signaling implements saltyrtc.Signaling {
     // Main class
     protected client: saltyrtc.SaltyRTC;
 
+    // Tasks
+    protected tasks: saltyrtc.Task[];
+
     // Keys
     protected serverKey: Uint8Array = null;
     protected permanentKey: KeyStore;
@@ -93,12 +96,13 @@ export abstract class Signaling implements saltyrtc.Signaling {
     /**
      * Create a new signaling instance.
      */
-    constructor(client: saltyrtc.SaltyRTC, host: string, port: number,
+    constructor(client: saltyrtc.SaltyRTC, host: string, port: number, tasks: saltyrtc.Task[],
                 permanentKey: KeyStore, peerTrustedKey?: Uint8Array) {
         this.client = client;
         this.permanentKey = permanentKey;
         this.host = host;
         this.port = port;
+        this.tasks = tasks;
         if (peerTrustedKey !== undefined) {
             this.peerTrustedKey = peerTrustedKey;
         }

@@ -3,56 +3,69 @@
 import { sleep } from "./utils";
 import { SaltyRTCBuilder } from "../saltyrtc/client";
 import { KeyStore } from "../saltyrtc/keystore";
+import { DummyTask } from "./testtasks";
 
 export default () => { describe('client', function() {
 
     describe('SaltyRTCBuilder', function() {
 
         it('can construct an untrusted initiator', () => {
+            const tasks = [new DummyTask()];
             const salty = new SaltyRTCBuilder()
                 .connectTo('localhost')
                 .withKeyStore(new KeyStore())
+                .usingTasks(tasks)
                 .asInitiator();
             expect(((salty as any).signaling as any).role).toEqual('initiator');
             expect(((salty as any).signaling as any).peerTrustedKey).toBeNull();
+            expect(((salty as any).signaling as any).tasks).toEqual(tasks);
         });
 
         it('can construct a trusted initiator', () => {
+            const tasks = [new DummyTask()];
             const trustedKey = nacl.randomBytes(32);
             const salty = new SaltyRTCBuilder()
                 .connectTo('localhost')
                 .withKeyStore(new KeyStore())
                 .withTrustedPeerKey(trustedKey)
+                .usingTasks(tasks)
                 .asInitiator();
             expect(((salty as any).signaling as any).role).toEqual('initiator');
             expect(((salty as any).signaling as any).peerTrustedKey).toEqual(trustedKey);
+            expect(((salty as any).signaling as any).tasks).toEqual(tasks);
         });
 
         it('can construct an untrusted responder', () => {
+            const tasks = [new DummyTask()];
             const pubKey = nacl.randomBytes(32);
             const authToken = nacl.randomBytes(32);
             const salty = new SaltyRTCBuilder()
                 .connectTo('localhost')
                 .withKeyStore(new KeyStore())
                 .initiatorInfo(pubKey, authToken)
+                .usingTasks(tasks)
                 .asResponder();
             expect(((salty as any).signaling as any).role).toEqual('responder');
             expect(((salty as any).signaling as any).initiator.permanentKey).toEqual(pubKey);
             expect(((salty as any).signaling as any).authToken.keyBytes).toEqual(authToken);
             expect(((salty as any).signaling as any).peerTrustedKey).toBeNull();
+            expect(((salty as any).signaling as any).tasks).toEqual(tasks);
         });
 
         it('can construct a trusted responder', () => {
+            const tasks = [new DummyTask()];
             const trustedKey = nacl.randomBytes(32);
             const salty = new SaltyRTCBuilder()
                 .connectTo('localhost')
                 .withKeyStore(new KeyStore())
                 .withTrustedPeerKey(trustedKey)
+                .usingTasks(tasks)
                 .asResponder();
             expect(((salty as any).signaling as any).role).toEqual('responder');
             expect(((salty as any).signaling as any).peerTrustedKey).toEqual(trustedKey);
             expect(((salty as any).signaling as any).initiator.permanentKey).toEqual(trustedKey);
             expect(((salty as any).signaling as any).authToken).toBeNull();
+            expect(((salty as any).signaling as any).tasks).toEqual(tasks);
         });
 
     });
@@ -73,6 +86,7 @@ export default () => { describe('client', function() {
                 this.sc = new SaltyRTCBuilder()
                     .connectTo('localhost')
                     .withKeyStore(new KeyStore())
+                    .usingTasks([new DummyTask()])
                     .asInitiator();
             });
 
