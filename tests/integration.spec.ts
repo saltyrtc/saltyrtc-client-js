@@ -10,7 +10,7 @@
 import { Config } from "./config";
 import { sleep } from "./utils";
 import { SaltyRTCBuilder, KeyStore } from "../saltyrtc/main";
-import { DummyTask } from "./testtasks";
+import { DummyTask, PingPongTask } from "./testtasks";
 
 export default () => { describe('Integration Tests', function() {
 
@@ -256,6 +256,17 @@ export default () => { describe('Integration Tests', function() {
             expect(initiator.state).toEqual('open');
             expect(responder.state).toEqual('open');
             done();
+        });
+
+    });
+
+    describe('Tasks', () => {
+
+        it('can exchange messages', async (done) => {
+            const initiatorTask = new PingPongTask();
+            const responderTask = new PingPongTask();
+
+            // TODO: Create peers & continue
         });
 
     });
