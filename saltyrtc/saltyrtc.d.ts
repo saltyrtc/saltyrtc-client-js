@@ -34,7 +34,11 @@ declare namespace saltyrtc {
     }
 
     interface Message {
-        type: messages.MessageType,
+        type: string;
+    }
+
+    interface SignalingMessage extends Message {
+        type: messages.MessageType;
     }
 
     type SignalingState = 'new' | 'ws-connecting' | 'server-handshake' | 'peer-handshake' | 'open' | 'closing' | 'closed';
@@ -200,7 +204,7 @@ declare namespace saltyrtc {
     }
 
     interface SaltyRTC {
-        state: State;
+        state: SignalingState;
         signalingChannel: SignalingChannel;
 
         keyStore: KeyStore;
@@ -235,25 +239,25 @@ declare namespace saltyrtc.messages {
                      | 'auth' | 'restart' | 'data';
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#server-hello
-    interface ServerHello extends Message {
+    interface ServerHello extends SignalingMessage {
         type: 'server-hello',
         key: ArrayBuffer,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#client-hello
-    interface ClientHello extends Message {
+    interface ClientHello extends SignalingMessage {
         type: 'client-hello',
         key: ArrayBuffer,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#client-auth
-    interface ClientAuth extends Message {
+    interface ClientAuth extends SignalingMessage {
         type: 'client-auth',
         your_cookie: ArrayBuffer,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#server-auth
-    interface ServerAuth extends Message {
+    interface ServerAuth extends SignalingMessage {
         type: 'server-auth',
         your_cookie: ArrayBuffer,
         initiator_connected?: boolean,
@@ -261,58 +265,62 @@ declare namespace saltyrtc.messages {
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#new-initiator
-    interface NewInitiator extends Message {
+    interface NewInitiator extends SignalingMessage {
         type: 'new-initiator',
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#new-responder
-    interface NewResponder extends Message {
+    interface NewResponder extends SignalingMessage {
         type: 'new-responder',
         id: number,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#drop-responder
-    interface DropResponder extends Message {
+    interface DropResponder extends SignalingMessage {
         type: 'drop-responder',
         id: number,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#send-error
-    interface SendError extends Message {
+    interface SendError extends SignalingMessage {
         type: 'send-error',
         hash: ArrayBuffer,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#token
-    interface Token extends Message {
+    interface Token extends SignalingMessage {
         type: 'token',
         key: ArrayBuffer,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#key
-    interface Key extends Message {
+    interface Key extends SignalingMessage {
         type: 'key',
         key: ArrayBuffer,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#auth
-    interface Auth extends Message {
+    interface Auth extends SignalingMessage {
         type: 'auth',
         your_cookie: ArrayBuffer,
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#restart
-    interface Restart extends Message {
+    interface Restart extends SignalingMessage {
         type: 'restart',
     }
 
-    interface Data extends Message {
+    interface Data extends SignalingMessage {
         type: 'data',
         data_type?: string,
         data: any,
     }
 
+    /**
+     * A task message must include the type. It may contain arbitrary other data.
+     */
     interface TaskMessage extends Message {
+        type: string;
     }
 
 }
