@@ -51,7 +51,7 @@ export class InitiatorSignaling extends Signaling {
         } else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR) {
             throw new ProtocolError('Initiator cannot send messages to initiator');
         } else if (isResponderId(receiver)) {
-            if (this.state === 'open') {
+            if (this.getState() === 'open') {
                 return this.responder.csn.next();
             } else if (this.responders.has(receiver)) {
                 return this.responders.get(receiver).csn.next();
@@ -77,7 +77,7 @@ export class InitiatorSignaling extends Signaling {
 
         // Find correct responder
         let responder: Responder;
-        if (this.state === 'open') {
+        if (this.getState() === 'open') {
             responder = this.responder;
         } else if (this.responders.has(receiver)) {
             responder = this.responders.get(receiver);
@@ -230,7 +230,7 @@ export class InitiatorSignaling extends Signaling {
                     this.handleAuth(msg as saltyrtc.messages.Auth, responder);
                     this.dropResponders();
                     // We're connected!
-                    this.state = 'open';
+                    this.setState('open');
                     console.info(this.logTag, 'Peer handshake done');
                     this.client.emit({type: 'connected'}); // TODO: Can we get rid of this event?
                     break;

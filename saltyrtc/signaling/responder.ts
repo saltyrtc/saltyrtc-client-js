@@ -161,7 +161,7 @@ export class ResponderSignaling extends Signaling {
                     this.handleAuth(msg as saltyrtc.messages.Auth);
                     this.sendAuth(nonce);
                     // We're connected!
-                    this.state = 'open';
+                    this.setState('open');
                     console.info(this.logTag, 'Peer handshake done');
                     this.client.emit({type: 'connected'}); // TODO: Can we get rid of this event?
                     break;

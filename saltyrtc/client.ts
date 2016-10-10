@@ -234,7 +234,7 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
      * Return the signaling state.
      */
     public get state(): saltyrtc.State {
-        return this.signaling.state;
+        return this.signaling.getState();
     }
 
     /**

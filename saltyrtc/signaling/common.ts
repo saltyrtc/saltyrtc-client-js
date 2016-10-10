@@ -104,7 +104,7 @@ export abstract class Signaling {
      *
      * TODO: Regular methods would probably be better.
      */
-    public set state(newState: saltyrtc.State) {
+    public setState(newState: saltyrtc.State): void {
         this._state = newState;
 
         // Notify listeners
@@ -114,7 +114,7 @@ export abstract class Signaling {
     /**
      * Return current state.
      */
-    public get state(): saltyrtc.State {
+    public getState(): saltyrtc.State {
         return this._state;
     }
 
@@ -177,7 +177,7 @@ export abstract class Signaling {
 
         // TODO: Close dc
 
-        this.state = 'closed';
+        this.setState('closed');
     }
 
     /**
@@ -203,7 +203,7 @@ export abstract class Signaling {
         this.ws.addEventListener('message', this.onMessage);
 
         // Store connection on instance
-        this.state = 'ws-connecting';
+        this.setState('ws-connecting');
         console.debug(this.logTag, 'Opening WebSocket connection to', url + path);
     }
 
@@ -212,7 +212,7 @@ export abstract class Signaling {
      */
     protected onOpen = (ev: Event) => {
         console.info(this.logTag, 'Opened connection');
-        this.state = 'server-handshake';
+        this.setState('server-handshake');
     };
 
     /**
@@ -232,7 +232,7 @@ export abstract class Signaling {
             console.info(this.logTag, 'Closed WebSocket connection due to handover');
         } else {
             console.info(this.logTag, 'Closed WebSocket connection');
-            this.state = 'closed';
+            this.setState('closed');
             const log = (reason) => console.error(this.logTag, 'Server closed connection:', reason);
             switch (ev.code) {
                 case CloseCode.GoingAway:
@@ -268,7 +268,7 @@ export abstract class Signaling {
             const nonce: SignalingChannelNonce = SignalingChannelNonce.fromArrayBuffer(box.nonce.buffer);
 
             // Dispatch message
-            switch (this.state) {
+            switch (this.getState()) {
                 case 'server-handshake':
                     this.onServerHandshakeMessage(box, nonce);
                     break;
@@ -279,7 +279,7 @@ export abstract class Signaling {
                     this.onPeerMessage(box, nonce);
                     break;
                 default:
-                    console.warn(this.logTag, 'Received message in', this.state, 'signaling state. Ignoring.');
+                    console.warn(this.logTag, 'Received message in', this.getState(), 'signaling state. Ignoring.');
             }
         } catch(e) {
             if (e instanceof ProtocolError) {
@@ -341,7 +341,7 @@ export abstract class Signaling {
 
         // Check if we're done yet
         if (this.serverHandshakeState === 'done') {
-            this.state = 'peer-handshake';
+            this.setState('peer-handshake');
             console.debug(this.logTag, 'Server handshake done');
             this.initPeerHandshake();
         }
@@ -664,7 +664,7 @@ export abstract class Signaling {
      * - Reset the server combined sequence
      */
     protected resetConnection(closeCode: CloseCode = CloseCode.ClosingNormal): void {
-        this.state = 'new';
+        this.setState('new');
         this.serverCsn = new CombinedSequence();
 
         // Close WebSocket instance
@@ -715,8 +715,8 @@ export abstract class Signaling {
      * Send a signaling data message to the peer, encrypted with the session key.
      */
     public sendSignalingData(data: saltyrtc.messages.Data) {
-        if (this.state !== 'open') {
-            console.error(this.logTag, 'Trying to send a message, but connection state is', this.state);
+        if (this.getState() !== 'open') {
+            console.error(this.logTag, 'Trying to send a message, but connection state is', this.getState());
             throw 'bad-state';
         }
 
@@ -788,8 +788,8 @@ export abstract class Signaling {
                     const nonce: SignalingChannelNonce = SignalingChannelNonce.fromArrayBuffer(box.nonce.buffer);
 
                     // Dispatch message
-                    if (this.state != 'open') {
-                        console.warn(this.logTag, 'Received dc message in', this.state, 'signaling state. Ignoring.');
+                    if (this.getState() != 'open') {
+                        console.warn(this.logTag, 'Received dc message in', this.getState(), 'signaling state. Ignoring.');
                         return;
                     }
                     this.onPeerMessage(box, nonce);
