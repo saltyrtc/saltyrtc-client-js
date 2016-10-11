@@ -45,7 +45,7 @@ const enum CloseCode {
  * Signaling base class.
  */
 export abstract class Signaling implements saltyrtc.Signaling {
-    static SALTYRTC_WS_SUBPROTOCOL = 'v0.saltyrtc.org';
+    static SALTYRTC_SUBPROTOCOL = 'v0.saltyrtc.org';
     static SALTYRTC_ADDR_UNKNOWN = 0x00;
     static SALTYRTC_ADDR_SERVER = 0x00;
     static SALTYRTC_ADDR_INITIATOR = 0x01;
@@ -200,7 +200,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
     protected initWebsocket() {
         const url = this.protocol + '://' + this.host + ':' + this.port + '/';
         const path = this.getWebsocketPath();
-        this.ws = new WebSocket(url + path, Signaling.SALTYRTC_WS_SUBPROTOCOL);
+        this.ws = new WebSocket(url + path, Signaling.SALTYRTC_SUBPROTOCOL);
 
         // Set binary type
         this.ws.binaryType = 'arraybuffer';
@@ -446,6 +446,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         const message: saltyrtc.messages.ClientAuth = {
             type: 'client-auth',
             your_cookie: this.cookiePair.theirs.asArrayBuffer(),
+            subprotocols: [Signaling.SALTYRTC_SUBPROTOCOL],
         };
         const packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
         console.debug(this.logTag, 'Sending client-auth');

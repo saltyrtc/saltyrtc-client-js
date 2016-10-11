@@ -253,6 +253,7 @@ declare namespace saltyrtc.messages {
     interface ClientAuth extends SignalingMessage {
         type: 'client-auth';
         your_cookie: ArrayBuffer;
+        subprotocols: string[];
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#server-auth
