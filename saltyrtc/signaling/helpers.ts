@@ -5,11 +5,14 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-import { ProtocolError } from "../exceptions";
-import { Box, KeyStore, AuthToken } from "../keystore";
+import { SignalingError } from "../exceptions";
+import { KeyStore, AuthToken } from "../keystore";
+import { CloseCode } from "../closecode";
 
 /**
- * Decrypt a KeyStore. Convert errors during decryption to an appropriate ProtocolError.
+ * Decrypt a KeyStore. Convert errors during decryption to an appropriate SignalingError.
+ *
+ * @throws SignalingError
  */
 export function decryptKeystore(box: saltyrtc.Box, keyStore: KeyStore, otherKey: Uint8Array,
                                 msgType?: string): Uint8Array {
@@ -17,20 +20,22 @@ export function decryptKeystore(box: saltyrtc.Box, keyStore: KeyStore, otherKey:
         return keyStore.decrypt(box, otherKey);
     } catch (e) {
         if (e === 'decryption-failed') {
-            throw new ProtocolError('Could not decrypt ' + msgType + ' message.')
+            throw new SignalingError(CloseCode.ProtocolError, 'Could not decrypt ' + msgType + ' message.')
         } else { throw e; }
     }
 }
 
 /**
- * Decrypt an AuthToken. Convert errors during decryption to an appropriate ProtocolError.
+ * Decrypt an AuthToken. Convert errors during decryption to an appropriate SignalingError.
+ *
+ * @throws SignalingError
  */
 export function decryptAuthtoken(box: saltyrtc.Box, authToken: AuthToken, msgType: string): Uint8Array {
     try {
         return authToken.decrypt(box);
     } catch (e) {
         if (e === 'decryption-failed') {
-            throw new ProtocolError('Could not decrypt ' + msgType + ' message.')
+            throw new SignalingError(CloseCode.ProtocolError, 'Could not decrypt ' + msgType + ' message.')
         } else { throw e; }
     }
 }

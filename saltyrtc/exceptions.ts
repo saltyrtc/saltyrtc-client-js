@@ -5,21 +5,8 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-/**
- * @deprecated Use SignalingError instead
- */
-export function ProtocolError(message: string) {
-    this.message = message;
-	// Use V8's native method if available, otherwise fallback
-    if ('captureStackTrace' in Error) {
-        (Error as any).captureStackTrace(this, ProtocolError);
-    } else {
-        this.stack = (new Error() as any).stack;
-	}
-}
-ProtocolError.prototype = Object.create(Error.prototype);
-ProtocolError.prototype.name = 'ProtocolError';
-ProtocolError.prototype.constructor = ProtocolError;
+import { CloseCode } from "./closecode";
+
 
 /**
  * @deprecated Use SignalingError instead
@@ -50,6 +37,16 @@ export class SignalingError extends Error {
         this.message = message;
         this.closeCode = closeCode;
         this.name = 'SignalingError';
+    }
+}
+
+
+/**
+ * A signaling error with the close code hardcoded to ProtocolError.
+ */
+export class ProtocolError extends SignalingError {
+    constructor(message: string) {
+        super(CloseCode.ProtocolError, message);
     }
 }
 

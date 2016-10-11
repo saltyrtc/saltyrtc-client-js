@@ -40,7 +40,7 @@ declare namespace saltyrtc {
         type: messages.MessageType;
     }
 
-    type SignalingState = 'new' | 'ws-connecting' | 'server-handshake' | 'peer-handshake' | 'open' | 'closing' | 'closed';
+    type SignalingState = 'new' | 'ws-connecting' | 'server-handshake' | 'peer-handshake' | 'task' | 'closing' | 'closed';
 
     type HandoverState = {local: boolean, peer: boolean};
 

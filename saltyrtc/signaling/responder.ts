@@ -11,10 +11,11 @@ import { KeyStore, AuthToken } from "../keystore";
 import { SignalingChannelNonce } from "../nonce";
 import { NextCombinedSequence } from "../csn";
 import { Initiator } from "../peers";
-import { ProtocolError, InternalError } from "../exceptions";
+import {ProtocolError, InternalError, SignalingError} from "../exceptions";
 import { u8aToHex, byteToHex } from "../utils";
 import { Signaling } from "./common";
 import { decryptKeystore, isResponderId } from "./helpers";
+import {CloseCode} from "../closecode";
 
 export class ResponderSignaling extends Signaling {
 
@@ -132,44 +133,64 @@ export class ResponderSignaling extends Signaling {
 
         // Handle peer messages
         } else if (nonce.source === Signaling.SALTYRTC_ADDR_INITIATOR) {
-            // Decrypt. The key messages are encrypted with a different key than the rest.
-            if (this.initiator.handshakeState === 'token-sent') {
-                // Expect key message, encrypted with the permanent keys
-                payload = decryptKeystore(box, this.permanentKey, this.initiator.permanentKey, 'key');
-            } else {
-                // Otherwise it must be encrypted with the session key
-                payload = decryptKeystore(box, this.sessionKey, this.initiator.sessionKey, 'initiator session');
-            }
+            payload = this.decryptInitiatorMessage(box);
 
             // Dispatch message
             let msg: saltyrtc.Message;
             switch (this.initiator.handshakeState) {
                 case 'new':
                     throw new ProtocolError('Unexpected peer handshake message');
-                case 'token-sent':
+                case 'key-sent':
                     // Expect key message
                     msg = this.decodeMessage(payload, 'key', true);
+                    console.debug(this.logTag, 'Received key');
                     this.handleKey(msg as saltyrtc.messages.Key);
-                    this.sessionKey = new KeyStore();
-                    this.sendKey();
+                    this.sendAuth(nonce);
                     break;
-                case 'key-sent':
+                case 'auth-sent':
                     // Expect auth message
                     msg = this.decodeMessage(payload, 'auth', true);
-                    this.handleAuth(msg as saltyrtc.messages.Auth);
-                    this.sendAuth(nonce);
+                    console.debug(this.logTag, 'Received auth');
+                    this.handleAuth(msg as saltyrtc.messages.Auth, nonce);
+
                     // We're connected!
-                    this.setState('open');
+                    this.setState('task');
                     console.info(this.logTag, 'Peer handshake done');
-                    this.client.emit({type: 'connected'}); // TODO: Can we get rid of this event?
+
                     break;
                 default:
-                    throw new InternalError('Unknown initiator handshake state');
+                    throw new SignalingError(CloseCode.InternalError, 'Unknown initiator handshake state');
             }
 
         // Handle unknown source
         } else {
-            throw new InternalError('Message source is neither the server nor the initiator');
+            throw new SignalingError(CloseCode.InternalError,
+                'Message source is neither the server nor the initiator');
+        }
+    }
+
+    /**
+     * Decrypt messages from the initiator.
+     *
+     * @param box encrypted box containing messag.e
+     * @returns The decrypted message bytes.
+     * @throws SignalingError
+     */
+    private decryptInitiatorMessage(box: saltyrtc.Box): Uint8Array {
+        switch (this.initiator.handshakeState) {
+            case 'new':
+            case 'token-sent':
+            case 'key-received':
+                throw new ProtocolError('Received message in ' + this.initiator.handshakeState + ' state.');
+            case 'key-sent':
+                // Expect a key message, encrypted with the permanent keys
+                return decryptKeystore(box, this.permanentKey, this.initiator.permanentKey, 'key');
+            case 'auth-sent':
+            case 'auth-received':
+                // Otherwise, it must be encrypted with the session key
+                return decryptKeystore(box, this.sessionKey, this.initiator.sessionKey, 'initiator session');
+            default:
+                throw new ProtocolError('Invalid handshake state: ' + this.initiator.handshakeState);
         }
     }
 
@@ -226,6 +247,7 @@ export class ResponderSignaling extends Signaling {
             if (this.peerTrustedKey === null) {
                 this.sendToken();
             }
+            this.sendKey();
         }
     }
 
@@ -239,23 +261,18 @@ export class ResponderSignaling extends Signaling {
         };
         const packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_INITIATOR);
         console.debug(this.logTag, 'Sending token');
-        if (this.role === 'responder') {
-            this.initiator.handshakeState = 'token-sent';
-        }
         this.ws.send(packet);
-    }
-
-    /**
-     * The initiator sends his public session key.
-     */
-    private handleKey(msg: saltyrtc.messages.Key): void {
-        this.initiator.sessionKey = new Uint8Array(msg.key);
+        this.initiator.handshakeState = 'token-sent';
     }
 
     /**
      * Send our public session key to the initiator.
      */
     private sendKey(): void {
+        // Generate our own session key
+        this.sessionKey = new KeyStore();
+
+        // Send public key to initiator
         const replyMessage: saltyrtc.messages.Key = {
             type: 'key',
             key: this.sessionKey.publicKeyBytes.buffer,
@@ -267,14 +284,11 @@ export class ResponderSignaling extends Signaling {
     }
 
     /**
-     * The initiator repeats our cookie.
+     * The initiator sends his public session key.
      */
-    private handleAuth(msg: saltyrtc.messages.Auth): void {
-        // Validate cookie
-        this.validateRepeatedCookie(msg);
-
-        // Ok!
-        console.debug(this.logTag, 'Initiator authenticated');
+    private handleKey(msg: saltyrtc.messages.Key): void {
+        this.initiator.sessionKey = new Uint8Array(msg.key);
+        this.initiator.handshakeState = 'key-received';
     }
 
     /**
@@ -294,5 +308,21 @@ export class ResponderSignaling extends Signaling {
         const packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_INITIATOR);
         console.debug(this.logTag, 'Sending auth');
         this.ws.send(packet);
+        this.initiator.handshakeState = 'auth-sent';
+    }
+
+    /**
+     * The initiator repeats our cookie.
+     */
+    private handleAuth(msg: saltyrtc.messages.Auth, nonce: SignalingChannelNonce): void {
+        // Validate cookie
+        this.validateRepeatedCookie(msg);
+
+        // TODO: Tasks
+
+        // Ok!
+        console.debug(this.logTag, 'Initiator authenticated');
+        this.initiator.cookie = nonce.cookie;
+        this.initiator.handshakeState = 'auth-received';
     }
 }

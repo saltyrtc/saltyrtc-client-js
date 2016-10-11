@@ -8,6 +8,7 @@
 import { CombinedSequence } from "./csn";
 import { KeyStore } from "./keystore";
 import { byteToHex } from "./utils";
+import { Cookie } from "./cookie";
 
 /**
  * Base class for peers (initiator or responder).
@@ -15,6 +16,7 @@ import { byteToHex } from "./utils";
 export abstract class Peer {
     public permanentKey: Uint8Array;
     public sessionKey: Uint8Array;
+    public cookie: Cookie;
     protected _id: number;
     protected _csn = new CombinedSequence();
 
@@ -40,7 +42,7 @@ export abstract class Peer {
  */
 export class Initiator extends Peer {
     public connected = false;
-    public handshakeState: 'new' | 'token-sent' | 'key-sent' = 'new';
+    public handshakeState: 'new' | 'token-sent' | 'key-sent' | 'key-received' | 'auth-sent' | 'auth-received' = 'new';
     constructor(permanentKey: Uint8Array) {
         super(permanentKey);
         this._id = 0x01;
@@ -52,7 +54,7 @@ export class Initiator extends Peer {
  */
 export class Responder extends Peer {
     public keyStore = new KeyStore();
-    public handshakeState: 'new' | 'token-received' | 'key-received' = 'new';
+    public handshakeState: 'new' | 'token-received' | 'key-received' | 'key-sent' | 'auth-received' | 'auth-sent' = 'new';
     constructor(id: number) {
         super();
         this._id = id;

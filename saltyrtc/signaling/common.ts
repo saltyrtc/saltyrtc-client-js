@@ -18,27 +18,7 @@ import { ProtocolError, InternalError } from "../exceptions";
 import { SignalingError, ConnectionError } from "../exceptions";
 import { concat, byteToHex } from "../utils";
 import { isResponderId } from "./helpers";
-
-const enum CloseCode {
-    // Normal closing of WebSocket
-    ClosingNormal = 1000,
-    // The endpoint is going away
-    GoingAway,
-    // No shared sub-protocol could be found
-    SubprotocolError,
-    // No free responder byte
-    PathFull = 3000,
-    // Invalid message, invalid path length, ...
-    ProtocolError,
-    // Syntax error, ...
-    InternalError,
-    // Handover to Data Channel
-    Handover,
-    // Dropped by initiator (for an initiator that means another initiator has
-    // connected to the path, for a responder it means that an initiator
-    // requested to drop the responder)
-    Dropped,
-}
+import { CloseCode, explainCloseCode } from "../closecode";
 
 /**
  * Signaling base class.
@@ -76,6 +56,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
     // Tasks
     protected tasks: saltyrtc.Task[];
+    protected task: saltyrtc.Task;
 
     // Keys
     protected serverKey: Uint8Array = null;
@@ -245,7 +226,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
                 case CloseCode.GoingAway:
                     log('Server is being shut down');
                     break;
-                case CloseCode.SubprotocolError:
+                case CloseCode.NoSharedSubprotocol:
                     log('No shared sub-protocol could be found');
                     break;
                 case CloseCode.PathFull:
@@ -257,7 +238,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
                 case CloseCode.InternalError:
                     log('Internal server error');
                     break;
-                case CloseCode.Dropped:
+                case CloseCode.DroppedByInitiator:
                     log('Dropped by initiator');
                     break;
             }
@@ -282,16 +263,23 @@ export abstract class Signaling implements saltyrtc.Signaling {
                 case 'peer-handshake':
                     this.onPeerHandshakeMessage(box, nonce);
                     break;
-                case 'open':
+                case 'task':
                     this.onSignalingMessage(box, nonce);
                     break;
                 default:
                     console.warn(this.logTag, 'Received message in', this.getState(), 'signaling state. Ignoring.');
             }
         } catch(e) {
-            if (e instanceof ProtocolError) {
-                console.warn(this.logTag, 'Protocol error. Resetting connection.');
-                this.resetConnection(CloseCode.ProtocolError);
+            if (e instanceof SignalingError) {
+                console.error(this.logTag, 'Signaling error: ' + explainCloseCode(e.closeCode));
+                // Send close message if client-to-client handshake has been completed
+                if (this.state === 'task') {
+                    this.sendClose(e.closeCode);
+                }
+                this.resetConnection(e.closeCode);
+            } else if (e instanceof ConnectionError) {
+                console.warn(this.logTag, 'Connection error. Resetting connection.');
+                this.resetConnection(CloseCode.InternalError);
             } else if (e instanceof InternalError) {
                 console.warn(this.logTag, 'Internal error. Resetting connection.');
                 this.resetConnection(CloseCode.InternalError);
@@ -302,6 +290,8 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
     /**
      * Handle messages received during server handshake.
+     *
+     * @throws SignalingError
      */
     protected onServerHandshakeMessage(box: saltyrtc.Box, nonce: SignalingChannelNonce): void {
         // Decrypt if necessary
@@ -340,10 +330,11 @@ export abstract class Signaling implements saltyrtc.Signaling {
                 this.handleServerAuth(msg as saltyrtc.messages.ServerAuth, nonce);
                 break;
             case 'done':
-                throw new InternalError('Received server handshake message even though ' +
-                    'server handshake state is set to \'done\'');
+                throw new SignalingError(CloseCode.InternalError,
+                    'Received server handshake message even though server handshake state is set to \'done\'');
             default:
-                throw new InternalError('Unknown server handshake state: ' + this.serverHandshakeState);
+                throw new SignalingError(CloseCode.InternalError,
+                    'Unknown server handshake state: ' + this.serverHandshakeState);
         }
 
         // Check if we're done yet
@@ -705,7 +696,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * @throws ConnectionError if message cannot be sent due to a bad signaling state.
      */
     private send(payload: Uint8Array): void {
-        if (['server-handshake', 'peer-handshake', 'open'].indexOf(this.state) === -1) {
+        if (['server-handshake', 'peer-handshake', 'task'].indexOf(this.state) === -1) {
             console.error('Trying to send message, but connection state is', this.state);
             throw new ConnectionError("Bad signaling state, cannot send message");
         }
