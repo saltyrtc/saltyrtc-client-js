@@ -29,69 +29,6 @@ export abstract class Nonce {
     get combinedSequenceNumber() { return (this._overflow << 32) + this._sequenceNumber; }
 }
 
-/**
- * A SaltyRTC data channel nonce.
- *
- * Nonce structure:
- *
- * |CCCCCCCCCCCCCCCC|DD|OO|QQQQ|
- *
- * - C: Cookie (16 byte)
- * - D: Data channel id (2 bytes)
- * - O: Overflow number (2 bytes)
- * - Q: Sequence number (4 bytes)
- */
-export class DataChannelNonce extends Nonce {
-    protected _channelId: number;
-
-    constructor(cookie: Cookie, channelId: number, overflow: number, sequenceNumber: number) {
-        super(cookie, overflow, sequenceNumber);
-        this._channelId = channelId;
-    }
-
-    get channelId() { return this._channelId; }
-
-    /**
-     * Create a nonce from an ArrayBuffer.
-     *
-     * If packet is not exactly 24 bytes long, throw an exception.
-     */
-    public static fromArrayBuffer(packet: ArrayBuffer): DataChannelNonce {
-        if (packet.byteLength != Nonce.TOTAL_LENGTH) {
-            throw 'bad-packet-length';
-        }
-
-        // Get view to buffer
-        const view = new DataView(packet);
-
-        // Parse and return nonce
-        const cookie = new Cookie(new Uint8Array(packet, 0, 16));
-        const channelId = view.getUint16(16);
-        const overflow = view.getUint16(18);
-        const sequenceNumber = view.getUint32(20);
-
-        return new DataChannelNonce(cookie, channelId, overflow, sequenceNumber);
-    }
-
-    /**
-     * Return an ArrayBuffer containing the nonce data.
-     */
-    public toArrayBuffer(): ArrayBuffer {
-        const buf = new ArrayBuffer(Nonce.TOTAL_LENGTH);
-
-        const uint8view = new Uint8Array(buf);
-        uint8view.set(this._cookie.bytes);
-
-        const view = new DataView(buf);
-        view.setUint16(16, this._channelId);
-        view.setUint16(18, this._overflow);
-        view.setUint32(20, this._sequenceNumber);
-
-        return buf;
-    }
-
-}
-
 
 /**
  * A SaltyRTC signaling channel nonce.

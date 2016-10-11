@@ -12,9 +12,8 @@
 
 import { KeyStore, AuthToken, Box } from "../keystore";
 import { Cookie, CookiePair } from "../cookie";
-import { SignalingChannelNonce, DataChannelNonce } from "../nonce";
+import { SignalingChannelNonce } from "../nonce";
 import { CombinedSequence, NextCombinedSequence } from "../csn";
-import { SecureDataChannel } from "../datachannel";
 import { ProtocolError, InternalError } from "../exceptions";
 import { SignalingError, ConnectionError } from "../exceptions";
 import { concat, byteToHex } from "../utils";
@@ -87,7 +86,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
     // Signaling
     public role: saltyrtc.SignalingRole = null;
-    public signalingChannel: saltyrtc.SignalingChannel = 'websocket';
     protected logTag: string = 'Signaling:';
     protected address: number = Signaling.SALTYRTC_ADDR_UNKNOWN;
     protected cookiePair: CookiePair = null;
@@ -631,38 +629,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
     protected abstract getPeerPermanentKey(): Uint8Array;
 
     /**
-     * Encrypt arbitrary data for the peer using the session keys.
-     */
-    public encryptData(data: ArrayBuffer, sdc: SecureDataChannel): saltyrtc.Box {
-        // Choose proper CSN
-        let csn: NextCombinedSequence;
-        try {
-            csn = this.getNextCsn(this.getPeerAddress());
-        } catch(e) {
-            if (e instanceof ProtocolError) {
-                this.resetConnection(CloseCode.ProtocolError);
-                return null;
-            }
-            throw e;
-        }
-
-        // Create nonce
-        const nonce = new DataChannelNonce(
-            this.cookiePair.ours,
-            sdc.id,
-            csn.overflow,
-            csn.sequenceNumber
-        );
-
-        // Encrypt
-        return this.sessionKey.encrypt(
-            new Uint8Array(data),
-            new Uint8Array(nonce.toArrayBuffer()),
-            this.getPeerSessionKey()
-        );
-    }
-
-    /**
      * Decrypt data from the peer using the session keys.
      */
     public decryptData(box: saltyrtc.Box): ArrayBuffer {
@@ -734,30 +700,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
     }
 
     /**
-     * Send a signaling data message to the peer, encrypted with the session key.
-     */
-    public sendSignalingData(data: saltyrtc.messages.Data) {
-        if (this.getState() !== 'open') {
-            console.error(this.logTag, 'Trying to send a message, but connection state is', this.getState());
-            throw 'bad-state';
-        }
-
-        // Send message
-        const packet: Uint8Array = this.buildPacket(data, this.getPeerAddress());
-        console.debug(this.logTag, 'Sending', data.data_type, 'data message through', this.signalingChannel);
-        switch (this.signalingChannel) {
-            case 'websocket':
-                this.ws.send(packet);
-                break;
-            case 'datachannel':
-                this.dc.send(packet);
-                break;
-            default:
-                throw new Error('Invalid signaling channel: ' + this.signalingChannel);
-        }
-    }
-
-    /**
      * Send binary data through the signaling channel.
      *
      * @throws ConnectionError if message cannot be sent due to a bad signaling state.
@@ -813,78 +755,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
      */
     public sendClose(reason: number): void {
         // TODO: Implement
-    }
-
-    /**
-     * Initiate the handover from WebSocket to WebRTC DataChannel.
-     *
-     * Possible promise rejections errors:
-     *
-     * - connection-error: A data channel error occured.
-     * - connection-closed: The data channel was closed.
-     */
-    public handover(pc: RTCPeerConnection): Promise<{}> {
-            console.debug(this.logTag, 'Starting handover');
-
-        // TODO (https://github.com/saltyrtc/saltyrtc-meta/issues/3): Negotiate channel id
-        this.dc = pc.createDataChannel('saltyrtc', {
-            id: 0,
-            negotiated: true,
-            ordered: true,
-            protocol: this.ws.protocol,
-        });
-
-        return new Promise((resolve, reject) => {
-            this.dc.onopen = (ev: Event) => {
-                // Data channel is open.
-                console.info(this.logTag, 'Handover to data channel finished');
-                this.signalingChannel = 'datachannel';
-                this.client.emit({type: 'handover'});
-
-                // Close the websocket after a short delay.
-                const linger_ms = 1000;
-                window.setTimeout(() => {
-                    this.ws.close(CloseCode.Handover);
-                    resolve();
-                }, linger_ms);
-            };
-            this.dc.onerror = (ev: Event) => {
-                console.error(this.logTag, 'Data channel error:', ev);
-                this.client.emit({type: 'connection-error', data: ev});
-                reject('connection-error');
-            };
-            this.dc.onclose = (ev: Event) => {
-                console.info(this.logTag, 'Closed DataChannel connection');
-                this.client.emit({type: 'connection-closed', data: ev});
-                reject('connection-closed');
-            };
-            this.dc.onmessage = (ev: RTCMessageEvent) => {
-                console.debug(this.logTag, 'New dc message (' + (ev.data as ArrayBuffer).byteLength + ' bytes)');
-                try {
-                    // Parse buffer
-                    const box: saltyrtc.Box = Box.fromUint8Array(new Uint8Array(ev.data), SignalingChannelNonce.TOTAL_LENGTH);
-
-                    // Parse nonce
-                    const nonce: SignalingChannelNonce = SignalingChannelNonce.fromArrayBuffer(box.nonce.buffer);
-
-                    // Dispatch message
-                    if (this.getState() != 'open') {
-                        console.warn(this.logTag, 'Received dc message in', this.getState(), 'signaling state. Ignoring.');
-                        return;
-                    }
-                    this.onSignalingMessage(box, nonce);
-                } catch(e) {
-                    if (e instanceof ProtocolError) {
-                        console.warn(this.logTag, 'Protocol error. Resetting connection.');
-                        this.resetConnection(CloseCode.ProtocolError);
-                    } else if (e instanceof InternalError) {
-                        console.warn(this.logTag, 'Internal error. Resetting connection.');
-                        this.resetConnection(CloseCode.InternalError);
-                    }
-                    throw e;
-                }
-            };
-        });
     }
 
 }

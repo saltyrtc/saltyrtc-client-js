@@ -10,4 +10,3 @@ import "../node_modules/babel-polyfill/dist/polyfill";
 
 export { SaltyRTCBuilder } from "./client";
 export { KeyStore, Box } from "./keystore";
-export { SecureDataChannel } from "./datachannel";

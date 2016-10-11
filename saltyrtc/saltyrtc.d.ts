@@ -204,7 +204,6 @@ declare namespace saltyrtc {
 
     interface SaltyRTC {
         state: SignalingState;
-        signalingChannel: SignalingChannel;
 
         keyStore: KeyStore;
         permanentKeyBytes: Uint8Array;
@@ -216,10 +215,6 @@ declare namespace saltyrtc {
 
         connect(): void;
         disconnect(): void;
-        sendSignalingData(dataType: string, data: any): void;
-        decryptSignalingData(data: ArrayBuffer): any;
-        handover(pc: RTCPeerConnection): Promise<{}>;
-        wrapDataChannel(dc: RTCDataChannel): SecureDataChannel;
 
         // Event handling
         on(event: string | string[], handler: SaltyEventHandler): void;

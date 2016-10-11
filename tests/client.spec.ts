@@ -72,14 +72,6 @@ export default () => { describe('client', function() {
 
     describe('SaltyRTC', function() {
 
-        /*it('wrapDataChannel() acts as a proxy', () => {
-            let pc = new RTCPeerConnection({iceServers: [{urls: ['stun:stun.services.mozilla.com']}]});
-            let dc = pc.createDataChannel("dc1");
-            let sc = new SaltyRTC(new KeyStore(), 'localhost');
-            let proxy = sc.wrapDataChannel(dc);
-            proxy.send("hello");
-        });*/
-
         describe('events', function() {
 
             beforeEach(() => {

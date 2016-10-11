@@ -9,7 +9,6 @@
 
 import { KeyStore, AuthToken, Box } from "./keystore";
 import { Signaling, InitiatorSignaling, ResponderSignaling } from "./signaling";
-import { SecureDataChannel } from "./datachannel";
 import { EventRegistry } from "./eventregistry";
 import { u8aToHex } from "./utils";
 
@@ -271,13 +270,6 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     }
 
     /**
-     * Return the signaling channel.
-     */
-    public get signalingChannel(): saltyrtc.SignalingChannel {
-        return this.signaling.signalingChannel;
-    }
-
-    /**
      * Return the keystore containing the personal permanent key private/public keypair.
      */
     public get keyStore(): KeyStore {
@@ -344,70 +336,6 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
      */
     public disconnect(): void {
         this.signaling.disconnect();
-    }
-
-    /**
-     * Decrypt signaling data from a peer.
-     *
-     * If data message has a type other than "data", a 'bad-message-type' error
-     * is thrown.
-     *
-     * If decryption fails, a 'decryption-failed' error is thrown.
-     */
-    public decryptSignalingData(data: ArrayBuffer): any {
-        const box = Box.fromUint8Array(new Uint8Array(data), nacl.box.nonceLength);
-        const message = this.signaling.decryptPeerMessage(box, false);
-        if (message.type !== 'data') {
-            console.error('Data messages must have message type set to "data", not "' + message.type + '".');
-            throw 'bad-message-type';
-        }
-        return (message as saltyrtc.messages.Data).data;
-    }
-
-    /**
-     * Send signaling data to the peer.
-     *
-     * Note that you can only send primitive types or plain dict-like objects.
-     * If you want to send custom typed objects, convert them to plain objects.
-     *
-     * If you want to send data through a specific data channel, pass it in.
-     *
-     * If you don't want to set a dataType, pass it in as `undefined`.
-     */
-    public sendSignalingData(dataType: string, data: any) {
-        const dataMessage: saltyrtc.messages.Data = {
-            type: 'data',
-            data: data,
-        };
-        if (dataType !== undefined) {
-            dataMessage.data_type = dataType;
-        }
-        this.signaling.sendSignalingData(dataMessage);
-    }
-
-
-    /**
-     * Do the handover from WebSocket to WebRTC DataChannel.
-     *
-     * Possible promise rejections errors:
-     *
-     * - connection-error: A data channel error occured.
-     * - connection-closed: The data channel was closed.
-     */
-    public handover(pc: RTCPeerConnection): Promise<{}> {
-        return this.signaling.handover(pc);
-    }
-
-    /**
-     * Wrap a WebRTC data channel.
-     *
-     * May throw an error if handover is not yet finished.
-     */
-    public wrapDataChannel(dc: RTCDataChannel): SecureDataChannel {
-        if (this.signalingChannel != 'datachannel') {
-            throw new Error('Handover must be finished before wrapping a data channel.')
-        }
-        return new SecureDataChannel(dc, this.signaling);
     }
 
     /**
