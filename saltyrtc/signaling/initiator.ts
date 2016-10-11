@@ -147,7 +147,7 @@ export class InitiatorSignaling extends Signaling {
             // Notify listeners
             this.client.emit({type: 'new-responder', data: responderId});
 
-            // If we trust teh responder, send our session key directly.
+            // If we trust the responder, send our session key directly.
             if (this.peerTrustedKey !== null) {
                 this.sendKey(responder);
             }
