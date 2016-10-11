@@ -260,6 +260,7 @@ declare namespace saltyrtc.messages {
     interface ServerAuth extends SignalingMessage {
         type: 'server-auth';
         your_cookie: ArrayBuffer;
+        signed_keys?: ArrayBuffer;
         initiator_connected?: boolean;
         responders?: number[];
     }
