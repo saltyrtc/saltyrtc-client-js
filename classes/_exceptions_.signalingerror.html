@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Responder | saltyrtc</title>
+	<title>SignalingError | saltyrtc</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -57,24 +57,42 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/_signaling_.html">&quot;signaling&quot;</a>
+					<a href="../modules/_exceptions_.html">&quot;exceptions&quot;</a>
 				</li>
 				<li>
-					<a href="_signaling_.responder.html">Responder</a>
+					<a href="_exceptions_.signalingerror.html">SignalingError</a>
 				</li>
 			</ul>
-			<h1>Class Responder</h1>
+			<h1>Class SignalingError</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>A SaltyRTC signaling error.</p>
+					</div>
+					<p>It will result in the connection closing with the specified error code.</p>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">Responder</span>
+						<span class="tsd-signature-type">Error</span>
+						<ul class="tsd-hierarchy">
+							<li>
+								<span class="target">SignalingError</span>
+								<ul class="tsd-hierarchy">
+									<li>
+										<a href="_exceptions_.protocolerror.html" class="tsd-signature-type">ProtocolError</a>
+									</li>
+								</ul>
+							</li>
+						</ul>
 					</li>
 				</ul>
 			</section>
@@ -82,139 +100,96 @@
 				<h2>Index</h2>
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
-						<section class="tsd-index-section tsd-is-not-exported">
+						<section class="tsd-index-section ">
 							<h3>Constructors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-not-exported"><a href="_signaling_.responder.html#constructor" class="tsd-kind-icon">constructor</a></li>
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="_exceptions_.signalingerror.html#constructor" class="tsd-kind-icon">constructor</a></li>
 							</ul>
 						</section>
-						<section class="tsd-index-section tsd-is-not-exported">
+						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private tsd-is-not-exported"><a href="_signaling_.responder.html#_id" class="tsd-kind-icon">_id</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-not-exported"><a href="_signaling_.responder.html#combinedsequence" class="tsd-kind-icon">combined<wbr>Sequence</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-not-exported"><a href="_signaling_.responder.html#keystore" class="tsd-kind-icon">key<wbr>Store</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-not-exported"><a href="_signaling_.responder.html#permanentkey" class="tsd-kind-icon">permanent<wbr>Key</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-not-exported"><a href="_signaling_.responder.html#sessionkey" class="tsd-kind-icon">session<wbr>Key</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-not-exported"><a href="_signaling_.responder.html#state" class="tsd-kind-icon">state</a></li>
-							</ul>
-						</section>
-						<section class="tsd-index-section tsd-is-not-exported">
-							<h3>Accessors</h3>
-							<ul class="tsd-index-list">
-								<li class="tsd-kind-get-signature tsd-parent-kind-class tsd-is-not-exported"><a href="_signaling_.responder.html#id" class="tsd-kind-icon">id</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_exceptions_.signalingerror.html#closecode" class="tsd-kind-icon">close<wbr>Code</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-static"><a href="_exceptions_.signalingerror.html#error" class="tsd-kind-icon">Error</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static"><a href="_exceptions_.signalingerror.html#message" class="tsd-kind-icon">message</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static"><a href="_exceptions_.signalingerror.html#name" class="tsd-kind-icon">name</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
-			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
+			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Constructors</h2>
-				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class tsd-is-not-exported">
+				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class">
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
-					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Responder<span class="tsd-signature-symbol">(</span>id<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_signaling_.responder.html" class="tsd-signature-type">Responder</a></li>
+					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Signaling<wbr>Error<span class="tsd-signature-symbol">(</span>closeCode<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, message<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_exceptions_.signalingerror.html" class="tsd-signature-type">SignalingError</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/signaling.ts#L114">signaling.ts:114</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/exceptions.ts#L34">exceptions.ts:34</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>id: <span class="tsd-signature-type">number</span></h5>
+									<h5>closeCode: <span class="tsd-signature-type">number</span></h5>
+								</li>
+								<li>
+									<h5>message: <span class="tsd-signature-type">string</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_signaling_.responder.html" class="tsd-signature-type">Responder</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="_exceptions_.signalingerror.html" class="tsd-signature-type">SignalingError</a></h4>
 						</li>
 					</ul>
 				</section>
 			</section>
-			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
+			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private tsd-is-not-exported">
-					<a name="_id" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagPrivate">Private</span> _id</h3>
-					<div class="tsd-signature tsd-kind-icon">_id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="closecode" class="tsd-anchor"></a>
+					<h3>close<wbr>Code</h3>
+					<div class="tsd-signature tsd-kind-icon">close<wbr>Code<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/signaling.ts#L98">signaling.ts:98</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/exceptions.ts#L34">exceptions.ts:34</a></li>
 						</ul>
 					</aside>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-not-exported">
-					<a name="combinedsequence" class="tsd-anchor"></a>
-					<h3>combined<wbr>Sequence</h3>
-					<div class="tsd-signature tsd-kind-icon">combined<wbr>Sequence<span class="tsd-signature-symbol">:</span> <a href="_signaling_.combinedsequence.html" class="tsd-signature-type">CombinedSequence</a></div>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-static">
+					<a name="error" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> Error</h3>
+					<div class="tsd-signature tsd-kind-icon">Error<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">ErrorConstructor</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/signaling.ts#L114">signaling.ts:114</a></li>
+							<li>Defined in /home/travis/build/saltyrtc/saltyrtc-client-js/node_modules/typescript/lib/lib.es6.d.ts:2220</li>
 						</ul>
 					</aside>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-not-exported">
-					<a name="keystore" class="tsd-anchor"></a>
-					<h3>key<wbr>Store</h3>
-					<div class="tsd-signature tsd-kind-icon">key<wbr>Store<span class="tsd-signature-symbol">:</span> <a href="_keystore_.keystore.html" class="tsd-signature-type">KeyStore</a></div>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+					<a name="message" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> message</h3>
+					<div class="tsd-signature tsd-kind-icon">message<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
+						<p>Inherited from Error.message</p>
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/signaling.ts#L108">signaling.ts:108</a></li>
+							<li>Defined in /home/travis/build/saltyrtc/saltyrtc-client-js/node_modules/typescript/lib/lib.es6.d.ts:2211</li>
 						</ul>
 					</aside>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-not-exported">
-					<a name="permanentkey" class="tsd-anchor"></a>
-					<h3>permanent<wbr>Key</h3>
-					<div class="tsd-signature tsd-kind-icon">permanent<wbr>Key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span></div>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+					<a name="name" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> name</h3>
+					<div class="tsd-signature tsd-kind-icon">name<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
+						<p>Inherited from Error.name</p>
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/signaling.ts#L102">signaling.ts:102</a></li>
+							<li>Defined in /home/travis/build/saltyrtc/saltyrtc-client-js/node_modules/typescript/lib/lib.es6.d.ts:2210</li>
 						</ul>
 					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-not-exported">
-					<a name="sessionkey" class="tsd-anchor"></a>
-					<h3>session<wbr>Key</h3>
-					<div class="tsd-signature tsd-kind-icon">session<wbr>Key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/signaling.ts#L105">signaling.ts:105</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-not-exported">
-					<a name="state" class="tsd-anchor"></a>
-					<h3>state</h3>
-					<div class="tsd-signature tsd-kind-icon">state<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"new"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"token-received"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"key-received"</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/signaling.ts#L111">signaling.ts:111</a></li>
-						</ul>
-					</aside>
-				</section>
-			</section>
-			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
-				<h2>Accessors</h2>
-				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class tsd-is-not-exported">
-					<a name="id" class="tsd-anchor"></a>
-					<h3>id</h3>
-					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class tsd-is-not-exported">
-						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> id<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/signaling.ts#L99">signaling.ts:99</a></li>
-								</ul>
-							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
-						</li>
-					</ul>
 				</section>
 			</section>
 		</div>
@@ -231,13 +206,19 @@
 						<a href="../modules/_client_.html">"client"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/_closecode_.html">"closecode"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/_cookie_.html">"cookie"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/_datachannel_.html">"datachannel"</a>
+						<a href="../modules/_csn_.html">"csn"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_eventregistry_.html">"eventregistry"</a>
+					</li>
+					<li class="current tsd-kind-external-module">
+						<a href="../modules/_exceptions_.html">"exceptions"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_keystore_.html">"keystore"</a>
@@ -248,8 +229,23 @@
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_nonce_.html">"nonce"</a>
 					</li>
-					<li class="current tsd-kind-external-module">
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_peers_.html">"peers"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/_signaling_.html">"signaling"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_signaling_common_.html">"signaling/common"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_signaling_helpers_.html">"signaling/helpers"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_signaling_initiator_.html">"signaling/initiator"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_signaling_responder_.html">"signaling/responder"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_utils_.html">"utils"</a>
@@ -258,56 +254,41 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-					<li class=" tsd-kind-enum tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../enums/_signaling_.closecode.html" class="tsd-kind-icon">Close<wbr>Code</a>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="_exceptions_.connectionerror.html" class="tsd-kind-icon">Connection<wbr>Error</a>
 					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="_signaling_.combinedsequence.html" class="tsd-kind-icon">Combined<wbr>Sequence</a>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="_exceptions_.protocolerror.html" class="tsd-kind-icon">Protocol<wbr>Error</a>
 					</li>
 				</ul>
 				<ul class="current">
-					<li class="current tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="_signaling_.responder.html" class="tsd-kind-icon">Responder</a>
+					<li class="current tsd-kind-class tsd-parent-kind-external-module">
+						<a href="_exceptions_.signalingerror.html" class="tsd-kind-icon">Signaling<wbr>Error</a>
 						<ul>
-							<li class=" tsd-kind-constructor tsd-parent-kind-class tsd-is-not-exported">
-								<a href="_signaling_.responder.html#constructor" class="tsd-kind-icon">constructor</a>
+							<li class=" tsd-kind-constructor tsd-parent-kind-class">
+								<a href="_exceptions_.signalingerror.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private tsd-is-not-exported">
-								<a href="_signaling_.responder.html#_id" class="tsd-kind-icon">_id</a>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="_exceptions_.signalingerror.html#closecode" class="tsd-kind-icon">close<wbr>Code</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-not-exported">
-								<a href="_signaling_.responder.html#combinedsequence" class="tsd-kind-icon">combined<wbr>Sequence</a>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-static">
+								<a href="_exceptions_.signalingerror.html#error" class="tsd-kind-icon">Error</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-not-exported">
-								<a href="_signaling_.responder.html#keystore" class="tsd-kind-icon">key<wbr>Store</a>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+								<a href="_exceptions_.signalingerror.html#message" class="tsd-kind-icon">message</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-not-exported">
-								<a href="_signaling_.responder.html#permanentkey" class="tsd-kind-icon">permanent<wbr>Key</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-not-exported">
-								<a href="_signaling_.responder.html#sessionkey" class="tsd-kind-icon">session<wbr>Key</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-not-exported">
-								<a href="_signaling_.responder.html#state" class="tsd-kind-icon">state</a>
-							</li>
-							<li class=" tsd-kind-get-signature tsd-parent-kind-class tsd-is-not-exported">
-								<a href="_signaling_.responder.html#id" class="tsd-kind-icon">id</a>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+								<a href="_exceptions_.signalingerror.html#name" class="tsd-kind-icon">name</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_signaling_.signaling.html" class="tsd-kind-icon">Signaling</a>
+						<a href="_exceptions_.validationerror.html" class="tsd-kind-icon">Validation<wbr>Error</a>
 					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../interfaces/_signaling_.packet.html" class="tsd-kind-icon">Packet</a>
-					</li>
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../interfaces/_signaling_.signalingmessage.html" class="tsd-kind-icon">Signaling<wbr>Message</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module">
-						<a href="../modules/_signaling_.html#state" class="tsd-kind-icon">State</a>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module">
+						<a href="../modules/_exceptions_.html#internalerror" class="tsd-kind-icon">Internal<wbr>Error</a>
 					</li>
 				</ul>
 			</nav>

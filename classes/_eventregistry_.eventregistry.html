@@ -70,6 +70,15 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>Copyright (C) 2016 Threema GmbH / SaltyRTC Contributors</p>
+					</div>
+					<p>This software may be modified and distributed under the terms
+					of the MIT license. See the <code>LICENSE.md</code> file for details.</p>
+				</div>
+			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
@@ -118,7 +127,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/eventregistry.ts#L16">eventregistry.ts:16</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/eventregistry.ts#L11">eventregistry.ts:11</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="_eventregistry_.eventregistry.html" class="tsd-signature-type">EventRegistry</a></h4>
@@ -131,10 +140,10 @@
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
 					<a name="map" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagPrivate">Private</span> map</h3>
-					<div class="tsd-signature tsd-kind-icon">map<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><a href="../modules/_eventregistry_.html#eventhandler" class="tsd-signature-type">EventHandler</a><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></div>
+					<div class="tsd-signature tsd-kind-icon">map<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Map</span><span class="tsd-signature-symbol">&lt;</span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">, </span><span class="tsd-signature-type">saltyrtc.SaltyEventHandler</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">&gt;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/eventregistry.ts#L16">eventregistry.ts:16</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/eventregistry.ts#L11">eventregistry.ts:11</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -145,13 +154,13 @@
 					<a name="get" class="tsd-anchor"></a>
 					<h3>get</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">get<span class="tsd-signature-symbol">(</span>eventType<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../modules/_eventregistry_.html#eventhandler" class="tsd-signature-type">EventHandler</a><span class="tsd-signature-symbol">[]</span></li>
+						<li class="tsd-signature tsd-kind-icon">get<span class="tsd-signature-symbol">(</span>eventType<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">saltyrtc.SaltyEventHandler</span><span class="tsd-signature-symbol">[]</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/eventregistry.ts#L86">eventregistry.ts:86</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/eventregistry.ts#L80">eventregistry.ts:80</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -168,7 +177,7 @@
 									<h5>eventType: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="../modules/_eventregistry_.html#eventhandler" class="tsd-signature-type">EventHandler</a><span class="tsd-signature-symbol">[]</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">saltyrtc.SaltyEventHandler</span><span class="tsd-signature-symbol">[]</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -176,13 +185,13 @@
 					<a name="register" class="tsd-anchor"></a>
 					<h3>register</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">register<span class="tsd-signature-symbol">(</span>eventType<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span>, handler<span class="tsd-signature-symbol">: </span><a href="../modules/_eventregistry_.html#eventhandler" class="tsd-signature-type">EventHandler</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">register<span class="tsd-signature-symbol">(</span>eventType<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span>, handler<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">saltyrtc.SaltyEventHandler</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/eventregistry.ts#L25">eventregistry.ts:25</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/eventregistry.ts#L20">eventregistry.ts:20</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -196,7 +205,7 @@
 									<h5>eventType: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h5>
 								</li>
 								<li>
-									<h5>handler: <a href="../modules/_eventregistry_.html#eventhandler" class="tsd-signature-type">EventHandler</a></h5>
+									<h5>handler: <span class="tsd-signature-type">saltyrtc.SaltyEventHandler</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -207,13 +216,13 @@
 					<a name="set" class="tsd-anchor"></a>
 					<h3><span class="tsd-flag ts-flagPrivate">Private</span> set</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-private">
-						<li class="tsd-signature tsd-kind-icon">set<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, value<span class="tsd-signature-symbol">: </span><a href="../modules/_eventregistry_.html#eventhandler" class="tsd-signature-type">EventHandler</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">set<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, value<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">saltyrtc.SaltyEventHandler</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/eventregistry.ts#L66">eventregistry.ts:66</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/eventregistry.ts#L61">eventregistry.ts:61</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -227,7 +236,7 @@
 									<h5>key: <span class="tsd-signature-type">string</span></h5>
 								</li>
 								<li>
-									<h5>value: <a href="../modules/_eventregistry_.html#eventhandler" class="tsd-signature-type">EventHandler</a></h5>
+									<h5>value: <span class="tsd-signature-type">saltyrtc.SaltyEventHandler</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -238,13 +247,13 @@
 					<a name="unregister" class="tsd-anchor"></a>
 					<h3>unregister</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">unregister<span class="tsd-signature-symbol">(</span>eventType<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span>, handler<span class="tsd-signature-symbol">?: </span><a href="../modules/_eventregistry_.html#eventhandler" class="tsd-signature-type">EventHandler</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+						<li class="tsd-signature tsd-kind-icon">unregister<span class="tsd-signature-symbol">(</span>eventType<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span>, handler<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">saltyrtc.SaltyEventHandler</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/eventregistry.ts#L39">eventregistry.ts:39</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/eventregistry.ts#L34">eventregistry.ts:34</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -259,7 +268,7 @@
 									<h5>eventType: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h5>
 								</li>
 								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> handler: <a href="../modules/_eventregistry_.html#eventhandler" class="tsd-signature-type">EventHandler</a></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> handler: <span class="tsd-signature-type">saltyrtc.SaltyEventHandler</span></h5>
 								</li>
 							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
@@ -281,13 +290,19 @@
 						<a href="../modules/_client_.html">"client"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/_closecode_.html">"closecode"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/_cookie_.html">"cookie"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/_datachannel_.html">"datachannel"</a>
+						<a href="../modules/_csn_.html">"csn"</a>
 					</li>
 					<li class="current tsd-kind-external-module">
 						<a href="../modules/_eventregistry_.html">"eventregistry"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_exceptions_.html">"exceptions"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_keystore_.html">"keystore"</a>
@@ -299,7 +314,22 @@
 						<a href="../modules/_nonce_.html">"nonce"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/_peers_.html">"peers"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/_signaling_.html">"signaling"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_signaling_common_.html">"signaling/common"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_signaling_helpers_.html">"signaling/helpers"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_signaling_initiator_.html">"signaling/initiator"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_signaling_responder_.html">"signaling/responder"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_utils_.html">"utils"</a>
@@ -335,12 +365,6 @@
 					</li>
 				</ul>
 				<ul class="after-current">
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module">
-						<a href="../interfaces/_eventregistry_.saltyrtcevent.html" class="tsd-kind-icon">SaltyRTCEvent</a>
-					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module">
-						<a href="../modules/_eventregistry_.html#eventhandler" class="tsd-kind-icon">Event<wbr>Handler</a>
-					</li>
 				</ul>
 			</nav>
 		</div>

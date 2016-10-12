@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Chunkifier | saltyrtc</title>
+	<title>Peer | saltyrtc</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -57,13 +57,13 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/_chunkifier_.html">&quot;chunkifier&quot;</a>
+					<a href="../modules/_peers_.html">&quot;peers&quot;</a>
 				</li>
 				<li>
-					<a href="_chunkifier_.chunkifier.html">Chunkifier</a>
+					<a href="_peers_.peer.html">Peer</a>
 				</li>
 			</ul>
-			<h1>Class Chunkifier</h1>
+			<h1>Class Peer</h1>
 		</div>
 	</div>
 </header>
@@ -73,18 +73,23 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>Convert an array to chunks.</p>
+						<p>Base class for peers (initiator or responder).</p>
 					</div>
-					<p>This is required for now as a workaround because the Chrome implementation
-						does not currently support sending messages larger than 16 KiB:
-					<a href="https://webrtc.org/web-apis/chrome/">https://webrtc.org/web-apis/chrome/</a></p>
 				</div>
 			</section>
 			<section class="tsd-panel tsd-hierarchy">
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">Chunkifier</span>
+						<span class="target">Peer</span>
+						<ul class="tsd-hierarchy">
+							<li>
+								<a href="_peers_.initiator.html" class="tsd-signature-type">Initiator</a>
+							</li>
+							<li>
+								<a href="_peers_.responder.html" class="tsd-signature-type">Responder</a>
+							</li>
+						</ul>
 					</li>
 				</ul>
 			</section>
@@ -95,29 +100,25 @@
 						<section class="tsd-index-section ">
 							<h3>Constructors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="_chunkifier_.chunkifier.html#constructor" class="tsd-kind-icon">constructor</a></li>
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="_peers_.peer.html#constructor" class="tsd-kind-icon">constructor</a></li>
 							</ul>
 						</section>
-						<section class="tsd-index-section tsd-is-private tsd-is-private-protected">
+						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_chunkifier_.chunkifier.html#_array" class="tsd-kind-icon">_array</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_chunkifier_.chunkifier.html#_chunksize" class="tsd-kind-icon">_chunk<wbr>Size</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_chunkifier_.chunkifier.html#_chunks" class="tsd-kind-icon">_chunks</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="_peers_.peer.html#_csn" class="tsd-kind-icon">_csn</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="_peers_.peer.html#_id" class="tsd-kind-icon">_id</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_peers_.peer.html#cookie" class="tsd-kind-icon">cookie</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_peers_.peer.html#permanentkey" class="tsd-kind-icon">permanent<wbr>Key</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_peers_.peer.html#sessionkey" class="tsd-kind-icon">session<wbr>Key</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Accessors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="_chunkifier_.chunkifier.html#chunks" class="tsd-kind-icon">chunks</a></li>
-							</ul>
-						</section>
-						<section class="tsd-index-section tsd-is-private tsd-is-private-protected">
-							<h3>Methods</h3>
-							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><a href="_chunkifier_.chunkifier.html#_getchunks" class="tsd-kind-icon">_get<wbr>Chunks</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><a href="_chunkifier_.chunkifier.html#_hasnext" class="tsd-kind-icon">_has<wbr>Next</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-private"><a href="_chunkifier_.chunkifier.html#_offset" class="tsd-kind-icon">_offset</a></li>
+								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="_peers_.peer.html#csn" class="tsd-kind-icon">csn</a></li>
+								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="_peers_.peer.html#hexid" class="tsd-kind-icon">hex<wbr>Id</a></li>
+								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="_peers_.peer.html#id" class="tsd-kind-icon">id</a></li>
 							</ul>
 						</section>
 					</div>
@@ -129,58 +130,75 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Chunkifier<span class="tsd-signature-symbol">(</span>array<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Uint8Array</span>, chunkSize<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_chunkifier_.chunkifier.html" class="tsd-signature-type">Chunkifier</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Peer<span class="tsd-signature-symbol">(</span>permanentKey<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_peers_.peer.html" class="tsd-signature-type">Peer</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/chunkifier.ts#L11">chunkifier.ts:11</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/peers.ts#L21">peers.ts:21</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>array: <span class="tsd-signature-type">Uint8Array</span></h5>
-								</li>
-								<li>
-									<h5>chunkSize: <span class="tsd-signature-type">number</span></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> permanentKey: <span class="tsd-signature-type">Uint8Array</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_chunkifier_.chunkifier.html" class="tsd-signature-type">Chunkifier</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="_peers_.peer.html" class="tsd-signature-type">Peer</a></h4>
 						</li>
 					</ul>
 				</section>
 			</section>
-			<section class="tsd-panel-group tsd-member-group tsd-is-private tsd-is-private-protected">
+			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
-					<a name="_array" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagPrivate">Private</span> _array</h3>
-					<div class="tsd-signature tsd-kind-icon">_array<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span></div>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-protected">
+					<a name="_csn" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagProtected">Protected</span> _csn</h3>
+					<div class="tsd-signature tsd-kind-icon">_csn<span class="tsd-signature-symbol">:</span> <a href="_csn_.combinedsequence.html" class="tsd-signature-type">CombinedSequence</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/chunkifier.ts#L9">chunkifier.ts:9</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/peers.ts#L21">peers.ts:21</a></li>
 						</ul>
 					</aside>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
-					<a name="_chunksize" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagPrivate">Private</span> _chunk<wbr>Size</h3>
-					<div class="tsd-signature tsd-kind-icon">_chunk<wbr>Size<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-protected">
+					<a name="_id" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagProtected">Protected</span> _id</h3>
+					<div class="tsd-signature tsd-kind-icon">_id<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/chunkifier.ts#L10">chunkifier.ts:10</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/peers.ts#L20">peers.ts:20</a></li>
 						</ul>
 					</aside>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
-					<a name="_chunks" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagPrivate">Private</span> _chunks</h3>
-					<div class="tsd-signature tsd-kind-icon">_chunks<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">[]</span></div>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="cookie" class="tsd-anchor"></a>
+					<h3>cookie</h3>
+					<div class="tsd-signature tsd-kind-icon">cookie<span class="tsd-signature-symbol">:</span> <a href="_cookie_.cookie.html" class="tsd-signature-type">Cookie</a></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/chunkifier.ts#L11">chunkifier.ts:11</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/peers.ts#L19">peers.ts:19</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="permanentkey" class="tsd-anchor"></a>
+					<h3>permanent<wbr>Key</h3>
+					<div class="tsd-signature tsd-kind-icon">permanent<wbr>Key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/peers.ts#L17">peers.ts:17</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="sessionkey" class="tsd-anchor"></a>
+					<h3>session<wbr>Key</h3>
+					<div class="tsd-signature tsd-kind-icon">session<wbr>Key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/peers.ts#L18">peers.ts:18</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -188,84 +206,52 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Accessors</h2>
 				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class">
-					<a name="chunks" class="tsd-anchor"></a>
-					<h3>chunks</h3>
+					<a name="csn" class="tsd-anchor"></a>
+					<h3>csn</h3>
 					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> chunks<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">[]</span></li>
+						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> csn<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_csn_.combinedsequence.html" class="tsd-signature-type">CombinedSequence</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/chunkifier.ts#L18">chunkifier.ts:18</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/peers.ts#L35">peers.ts:35</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">[]</span></h4>
+							<h4 class="tsd-returns-title">Returns <a href="_csn_.combinedsequence.html" class="tsd-signature-type">CombinedSequence</a></h4>
 						</li>
 					</ul>
 				</section>
-			</section>
-			<section class="tsd-panel-group tsd-member-group tsd-is-private tsd-is-private-protected">
-				<h2>Methods</h2>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-private">
-					<a name="_getchunks" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagPrivate">Private</span> _get<wbr>Chunks</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-private">
-						<li class="tsd-signature tsd-kind-icon">_get<wbr>Chunks<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">[]</span></li>
+				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class">
+					<a name="hexid" class="tsd-anchor"></a>
+					<h3>hex<wbr>Id</h3>
+					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> hexId<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/chunkifier.ts#L30">chunkifier.ts:30</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/peers.ts#L31">peers.ts:31</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">[]</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
 						</li>
 					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-private">
-					<a name="_hasnext" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagPrivate">Private</span> _has<wbr>Next</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-private">
-						<li class="tsd-signature tsd-kind-icon">_has<wbr>Next<span class="tsd-signature-symbol">(</span>index<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class">
+					<a name="id" class="tsd-anchor"></a>
+					<h3>id</h3>
+					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> id<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/chunkifier.ts#L26">chunkifier.ts:26</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/peers.ts#L27">peers.ts:27</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>index: <span class="tsd-signature-type">number</span></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-private">
-					<a name="_offset" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagPrivate">Private</span> _offset</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-private">
-						<li class="tsd-signature tsd-kind-icon">_offset<span class="tsd-signature-symbol">(</span>index<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/chunkifier.ts#L22">chunkifier.ts:22</a></li>
-								</ul>
-							</aside>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>index: <span class="tsd-signature-type">number</span></h5>
-								</li>
-							</ul>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
 						</li>
 					</ul>
@@ -278,7 +264,7 @@
 					<li class="globals  ">
 						<a href="../globals.html"><em>Globals</em></a>
 					</li>
-					<li class="current tsd-kind-external-module">
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/_chunkifier_.html">"chunkifier"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -308,7 +294,7 @@
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_nonce_.html">"nonce"</a>
 					</li>
-					<li class=" tsd-kind-external-module">
+					<li class="current tsd-kind-external-module">
 						<a href="../modules/_peers_.html">"peers"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
@@ -333,41 +319,47 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="_peers_.initiator.html" class="tsd-kind-icon">Initiator</a>
+					</li>
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_chunkifier_.chunkifier.html" class="tsd-kind-icon">Chunkifier</a>
+						<a href="_peers_.peer.html" class="tsd-kind-icon">Peer</a>
 						<ul>
 							<li class=" tsd-kind-constructor tsd-parent-kind-class">
-								<a href="_chunkifier_.chunkifier.html#constructor" class="tsd-kind-icon">constructor</a>
+								<a href="_peers_.peer.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
-								<a href="_chunkifier_.chunkifier.html#_array" class="tsd-kind-icon">_array</a>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-protected">
+								<a href="_peers_.peer.html#_csn" class="tsd-kind-icon">_csn</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
-								<a href="_chunkifier_.chunkifier.html#_chunksize" class="tsd-kind-icon">_chunk<wbr>Size</a>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-protected">
+								<a href="_peers_.peer.html#_id" class="tsd-kind-icon">_id</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
-								<a href="_chunkifier_.chunkifier.html#_chunks" class="tsd-kind-icon">_chunks</a>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="_peers_.peer.html#cookie" class="tsd-kind-icon">cookie</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="_peers_.peer.html#permanentkey" class="tsd-kind-icon">permanent<wbr>Key</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="_peers_.peer.html#sessionkey" class="tsd-kind-icon">session<wbr>Key</a>
 							</li>
 							<li class=" tsd-kind-get-signature tsd-parent-kind-class">
-								<a href="_chunkifier_.chunkifier.html#chunks" class="tsd-kind-icon">chunks</a>
+								<a href="_peers_.peer.html#csn" class="tsd-kind-icon">csn</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-private">
-								<a href="_chunkifier_.chunkifier.html#_getchunks" class="tsd-kind-icon">_get<wbr>Chunks</a>
+							<li class=" tsd-kind-get-signature tsd-parent-kind-class">
+								<a href="_peers_.peer.html#hexid" class="tsd-kind-icon">hex<wbr>Id</a>
 							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-private">
-								<a href="_chunkifier_.chunkifier.html#_hasnext" class="tsd-kind-icon">_has<wbr>Next</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-private">
-								<a href="_chunkifier_.chunkifier.html#_offset" class="tsd-kind-icon">_offset</a>
+							<li class=" tsd-kind-get-signature tsd-parent-kind-class">
+								<a href="_peers_.peer.html#id" class="tsd-kind-icon">id</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_chunkifier_.unchunkifier.html" class="tsd-kind-icon">Unchunkifier</a>
+						<a href="_peers_.responder.html" class="tsd-kind-icon">Responder</a>
 					</li>
 				</ul>
 			</nav>

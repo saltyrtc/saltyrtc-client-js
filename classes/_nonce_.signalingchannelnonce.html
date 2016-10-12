@@ -83,7 +83,7 @@
 						<li>C: Cookie (16 byte)</li>
 						<li>S: Source byte (1 byte)</li>
 						<li>D: Destination byte (1 byte)</li>
-						<li>O: Overflow number (4 bytes)</li>
+						<li>O: Overflow number (2 bytes)</li>
 						<li>Q: Sequence number (4 bytes)</li>
 					</ul>
 				</div>
@@ -111,7 +111,7 @@
 								<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-overwrite"><a href="_nonce_.signalingchannelnonce.html#constructor" class="tsd-kind-icon">constructor</a></li>
 							</ul>
 						</section>
-						<section class="tsd-index-section tsd-is-private-protected">
+						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected"><a href="_nonce_.signalingchannelnonce.html#_cookie" class="tsd-kind-icon">_cookie</a></li>
@@ -119,6 +119,7 @@
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected"><a href="_nonce_.signalingchannelnonce.html#_overflow" class="tsd-kind-icon">_overflow</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected"><a href="_nonce_.signalingchannelnonce.html#_sequencenumber" class="tsd-kind-icon">_sequence<wbr>Number</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="_nonce_.signalingchannelnonce.html#_source" class="tsd-kind-icon">_source</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static"><a href="_nonce_.signalingchannelnonce.html#total_length" class="tsd-kind-icon">TOTAL_<wbr>LENGTH</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
@@ -155,7 +156,7 @@
 							<aside class="tsd-sources">
 								<p>Overwrites <a href="_nonce_.nonce.html">Nonce</a>.<a href="_nonce_.nonce.html#constructor">constructor</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/nonce.ts#L108">nonce.ts:108</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/nonce.ts#L52">nonce.ts:52</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -181,7 +182,7 @@
 					</ul>
 				</section>
 			</section>
-			<section class="tsd-panel-group tsd-member-group tsd-is-private-protected">
+			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected">
 					<a name="_cookie" class="tsd-anchor"></a>
@@ -190,7 +191,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="_nonce_.nonce.html">Nonce</a>.<a href="_nonce_.nonce.html#_cookie">_cookie</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/nonce.ts#L16">nonce.ts:16</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/nonce.ts#L14">nonce.ts:14</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -200,7 +201,7 @@
 					<div class="tsd-signature tsd-kind-icon">_destination<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/nonce.ts#L108">nonce.ts:108</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/nonce.ts#L52">nonce.ts:52</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -211,7 +212,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="_nonce_.nonce.html">Nonce</a>.<a href="_nonce_.nonce.html#_overflow">_overflow</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/nonce.ts#L17">nonce.ts:17</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/nonce.ts#L15">nonce.ts:15</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -222,7 +223,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="_nonce_.nonce.html">Nonce</a>.<a href="_nonce_.nonce.html#_sequencenumber">_sequenceNumber</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/nonce.ts#L18">nonce.ts:18</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/nonce.ts#L16">nonce.ts:16</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -232,7 +233,18 @@
 					<div class="tsd-signature tsd-kind-icon">_source<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/nonce.ts#L107">nonce.ts:107</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/nonce.ts#L51">nonce.ts:51</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+					<a name="total_length" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> TOTAL_<wbr>LENGTH</h3>
+					<div class="tsd-signature tsd-kind-icon">TOTAL_<wbr>LENGTH<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<aside class="tsd-sources">
+						<p>Inherited from <a href="_nonce_.nonce.html">Nonce</a>.<a href="_nonce_.nonce.html#total_length">TOTAL_LENGTH</a></p>
+						<ul>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/nonce.ts#L18">nonce.ts:18</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -250,7 +262,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_nonce_.nonce.html">Nonce</a>.<a href="_nonce_.nonce.html#combinedsequencenumber">combinedSequenceNumber</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/nonce.ts#L29">nonce.ts:29</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/nonce.ts#L29">nonce.ts:29</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
@@ -268,7 +280,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_nonce_.nonce.html">Nonce</a>.<a href="_nonce_.nonce.html#cookie">cookie</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/nonce.ts#L26">nonce.ts:26</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/nonce.ts#L26">nonce.ts:26</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <a href="_cookie_.cookie.html" class="tsd-signature-type">Cookie</a></h4>
@@ -285,7 +297,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/nonce.ts#L118">nonce.ts:118</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/nonce.ts#L62">nonce.ts:62</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
@@ -303,7 +315,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_nonce_.nonce.html">Nonce</a>.<a href="_nonce_.nonce.html#overflow">overflow</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/nonce.ts#L27">nonce.ts:27</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/nonce.ts#L27">nonce.ts:27</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
@@ -321,7 +333,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_nonce_.nonce.html">Nonce</a>.<a href="_nonce_.nonce.html#sequencenumber">sequenceNumber</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/nonce.ts#L28">nonce.ts:28</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/nonce.ts#L28">nonce.ts:28</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
@@ -338,7 +350,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/nonce.ts#L117">nonce.ts:117</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/nonce.ts#L61">nonce.ts:61</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
@@ -358,7 +370,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/nonce.ts#L146">nonce.ts:146</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/nonce.ts#L90">nonce.ts:90</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -380,7 +392,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/nonce.ts#L125">nonce.ts:125</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/nonce.ts#L69">nonce.ts:69</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -414,13 +426,19 @@
 						<a href="../modules/_client_.html">"client"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/_closecode_.html">"closecode"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/_cookie_.html">"cookie"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/_datachannel_.html">"datachannel"</a>
+						<a href="../modules/_csn_.html">"csn"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_eventregistry_.html">"eventregistry"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_exceptions_.html">"exceptions"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_keystore_.html">"keystore"</a>
@@ -432,7 +450,22 @@
 						<a href="../modules/_nonce_.html">"nonce"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="../modules/_peers_.html">"peers"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/_signaling_.html">"signaling"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_signaling_common_.html">"signaling/common"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_signaling_helpers_.html">"signaling/helpers"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_signaling_initiator_.html">"signaling/initiator"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_signaling_responder_.html">"signaling/responder"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_utils_.html">"utils"</a>
@@ -442,9 +475,6 @@
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_nonce_.datachannelnonce.html" class="tsd-kind-icon">Data<wbr>Channel<wbr>Nonce</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
 						<a href="_nonce_.nonce.html" class="tsd-kind-icon">Nonce</a>
 					</li>
 				</ul>
@@ -469,6 +499,9 @@
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-protected">
 								<a href="_nonce_.signalingchannelnonce.html#_source" class="tsd-kind-icon">_source</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+								<a href="_nonce_.signalingchannelnonce.html#total_length" class="tsd-kind-icon">TOTAL_<wbr>LENGTH</a>
 							</li>
 							<li class=" tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
 								<a href="_nonce_.signalingchannelnonce.html#combinedsequencenumber" class="tsd-kind-icon">combined<wbr>Sequence<wbr>Number</a>

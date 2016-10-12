@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>Packet | saltyrtc</title>
+	<title>CombinedSequence | saltyrtc</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -57,13 +57,13 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/_signaling_.html">&quot;signaling&quot;</a>
+					<a href="../modules/_csn_.html">&quot;csn&quot;</a>
 				</li>
 				<li>
-					<a href="_signaling_.packet.html">Packet</a>
+					<a href="_csn_.combinedsequence.html">CombinedSequence</a>
 				</li>
 			</ul>
-			<h1>Interface Packet</h1>
+			<h1>Class CombinedSequence</h1>
 		</div>
 	</div>
 </header>
@@ -74,7 +74,7 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">Packet</span>
+						<span class="target">CombinedSequence</span>
 					</li>
 				</ul>
 			</section>
@@ -82,37 +82,118 @@
 				<h2>Index</h2>
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
-						<section class="tsd-index-section tsd-is-not-exported">
+						<section class="tsd-index-section ">
+							<h3>Constructors</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="_csn_.combinedsequence.html#constructor" class="tsd-kind-icon">constructor</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section tsd-is-private tsd-is-private-protected">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported"><a href="_signaling_.packet.html#message" class="tsd-kind-icon">message</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported"><a href="_signaling_.packet.html#nonce" class="tsd-kind-icon">nonce</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_csn_.combinedsequence.html#overflow" class="tsd-kind-icon">overflow</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private"><a href="_csn_.combinedsequence.html#sequencenumber" class="tsd-kind-icon">sequence<wbr>Number</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private tsd-is-static"><a href="_csn_.combinedsequence.html#overflow_max" class="tsd-kind-icon">OVERFLOW_<wbr>MAX</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-private tsd-is-static"><a href="_csn_.combinedsequence.html#sequence_number_max" class="tsd-kind-icon">SEQUENCE_<wbr>NUMBER_<wbr>MAX</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Methods</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_csn_.combinedsequence.html#next" class="tsd-kind-icon">next</a></li>
 							</ul>
 						</section>
 					</div>
 				</section>
 			</section>
-			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Constructors</h2>
+				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class">
+					<a name="constructor" class="tsd-anchor"></a>
+					<h3>constructor</h3>
+					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Combined<wbr>Sequence<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_csn_.combinedsequence.html" class="tsd-signature-type">CombinedSequence</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/csn.ts#L15">csn.ts:15</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <a href="_csn_.combinedsequence.html" class="tsd-signature-type">CombinedSequence</a></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group tsd-is-private tsd-is-private-protected">
 				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-					<a name="message" class="tsd-anchor"></a>
-					<h3>message</h3>
-					<div class="tsd-signature tsd-kind-icon">message<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Message</span></div>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="overflow" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> overflow</h3>
+					<div class="tsd-signature tsd-kind-icon">overflow<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/signaling.ts#L53">signaling.ts:53</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/csn.ts#L15">csn.ts:15</a></li>
 						</ul>
 					</aside>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-					<a name="nonce" class="tsd-anchor"></a>
-					<h3>nonce</h3>
-					<div class="tsd-signature tsd-kind-icon">nonce<span class="tsd-signature-symbol">:</span> <a href="../classes/_nonce_.nonce.html" class="tsd-signature-type">Nonce</a></div>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
+					<a name="sequencenumber" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagPrivate">Private</span> sequence<wbr>Number</h3>
+					<div class="tsd-signature tsd-kind-icon">sequence<wbr>Number<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/signaling.ts#L54">signaling.ts:54</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/csn.ts#L14">csn.ts:14</a></li>
 						</ul>
 					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private tsd-is-static">
+					<a name="overflow_max" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> <span class="tsd-flag ts-flagPrivate">Private</span> OVERFLOW_<wbr>MAX</h3>
+					<div class="tsd-signature tsd-kind-icon">OVERFLOW_<wbr>MAX<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/csn.ts#L12">csn.ts:12</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private tsd-is-static">
+					<a name="sequence_number_max" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> <span class="tsd-flag ts-flagPrivate">Private</span> SEQUENCE_<wbr>NUMBER_<wbr>MAX</h3>
+					<div class="tsd-signature tsd-kind-icon">SEQUENCE_<wbr>NUMBER_<wbr>MAX<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/csn.ts#L11">csn.ts:11</a></li>
+						</ul>
+					</aside>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Methods</h2>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="next" class="tsd-anchor"></a>
+					<h3>next</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">next<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="../modules/_csn_.html#nextcombinedsequence" class="tsd-signature-type">NextCombinedSequence</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/csn.ts#L28">csn.ts:28</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Return next sequence number and overflow.</p>
+								</div>
+								<p>May throw an error if overflow number overflows. This is extremely
+								unlikely and must be treated as a protocol error.</p>
+							</div>
+							<h4 class="tsd-returns-title">Returns <a href="../modules/_csn_.html#nextcombinedsequence" class="tsd-signature-type">NextCombinedSequence</a></h4>
+						</li>
+					</ul>
 				</section>
 			</section>
 		</div>
@@ -129,13 +210,19 @@
 						<a href="../modules/_client_.html">"client"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/_cookie_.html">"cookie"</a>
+						<a href="../modules/_closecode_.html">"closecode"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="../modules/_datachannel_.html">"datachannel"</a>
+						<a href="../modules/_cookie_.html">"cookie"</a>
+					</li>
+					<li class="current tsd-kind-external-module">
+						<a href="../modules/_csn_.html">"csn"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_eventregistry_.html">"eventregistry"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_exceptions_.html">"exceptions"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_keystore_.html">"keystore"</a>
@@ -146,8 +233,23 @@
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_nonce_.html">"nonce"</a>
 					</li>
-					<li class="current tsd-kind-external-module">
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_peers_.html">"peers"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="../modules/_signaling_.html">"signaling"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_signaling_common_.html">"signaling/common"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_signaling_helpers_.html">"signaling/helpers"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_signaling_initiator_.html">"signaling/initiator"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_signaling_responder_.html">"signaling/responder"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="../modules/_utils_.html">"utils"</a>
@@ -156,38 +258,35 @@
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
-					<li class=" tsd-kind-enum tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../enums/_signaling_.closecode.html" class="tsd-kind-icon">Close<wbr>Code</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../classes/_signaling_.combinedsequence.html" class="tsd-kind-icon">Combined<wbr>Sequence</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="../classes/_signaling_.responder.html" class="tsd-kind-icon">Responder</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="../classes/_signaling_.signaling.html" class="tsd-kind-icon">Signaling</a>
-					</li>
 				</ul>
 				<ul class="current">
-					<li class="current tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="_signaling_.packet.html" class="tsd-kind-icon">Packet</a>
+					<li class="current tsd-kind-class tsd-parent-kind-external-module">
+						<a href="_csn_.combinedsequence.html" class="tsd-kind-icon">Combined<wbr>Sequence</a>
 						<ul>
-							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-								<a href="_signaling_.packet.html#message" class="tsd-kind-icon">message</a>
+							<li class=" tsd-kind-constructor tsd-parent-kind-class">
+								<a href="_csn_.combinedsequence.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-interface tsd-is-not-exported">
-								<a href="_signaling_.packet.html#nonce" class="tsd-kind-icon">nonce</a>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="_csn_.combinedsequence.html#overflow" class="tsd-kind-icon">overflow</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private">
+								<a href="_csn_.combinedsequence.html#sequencenumber" class="tsd-kind-icon">sequence<wbr>Number</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private tsd-is-static">
+								<a href="_csn_.combinedsequence.html#overflow_max" class="tsd-kind-icon">OVERFLOW_<wbr>MAX</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-private tsd-is-static">
+								<a href="_csn_.combinedsequence.html#sequence_number_max" class="tsd-kind-icon">SEQUENCE_<wbr>NUMBER_<wbr>MAX</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="_csn_.combinedsequence.html#next" class="tsd-kind-icon">next</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
-					<li class=" tsd-kind-interface tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="_signaling_.signalingmessage.html" class="tsd-kind-icon">Signaling<wbr>Message</a>
-					</li>
 					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module">
-						<a href="../modules/_signaling_.html#state" class="tsd-kind-icon">State</a>
+						<a href="../modules/_csn_.html#nextcombinedsequence" class="tsd-kind-icon">Next<wbr>Combined<wbr>Sequence</a>
 					</li>
 				</ul>
 			</nav>

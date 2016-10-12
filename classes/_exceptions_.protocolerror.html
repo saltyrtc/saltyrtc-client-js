@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>&quot;keystore&quot; | saltyrtc</title>
+	<title>ProtocolError | saltyrtc</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -57,29 +57,121 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="_keystore_.html">&quot;keystore&quot;</a>
+					<a href="../modules/_exceptions_.html">&quot;exceptions&quot;</a>
+				</li>
+				<li>
+					<a href="_exceptions_.protocolerror.html">ProtocolError</a>
 				</li>
 			</ul>
-			<h1>External module &quot;keystore&quot;</h1>
+			<h1>Class ProtocolError</h1>
 		</div>
 	</div>
 </header>
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>A signaling error with the close code hardcoded to ProtocolError.</p>
+					</div>
+				</div>
+			</section>
+			<section class="tsd-panel tsd-hierarchy">
+				<h3>Hierarchy</h3>
+				<ul class="tsd-hierarchy">
+					<li>
+						<a href="_exceptions_.signalingerror.html" class="tsd-signature-type">SignalingError</a>
+						<ul class="tsd-hierarchy">
+							<li>
+								<span class="target">ProtocolError</span>
+							</li>
+						</ul>
+					</li>
+				</ul>
+			</section>
 			<section class="tsd-panel-group tsd-index-group">
 				<h2>Index</h2>
 				<section class="tsd-panel tsd-index-panel">
 					<div class="tsd-index-content">
 						<section class="tsd-index-section ">
-							<h3>Classes</h3>
+							<h3>Constructors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/_keystore_.authtoken.html" class="tsd-kind-icon">Auth<wbr>Token</a></li>
-								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/_keystore_.box.html" class="tsd-kind-icon">Box</a></li>
-								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/_keystore_.keystore.html" class="tsd-kind-icon">Key<wbr>Store</a></li>
+								<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-overwrite"><a href="_exceptions_.protocolerror.html#constructor" class="tsd-kind-icon">constructor</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section tsd-is-inherited">
+							<h3>Properties</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="_exceptions_.protocolerror.html#closecode" class="tsd-kind-icon">close<wbr>Code</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static"><a href="_exceptions_.protocolerror.html#message" class="tsd-kind-icon">message</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static"><a href="_exceptions_.protocolerror.html#name" class="tsd-kind-icon">name</a></li>
 							</ul>
 						</section>
 					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Constructors</h2>
+				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class tsd-is-overwrite">
+					<a name="constructor" class="tsd-anchor"></a>
+					<h3>constructor</h3>
+					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class tsd-is-overwrite">
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Protocol<wbr>Error<span class="tsd-signature-symbol">(</span>message<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_exceptions_.protocolerror.html" class="tsd-signature-type">ProtocolError</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<p>Overwrites <a href="_exceptions_.signalingerror.html">SignalingError</a>.<a href="_exceptions_.signalingerror.html#constructor">constructor</a></p>
+								<ul>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/exceptions.ts#L47">exceptions.ts:47</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>message: <span class="tsd-signature-type">string</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="_exceptions_.protocolerror.html" class="tsd-signature-type">ProtocolError</a></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group tsd-is-inherited">
+				<h2>Properties</h2>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
+					<a name="closecode" class="tsd-anchor"></a>
+					<h3>close<wbr>Code</h3>
+					<div class="tsd-signature tsd-kind-icon">close<wbr>Code<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+					<aside class="tsd-sources">
+						<p>Inherited from <a href="_exceptions_.signalingerror.html">SignalingError</a>.<a href="_exceptions_.signalingerror.html#closecode">closeCode</a></p>
+						<ul>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/exceptions.ts#L34">exceptions.ts:34</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+					<a name="message" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> message</h3>
+					<div class="tsd-signature tsd-kind-icon">message<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<aside class="tsd-sources">
+						<p>Inherited from Error.message</p>
+						<ul>
+							<li>Defined in /home/travis/build/saltyrtc/saltyrtc-client-js/node_modules/typescript/lib/lib.es6.d.ts:2211</li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+					<a name="name" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> name</h3>
+					<div class="tsd-signature tsd-kind-icon">name<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<aside class="tsd-sources">
+						<p>Inherited from Error.name</p>
+						<ul>
+							<li>Defined in /home/travis/build/saltyrtc/saltyrtc-client-js/node_modules/typescript/lib/lib.es6.d.ts:2210</li>
+						</ul>
+					</aside>
 				</section>
 			</section>
 		</div>
@@ -90,68 +182,92 @@
 						<a href="../globals.html"><em>Globals</em></a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_chunkifier_.html">"chunkifier"</a>
+						<a href="../modules/_chunkifier_.html">"chunkifier"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_client_.html">"client"</a>
+						<a href="../modules/_client_.html">"client"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_closecode_.html">"closecode"</a>
+						<a href="../modules/_closecode_.html">"closecode"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_cookie_.html">"cookie"</a>
+						<a href="../modules/_cookie_.html">"cookie"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_csn_.html">"csn"</a>
+						<a href="../modules/_csn_.html">"csn"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_eventregistry_.html">"eventregistry"</a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="_exceptions_.html">"exceptions"</a>
+						<a href="../modules/_eventregistry_.html">"eventregistry"</a>
 					</li>
 					<li class="current tsd-kind-external-module">
-						<a href="_keystore_.html">"keystore"</a>
+						<a href="../modules/_exceptions_.html">"exceptions"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_main_.html">"main"</a>
+						<a href="../modules/_keystore_.html">"keystore"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_nonce_.html">"nonce"</a>
+						<a href="../modules/_main_.html">"main"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_peers_.html">"peers"</a>
+						<a href="../modules/_nonce_.html">"nonce"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_signaling_.html">"signaling"</a>
+						<a href="../modules/_peers_.html">"peers"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_signaling_common_.html">"signaling/common"</a>
+						<a href="../modules/_signaling_.html">"signaling"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_signaling_helpers_.html">"signaling/helpers"</a>
+						<a href="../modules/_signaling_common_.html">"signaling/common"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_signaling_initiator_.html">"signaling/initiator"</a>
+						<a href="../modules/_signaling_helpers_.html">"signaling/helpers"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_signaling_responder_.html">"signaling/responder"</a>
+						<a href="../modules/_signaling_initiator_.html">"signaling/initiator"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="_utils_.html">"utils"</a>
+						<a href="../modules/_signaling_responder_.html">"signaling/responder"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="../modules/_utils_.html">"utils"</a>
 					</li>
 				</ul>
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="../classes/_keystore_.authtoken.html" class="tsd-kind-icon">Auth<wbr>Token</a>
+						<a href="_exceptions_.connectionerror.html" class="tsd-kind-icon">Connection<wbr>Error</a>
+					</li>
+				</ul>
+				<ul class="current">
+					<li class="current tsd-kind-class tsd-parent-kind-external-module">
+						<a href="_exceptions_.protocolerror.html" class="tsd-kind-icon">Protocol<wbr>Error</a>
+						<ul>
+							<li class=" tsd-kind-constructor tsd-parent-kind-class tsd-is-overwrite">
+								<a href="_exceptions_.protocolerror.html#constructor" class="tsd-kind-icon">constructor</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
+								<a href="_exceptions_.protocolerror.html#closecode" class="tsd-kind-icon">close<wbr>Code</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+								<a href="_exceptions_.protocolerror.html#message" class="tsd-kind-icon">message</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+								<a href="_exceptions_.protocolerror.html#name" class="tsd-kind-icon">name</a>
+							</li>
+						</ul>
+					</li>
+				</ul>
+				<ul class="after-current">
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="_exceptions_.signalingerror.html" class="tsd-kind-icon">Signaling<wbr>Error</a>
 					</li>
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="../classes/_keystore_.box.html" class="tsd-kind-icon">Box</a>
+						<a href="_exceptions_.validationerror.html" class="tsd-kind-icon">Validation<wbr>Error</a>
 					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="../classes/_keystore_.keystore.html" class="tsd-kind-icon">Key<wbr>Store</a>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module">
+						<a href="../modules/_exceptions_.html#internalerror" class="tsd-kind-icon">Internal<wbr>Error</a>
 					</li>
 				</ul>
 			</nav>

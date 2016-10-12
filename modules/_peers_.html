@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>&quot;datachannel&quot; | saltyrtc</title>
+	<title>&quot;peers&quot; | saltyrtc</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -57,10 +57,10 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="_datachannel_.html">&quot;datachannel&quot;</a>
+					<a href="_peers_.html">&quot;peers&quot;</a>
 				</li>
 			</ul>
-			<h1>External module &quot;datachannel&quot;</h1>
+			<h1>External module &quot;peers&quot;</h1>
 		</div>
 	</div>
 </header>
@@ -74,81 +74,11 @@
 						<section class="tsd-index-section ">
 							<h3>Classes</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/_datachannel_.securedatachannel.html" class="tsd-kind-icon">Secure<wbr>Data<wbr>Channel</a></li>
+								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/_peers_.initiator.html" class="tsd-kind-icon">Initiator</a></li>
+								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/_peers_.peer.html" class="tsd-kind-icon">Peer</a></li>
+								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/_peers_.responder.html" class="tsd-kind-icon">Responder</a></li>
 							</ul>
 						</section>
-						<section class="tsd-index-section tsd-is-not-exported">
-							<h3>Type aliases</h3>
-							<ul class="tsd-index-list">
-								<li class="tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported"><a href="_datachannel_.html#eventhandler" class="tsd-kind-icon">Event<wbr>Handler</a></li>
-								<li class="tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported"><a href="_datachannel_.html#messageeventhandler" class="tsd-kind-icon">Message<wbr>Event<wbr>Handler</a></li>
-							</ul>
-						</section>
-					</div>
-				</section>
-			</section>
-			<section class="tsd-panel-group tsd-member-group tsd-is-not-exported">
-				<h2>Type aliases</h2>
-				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
-					<a name="eventhandler" class="tsd-anchor"></a>
-					<h3>Event<wbr>Handler</h3>
-					<div class="tsd-signature tsd-kind-icon">Event<wbr>Handler<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">function</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/datachannel.ts#L15">datachannel.ts:15</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-type-declaration">
-						<h4>Type declaration</h4>
-						<ul class="tsd-parameters">
-							<li class="tsd-parameter-siganture">
-								<ul class="tsd-signatures tsd-kind-type-literal tsd-parent-kind-type-alias tsd-is-not-exported">
-									<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>event<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Event</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
-								</ul>
-								<ul class="tsd-descriptions">
-									<li class="tsd-description">
-										<h4 class="tsd-parameters-title">Parameters</h4>
-										<ul class="tsd-parameters">
-											<li>
-												<h5>event: <span class="tsd-signature-type">Event</span></h5>
-											</li>
-										</ul>
-										<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
-									</li>
-								</ul>
-							</li>
-						</ul>
-					</div>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
-					<a name="messageeventhandler" class="tsd-anchor"></a>
-					<h3>Message<wbr>Event<wbr>Handler</h3>
-					<div class="tsd-signature tsd-kind-icon">Message<wbr>Event<wbr>Handler<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">function</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/e2e9784/saltyrtc/datachannel.ts#L16">datachannel.ts:16</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-type-declaration">
-						<h4>Type declaration</h4>
-						<ul class="tsd-parameters">
-							<li class="tsd-parameter-siganture">
-								<ul class="tsd-signatures tsd-kind-type-literal tsd-parent-kind-type-alias tsd-is-not-exported">
-									<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span>event<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">RTCMessageEvent</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
-								</ul>
-								<ul class="tsd-descriptions">
-									<li class="tsd-description">
-										<h4 class="tsd-parameters-title">Parameters</h4>
-										<ul class="tsd-parameters">
-											<li>
-												<h5>event: <span class="tsd-signature-type">RTCMessageEvent</span></h5>
-											</li>
-										</ul>
-										<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
-									</li>
-								</ul>
-							</li>
-						</ul>
 					</div>
 				</section>
 			</section>
@@ -166,13 +96,19 @@
 						<a href="_client_.html">"client"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="_closecode_.html">"closecode"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="_cookie_.html">"cookie"</a>
 					</li>
-					<li class="current tsd-kind-external-module">
-						<a href="_datachannel_.html">"datachannel"</a>
+					<li class=" tsd-kind-external-module">
+						<a href="_csn_.html">"csn"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="_eventregistry_.html">"eventregistry"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_exceptions_.html">"exceptions"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="_keystore_.html">"keystore"</a>
@@ -183,8 +119,23 @@
 					<li class=" tsd-kind-external-module">
 						<a href="_nonce_.html">"nonce"</a>
 					</li>
+					<li class="current tsd-kind-external-module">
+						<a href="_peers_.html">"peers"</a>
+					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="_signaling_.html">"signaling"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_signaling_common_.html">"signaling/common"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_signaling_helpers_.html">"signaling/helpers"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_signaling_initiator_.html">"signaling/initiator"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_signaling_responder_.html">"signaling/responder"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="_utils_.html">"utils"</a>
@@ -194,13 +145,13 @@
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="../classes/_datachannel_.securedatachannel.html" class="tsd-kind-icon">Secure<wbr>Data<wbr>Channel</a>
+						<a href="../classes/_peers_.initiator.html" class="tsd-kind-icon">Initiator</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="_datachannel_.html#eventhandler" class="tsd-kind-icon">Event<wbr>Handler</a>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/_peers_.peer.html" class="tsd-kind-icon">Peer</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module tsd-is-not-exported">
-						<a href="_datachannel_.html#messageeventhandler" class="tsd-kind-icon">Message<wbr>Event<wbr>Handler</a>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/_peers_.responder.html" class="tsd-kind-icon">Responder</a>
 					</li>
 				</ul>
 			</nav>

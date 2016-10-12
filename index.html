@@ -66,36 +66,73 @@
 		<div class="col-8 col-content">
 			<div class="tsd-panel tsd-typography">
 				<h1 id="saltyrtc-javascript-client">SaltyRTC JavaScript Client</h1>
-				<p><a href="https://travis-ci.org/saltyrtc/saltyrtc-client-js"><img src="https://img.shields.io/travis/saltyrtc/saltyrtc-client-js/develop.svg" alt="Travis branch"></a></p>
+				<p><a href="https://travis-ci.org/saltyrtc/saltyrtc-client-js"><img src="https://img.shields.io/travis/saltyrtc/saltyrtc-client-js/master.svg" alt="Travis branch"></a>
+				<a href="https://github.com/saltyrtc/saltyrtc-client-js"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a></p>
 				<p>This is a <a href="https://github.com/saltyrtc/saltyrtc-meta">SaltyRTC</a> implementation
-				for ECMAScript 2015 written in TypeScript 1.8+.</p>
-				<p>The development is still ongoing, you can find the current version in the
-				<code>develop</code> branch.</p>
+				for JavaScript (ES5) written in TypeScript 1.8+.</p>
+				<p>The development is still ongoing, the library is not yet production ready.</p>
 				<p>Currently at least Firefox 45 and Chromium 49 are required.</p>
 				<p><a href="https://saltyrtc.github.io/saltyrtc-client-js/">API Docs</a></p>
+				<h2 id="usage">Usage</h2>
+				<p>First, create a keypair:</p>
+				<pre><code><span class="hljs-keyword">let</span> permanentKey = <span class="hljs-function"><span class="hljs-keyword">new</span> <span class="hljs-title">saltyrtc</span>.<span class="hljs-title">KeyStore</span>();</span>
+</code></pre><p>Then, create a SaltyRTCBuilder instance:</p>
+				<pre><code><span class="hljs-keyword">let</span> builder = <span class="hljs-function"><span class="hljs-keyword">new</span> <span class="hljs-title">saltyrtc</span>.<span class="hljs-title">SaltyRTCBuilder</span>()
+    .<span class="hljs-title">connectTo</span>(saltyrtcHost, saltyrtcPort)
+    .<span class="hljs-title">withKeyStore</span>(permanentKey);</span>
+</code></pre><p>Depending on whether you&#39;re the initiator or the responder, initialize the SaltyRTC instance:</p>
+				<pre><code><span class="hljs-attribute">let initiator</span> = builder.asInitiator();
+<span class="hljs-attribute">let responder</span> = builder.initiatorInfo(permanentKey.publicKeyBytes, initiator.authTokenBytes).asResponder();
+</code></pre><p>You can also use trusted keys to connect:</p>
+				<pre><code><span class="hljs-attribute">let trustingInitiator</span> = builder.withTrustedPeerKey(responderKey).asInitiator();
+<span class="hljs-attribute">let trustingResponder</span> = builder.withTrustedPeerKey(initiatorKey).asResponder();
+</code></pre><p>Now you can connect both sides:</p>
+				<pre><code>initiator.<span class="hljs-built_in">connect</span>()
+responder.<span class="hljs-built_in">connect</span>()
+</code></pre><p>You can query the current signaling state:</p>
+				<pre><code>&gt;&gt;&gt; console.<span class="hljs-keyword">log</span>(initiator.<span class="hljs-keyword">state</span>)
+server-handshake
+</code></pre><p>And you can register callbacks for certain events:</p>
+				<pre><code>initiator.<span class="hljs-literal">on</span>(<span class="hljs-string">'handover'</span>, <span class="hljs-function"><span class="hljs-params">()</span> =&gt;</span> <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'Handover is done'</span>));
+responder.<span class="hljs-literal">on</span>(<span class="hljs-string">'state-change'</span>, <span class="hljs-function"><span class="hljs-params">(newState)</span> =&gt;</span> <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'New signaling state:'</span>, newState));
+</code></pre><p>The following events are available:</p>
+				<ul>
+					<li><code>state-change(saltyrtc.SignalingState)</code>: The signaling state changed.</li>
+					<li><code>state-change:&lt;new-state&gt;(void)</code>: The signaling state change event, filtered by state.</li>
+					<li><code>new-responder(responderId)</code>: A responder has connected. This event is only dispatched for the initiator.</li>
+					<li><code>handover(void)</code>: The handover to the data channel is done.</li>
+					<li><code>connection-error(ErrorEvent)</code>: A connection error occured.</li>
+					<li><code>connection-closed(CloseEvent)</code>: The connection was closed.</li>
+				</ul>
 				<h2 id="development">Development</h2>
-				<p>Install dependencies with npm (or alternatively install them manually):</p>
+				<p>Fetch git submodules:</p>
+				<pre><code>$ git submodule <span class="hljs-keyword">update</span> <span class="hljs-comment">--init</span>
+</code></pre><p>Install dependencies with npm (or alternatively install them manually):</p>
 				<pre><code>$ npm <span class="hljs-keyword">install</span>
-</code></pre><p>To compile the TypeScript sources to a single JavaScript (ES2015) file, run
-				<code>rollup</code> in the main directory.</p>
-				<pre><code>$ npm <span class="hljs-built_in">run</span> rollup
-</code></pre><p>The resulting file will be located in <code>dist/saltyrtc.js</code>.</p>
+</code></pre><p>To compile the TypeScript sources to a single minified JavaScript (ES5) file:</p>
+				<pre><code>$ npm <span class="hljs-keyword">run</span><span class="bash"> dist</span>
+</code></pre><p>The resulting file will be located in <code>dist/saltyrtc.min.js</code>.</p>
 				<p>You can also watch the source code for changes and recompile automatically:</p>
-				<pre><code>$ npm <span class="hljs-built_in">run</span> watch
+				<pre><code>$ npm <span class="hljs-keyword">run</span><span class="bash"> watch</span>
 </code></pre><p>Due to a bug (<a href="https://github.com/rollup/rollup-plugin-typescript/issues/43">https://github.com/rollup/rollup-plugin-typescript/issues/43</a>),
 					rollup does not currently output non-fatal errors from TypeScript. To see
 				those, simply issue <code>npm run validate</code> in your main directory.</p>
-				<pre><code>$ npm <span class="hljs-built_in">run</span> validate
+				<pre><code>$ npm <span class="hljs-keyword">run</span><span class="bash"> validate</span>
 </code></pre><h2 id="testing">Testing</h2>
 				<p>To compile the test sources, run:</p>
-				<pre><code>$ npm <span class="hljs-built_in">run</span> rollup_tests
+				<pre><code>$ npm <span class="hljs-keyword">run</span><span class="bash"> rollup_tests</span>
 </code></pre><p>You can also watch the tests and sources for changes and recompile
 				automatically:</p>
-				<pre><code>$ npm <span class="hljs-built_in">run</span> watch_tests
+				<pre><code>$ npm <span class="hljs-keyword">run</span><span class="bash"> watch_tests</span>
 </code></pre><p>Then simply open <code>tests/testsuite.html</code> in your browser!</p>
 				<p>Alternatively, run the tests automatically in Firefox and Chrome:</p>
 				<pre><code>$ npm <span class="hljs-built_in">test</span>
-</code></pre><h2 id="license">License</h2>
+</code></pre><h2 id="coding-guidelines">Coding Guidelines</h2>
+				<ul>
+					<li>Write clean ES2015</li>
+					<li>Favor <code>const</code> over <code>let</code></li>
+				</ul>
+				<h2 id="license">License</h2>
 				<p>MIT, see <code>LICENSE.md</code>.</p>
 			</div>
 		</div>
@@ -112,13 +149,19 @@
 						<a href="modules/_client_.html">"client"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="modules/_closecode_.html">"closecode"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="modules/_cookie_.html">"cookie"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_datachannel_.html">"datachannel"</a>
+						<a href="modules/_csn_.html">"csn"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="modules/_eventregistry_.html">"eventregistry"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_exceptions_.html">"exceptions"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="modules/_keystore_.html">"keystore"</a>
@@ -130,7 +173,22 @@
 						<a href="modules/_nonce_.html">"nonce"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="modules/_peers_.html">"peers"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="modules/_signaling_.html">"signaling"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_signaling_common_.html">"signaling/common"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_signaling_helpers_.html">"signaling/helpers"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_signaling_initiator_.html">"signaling/initiator"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_signaling_responder_.html">"signaling/responder"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="modules/_utils_.html">"utils"</a>
