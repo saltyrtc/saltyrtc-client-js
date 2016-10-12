@@ -2,6 +2,8 @@
  * WebRTC initiator example.
  */
 
+///// WARNING: OUTDATED EXAMPLE (TODO) /////
+
 /// <reference path='saltyrtc/types/RTCPeerConnection.d.ts' />
 import { SaltyRTC, KeyStore, SecureDataChannel } from './saltyrtc/main';
 

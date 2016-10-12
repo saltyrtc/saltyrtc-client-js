@@ -97,6 +97,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
         // Notify listeners
         this.client.emit({type: 'state-change', data: newState});
+        this.client.emit({type: 'state-change:' + newState});
     }
 
     /**

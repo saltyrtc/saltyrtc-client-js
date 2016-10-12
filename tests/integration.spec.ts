@@ -30,12 +30,13 @@ export default () => { describe('Integration Tests', function() {
             .usingTasks([new DummyTask()])
             .asResponder() as saltyrtc.SaltyRTC;
 
-        // Helper function. Connect both clients and resolve once they're both connected.
+        // Helper function. Connect both clients and resolve once they both finished the peer handshake.
         this.connectBoth = (a, b) => {
             let ready = 0;
             return new Promise((resolve) => {
-                a.once('connected', () => { ready += 1; if (ready == 2) resolve(); });
-                b.once('connected', () => { ready += 1; if (ready == 2) resolve(); });
+                const handler = () => { if (++ready == 2) resolve() };
+                a.once('state-change:task', handler);
+                b.once('state-change:task', handler);
                 a.connect();
                 b.connect();
             });
@@ -91,8 +92,8 @@ export default () => { describe('Integration Tests', function() {
                     done();
                 }
             };
-            this.initiator.on('connected', callback);
-            this.responder.on('connected', callback);
+            this.initiator.on('state-change:task', callback);
+            this.responder.on('state-change:task', callback);
             t1 = new Date();
             this.initiator.connect();
             this.responder.connect();

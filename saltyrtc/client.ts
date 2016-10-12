@@ -321,8 +321,8 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     /**
      * Connect to the SaltyRTC server.
      *
-     * This method is asynchronous. To get notified when the connection is up
-     * and running, subscribe to the `connected` event.
+     * This method is asynchronous. To get notified when the peer connection is up
+     * and running, subscribe to the `state-change:task` event.
      */
     public connect(): void {
         this.signaling.connect();
