@@ -8,8 +8,9 @@ export class DummyTask implements saltyrtc.Task {
     constructor(name?: string) {
         if (name === undefined) {
             this.name = 'dummy.tasks.saltyrtc.org';
+        } else {
+            this.name = name;
         }
-
     }
 
     init(signaling: saltyrtc.Signaling, data: Object): void {
