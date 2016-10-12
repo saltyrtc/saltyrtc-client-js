@@ -56,7 +56,7 @@ The following events are available:
  - `new-responder(responderId)`: A responder has connected. This event is only dispatched for the initiator.
  - `handover(void)`: The handover to the data channel is done.
  - `connection-error(ErrorEvent)`: A connection error occured.
- - `connection-closed(CloseEvent)`: The connection was closed.
+ - `connection-closed(CloseEvent)`: The websocket connection was closed. (Note: This might be due to handover.)
 
 ## Development
 
