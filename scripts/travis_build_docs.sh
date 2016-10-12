@@ -2,7 +2,7 @@
 # https://github.com/phosphorjs/phosphor/wiki/TypeDoc-Publishing
 set -e
 
-if [[ $TRAVIS_PULL_REQUEST == false && $TRAVIS_BRANCH == "develop" ]]
+if [[ $TRAVIS_PULL_REQUEST == false && $TRAVIS_BRANCH == "master" ]]
 then
     echo "-- will build docs --"
 
@@ -39,5 +39,5 @@ then
     git commit -m "autocommit docs"
     git push origin gh-pages
 else
-    echo "-- will only build docs from develop --"
+    echo "-- will only build docs from master --"
 fi
