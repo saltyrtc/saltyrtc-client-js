@@ -30,7 +30,7 @@ before_script:
   - certutil -d ~/.mozilla/firefox/saltyrtc -A -n saltyrtc-test-ca -t Ccw,, -i saltyrtc.crt
   - certutil -d sql:$HOME/.pki/nssdb -A -n saltyrtc-test-ca -t Ccw,, -i saltyrtc.crt
   # Start SaltyRTC server
-  - git clone https://github.com/saltyrtc/saltyrtc-server-python -b develop
+  - git clone https://github.com/saltyrtc/saltyrtc-server-python -b master
   - export SALTYRTC_TLS_CERT=../saltyrtc.crt SALTYRTC_TLS_KEY=../saltyrtc.key
   - |
     cd saltyrtc-server-python
