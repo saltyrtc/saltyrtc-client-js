@@ -12,6 +12,12 @@ Currently at least Firefox 45 and Chromium 49 are required.
 
 [API Docs](https://saltyrtc.github.io/saltyrtc-client-js/)
 
+## Installing
+
+You can install this library via `npm`:
+
+    npm install saltyrtc-client
+
 ## Usage
 
 First, create a keypair:
@@ -59,10 +65,6 @@ The following events are available:
  - `connection-closed(CloseEvent)`: The websocket connection was closed. (Note: This might be due to handover.)
 
 ## Development
-
-Fetch git submodules:
-
-    $ git submodule update --init
 
 Install dependencies with npm (or alternatively install them manually):
 
