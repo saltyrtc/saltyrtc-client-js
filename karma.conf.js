@@ -3,8 +3,6 @@ module.exports = function(config) {
   var configuration = {
     frameworks: ['jasmine'],
     files: [
-      'vendor/nacl-fast.min.js',
-      'vendor/msgpack.min.js',
       'node_modules/webrtc-adapter/out/adapter.js',
       'dist/tests.js'
     ],

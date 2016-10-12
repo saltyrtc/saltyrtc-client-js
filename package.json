@@ -41,5 +41,8 @@
     "rollup-plugin-uglify": "^1.0.1",
     "typescript": "^1.8.9",
     "watch": "^0.18.0"
+  },
+  "dependencies": {
+    "tweetnacl": "^0.14.3"
   }
 }
