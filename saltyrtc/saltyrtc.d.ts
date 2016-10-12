@@ -5,8 +5,6 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-/// <reference path="types/RTCPeerConnection.d.ts" />
-
 declare namespace saltyrtc {
 
     interface Box {
@@ -172,30 +170,6 @@ declare namespace saltyrtc {
         close(reason: number): void;
     }
 
-    interface SecureDataChannel extends RTCDataChannel {
-        send(data: string | Blob | ArrayBuffer | ArrayBufferView): void;
-        label: string;
-        ordered: boolean;
-        maxPacketLifeTime: number;
-        maxRetransmits: number;
-        protocol: string;
-        negotiated: boolean;
-        id: number;
-        readyState: RTCDataChannelState;
-        bufferedAmount: number;
-        bufferedAmountLowThreshold: number;
-        binaryType: RTCBinaryType;
-        onopen: EventHandler;
-        onbufferedamountlow: EventHandler;
-        onerror: EventHandler;
-        onclose: EventHandler;
-        onmessage: MessageEventHandler;
-        close(): void;
-        addEventListener(type: string, listener: EventListenerOrEventListenerObject, useCapture?: boolean): void;
-        removeEventListener(type: string, listener: EventListenerOrEventListenerObject, useCapture?: boolean): void;
-        dispatchEvent(e: Event): boolean;
-    }
-
     interface SaltyRTCBuilder {
         connectTo(host: string, port: number): SaltyRTCBuilder;
         withKeyStore(keyStore: KeyStore): SaltyRTCBuilder;
@@ -225,6 +199,29 @@ declare namespace saltyrtc {
         once(event: string | string[], handler: SaltyEventHandler): void;
         off(event: string | string[], handler?: SaltyEventHandler): void;
         emit(event: SaltyRTCEvent): void;
+    }
+
+    interface EventRegistry {
+        /**
+         * Register an event handler for the specified event(s).
+         */
+        register(eventType: string | string[], handler: SaltyEventHandler): void;
+
+        /**
+         * Unregister an event handler for the specified event(s).
+         * If no handler is specified, all handlers for the specified event(s) are removed.
+         */
+        unregister(eventType: string | string[], handler?: SaltyEventHandler): void;
+
+        /**
+         * Return all event handlers for the specified event(s).
+         *
+         * The return value is always an array. If the event does not exist, the
+         * array will be empty.
+         *
+         * Even if a handler is registered for multiple events, it is only returned once.
+         */
+        get(eventType: string | string[]): SaltyEventHandler[];
     }
 
 }

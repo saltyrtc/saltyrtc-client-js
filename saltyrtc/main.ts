@@ -12,3 +12,4 @@ import "../vendor/msgpack.min.js";
 
 export { SaltyRTCBuilder } from "./client";
 export { KeyStore, Box } from "./keystore";
+export { EventRegistry } from "./eventregistry";
