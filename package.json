@@ -40,7 +40,6 @@
     "rollup-plugin-typescript": "^0.7.6",
     "rollup-plugin-uglify": "^1.0.1",
     "typescript": "^1.8.9",
-    "watch": "^0.18.0",
-    "webrtc-adapter": "^1.4.0"
+    "watch": "^0.18.0"
   }
 }
