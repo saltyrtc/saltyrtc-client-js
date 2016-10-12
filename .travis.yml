@@ -31,14 +31,12 @@ before_script:
   - certutil -d sql:$HOME/.pki/nssdb -A -n saltyrtc-test-ca -t Ccw,, -i saltyrtc.crt
   # Start SaltyRTC server
   - git clone https://github.com/saltyrtc/saltyrtc-server-python -b master
-  - export SALTYRTC_TLS_CERT=../saltyrtc.crt SALTYRTC_TLS_KEY=../saltyrtc.key
   - export SALTYRTC_SERVER_PERMANENT_KEY=0919b266ce1855419e4066fc076b39855e728768e3afa773105edd2e37037c20
   - |
     cd saltyrtc-server-python
     pyvenv venv
-    venv/bin/python setup.py install
-    venv/bin/pip install logbook
-    venv/bin/python examples/debug.py > serverlog.txt 2>&1 &
+    venv/bin/pip install .[logging]
+    venv/bin/saltyrtc-server serve -sc ../saltyrtc.crt -sk ../saltyrtc.key -p 8765 -k $SALTYRTC_SERVER_PERMANENT_KEY > serverlog.txt 2>&1 &
     export SALTYRTC_SERVER_PID=$!
     sleep 2
     cd ..
