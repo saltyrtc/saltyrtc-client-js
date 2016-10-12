@@ -232,7 +232,7 @@ export class InitiatorSignaling extends Signaling {
                     payload = decryptKeystore(box, responder.keyStore, responder.sessionKey, 'auth');
                     msg = this.decodeMessage(payload, 'auth', true);
                     console.debug(this.logTag, 'Received auth');
-                    this.handleAuth(msg as saltyrtc.messages.Auth, responder, nonce);
+                    this.handleAuth(msg as saltyrtc.messages.ResponderAuth, responder, nonce);
                     this.sendAuth(responder, nonce);
 
                     // We're connected!
@@ -331,10 +331,16 @@ export class InitiatorSignaling extends Signaling {
             throw new ProtocolError('Their cookie and our cookie are the same.');
         }
 
+        // Prepare task data
+        const taskData = {};
+        taskData[this.task.getName()] = this.task.getData();
+
         // Send auth
-        const message: saltyrtc.messages.Auth = {
+        const message: saltyrtc.messages.InitiatorAuth = {
             type: 'auth',
             your_cookie: nonce.cookie.asArrayBuffer(),
+            task: this.task.getName(),
+            data: taskData,
         };
         const packet: Uint8Array = this.buildPacket(message, responder.id);
         console.debug(this.logTag, 'Sending auth');
@@ -349,7 +355,7 @@ export class InitiatorSignaling extends Signaling {
      *
      * @throws SignalingError
      */
-    private handleAuth(msg: saltyrtc.messages.Auth, responder: Responder, nonce: SignalingChannelNonce): void {
+    private handleAuth(msg: saltyrtc.messages.ResponderAuth, responder: Responder, nonce: SignalingChannelNonce): void {
         // Validate cookie
         this.validateRepeatedCookie(msg);
 

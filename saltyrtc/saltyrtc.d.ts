@@ -66,6 +66,8 @@ declare namespace saltyrtc {
 
         /**
          * Send a task message through the websocket.
+         *
+         * @throws SignalingError if message could not be sent.
          */
         sendTaskMessage(msg: messages.TaskMessage): void;
 
@@ -90,6 +92,7 @@ declare namespace saltyrtc {
          * This method can be used by tasks to pass in messages that arrived through their signaling channel.
          *
          * @param decryptedBytes The decrypted message bytes.
+         * @throws SignalingError if the message is invalid.
          */
         onSignalingPeerMessage(decryptedBytes: Uint8Array): void;
 
@@ -148,14 +151,14 @@ declare namespace saltyrtc {
         /**
          * Return the task protocol name.
          */
-        getName(): String;
+        getName(): string;
 
         /**
          * Return the list of supported message types.
          *
          * Incoming mssages with this type will be passed to the task.
          */
-        getSupportedMessageTypes(): String[];
+        getSupportedMessageTypes(): string[];
 
         /**
          * Return the task data used for negotiation in the `auth` message.
@@ -283,22 +286,29 @@ declare namespace saltyrtc.messages {
         hash: ArrayBuffer;
     }
 
-    // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#token
+    // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#token-message
     interface Token extends SignalingMessage {
         type: 'token';
         key: ArrayBuffer;
     }
 
-    // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#key
+    // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#key-message
     interface Key extends SignalingMessage {
         type: 'key';
         key: ArrayBuffer;
     }
 
-    // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#auth
+    // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#auth-message
     interface Auth extends SignalingMessage {
         type: 'auth';
         your_cookie: ArrayBuffer;
+        data: Object;
+    }
+    interface InitiatorAuth extends Auth {
+        task: string;
+    }
+    interface ResponderAuth extends Auth {
+        tasks: string[];
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#restart

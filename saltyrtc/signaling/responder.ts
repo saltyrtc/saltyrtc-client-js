@@ -11,11 +11,11 @@ import { KeyStore, AuthToken } from "../keystore";
 import { SignalingChannelNonce } from "../nonce";
 import { NextCombinedSequence } from "../csn";
 import { Initiator } from "../peers";
-import {ProtocolError, InternalError, SignalingError} from "../exceptions";
+import { ProtocolError, SignalingError } from "../exceptions";
 import { u8aToHex, byteToHex } from "../utils";
 import { Signaling } from "./common";
 import { decryptKeystore, isResponderId } from "./helpers";
-import {CloseCode} from "../closecode";
+import { CloseCode } from "../closecode";
 
 export class ResponderSignaling extends Signaling {
 
@@ -151,7 +151,7 @@ export class ResponderSignaling extends Signaling {
                     // Expect auth message
                     msg = this.decodeMessage(payload, 'auth', true);
                     console.debug(this.logTag, 'Received auth');
-                    this.handleAuth(msg as saltyrtc.messages.Auth, nonce);
+                    this.handleAuth(msg as saltyrtc.messages.InitiatorAuth, nonce);
 
                     // We're connected!
                     this.setState('task');
@@ -300,10 +300,19 @@ export class ResponderSignaling extends Signaling {
             throw new ProtocolError('Their cookie and our cookie are the same.');
         }
 
+        // Prepare task data
+        const taskData = {};
+        for (let task of this.tasks) {
+            taskData[task.getName()] = task.getData();
+        }
+        const taskNames = this.tasks.map((task) => task.getName());
+
         // Send auth
-        const message: saltyrtc.messages.Auth = {
+        const message: saltyrtc.messages.ResponderAuth = {
             type: 'auth',
             your_cookie: nonce.cookie.asArrayBuffer(),
+            tasks: taskNames,
+            data: taskData,
         };
         const packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_INITIATOR);
         console.debug(this.logTag, 'Sending auth');
@@ -314,7 +323,7 @@ export class ResponderSignaling extends Signaling {
     /**
      * The initiator repeats our cookie.
      */
-    private handleAuth(msg: saltyrtc.messages.Auth, nonce: SignalingChannelNonce): void {
+    private handleAuth(msg: saltyrtc.messages.InitiatorAuth, nonce: SignalingChannelNonce): void {
         // Validate cookie
         this.validateRepeatedCookie(msg);
 

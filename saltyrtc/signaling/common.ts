@@ -388,7 +388,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Signaling message received from peer *after* the handshake is done.
      *
      * @param decrypted Decrypted bytes from the peer.
-     * @throws ProtocolError if the message is invalid.
+     * @throws SignalingError if the message is invalid.
      */
     public onSignalingPeerMessage(decrypted: Uint8Array): void {
         let msg: saltyrtc.Message = this.decodeMessage(decrypted);
