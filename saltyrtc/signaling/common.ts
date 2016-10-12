@@ -56,7 +56,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
     // Tasks
     protected tasks: saltyrtc.Task[];
-    public task: saltyrtc.Task;
+    public task: saltyrtc.Task = null;
 
     // Keys
     protected serverKey: Uint8Array = null;
@@ -401,6 +401,9 @@ export abstract class Signaling implements saltyrtc.Signaling {
         } else if (msg.type === 'restart') {
             console.debug(this.logTag, 'Received restart');
             this.handleRestart(msg as saltyrtc.messages.Restart);
+        } else if (this.task !== null && this.task.getSupportedMessageTypes().indexOf(msg.type) !== -1) {
+            console.debug(this.logTag, 'Received', msg.type, '[' + this.task.getName() + ']');
+            this.task.onTaskMessage(msg as saltyrtc.messages.TaskMessage);
         } else {
             // TODO: Check if message is a task message
             console.warn(this.logTag, 'Received message with invalid type from peer:', msg.type);
