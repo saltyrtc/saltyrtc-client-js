@@ -11,11 +11,11 @@ import { KeyStore, AuthToken } from "../keystore";
 import { NextCombinedSequence } from "../csn";
 import { SignalingChannelNonce } from "../nonce";
 import { Responder } from "../peers";
-import {ProtocolError, InternalError, SignalingError} from "../exceptions";
+import { ProtocolError, SignalingError, ValidationError } from "../exceptions";
+import { CloseCode } from "../closecode";
 import { Signaling } from "./common";
-import { decryptKeystore, decryptAuthtoken, isResponderId } from "./helpers";
+import { decryptKeystore, isResponderId } from "./helpers";
 import { byteToHex } from "../utils";
-import {CloseCode} from "../closecode";
 
 export class InitiatorSignaling extends Signaling {
 
@@ -351,7 +351,7 @@ export class InitiatorSignaling extends Signaling {
     }
 
     /**
-     * A responder repeats our cookie.
+     * A responder repeats our cookie and sends a list of acceptable tasks.
      *
      * @throws SignalingError
      */
@@ -359,7 +359,25 @@ export class InitiatorSignaling extends Signaling {
         // Validate cookie
         this.validateRepeatedCookie(msg);
 
-        // TODO: Process task info
+        // Validate task info
+        try {
+            InitiatorSignaling.validateTaskInfo(msg.tasks, msg.data);
+        } catch (e) {
+            if (e instanceof ValidationError) {
+                throw new ProtocolError("Peer sent invalid task info: " + e.message);
+            } throw e;
+        }
+
+        // Select task
+        const task: saltyrtc.Task = InitiatorSignaling.chooseCommonTask(this.tasks, msg.tasks);
+        if (task === null) {
+            throw new SignalingError(CloseCode.NoSharedTask, "No shared task could be found");
+        } else {
+            console.log(this.logTag, "Task", task.getName(), "has been selected");
+        }
+
+        // Initialize task
+        this.initTask(task, msg.data[task.getName()]);
 
         // Ok!
         console.debug(this.logTag, 'Responder', responder.hexId, 'authenticated');
@@ -372,6 +390,44 @@ export class InitiatorSignaling extends Signaling {
 
         // Update state
         responder.handshakeState = 'auth-received';
+    }
+
+    /**
+     * Validate task info. Throw a ValidationError if validation fails.
+     * @param names List of task names
+     * @param data Task data
+     * @throws ValidationError
+     */
+    private static validateTaskInfo(names: string[], data: Object): void {
+        if (names.length < 1) {
+            throw new ValidationError("Task names must not be empty");
+        }
+        if (Object.keys(data).length < 1) {
+            throw new ValidationError("Task data must not be empty");
+        }
+        if (names.length != Object.keys(data).length) {
+            throw new ValidationError("Task data must contain an entry for every task");
+        }
+        for (let task of names) {
+            if (!data.hasOwnProperty(task)) {
+                throw new ValidationError("Task data must contain an entry for every task");
+            }
+        }
+    }
+
+    /**
+     * Choose the first task in our own list of supported tasks that is also contained in the list
+     * of supported tasks provided by the peer.
+     *
+     * @returns The selected task, or null if no common task could be found.
+     */
+    private static chooseCommonTask(ourTasks: saltyrtc.Task[], theirTasks: string[]): saltyrtc.Task {
+        for (let task of ourTasks) {
+            if (theirTasks.indexOf(task.getName()) !== -1) {
+                return task;
+            }
+        }
+        return null;
     }
 
     /**

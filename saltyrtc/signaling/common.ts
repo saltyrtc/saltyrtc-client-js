@@ -14,7 +14,7 @@ import { KeyStore, AuthToken, Box } from "../keystore";
 import { Cookie, CookiePair } from "../cookie";
 import { SignalingChannelNonce } from "../nonce";
 import { CombinedSequence, NextCombinedSequence } from "../csn";
-import { ProtocolError, InternalError } from "../exceptions";
+import { ProtocolError, ValidationError } from "../exceptions";
 import { SignalingError, ConnectionError } from "../exceptions";
 import { concat, byteToHex } from "../utils";
 import { isResponderId } from "./helpers";
@@ -279,9 +279,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
                 this.resetConnection(e.closeCode);
             } else if (e instanceof ConnectionError) {
                 console.warn(this.logTag, 'Connection error. Resetting connection.');
-                this.resetConnection(CloseCode.InternalError);
-            } else if (e instanceof InternalError) {
-                console.warn(this.logTag, 'Internal error. Resetting connection.');
                 this.resetConnection(CloseCode.InternalError);
             }
             throw e;
@@ -654,6 +651,26 @@ export abstract class Signaling implements saltyrtc.Signaling {
         this.ws = null;
 
         // TODO: Close dc
+    }
+
+
+    /**
+     * Initialize the task with the task data sent by the peer.
+     * Set it as the current task.
+     *
+     * @param task The task instance.
+     * @param data The task data provided by the peer.
+     * @throws SignalingError
+     */
+    protected initTask(task: saltyrtc.Task, data: Object): void {
+        try {
+            task.init(this, data);
+        } catch (e) {
+            if (e instanceof ValidationError) {
+                throw new ProtocolError("Peer sent invalid task data");
+            } throw e;
+        }
+        this.task = task;
     }
 
     /**

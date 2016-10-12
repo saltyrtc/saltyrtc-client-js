@@ -60,3 +60,15 @@ export class ConnectionError extends Error {
         this.name = 'ConnectionError';
     }
 }
+
+
+/**
+ * Errors related to validation.
+ */
+export class ValidationError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.message = message;
+        this.name = 'ValidationError';
+    }
+}

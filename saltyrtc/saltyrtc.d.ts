@@ -123,6 +123,7 @@ declare namespace saltyrtc {
          *
          * @param signaling The signaling instance.
          * @param data The data sent by the peer in the 'auth' message.
+         * @throws ValidationError if task data is invalid.
          */
         init(signaling: Signaling, data: Object): void;
 

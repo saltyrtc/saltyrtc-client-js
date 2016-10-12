@@ -11,11 +11,11 @@ import { KeyStore, AuthToken } from "../keystore";
 import { SignalingChannelNonce } from "../nonce";
 import { NextCombinedSequence } from "../csn";
 import { Initiator } from "../peers";
-import { ProtocolError, SignalingError } from "../exceptions";
+import { ProtocolError, SignalingError, ValidationError } from "../exceptions";
+import { CloseCode } from "../closecode";
 import { u8aToHex, byteToHex } from "../utils";
 import { Signaling } from "./common";
 import { decryptKeystore, isResponderId } from "./helpers";
-import { CloseCode } from "../closecode";
 
 export class ResponderSignaling extends Signaling {
 
@@ -321,17 +321,62 @@ export class ResponderSignaling extends Signaling {
     }
 
     /**
-     * The initiator repeats our cookie.
+     * The initiator repeats our cookie and sends the chosen task.
      */
     private handleAuth(msg: saltyrtc.messages.InitiatorAuth, nonce: SignalingChannelNonce): void {
         // Validate cookie
         this.validateRepeatedCookie(msg);
 
-        // TODO: Tasks
+        // Validate task data
+        try {
+            ResponderSignaling.validateTaskInfo(msg.task, msg.data);
+        } catch (e) {
+            if (e instanceof ValidationError) {
+                throw new ProtocolError("Peer sent invalid task info: " + e.message);
+            } throw e;
+        }
+
+        // Find selected task
+        let selectedTask: saltyrtc.Task = null;
+        for (let task of this.tasks) {
+            if (task.getName() === msg.task) {
+                selectedTask = task;
+                console.info(this.logTag, "Task", msg.task, "has been selected");
+                break;
+            }
+        }
+
+        // Initialize task
+        if (selectedTask === null) {
+            throw new SignalingError(CloseCode.ProtocolError, "Initiator selected unknown task");
+        } else {
+            this.initTask(selectedTask, msg.data[selectedTask.getName()]);
+        }
 
         // Ok!
         console.debug(this.logTag, 'Initiator authenticated');
         this.initiator.cookie = nonce.cookie;
         this.initiator.handshakeState = 'auth-received';
+    }
+
+    /**
+     * Validate task info. Throw ValidationError if validation fails.
+     * @param name Task name
+     * @param data Task data
+     * @throws ValidationError
+     */
+    private static validateTaskInfo(name: string, data: Object): void {
+        if (name.length == 0) {
+            throw new ValidationError("Task name must not be empty");
+        }
+        if (Object.keys(data).length < 1) {
+            throw new ValidationError("Task data must not be empty");
+        }
+        if (Object.keys(data).length > 1) {
+            throw new ValidationError("Task data must contain exactly 1 key");
+        }
+        if (!data.hasOwnProperty(name)) {
+            throw new ValidationError("Task data must contain an entry for the chosen task");
+        }
     }
 }
