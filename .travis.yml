@@ -32,6 +32,7 @@ before_script:
   # Start SaltyRTC server
   - git clone https://github.com/saltyrtc/saltyrtc-server-python -b master
   - export SALTYRTC_TLS_CERT=../saltyrtc.crt SALTYRTC_TLS_KEY=../saltyrtc.key
+  - export SALTYRTC_SERVER_PERMANENT_KEY=0919b266ce1855419e4066fc076b39855e728768e3afa773105edd2e37037c20
   - |
     cd saltyrtc-server-python
     pyvenv venv
