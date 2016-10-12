@@ -11,7 +11,7 @@ then
 
     # Build docs
     rm -rf docs/
-    npm install https://github.com/TypeStrong/typedoc/archive/2e855cf8c62c7813ac62cb1ef911c9a0c5e034c2.tar.gz
+    npm install typedoc
     cd node_modules/typedoc/
     ../typescript/bin/tsc
     cd ../..
