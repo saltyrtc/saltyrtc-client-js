@@ -15,7 +15,13 @@ then
     cd node_modules/typedoc/
     ../typescript/bin/tsc
     cd ../..
-    node_modules/.bin/typedoc --out docs saltyrtc/
+    node_modules/.bin/typedoc \
+        --excludeNotExported \
+        --excludePrivate \
+        --includeDeclarations \
+        --target ES6 \
+        --out docs \
+        saltyrtc/
 
     # Clone gh-pages repo
     git clone https://github.com/saltyrtc/saltyrtc-client-js.git travis_docs_build
