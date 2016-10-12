@@ -190,7 +190,7 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     private tasks: saltyrtc.Task[];
     private peerTrustedKey: Uint8Array = null;
     private _signaling: Signaling = null;
-    private eventRegistry: EventRegistry;
+    private eventRegistry: saltyrtc.EventRegistry;
 
     /**
      * Create a new SaltyRTC instance.
