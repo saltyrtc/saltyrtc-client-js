@@ -319,6 +319,13 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     }
 
     /**
+     * Return the negotiated task, or null if no task has been negotiated yet.
+     */
+    public getTask(): saltyrtc.Task {
+        return this.signaling.task;
+    }
+
+    /**
      * Connect to the SaltyRTC server.
      *
      * This method is asynchronous. To get notified when the peer connection is up

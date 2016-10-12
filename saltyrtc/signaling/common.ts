@@ -56,7 +56,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
     // Tasks
     protected tasks: saltyrtc.Task[];
-    protected task: saltyrtc.Task;
+    public task: saltyrtc.Task;
 
     // Keys
     protected serverKey: Uint8Array = null;
