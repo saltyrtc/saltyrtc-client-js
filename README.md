@@ -46,19 +46,17 @@ You can query the current signaling state:
 
 And you can register callbacks for certain events:
 
-    initiator.on('connected', () => console.log('Initiator is connected'));
-    responder.on('data', (dataMessage) => console.log('New data arrived:', dataMessage.data));
+    initiator.on('handover', () => console.log('Handover is done'));
+    responder.on('state-change', (newState) => console.log('New signaling state:', newState));
 
 The following events are available:
 
- - `state-change(saltyrtc.State)`: The signaling state changed.
+ - `state-change(saltyrtc.SignalingState)`: The signaling state changed.
+ - `state-change:<new-state>(void)`: The signaling state change event, filtered by state.
  - `new-responder(responderId)`: A responder has connected. This event is only dispatched for the initiator.
- - `connected(void)`: Handshake has been completed, we're connected!
  - `handover(void)`: The handover to the data channel is done.
  - `connection-error(ErrorEvent)`: A connection error occured.
  - `connection-closed(CloseEvent)`: The connection was closed.
- - `data(saltyrtc.Data)`: A new data message was received.
- - `data:<data-type>(saltyrtc.Data)`: The data event, filtered by data type.
 
 ## Development
 

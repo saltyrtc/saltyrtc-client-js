@@ -7,13 +7,14 @@
 
 /// <reference path='../saltyrtc.d.ts' />
 
-import { KeyStore, Box, AuthToken } from "../keystore";
+import { KeyStore, AuthToken } from "../keystore";
 import { NextCombinedSequence } from "../csn";
 import { SignalingChannelNonce } from "../nonce";
 import { Responder } from "../peers";
-import { ProtocolError, InternalError } from "../exceptions";
+import { ProtocolError, SignalingError, ValidationError } from "../exceptions";
+import { CloseCode } from "../closecode";
 import { Signaling } from "./common";
-import { decryptKeystore, decryptAuthtoken, isResponderId } from "./helpers";
+import { decryptKeystore, isResponderId } from "./helpers";
 import { byteToHex } from "../utils";
 
 export class InitiatorSignaling extends Signaling {
@@ -29,9 +30,9 @@ export class InitiatorSignaling extends Signaling {
     /**
      * Create a new initiator signaling instance.
      */
-    constructor(client: saltyrtc.SaltyRTC, host: string, port: number,
+    constructor(client: saltyrtc.SaltyRTC, host: string, port: number, tasks: saltyrtc.Task[],
                 permanentKey: KeyStore, responderTrustedKey?: Uint8Array) {
-        super(client, host, port, permanentKey, responderTrustedKey);
+        super(client, host, port, tasks, permanentKey, responderTrustedKey);
         this.role = 'initiator';
         if (responderTrustedKey === undefined) {
             this.authToken = new AuthToken();
@@ -51,7 +52,7 @@ export class InitiatorSignaling extends Signaling {
         } else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR) {
             throw new ProtocolError('Initiator cannot send messages to initiator');
         } else if (isResponderId(receiver)) {
-            if (this.state === 'open') {
+            if (this.getState() === 'task') {
                 return this.responder.csn.next();
             } else if (this.responders.has(receiver)) {
                 return this.responders.get(receiver).csn.next();
@@ -66,8 +67,8 @@ export class InitiatorSignaling extends Signaling {
     /**
      * Encrypt data for the responder.
      */
-    protected encryptForPeer(receiver: number, messageType: string,
-                             payload: Uint8Array, nonceBytes: Uint8Array): Box {
+    protected encryptHandshakeDataForPeer(receiver: number, messageType: string,
+                                          payload: Uint8Array, nonceBytes: Uint8Array): saltyrtc.Box {
         // Validate receiver
         if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR) {
             throw new ProtocolError('Initiator cannot encrypt messages for initiator');
@@ -77,7 +78,7 @@ export class InitiatorSignaling extends Signaling {
 
         // Find correct responder
         let responder: Responder;
-        if (this.state === 'open') {
+        if (this.getState() === 'task') {
             responder = this.responder;
         } else if (this.responders.has(receiver)) {
             responder = this.responders.get(receiver);
@@ -118,15 +119,13 @@ export class InitiatorSignaling extends Signaling {
     /**
      * Store a new responder.
      *
-     * If we trust the responder, send our session key.
-     *
-     * @throws ProtocolError if the responder id matches our own address.
+     * @throws SignalingError
      */
     protected processNewResponder(responderId: number): void {
         if (!this.responders.has(responderId)) {
-            // Check for address conflict
-            if (responderId === this.address) {
-                throw new ProtocolError('Responder id matches own address.');
+            // Validate responder id
+            if (!isResponderId(responderId)) {
+                throw new ProtocolError('Invalid responder id: ' + responderId);
             }
 
             // Create responder instance
@@ -146,17 +145,12 @@ export class InitiatorSignaling extends Signaling {
 
             // Notify listeners
             this.client.emit({type: 'new-responder', data: responderId});
-
-            // If we trust the responder, send our session key directly.
-            if (this.peerTrustedKey !== null) {
-                this.sendKey(responder);
-            }
         } else {
             console.warn(this.logTag, 'Got new-responder message for an already known responder.');
         }
     }
 
-    protected onPeerHandshakeMessage(box: Box, nonce: SignalingChannelNonce): void {
+    protected onPeerHandshakeMessage(box: saltyrtc.Box, nonce: SignalingChannelNonce): void {
         // Validate nonce destination
         // TODO: Can we do this earlier?
         if (nonce.destination != this.address) {
@@ -193,54 +187,77 @@ export class InitiatorSignaling extends Signaling {
             let msg: saltyrtc.Message;
             switch (responder.handshakeState) {
                 case 'new':
+                    if (this.peerTrustedKey !== null) {
+                        throw new SignalingError(CloseCode.InternalError,
+                            'Handshake state is "new" even though a trusted key is available');
+                    }
+
                     // Expect token message, encrypted with authentication token
-                    payload = decryptAuthtoken(box, this.authToken, 'token');
+                    try {
+                        payload = this.authToken.decrypt(box);
+                    } catch (e) {
+                        console.warn(this.logTag, 'Could not decrypt token message: ', e);
+                        this.dropResponder(responder.id); // TODO: Reason
+                        return;
+                    }
+
                     msg = this.decodeMessage(payload, 'token', true);
                     console.debug(this.logTag, 'Received token');
                     this.handleToken(msg as saltyrtc.messages.Token, responder);
-                    this.sendKey(responder);
                     break;
                 case 'token-received':
                     // Expect key message, encrypted with our permanent key
                     const peerPublicKey = this.peerTrustedKey || responder.permanentKey;
                     try {
-                        payload = decryptKeystore(box, this.permanentKey, peerPublicKey, 'key');
+                        payload = this.permanentKey.decrypt(box, peerPublicKey);
                     } catch (e) {
-                        if (e instanceof ProtocolError && this.peerTrustedKey !== null) {
+                        if (this.peerTrustedKey !== null) {
                             // Decryption failed.
                             // We trust a responder, but this particular responder used a different key.
-                            console.debug(this.logTag, 'Decrypting key message failed.');
-                            this.dropResponder(responder.id);
-                            break;
+                            console.warn(this.logTag, 'Could not decrypt key message');
+                            this.dropResponder(responder.id); // TODO: Reason
+                            return;
                         }
                         throw e;
                     }
                     msg = this.decodeMessage(payload, 'key', true);
                     console.debug(this.logTag, 'Received key');
                     this.handleKey(msg as saltyrtc.messages.Key, responder);
-                    this.sendAuth(responder, nonce);
+                    this.sendKey(responder);
                     break;
-                case 'key-received':
+                case 'key-sent':
                     // Expect auth message, encrypted with our session key
                     // Note: The session key related to the responder is
                     // responder.keyStore, not this.sessionKey!
                     payload = decryptKeystore(box, responder.keyStore, responder.sessionKey, 'auth');
                     msg = this.decodeMessage(payload, 'auth', true);
                     console.debug(this.logTag, 'Received auth');
-                    this.handleAuth(msg as saltyrtc.messages.Auth, responder);
-                    this.dropResponders();
+                    this.handleAuth(msg as saltyrtc.messages.ResponderAuth, responder, nonce);
+                    this.sendAuth(responder, nonce);
+
                     // We're connected!
-                    this.state = 'open';
+                    this.responder = this.responders.get(responder.id);
+                    this.sessionKey = responder.keyStore;
+
+                    // Remove responder from responders list
+                    this.responders.delete(responder.id);
+
+                    // Drop other responders
+                    this.dropResponders();
+
+                    // Peer handshake done
+                    this.setState('task');
                     console.info(this.logTag, 'Peer handshake done');
-                    this.client.emit({type: 'connected'}); // TODO: Can we get rid of this event?
+                    this.task.onPeerHandshakeDone();
+
                     break;
                 default:
-                    throw new InternalError('Unknown responder handshake state');
+                    throw new SignalingError(CloseCode.InternalError, 'Unknown responder handshake state');
             }
 
         // Handle unknown source
         } else {
-            throw new InternalError('Message source is neither the server nor a responder');
+            throw new SignalingError(CloseCode.InternalError, 'Message source is neither the server nor a responder');
         }
     }
 
@@ -284,6 +301,14 @@ export class InitiatorSignaling extends Signaling {
     }
 
     /**
+     * A responder sends his public session key.
+     */
+    private handleKey(msg: saltyrtc.messages.Key, responder: Responder): void {
+        responder.sessionKey = new Uint8Array(msg.key);
+        responder.handshakeState = 'key-received';
+    }
+
+    /**
      * Send our public session key to the responder.
      */
     private sendKey(responder: Responder): void {
@@ -294,14 +319,7 @@ export class InitiatorSignaling extends Signaling {
         const packet: Uint8Array = this.buildPacket(message, responder.id);
         console.debug(this.logTag, 'Sending key');
         this.ws.send(packet);
-    }
-
-    /**
-     * A responder sends his public session key.
-     */
-    private handleKey(msg: saltyrtc.messages.Key, responder: Responder): void {
-        responder.sessionKey = new Uint8Array(msg.key);
-        responder.handshakeState = 'key-received';
+        responder.handshakeState = 'key-sent';
     }
 
     /**
@@ -313,32 +331,103 @@ export class InitiatorSignaling extends Signaling {
             throw new ProtocolError('Their cookie and our cookie are the same.');
         }
 
+        // Prepare task data
+        const taskData = {};
+        taskData[this.task.getName()] = this.task.getData();
+
         // Send auth
-        const message: saltyrtc.messages.Auth = {
+        const message: saltyrtc.messages.InitiatorAuth = {
             type: 'auth',
             your_cookie: nonce.cookie.asArrayBuffer(),
+            task: this.task.getName(),
+            data: taskData,
         };
         const packet: Uint8Array = this.buildPacket(message, responder.id);
         console.debug(this.logTag, 'Sending auth');
         this.ws.send(packet);
+
+        // Update state
+        responder.handshakeState = 'auth-sent';
     }
 
     /**
-     * A responder repeats our cookie.
+     * A responder repeats our cookie and sends a list of acceptable tasks.
+     *
+     * @throws SignalingError
      */
-    private handleAuth(msg: saltyrtc.messages.Auth, responder: Responder): void {
+    private handleAuth(msg: saltyrtc.messages.ResponderAuth, responder: Responder, nonce: SignalingChannelNonce): void {
         // Validate cookie
         this.validateRepeatedCookie(msg);
+
+        // Validate task info
+        try {
+            InitiatorSignaling.validateTaskInfo(msg.tasks, msg.data);
+        } catch (e) {
+            if (e instanceof ValidationError) {
+                throw new ProtocolError("Peer sent invalid task info: " + e.message);
+            } throw e;
+        }
+
+        // Select task
+        const task: saltyrtc.Task = InitiatorSignaling.chooseCommonTask(this.tasks, msg.tasks);
+        if (task === null) {
+            throw new SignalingError(CloseCode.NoSharedTask, "No shared task could be found");
+        } else {
+            console.log(this.logTag, "Task", task.getName(), "has been selected");
+        }
+
+        // Initialize task
+        this.initTask(task, msg.data[task.getName()]);
 
         // Ok!
         console.debug(this.logTag, 'Responder', responder.hexId, 'authenticated');
 
-        // Store responder details and session key
-        this.responder = this.responders.get(responder.id);
-        this.sessionKey = responder.keyStore;
+        // Store cookie
+        if (nonce.cookie.equals(this.cookiePair.ours)) {
+            throw new ProtocolError('Local and remote cookies are equal');
+        }
+        responder.cookie = nonce.cookie;
 
-        // Remove responder from responders list
-        this.responders.delete(responder.id);
+        // Update state
+        responder.handshakeState = 'auth-received';
+    }
+
+    /**
+     * Validate task info. Throw a ValidationError if validation fails.
+     * @param names List of task names
+     * @param data Task data
+     * @throws ValidationError
+     */
+    private static validateTaskInfo(names: string[], data: Object): void {
+        if (names.length < 1) {
+            throw new ValidationError("Task names must not be empty");
+        }
+        if (Object.keys(data).length < 1) {
+            throw new ValidationError("Task data must not be empty");
+        }
+        if (names.length != Object.keys(data).length) {
+            throw new ValidationError("Task data must contain an entry for every task");
+        }
+        for (let task of names) {
+            if (!data.hasOwnProperty(task)) {
+                throw new ValidationError("Task data must contain an entry for every task");
+            }
+        }
+    }
+
+    /**
+     * Choose the first task in our own list of supported tasks that is also contained in the list
+     * of supported tasks provided by the peer.
+     *
+     * @returns The selected task, or null if no common task could be found.
+     */
+    private static chooseCommonTask(ourTasks: saltyrtc.Task[], theirTasks: string[]): saltyrtc.Task {
+        for (let task of ourTasks) {
+            if (theirTasks.indexOf(task.getName()) !== -1) {
+                return task;
+            }
+        }
+        return null;
     }
 
     /**

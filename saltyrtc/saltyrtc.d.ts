@@ -10,11 +10,9 @@
 declare namespace saltyrtc {
 
     interface Box {
-        //constructor(nonce: Uint8Array, data: Uint8Array, nonceLength: number);
         length: number;
         data: Uint8Array;
         nonce: Uint8Array;
-        //static fromUint8Array(array: Uint8Array, nonceLength: number): Box;
         toUint8Array(): Uint8Array;
     }
 
@@ -28,7 +26,6 @@ declare namespace saltyrtc {
     }
 
     interface AuthToken {
-        //constructor(bytes?: Uint8Array);
         keyBytes: Uint8Array;
         keyHex: string;
         encrypt(bytes: Uint8Array, nonce: Uint8Array): Box;
@@ -36,10 +33,16 @@ declare namespace saltyrtc {
     }
 
     interface Message {
-        type: messages.MessageType,
+        type: string;
     }
 
-    type State = 'new' | 'ws-connecting' | 'server-handshake' | 'peer-handshake' | 'open' | 'closing' | 'closed';
+    interface SignalingMessage extends Message {
+        type: messages.MessageType;
+    }
+
+    type SignalingState = 'new' | 'ws-connecting' | 'server-handshake' | 'peer-handshake' | 'task' | 'closing' | 'closed';
+
+    type HandoverState = {local: boolean, peer: boolean};
 
     type SignalingChannel = 'websocket' | 'datachannel';
 
@@ -53,6 +56,121 @@ declare namespace saltyrtc {
     type EventHandler = (event: Event) => void;
     type SaltyEventHandler = (event: SaltyRTCEvent) => boolean | void;
     type MessageEventHandler = (event: RTCMessageEvent) => void;
+
+    interface Signaling {
+        handoverState: HandoverState;
+        role: SignalingRole;
+
+        getState(): SignalingState;
+        setState(state: SignalingState): void;
+
+        /**
+         * Send a task message through the websocket.
+         *
+         * @throws SignalingError if message could not be sent.
+         */
+        sendTaskMessage(msg: messages.TaskMessage): void;
+
+        /**
+         * Encrypt data for the peer.
+         *
+         * @param data The bytes to be encrypted.
+         * @param nonce The bytes to be used as NaCl nonce.
+         */
+        encryptForPeer(data: Uint8Array, nonce: Uint8Array): Box;
+
+        /**
+         * Decrypt data from the peer.
+         *
+         * @param box The encrypted box.
+         */
+        decryptFromPeer(box: Box): Uint8Array;
+
+        /**
+         * Handle incoming signaling messages from the peer.
+         *
+         * This method can be used by tasks to pass in messages that arrived through their signaling channel.
+         *
+         * @param decryptedBytes The decrypted message bytes.
+         * @throws SignalingError if the message is invalid.
+         */
+        onSignalingPeerMessage(decryptedBytes: Uint8Array): void;
+
+        /**
+         * Send a close message to the peer.
+         *
+         * This method may only be called once the client-to-client handshakes has been completed.
+         *
+         * Note that sending a close message does not reset the connection. To do that,
+         * `resetConnection` needs to be called explicitly.
+         *
+         * @param reason The close code.
+         */
+        sendClose(reason: number): void;
+
+        /**
+         * Close and reset the connection with the specified close code.
+         * @param reason The close code to use.
+         */
+        resetConnection(reason: number): void;
+    }
+
+    interface Task {
+        /**
+         * Initialize the task with the task data from the peer.
+         *
+         * The task should keep track internally whether it has been initialized or not.
+         *
+         * @param signaling The signaling instance.
+         * @param data The data sent by the peer in the 'auth' message.
+         * @throws ValidationError if task data is invalid.
+         */
+        init(signaling: Signaling, data: Object): void;
+
+        /**
+         * Used by the signaling class to notify task that the peer handshake is over.
+         *
+         * This is the point where the task can take over.
+         */
+        onPeerHandshakeDone(): void;
+
+        /**
+         * This method is called by SaltyRTC when a task related message
+         * arrives through the WebSocket.
+         *
+         * @param message The deserialized MessagePack message.
+         */
+        onTaskMessage(message: messages.TaskMessage): void;
+
+        /**
+         * Send bytes through the task signaling channel.
+         *
+         * This method should only be called after the handover.
+         */
+        sendSignalingMessage(payload: Uint8Array);
+
+        /**
+         * Return the task protocol name.
+         */
+        getName(): string;
+
+        /**
+         * Return the list of supported message types.
+         *
+         * Incoming mssages with this type will be passed to the task.
+         */
+        getSupportedMessageTypes(): string[];
+
+        /**
+         * Return the task data used for negotiation in the `auth` message.
+         */
+        getData(): Object;
+
+        /**
+         * This method is called by the signaling class when sending and receiving 'close' messages.
+         */
+        close(reason: number): void;
+    }
 
     interface SecureDataChannel extends RTCDataChannel {
         send(data: string | Blob | ArrayBuffer | ArrayBufferView): void;
@@ -89,8 +207,7 @@ declare namespace saltyrtc {
     }
 
     interface SaltyRTC {
-        state: State;
-        signalingChannel: SignalingChannel;
+        state: SignalingState;
 
         keyStore: KeyStore;
         permanentKeyBytes: Uint8Array;
@@ -102,10 +219,6 @@ declare namespace saltyrtc {
 
         connect(): void;
         disconnect(): void;
-        sendSignalingData(dataType: string, data: any): void;
-        decryptSignalingData(data: ArrayBuffer): any;
-        handover(pc: RTCPeerConnection): Promise<{}>;
-        wrapDataChannel(dc: RTCDataChannel): SecureDataChannel;
 
         // Event handling
         on(event: string | string[], handler: SaltyEventHandler): void;
@@ -124,81 +237,97 @@ declare namespace saltyrtc.messages {
                      | 'auth' | 'restart' | 'data';
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#server-hello
-    interface ServerHello extends Message {
-        type: 'server-hello',
-        key: ArrayBuffer,
+    interface ServerHello extends SignalingMessage {
+        type: 'server-hello';
+        key: ArrayBuffer;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#client-hello
-    interface ClientHello extends Message {
-        type: 'client-hello',
-        key: ArrayBuffer,
+    interface ClientHello extends SignalingMessage {
+        type: 'client-hello';
+        key: ArrayBuffer;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#client-auth
-    interface ClientAuth extends Message {
-        type: 'client-auth',
-        your_cookie: ArrayBuffer,
+    interface ClientAuth extends SignalingMessage {
+        type: 'client-auth';
+        your_cookie: ArrayBuffer;
+        subprotocols: string[];
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#server-auth
-    interface ServerAuth extends Message {
-        type: 'server-auth',
-        your_cookie: ArrayBuffer,
-        initiator_connected?: boolean,
-        responders?: number[],
+    interface ServerAuth extends SignalingMessage {
+        type: 'server-auth';
+        your_cookie: ArrayBuffer;
+        signed_keys?: ArrayBuffer;
+        initiator_connected?: boolean;
+        responders?: number[];
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#new-initiator
-    interface NewInitiator extends Message {
-        type: 'new-initiator',
+    interface NewInitiator extends SignalingMessage {
+        type: 'new-initiator';
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#new-responder
-    interface NewResponder extends Message {
-        type: 'new-responder',
-        id: number,
+    interface NewResponder extends SignalingMessage {
+        type: 'new-responder';
+        id: number;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#drop-responder
-    interface DropResponder extends Message {
-        type: 'drop-responder',
-        id: number,
+    interface DropResponder extends SignalingMessage {
+        type: 'drop-responder';
+        id: number;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#send-error
-    interface SendError extends Message {
-        type: 'send-error',
-        hash: ArrayBuffer,
+    interface SendError extends SignalingMessage {
+        type: 'send-error';
+        hash: ArrayBuffer;
     }
 
-    // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#token
-    interface Token extends Message {
-        type: 'token',
-        key: ArrayBuffer,
+    // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#token-message
+    interface Token extends SignalingMessage {
+        type: 'token';
+        key: ArrayBuffer;
     }
 
-    // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#key
-    interface Key extends Message {
-        type: 'key',
-        key: ArrayBuffer,
+    // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#key-message
+    interface Key extends SignalingMessage {
+        type: 'key';
+        key: ArrayBuffer;
     }
 
-    // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#auth
-    interface Auth extends Message {
-        type: 'auth',
-        your_cookie: ArrayBuffer,
+    // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#auth-message
+    interface Auth extends SignalingMessage {
+        type: 'auth';
+        your_cookie: ArrayBuffer;
+        data: Object;
+    }
+    interface InitiatorAuth extends Auth {
+        task: string;
+    }
+    interface ResponderAuth extends Auth {
+        tasks: string[];
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#restart
-    interface Restart extends Message {
-        type: 'restart',
+    interface Restart extends SignalingMessage {
+        type: 'restart';
     }
 
-    interface Data extends Message {
-        type: 'data',
-        data_type?: string,
-        data: any,
+    interface Data extends SignalingMessage {
+        type: 'data';
+        data_type?: string;
+        data: any;
+    }
+
+    /**
+     * A task message must include the type. It may contain arbitrary other data.
+     */
+    interface TaskMessage extends Message {
+        type: string;
     }
 
 }
@@ -216,6 +345,6 @@ declare namespace saltyrtc.static {
 }
 
 declare var saltyrtc: {
-    KeyStore: saltyrtc.static.KeyStore,
-    SaltyRTCBuilder: saltyrtc.static.SaltyRTCBuilder,
+    KeyStore: saltyrtc.static.KeyStore;
+    SaltyRTCBuilder: saltyrtc.static.SaltyRTCBuilder;
 };

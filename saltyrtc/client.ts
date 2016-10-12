@@ -9,7 +9,6 @@
 
 import { KeyStore, AuthToken, Box } from "./keystore";
 import { Signaling, InitiatorSignaling, ResponderSignaling } from "./signaling";
-import { SecureDataChannel } from "./datachannel";
 import { EventRegistry } from "./eventregistry";
 import { u8aToHex } from "./utils";
 
@@ -19,6 +18,7 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
     private hasKeyStore = false;
     private hasInitiatorInfo = false;
     private hasTrustedPeerKey = false;
+    private hasTasks = false;
 
     private host: string;
     private port: number;
@@ -26,6 +26,7 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
     private initiatorPublicKey: Uint8Array;
     private authToken: Uint8Array;
     private peerTrustedKey: Uint8Array;
+    private tasks: saltyrtc.Task[];
 
     /**
      * Validate the SaltyRTC host. Throw an `Error` if it's invalid.
@@ -54,6 +55,15 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
     private requireConnectionInfo(): void {
         if (!this.hasConnectionInfo) {
             throw new Error("Connection info not set yet. Please call .connectTo method first.");
+        }
+    }
+
+    /**
+     * Assert that tasks have been set.
+     */
+    private requireTasks(): void {
+        if (!this.hasTasks) {
+            throw new Error("Tasks not set yet. Please call .usingTasks method first.");
         }
     }
 
@@ -96,11 +106,25 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
     /**
      * Set the trusted public key of the peer.
      *
-     * @param keyStore The KeyStore instance containing the public and private permanent key to use.
+     * @param peerTrustedKey The trusted public permanent key of the peer.
      */
     public withTrustedPeerKey(peerTrustedKey: Uint8Array): SaltyRTCBuilder {
         this.peerTrustedKey = peerTrustedKey;
         this.hasTrustedPeerKey = true;
+        return this;
+    }
+
+    /**
+     * Set a list of tasks in order of descending preference.
+     *
+     * @param tasks A list of objects implementing the `saltyrtc.Task` interface in descending preference.
+     */
+    public usingTasks(tasks: saltyrtc.Task[]): SaltyRTCBuilder {
+        if (tasks.length < 1) {
+            throw new Error("You must specify at least 1 task");
+        }
+        this.tasks = tasks;
+        this.hasTasks = true;
         return this;
     }
 
@@ -125,11 +149,12 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
     public asInitiator(): SaltyRTC {
         this.requireConnectionInfo();
         this.requireKeyStore();
+        this.requireTasks();
         if (this.hasTrustedPeerKey) {
-            return new SaltyRTC(this.keyStore, this.host, this.port, this.peerTrustedKey)
+            return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks, this.peerTrustedKey)
                 .asInitiator();
         } else {
-            return new SaltyRTC(this.keyStore, this.host, this.port)
+            return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks)
                 .asInitiator();
         }
     }
@@ -142,12 +167,13 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
     public asResponder(): SaltyRTC {
         this.requireConnectionInfo();
         this.requireKeyStore();
+        this.requireTasks();
         if (this.hasTrustedPeerKey) {
-            return new SaltyRTC(this.keyStore, this.host, this.port, this.peerTrustedKey)
+            return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks, this.peerTrustedKey)
                 .asResponder();
         } else {
             this.requireInitiatorInfo();
-            return new SaltyRTC(this.keyStore, this.host, this.port)
+            return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks)
                 .asResponder(this.initiatorPublicKey, this.authToken);
         }
     }
@@ -161,6 +187,7 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     private host: string;
     private port: number;
     private permanentKey: KeyStore;
+    private tasks: saltyrtc.Task[];
     private peerTrustedKey: Uint8Array = null;
     private _signaling: Signaling = null;
     private eventRegistry: EventRegistry;
@@ -168,7 +195,8 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     /**
      * Create a new SaltyRTC instance.
      */
-    constructor(permanentKey: KeyStore, host: string, port: number, peerTrustedKey?: Uint8Array) {
+    constructor(permanentKey: KeyStore, host: string, port: number,
+                tasks: saltyrtc.Task[], peerTrustedKey?: Uint8Array) {
         // Validate arguments
         if (permanentKey === undefined) {
             throw new Error('SaltyRTC must be initialized with a permanent key');
@@ -176,11 +204,15 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
         if (host === undefined) {
             throw new Error('SaltyRTC must be initialized with a target host');
         }
+        if (tasks === undefined || tasks.length == 0) {
+            throw new Error('SaltyRTC must be initialized with at least 1 task');
+        }
 
         // Store properties
         this.host = host;
         this.port = port;
         this.permanentKey = permanentKey;
+        this.tasks = tasks;
         if (peerTrustedKey !== undefined) {
             this.peerTrustedKey = peerTrustedKey;
         }
@@ -195,9 +227,9 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     public asInitiator(): SaltyRTC {
         // Initialize signaling class
         if (this.peerTrustedKey !== null) {
-            this._signaling = new InitiatorSignaling(this, this.host, this.port, this.permanentKey, this.peerTrustedKey);
+            this._signaling = new InitiatorSignaling(this, this.host, this.port, this.tasks, this.permanentKey, this.peerTrustedKey);
         } else {
-            this._signaling = new InitiatorSignaling(this, this.host, this.port, this.permanentKey);
+            this._signaling = new InitiatorSignaling(this, this.host, this.port, this.tasks, this.permanentKey);
         }
 
         // Return self
@@ -210,13 +242,13 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     public asResponder(initiatorPubKey?: Uint8Array, authToken?: Uint8Array): SaltyRTC {
         if (this.peerTrustedKey !== null) {
             // Initialize signaling class
-            this._signaling = new ResponderSignaling(this, this.host, this.port, this.permanentKey, this.peerTrustedKey);
+            this._signaling = new ResponderSignaling(this, this.host, this.port, this.tasks, this.permanentKey, this.peerTrustedKey);
         } else {
             // Create AuthToken instance
             const token = new AuthToken(authToken);
 
             // Initialize signaling class
-            this._signaling = new ResponderSignaling(this, this.host, this.port, this.permanentKey, initiatorPubKey, token);
+            this._signaling = new ResponderSignaling(this, this.host, this.port, this.tasks, this.permanentKey, initiatorPubKey, token);
         }
 
         // Return self
@@ -233,15 +265,8 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     /**
      * Return the signaling state.
      */
-    public get state(): saltyrtc.State {
-        return this.signaling.state;
-    }
-
-    /**
-     * Return the signaling channel.
-     */
-    public get signalingChannel(): saltyrtc.SignalingChannel {
-        return this.signaling.signalingChannel;
+    public get state(): saltyrtc.SignalingState {
+        return this.signaling.getState();
     }
 
     /**
@@ -296,8 +321,8 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     /**
      * Connect to the SaltyRTC server.
      *
-     * This method is asynchronous. To get notified when the connection is up
-     * and running, subscribe to the `connected` event.
+     * This method is asynchronous. To get notified when the peer connection is up
+     * and running, subscribe to the `state-change:task` event.
      */
     public connect(): void {
         this.signaling.connect();
@@ -311,70 +336,6 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
      */
     public disconnect(): void {
         this.signaling.disconnect();
-    }
-
-    /**
-     * Decrypt signaling data from a peer.
-     *
-     * If data message has a type other than "data", a 'bad-message-type' error
-     * is thrown.
-     *
-     * If decryption fails, a 'decryption-failed' error is thrown.
-     */
-    public decryptSignalingData(data: ArrayBuffer): any {
-        const box = Box.fromUint8Array(new Uint8Array(data), nacl.box.nonceLength);
-        const message = this.signaling.decryptPeerMessage(box, false);
-        if (message.type !== 'data') {
-            console.error('Data messages must have message type set to "data", not "' + message.type + '".');
-            throw 'bad-message-type';
-        }
-        return (message as saltyrtc.messages.Data).data;
-    }
-
-    /**
-     * Send signaling data to the peer.
-     *
-     * Note that you can only send primitive types or plain dict-like objects.
-     * If you want to send custom typed objects, convert them to plain objects.
-     *
-     * If you want to send data through a specific data channel, pass it in.
-     *
-     * If you don't want to set a dataType, pass it in as `undefined`.
-     */
-    public sendSignalingData(dataType: string, data: any) {
-        const dataMessage: saltyrtc.messages.Data = {
-            type: 'data',
-            data: data,
-        };
-        if (dataType !== undefined) {
-            dataMessage.data_type = dataType;
-        }
-        this.signaling.sendSignalingData(dataMessage);
-    }
-
-
-    /**
-     * Do the handover from WebSocket to WebRTC DataChannel.
-     *
-     * Possible promise rejections errors:
-     *
-     * - connection-error: A data channel error occured.
-     * - connection-closed: The data channel was closed.
-     */
-    public handover(pc: RTCPeerConnection): Promise<{}> {
-        return this.signaling.handover(pc);
-    }
-
-    /**
-     * Wrap a WebRTC data channel.
-     *
-     * May throw an error if handover is not yet finished.
-     */
-    public wrapDataChannel(dc: RTCDataChannel): SecureDataChannel {
-        if (this.signalingChannel != 'datachannel') {
-            throw new Error('Handover must be finished before wrapping a data channel.')
-        }
-        return new SecureDataChannel(dc, this.signaling);
     }
 
     /**
