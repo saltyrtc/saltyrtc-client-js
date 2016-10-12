@@ -239,4 +239,55 @@ export default () => { describe('Integration Tests', function() {
 
     });
 
+    describe('Tasks', () => {
+        it('can send a ping pong task message', async (done) => {
+            // Create peers
+            const initiator = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withKeyStore(new KeyStore())
+                .usingTasks([new PingPongTask()])
+                .asInitiator();
+            const responder = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withKeyStore(new KeyStore())
+                .initiatorInfo(initiator.permanentKeyBytes, initiator.authTokenBytes)
+                .usingTasks([new PingPongTask()])
+                .asResponder();
+
+            // Chosen task should be null
+            expect(initiator.getTask()).toBeNull();
+            expect(responder.getTask()).toBeNull();
+
+            // Connect
+            expect(initiator.state).toEqual('new');
+            expect(responder.state).toEqual('new');
+            await this.connectBoth(initiator, responder);
+            expect(initiator.state).toEqual('task');
+            expect(responder.state).toEqual('task');
+
+            // Chosen task should be PingPongTask
+            expect(initiator.getTask() instanceof PingPongTask).toEqual(true);
+            expect(responder.getTask() instanceof PingPongTask).toEqual(true);
+
+            // Wait for ping-pong messages
+            await sleep(500);
+
+            // Check whether ping-pong has happened
+            expect((responder.getTask() as PingPongTask).sentPong).toBeTruthy();
+            expect((initiator.getTask() as PingPongTask).receivedPong).toBeTruthy();
+            expect((responder.getTask() as PingPongTask).receivedPong).toBeFalsy();
+            expect((initiator.getTask() as PingPongTask).sentPong).toBeFalsy();
+
+            // Disconnect
+            initiator.disconnect();
+            responder.disconnect();
+
+            // Await close events
+            await sleep(300);
+            expect(initiator.state).toEqual('closed');
+            expect(responder.state).toEqual('closed');
+            done();
+        })
+    });
+
 }); }
