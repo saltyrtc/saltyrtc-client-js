@@ -209,6 +209,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
     protected onError = (ev: ErrorEvent) => {
         console.error(this.logTag, 'General WebSocket error', ev);
         // TODO: Do we need to update the state here?
+        // TODO: Do we need to emit this event more often?
         this.client.emit({type: 'connection-error', data: ev});
     };
 
