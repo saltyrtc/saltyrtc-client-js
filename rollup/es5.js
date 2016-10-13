@@ -3,6 +3,9 @@ import babel from 'rollup-plugin-babel';
 
 config.entry = 'saltyrtc/main.es5.ts';
 config.dest = 'dist/saltyrtc-client.es5.js';
+config.format = 'iife';
+config.moduleName = 'saltyrtc.client';
+config.useStrict = true;
 config.plugins.push(
     babel({
         babelrc: false,

@@ -128,8 +128,8 @@ Build dist files:
 
 Commit & tag:
 
-    $ git commit dist/ package.json CHANGELOG.md -m 'Release v${VERSION}'
-    $ git tag -s -u ${GPG_KEY} v${VERSION} -m 'Version ${VERSION}'
+    $ git commit -m "Release v${VERSION}"
+    $ git tag -s -u ${GPG_KEY} v${VERSION} -m "Version ${VERSION}"
 
 Push & publish:
 

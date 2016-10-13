@@ -6,11 +6,9 @@ let p = JSON.parse(fs.readFileSync('package.json'));
 export default {
     entry: 'saltyrtc/main.ts',
     dest: 'dist/saltyrtc-client.es2015.js',
-    format: 'iife',
-    moduleName: 'saltyrtc.client',
+    format: 'es',
     sourceMap: false,
     treeshake: true,
-    useStrict: true,
     plugins: [
         typescript({
             typescript: require('typescript')
