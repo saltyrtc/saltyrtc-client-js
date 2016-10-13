@@ -7,7 +7,7 @@
 
 import { randomUint32 } from "./utils";
 
-export class CombinedSequence {
+export class CombinedSequence implements saltyrtc.CombinedSequence {
     private static SEQUENCE_NUMBER_MAX = 0x100000000; // 1<<32
     private static OVERFLOW_MAX = 0x100000; // 1<<16
 
@@ -25,7 +25,7 @@ export class CombinedSequence {
      * May throw an error if overflow number overflows. This is extremely
      * unlikely and must be treated as a protocol error.
      */
-    public next(): NextCombinedSequence {
+    public next(): saltyrtc.NextCombinedSequence {
         if (this.sequenceNumber + 1 >= CombinedSequence.SEQUENCE_NUMBER_MAX) {
             // Sequence number overflow
             this.sequenceNumber = 0;
@@ -45,5 +45,3 @@ export class CombinedSequence {
     }
 
 }
-
-export type NextCombinedSequence = { sequenceNumber: number, overflow: number };

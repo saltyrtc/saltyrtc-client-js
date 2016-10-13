@@ -235,6 +235,12 @@ declare namespace saltyrtc {
         theirs: Cookie;
     }
 
+    type NextCombinedSequence = { sequenceNumber: number, overflow: number };
+
+    interface CombinedSequence {
+        next(): NextCombinedSequence;
+    }
+
 }
 
 declare namespace saltyrtc.messages {

@@ -8,7 +8,6 @@
 /// <reference path='../saltyrtc.d.ts' />
 
 import { KeyStore, AuthToken } from "../keystore";
-import { NextCombinedSequence } from "../csn";
 import { SignalingChannelNonce } from "../nonce";
 import { Responder } from "../peers";
 import { ProtocolError, SignalingError, ValidationError } from "../exceptions";
@@ -46,7 +45,7 @@ export class InitiatorSignaling extends Signaling {
         return this.permanentKey.publicKeyHex;
     }
 
-    protected getNextCsn(receiver: number): NextCombinedSequence {
+    protected getNextCsn(receiver: number): saltyrtc.NextCombinedSequence {
         if (receiver === Signaling.SALTYRTC_ADDR_SERVER) {
             return this.serverCsn.next();
         } else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR) {

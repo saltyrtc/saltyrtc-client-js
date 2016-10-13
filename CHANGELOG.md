@@ -15,6 +15,7 @@ Possible log types:
 ### v0.1.2 (2016-10-13)
 
 - [added] Expose `Cookie` and `CookiePair` classes
+- [added] Expose `CombinedSequence` class
 
 ### v0.1.1 (2016-10-12)
 

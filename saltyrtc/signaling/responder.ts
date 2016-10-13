@@ -9,7 +9,6 @@
 
 import { KeyStore, AuthToken } from "../keystore";
 import { SignalingChannelNonce } from "../nonce";
-import { NextCombinedSequence } from "../csn";
 import { Initiator } from "../peers";
 import { ProtocolError, SignalingError, ValidationError } from "../exceptions";
 import { CloseCode } from "../closecode";
@@ -47,7 +46,7 @@ export class ResponderSignaling extends Signaling {
         return u8aToHex(this.initiator.permanentKey);
     }
 
-    protected getNextCsn(receiver: number): NextCombinedSequence {
+    protected getNextCsn(receiver: number): saltyrtc.NextCombinedSequence {
         if (receiver === Signaling.SALTYRTC_ADDR_SERVER) {
             return this.serverCsn.next();
         } else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR) {

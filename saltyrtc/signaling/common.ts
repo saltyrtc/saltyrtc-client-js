@@ -13,7 +13,7 @@
 import { KeyStore, AuthToken, Box } from "../keystore";
 import { Cookie, CookiePair } from "../cookie";
 import { SignalingChannelNonce } from "../nonce";
-import { CombinedSequence, NextCombinedSequence } from "../csn";
+import { CombinedSequence } from "../csn";
 import { ProtocolError, ValidationError } from "../exceptions";
 import { SignalingError, ConnectionError } from "../exceptions";
 import { concat, byteToHex } from "../utils";
@@ -484,7 +484,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      *
      * May throw a `ProtocolError`.
      */
-    protected abstract getNextCsn(receiver: number): NextCombinedSequence;
+    protected abstract getNextCsn(receiver: number): saltyrtc.NextCombinedSequence;
 
     /**
      * Validate destination and optionally source of nonce.
@@ -560,7 +560,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      */
     protected buildPacket(message: saltyrtc.Message, receiver: number, encrypt=true): Uint8Array {
         // Choose proper sequence number
-        const csn: NextCombinedSequence = this.getNextCsn(receiver);
+        const csn: saltyrtc.NextCombinedSequence = this.getNextCsn(receiver);
 
         // Create nonce
         const nonce = new SignalingChannelNonce(
