@@ -17,4 +17,5 @@ export { KeyStore } from "./keystore";
 // API for tasks
 export { Box } from "./keystore";
 export { Cookie, CookiePair } from "./cookie";
+export { CombinedSequence, CombinedSequencePair } from "./csn";
 export { EventRegistry } from "./eventregistry";
