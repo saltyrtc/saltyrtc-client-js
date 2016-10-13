@@ -1,3 +1,5 @@
+import "../node_modules/babel-polyfill/dist/polyfill";
+
 import test_utils from "./utils.spec";
 import test_keystore from "./keystore.spec";
 import test_nonce from "./nonce.spec";

@@ -2,10 +2,15 @@
   "name": "saltyrtc-client",
   "version": "0.1.5",
   "description": "SaltyRTC JavaScript implementation",
+  "main": "dist/saltyrtc-client.es5.min.js",
+  "jsnext:main": "dist/saltyrtc-client.es2015.js",
   "scripts": {
     "test": "karma start --single-run --log-level=debug --colors",
-    "dist": "rollup -c rollup/rollup.dist.js && cp saltyrtc/saltyrtc.d.ts dist/",
-    "rollup_tests": "rollup -c rollup/rollup.testing.js",
+    "dist": "npm run dist_es5 && npm run dist_es5_min && npm run dist_es2015 && cp saltyrtc/saltyrtc.d.ts dist/",
+    "dist_es5": "rollup -c rollup/es5.js",
+    "dist_es5_min": "rollup -c rollup/es5.min.js",
+    "dist_es2015": "rollup -c rollup/es2015.js",
+    "rollup_tests": "rollup -c rollup/testing.js",
     "validate": "tsc --noEmit",
     "clean": "rm -rf saltyrtc/*.js tests/testsuite.js*"
   },

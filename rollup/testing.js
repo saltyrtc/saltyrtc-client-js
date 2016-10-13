@@ -1,4 +1,4 @@
-import config from './rollup.dist.js';
+import config from './es5.js';
 
 config.entry = 'tests/main.ts';
 config.dest = 'tests/testsuite.js';

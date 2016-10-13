@@ -1,10 +1,8 @@
 import typescript from 'rollup-plugin-typescript';
-import babel from 'rollup-plugin-babel';
-import uglify from 'rollup-plugin-uglify';
 
 export default {
     entry: 'saltyrtc/main.ts',
-    dest: 'dist/saltyrtc-client.min.js',
+    dest: 'dist/saltyrtc-client.es2015.js',
     format: 'iife',
     moduleName: 'saltyrtc.client',
     sourceMap: false,
@@ -13,25 +11,7 @@ export default {
     plugins: [
         typescript({
             typescript: require('typescript')
-        }),
-        babel({
-            babelrc: false,
-            exclude: 'node_modules/**',
-            presets: ['es2015-rollup'],
-            plugins: ['external-helpers']
-        })/*,
-        uglify({
-            output: {
-                comments: (node, comment) => {
-                    const text = comment.value;
-                    const type = comment.type;
-                    if (type == "comment2") { // multiline comment
-                        return /MIT license/.test(text);
-                    }
-
-                }
-            }
-        })*/
+        })
     ],
     banner: "/**\n" +
             " * SaltyRTC JavaScript implementation\n" +
