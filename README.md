@@ -113,6 +113,11 @@ Alternatively, run the tests automatically in Firefox and Chrome:
 
 ## Releasing
 
+Set variables:
+
+    $ export VERSION=X.Y.Z
+    $ export GPG_KEY=E7ADD9914E260E8B35DFB50665FDE935573ACDA6
+
 Update version numbers:
 
     $ vim -p package.json CHANGELOG.md
@@ -123,8 +128,8 @@ Build dist files:
 
 Commit & tag:
 
-    $ git commit dist/ package.json CHANGELOG.md -m 'Release vX.Y.Z'
-    $ git tag -s -u E7ADD9914E260E8B35DFB50665FDE935573ACDA6 vX.Y.Z -m 'Version X.Y.Z'
+    $ git commit dist/ package.json CHANGELOG.md -m 'Release v${VERSION}'
+    $ git tag -s -u ${GPG_KEY} v${VERSION} -m 'Version ${VERSION}'
 
 Push & publish:
 
