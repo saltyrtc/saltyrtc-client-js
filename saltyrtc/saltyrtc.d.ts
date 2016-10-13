@@ -241,6 +241,11 @@ declare namespace saltyrtc {
         next(): NextCombinedSequence;
     }
 
+    interface CombinedSequencePair {
+        ours: CombinedSequence;
+        theirs: number;
+    }
+
 }
 
 declare namespace saltyrtc.messages {

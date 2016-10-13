@@ -12,6 +12,10 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.1.3 (2016-10-13)
+
+- [added] Create `CombinedSequencePair` class
+
 ### v0.1.2 (2016-10-13)
 
 - [added] Expose `Cookie` and `CookiePair` classes

@@ -45,3 +45,22 @@ export class CombinedSequence implements saltyrtc.CombinedSequence {
     }
 
 }
+
+/**
+ * A combined sequence pair.
+ */
+export class CombinedSequencePair implements saltyrtc.CombinedSequencePair {
+    public ours: CombinedSequence = null;
+    public theirs: number = null;
+
+    constructor(ours?: CombinedSequence, theirs?: number) {
+        if (typeof ours !== 'undefined' && typeof theirs !== 'undefined') {
+            this.ours = ours;
+            this.theirs = theirs;
+        } else if (typeof ours === 'undefined' && typeof theirs === 'undefined') {
+            this.ours = new CombinedSequence();
+        } else {
+            throw new Error('Either both or no combined sequences must be specified');
+        }
+    }
+}
