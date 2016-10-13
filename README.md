@@ -108,6 +108,30 @@ Alternatively, run the tests automatically in Firefox and Chrome:
 
     $ npm test
 
+## Releasing
+
+Build dist files:
+
+    $ npm run dist
+
+Add dist files:
+
+    $ git add dist/
+
+Update version numbers:
+
+    $ vim -p package.json CHANGELOG.md
+
+Commit & tag:
+
+    $ git commit dist/ package.json CHANGELOG.md -m 'Release vX.Y.Z'
+    $ git tag -s vX.Y.Z -m 'Version X.Y.Z'
+
+Push & publish:
+
+    $ git push && git push --tags
+    $ npm publish
+
 ## Coding Guidelines
 
 - Write clean ES2015
