@@ -3,7 +3,8 @@ module.exports = function(config) {
   var configuration = {
     frameworks: ['jasmine'],
     files: [
-      'dist/tests.js'
+      'node_modules/tweetnacl/nacl-fast.min.js',
+      'tests/testsuite.js'
     ],
     customLaunchers: {
       Chrome_travis_ci: {
