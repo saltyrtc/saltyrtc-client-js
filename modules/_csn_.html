@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>&quot;csn&quot; | saltyrtc</title>
+	<title>&quot;csn&quot; | saltyrtc-client</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -23,7 +23,7 @@
 						<li class="state loading">Preparing search index...</li>
 						<li class="state failure">The search index is not available</li>
 					</ul>
-					<a href="../index.html" class="title">saltyrtc</a>
+					<a href="../index.html" class="title">saltyrtc-client</a>
 				</div>
 				<div class="table-cell" id="tsd-widgets">
 					<div id="tsd-filter">
@@ -41,8 +41,6 @@
 							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
 							<input type="checkbox" id="tsd-filter-externals" checked />
 							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
-							<input type="checkbox" id="tsd-filter-only-exported" />
-							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
 						</div>
 					</div>
 					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
@@ -75,38 +73,9 @@
 							<h3>Classes</h3>
 							<ul class="tsd-index-list">
 								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/_csn_.combinedsequence.html" class="tsd-kind-icon">Combined<wbr>Sequence</a></li>
+								<li class="tsd-kind-class tsd-parent-kind-external-module"><a href="../classes/_csn_.combinedsequencepair.html" class="tsd-kind-icon">Combined<wbr>Sequence<wbr>Pair</a></li>
 							</ul>
 						</section>
-						<section class="tsd-index-section ">
-							<h3>Type aliases</h3>
-							<ul class="tsd-index-list">
-								<li class="tsd-kind-type-alias tsd-parent-kind-external-module"><a href="_csn_.html#nextcombinedsequence" class="tsd-kind-icon">Next<wbr>Combined<wbr>Sequence</a></li>
-							</ul>
-						</section>
-					</div>
-				</section>
-			</section>
-			<section class="tsd-panel-group tsd-member-group ">
-				<h2>Type aliases</h2>
-				<section class="tsd-panel tsd-member tsd-kind-type-alias tsd-parent-kind-external-module">
-					<a name="nextcombinedsequence" class="tsd-anchor"></a>
-					<h3>Next<wbr>Combined<wbr>Sequence</h3>
-					<div class="tsd-signature tsd-kind-icon">Next<wbr>Combined<wbr>Sequence<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/1cfa335/saltyrtc/csn.ts#L49">csn.ts:49</a></li>
-						</ul>
-					</aside>
-					<div class="tsd-type-declaration">
-						<h4>Type declaration</h4>
-						<ul class="tsd-parameters">
-							<li class="tsd-parameter">
-								<h5>overflow<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
-							</li>
-							<li class="tsd-parameter">
-								<h5>sequence<wbr>Number<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span></h5>
-							</li>
-						</ul>
 					</div>
 				</section>
 			</section>
@@ -116,9 +85,6 @@
 				<ul>
 					<li class="globals  ">
 						<a href="../globals.html"><em>Globals</em></a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="_chunkifier_.html">"chunkifier"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="_client_.html">"client"</a>
@@ -145,10 +111,16 @@
 						<a href="_main_.html">"main"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="_main_es5_.html">"main.es5"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="_nonce_.html">"nonce"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="_peers_.html">"peers"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_saltyrtc_d_.html">"saltyrtc.d"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="_signaling_.html">"signaling"</a>
@@ -166,6 +138,12 @@
 						<a href="_signaling_responder_.html">"signaling/responder"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="_types_msgpack_lite_d_.html">"types/msgpack-<wbr>lite.d"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="_types_tweetnacl_d_.html">"types/tweetnacl.d"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="_utils_.html">"utils"</a>
 					</li>
 				</ul>
@@ -175,8 +153,8 @@
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
 						<a href="../classes/_csn_.combinedsequence.html" class="tsd-kind-icon">Combined<wbr>Sequence</a>
 					</li>
-					<li class=" tsd-kind-type-alias tsd-parent-kind-external-module">
-						<a href="_csn_.html#nextcombinedsequence" class="tsd-kind-icon">Next<wbr>Combined<wbr>Sequence</a>
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="../classes/_csn_.combinedsequencepair.html" class="tsd-kind-icon">Combined<wbr>Sequence<wbr>Pair</a>
 					</li>
 				</ul>
 			</nav>

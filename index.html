@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>saltyrtc</title>
+	<title>saltyrtc-client</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="assets/css/main.css">
@@ -23,7 +23,7 @@
 						<li class="state loading">Preparing search index...</li>
 						<li class="state failure">The search index is not available</li>
 					</ul>
-					<a href="index.html" class="title">saltyrtc</a>
+					<a href="index.html" class="title">saltyrtc-client</a>
 				</div>
 				<div class="table-cell" id="tsd-widgets">
 					<div id="tsd-filter">
@@ -41,8 +41,6 @@
 							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
 							<input type="checkbox" id="tsd-filter-externals" checked />
 							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
-							<input type="checkbox" id="tsd-filter-only-exported" />
-							<label class="tsd-widget" for="tsd-filter-only-exported">Only exported</label>
 						</div>
 					</div>
 					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
@@ -57,7 +55,7 @@
 					<a href="globals.html">Globals</a>
 				</li>
 			</ul>
-			<h1> saltyrtc</h1>
+			<h1> saltyrtc-client</h1>
 		</div>
 	</div>
 </header>
@@ -67,12 +65,30 @@
 			<div class="tsd-panel tsd-typography">
 				<h1 id="saltyrtc-javascript-client">SaltyRTC JavaScript Client</h1>
 				<p><a href="https://travis-ci.org/saltyrtc/saltyrtc-client-js"><img src="https://img.shields.io/travis/saltyrtc/saltyrtc-client-js/master.svg" alt="Travis branch"></a>
+					<a href="https://github.com/saltyrtc/saltyrtc-client-js"><img src="https://img.shields.io/badge/javascript-ES5%20%2F%20ES2015-yellow.svg" alt="Supported ES Standard"></a>
+					<a href="https://www.npmjs.com/package/saltyrtc-client"><img src="https://img.shields.io/npm/v/saltyrtc-client.svg?maxAge=2592000" alt="npm Version"></a>
+					<a href="https://www.npmjs.com/package/saltyrtc-client"><img src="https://img.shields.io/npm/dt/saltyrtc-client.svg?maxAge=2592000" alt="npm Downloads"></a>
 				<a href="https://github.com/saltyrtc/saltyrtc-client-js"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a></p>
 				<p>This is a <a href="https://github.com/saltyrtc/saltyrtc-meta">SaltyRTC</a> implementation
 				for JavaScript (ES5) written in TypeScript 1.8+.</p>
 				<p>The development is still ongoing, the library is not yet production ready.</p>
 				<p>Currently at least Firefox 45 and Chromium 49 are required.</p>
 				<p><a href="https://saltyrtc.github.io/saltyrtc-client-js/">API Docs</a></p>
+				<h2 id="installing">Installing</h2>
+				<h3 id="via-npm">Via npm</h3>
+				<p>You can install this library via <code>npm</code>:</p>
+				<pre><code>npm <span class="hljs-keyword">install</span> saltyrtc-<span class="hljs-keyword">client</span>
+</code></pre><h3 id="manually">Manually</h3>
+				<p>Alternatively, copy one of the following files to your project directly:</p>
+				<ul>
+					<li>ES2015: <code>dist/saltyrtc-client.es2015.js</code></li>
+					<li>ES5: <code>dist/saltyrtc-client.es5.js</code></li>
+					<li>ES5 minified: <code>dist/saltyrtc-client.es5.min.js</code></li>
+				</ul>
+				<p>Make sure to manually add the following external dependencies to your project:</p>
+				<ul>
+					<li><a href="https://github.com/dchest/tweetnacl-js">tweetnacl</a></li>
+				</ul>
 				<h2 id="usage">Usage</h2>
 				<p>First, create a keypair:</p>
 				<pre><code><span class="hljs-keyword">let</span> permanentKey = <span class="hljs-function"><span class="hljs-keyword">new</span> <span class="hljs-title">saltyrtc</span>.<span class="hljs-title">KeyStore</span>();</span>
@@ -102,31 +118,38 @@ responder.<span class="hljs-literal">on</span>(<span class="hljs-string">'state-
 					<li><code>new-responder(responderId)</code>: A responder has connected. This event is only dispatched for the initiator.</li>
 					<li><code>handover(void)</code>: The handover to the data channel is done.</li>
 					<li><code>connection-error(ErrorEvent)</code>: A connection error occured.</li>
-					<li><code>connection-closed(CloseEvent)</code>: The connection was closed.</li>
+					<li><code>connection-closed(CloseEvent)</code>: The websocket connection was closed. (Note: This might be due to handover.)</li>
 				</ul>
 				<h2 id="development">Development</h2>
-				<p>Fetch git submodules:</p>
-				<pre><code>$ git submodule <span class="hljs-keyword">update</span> <span class="hljs-comment">--init</span>
-</code></pre><p>Install dependencies with npm (or alternatively install them manually):</p>
+				<p>Install dependencies:</p>
 				<pre><code>$ npm <span class="hljs-keyword">install</span>
-</code></pre><p>To compile the TypeScript sources to a single minified JavaScript (ES5) file:</p>
+</code></pre><p>To compile the TypeScript sources to a single JavaScript (ES5 / Minified ES5 / ES2015) file:</p>
 				<pre><code>$ npm <span class="hljs-keyword">run</span><span class="bash"> dist</span>
-</code></pre><p>The resulting file will be located in <code>dist/saltyrtc.min.js</code>.</p>
-				<p>You can also watch the source code for changes and recompile automatically:</p>
-				<pre><code>$ npm <span class="hljs-keyword">run</span><span class="bash"> watch</span>
-</code></pre><p>Due to a bug (<a href="https://github.com/rollup/rollup-plugin-typescript/issues/43">https://github.com/rollup/rollup-plugin-typescript/issues/43</a>),
+</code></pre><p>The resulting files will be located in <code>dist/</code>.</p>
+				<p>Due to a bug (<a href="https://github.com/rollup/rollup-plugin-typescript/issues/43">https://github.com/rollup/rollup-plugin-typescript/issues/43</a>),
 					rollup does not currently output non-fatal errors from TypeScript. To see
 				those, simply issue <code>npm run validate</code> in your main directory.</p>
 				<pre><code>$ npm <span class="hljs-keyword">run</span><span class="bash"> validate</span>
 </code></pre><h2 id="testing">Testing</h2>
 				<p>To compile the test sources, run:</p>
 				<pre><code>$ npm <span class="hljs-keyword">run</span><span class="bash"> rollup_tests</span>
-</code></pre><p>You can also watch the tests and sources for changes and recompile
-				automatically:</p>
-				<pre><code>$ npm <span class="hljs-keyword">run</span><span class="bash"> watch_tests</span>
 </code></pre><p>Then simply open <code>tests/testsuite.html</code> in your browser!</p>
 				<p>Alternatively, run the tests automatically in Firefox and Chrome:</p>
 				<pre><code>$ npm <span class="hljs-built_in">test</span>
+</code></pre><h2 id="releasing">Releasing</h2>
+				<p>Set variables:</p>
+				<pre><code>$ <span class="hljs-keyword">export</span> <span class="hljs-literal">VERSION</span>=X.Y.Z
+$ <span class="hljs-keyword">export</span> GPG_KEY=E7ADD9914E260E8B35DFB50665FDE935573ACDA6
+</code></pre><p>Update version numbers:</p>
+				<pre><code>$ vim -<span class="hljs-selector-tag">p</span> package<span class="hljs-selector-class">.json</span> CHANGELOG.md
+</code></pre><p>Build dist files:</p>
+				<pre><code>$ npm <span class="hljs-keyword">run</span><span class="bash"> dist</span>
+</code></pre><p>Commit &amp; tag:</p>
+				<pre><code>$ git commit dist/ package.json CHANGELOG.md -m 'Release v${<span class="hljs-keyword">VERSION</span>}'
+$ git <span class="hljs-keyword">tag</span> <span class="hljs-title">-s</span> -u ${GPG_KEY} v${<span class="hljs-keyword">VERSION</span>} -m '<span class="hljs-keyword">Version</span> ${<span class="hljs-keyword">VERSION</span>}'
+</code></pre><p>Push &amp; publish:</p>
+				<pre><code>$ git <span class="hljs-keyword">push </span>&amp;&amp; git <span class="hljs-keyword">push </span>--tags
+$ npm publish
 </code></pre><h2 id="coding-guidelines">Coding Guidelines</h2>
 				<ul>
 					<li>Write clean ES2015</li>
@@ -141,9 +164,6 @@ responder.<span class="hljs-literal">on</span>(<span class="hljs-string">'state-
 				<ul>
 					<li class="globals  ">
 						<a href="globals.html"><em>Globals</em></a>
-					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="modules/_chunkifier_.html">"chunkifier"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="modules/_client_.html">"client"</a>
@@ -170,10 +190,16 @@ responder.<span class="hljs-literal">on</span>(<span class="hljs-string">'state-
 						<a href="modules/_main_.html">"main"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
+						<a href="modules/_main_es5_.html">"main.es5"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
 						<a href="modules/_nonce_.html">"nonce"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="modules/_peers_.html">"peers"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_saltyrtc_d_.html">"saltyrtc.d"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="modules/_signaling_.html">"signaling"</a>
@@ -189,6 +215,12 @@ responder.<span class="hljs-literal">on</span>(<span class="hljs-string">'state-
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="modules/_signaling_responder_.html">"signaling/responder"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_msgpack_lite_d_.html">"types/msgpack-<wbr>lite.d"</a>
+					</li>
+					<li class=" tsd-kind-external-module">
+						<a href="modules/_types_tweetnacl_d_.html">"types/tweetnacl.d"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
 						<a href="modules/_utils_.html">"utils"</a>
