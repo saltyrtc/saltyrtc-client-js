@@ -1,4 +1,7 @@
 import typescript from 'rollup-plugin-typescript';
+import fs from 'fs';
+
+let p = JSON.parse(fs.readFileSync('package.json'));
 
 export default {
     entry: 'saltyrtc/main.ts',
@@ -14,10 +17,11 @@ export default {
         })
     ],
     banner: "/**\n" +
-            " * SaltyRTC JavaScript implementation\n" +
-            " * https://github.com/saltyrtc/saltyrtc-client-js\n" +
+            " * saltyrtc-client-js v" + p.version + "\n" +
+            " * " + p.description + "\n" +
+            " * " + p.homepage + "\n" +
             " *\n" +
-            " * Copyright (C) 2016 Threema GmbH\n" +
+            " * Copyright (C) 2016 " + p.author + "\n" +
             " *\n" +
             " * This software may be modified and distributed under the terms\n" +
             " * of the MIT license:\n" +
