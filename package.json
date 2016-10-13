@@ -7,7 +7,7 @@
     "dist": "rollup -c rollup.dist.js && cp saltyrtc/saltyrtc.d.ts dist/",
     "rollup_tests": "rollup -c rollup.testing.js",
     "validate": "tsc --noEmit",
-    "clean": "rm -rf js/ saltyrtc/*.js"
+    "clean": "rm -rf saltyrtc/*.js tests/testsuite.js*"
   },
   "repository": {
     "type": "git",

@@ -1,8 +1,8 @@
 *.swp
-js/
 node_modules/
 npm-debug.log
 dist/
+tests/testsuite.js*
 docs/
 saltyrtc.crt
 saltyrtc.csr
