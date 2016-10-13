@@ -87,11 +87,11 @@ Install dependencies:
 
     $ npm install
 
-To compile the TypeScript sources to a single minified JavaScript (ES5) file:
+To compile the TypeScript sources to a single JavaScript (ES5 / Minified ES5 / ES2015) file:
 
     $ npm run dist
 
-The resulting file will be located in `dist/saltyrtc-client.min.js`.
+The resulting files will be located in `dist/`.
 
 Due to a bug (https://github.com/rollup/rollup-plugin-typescript/issues/43),
 rollup does not currently output non-fatal errors from TypeScript. To see
