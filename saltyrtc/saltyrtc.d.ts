@@ -224,6 +224,17 @@ declare namespace saltyrtc {
         get(eventType: string | string[]): SaltyEventHandler[];
     }
 
+    interface Cookie {
+        bytes: Uint8Array;
+        asArrayBuffer(): ArrayBuffer;
+        equals(otherCookie: Cookie): boolean;
+    }
+
+    interface CookiePair {
+        ours: Cookie;
+        theirs: Cookie;
+    }
+
 }
 
 declare namespace saltyrtc.messages {

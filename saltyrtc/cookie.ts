@@ -7,7 +7,7 @@
 
 /// <reference path='types/tweetnacl.d.ts' />
 
-export class Cookie {
+export class Cookie implements saltyrtc.Cookie {
 
     public static COOKIE_LENGTH = 16;
 
@@ -61,7 +61,7 @@ export class Cookie {
 /**
  * A cookie pair.
  */
-export class CookiePair {
+export class CookiePair implements saltyrtc.CookiePair {
     public ours: Cookie = null;
     public theirs: Cookie = null;
 

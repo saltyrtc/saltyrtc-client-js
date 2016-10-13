@@ -10,6 +10,11 @@ import "../node_modules/babel-polyfill/dist/polyfill";
 import "../node_modules/tweetnacl/nacl-fast";
 import "../vendor/msgpack.min.js";
 
+// Main API
 export { SaltyRTCBuilder } from "./client";
-export { KeyStore, Box } from "./keystore";
+export { KeyStore } from "./keystore";
+
+// API for tasks
+export { Box } from "./keystore";
+export { Cookie, CookiePair } from "./cookie";
 export { EventRegistry } from "./eventregistry";
