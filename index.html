@@ -145,8 +145,8 @@ $ <span class="hljs-keyword">export</span> GPG_KEY=E7ADD9914E260E8B35DFB50665FDE
 </code></pre><p>Build dist files:</p>
 				<pre><code>$ npm <span class="hljs-keyword">run</span><span class="bash"> dist</span>
 </code></pre><p>Commit &amp; tag:</p>
-				<pre><code>$ git commit dist/ package.json CHANGELOG.md -m 'Release v${<span class="hljs-keyword">VERSION</span>}'
-$ git <span class="hljs-keyword">tag</span> <span class="hljs-title">-s</span> -u ${GPG_KEY} v${<span class="hljs-keyword">VERSION</span>} -m '<span class="hljs-keyword">Version</span> ${<span class="hljs-keyword">VERSION</span>}'
+				<pre><code>$ git commit -m <span class="hljs-string">"Release v<span class="hljs-variable">${VERSION}</span>"</span>
+$ git tag <span class="hljs-_">-s</span> -u <span class="hljs-variable">${GPG_KEY}</span> v<span class="hljs-variable">${VERSION}</span> -m <span class="hljs-string">"Version <span class="hljs-variable">${VERSION}</span>"</span>
 </code></pre><p>Push &amp; publish:</p>
 				<pre><code>$ git <span class="hljs-keyword">push </span>&amp;&amp; git <span class="hljs-keyword">push </span>--tags
 $ npm publish
