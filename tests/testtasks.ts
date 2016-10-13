@@ -1,3 +1,5 @@
+/// <reference path="../saltyrtc/saltyrtc.d.ts" />
+
 export class DummyTask implements saltyrtc.Task {
 
     public initialized = false;
@@ -30,11 +32,11 @@ export class DummyTask implements saltyrtc.Task {
         console.log("Sending signaling message (" + payload.byteLength + " bytes)");
     }
 
-    getName(): String {
+    getName(): string {
         return this.name;
     }
 
-    getSupportedMessageTypes(): String[] {
+    getSupportedMessageTypes(): string[] {
         return ['dummy'];
     }
 
@@ -57,7 +59,7 @@ export class PingPongTask extends DummyTask {
         super('pingpong.tasks.saltyrtc.org');
     }
 
-    getSupportedMessageTypes(): String[] {
+    getSupportedMessageTypes(): string[] {
         return ['ping', 'pong'];
     }
 

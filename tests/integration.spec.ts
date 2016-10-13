@@ -5,7 +5,6 @@
 
 /// <reference path="jasmine.d.ts" />
 /// <reference path="../saltyrtc/saltyrtc.d.ts" />
-/// <reference path="../saltyrtc/types/RTCPeerConnection.d.ts" />
 
 import { Config } from "./config";
 import { sleep } from "./utils";

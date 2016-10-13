@@ -175,6 +175,7 @@ declare namespace saltyrtc {
         withKeyStore(keyStore: KeyStore): SaltyRTCBuilder;
         withTrustedPeerKey(peerTrustedKey: Uint8Array): SaltyRTCBuilder;
         initiatorInfo(initiatorPublicKey: Uint8Array, authToken: Uint8Array): SaltyRTCBuilder;
+        usingTasks(tasks: Task[]): SaltyRTCBuilder;
 
         asInitiator(): SaltyRTC;
         asResponder(): SaltyRTC;
