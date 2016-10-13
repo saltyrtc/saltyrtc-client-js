@@ -110,22 +110,18 @@ Alternatively, run the tests automatically in Firefox and Chrome:
 
 ## Releasing
 
-Build dist files:
-
-    $ npm run dist
-
-Add dist files:
-
-    $ git add dist/
-
 Update version numbers:
 
     $ vim -p package.json CHANGELOG.md
 
+Build dist files:
+
+    $ npm run dist
+
 Commit & tag:
 
     $ git commit dist/ package.json CHANGELOG.md -m 'Release vX.Y.Z'
-    $ git tag -s vX.Y.Z -m 'Version X.Y.Z'
+    $ git tag -s -u E7ADD9914E260E8B35DFB50665FDE935573ACDA6 vX.Y.Z -m 'Version X.Y.Z'
 
 Push & publish:
 
