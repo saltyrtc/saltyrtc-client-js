@@ -6,7 +6,6 @@
  */
 
 /// <reference path='../saltyrtc.d.ts' />
-/// <reference path='../types/RTCPeerConnection.d.ts' />
 /// <reference path='../types/msgpack-lite.d.ts' />
 /// <reference path='../types/tweetnacl.d.ts' />
 
