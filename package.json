@@ -1,6 +1,6 @@
 {
   "name": "saltyrtc-client",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "SaltyRTC JavaScript implementation",
   "scripts": {
     "test": "karma start --single-run --log-level=debug --colors",
