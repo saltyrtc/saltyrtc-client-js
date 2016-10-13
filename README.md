@@ -2,8 +2,8 @@
 
 [![Travis branch](https://img.shields.io/travis/saltyrtc/saltyrtc-client-js/master.svg)](https://travis-ci.org/saltyrtc/saltyrtc-client-js)
 [![Supported ES Standard](https://img.shields.io/badge/javascript-ES5%20%2F%20ES2015-yellow.svg)](https://github.com/saltyrtc/saltyrtc-client-js)
-[![npm Version](https://img.shields.io/npm/v/saltyrtc-client.svg?maxAge=2592000)]()
-[![npm Downloads](https://img.shields.io/npm/dt/saltyrtc-client.svg?maxAge=2592000)]()
+[![npm Version](https://img.shields.io/npm/v/saltyrtc-client.svg?maxAge=2592000)](https://www.npmjs.com/package/saltyrtc-client)
+[![npm Downloads](https://img.shields.io/npm/dt/saltyrtc-client.svg?maxAge=2592000)](https://www.npmjs.com/package/saltyrtc-client)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/saltyrtc/saltyrtc-client-js)
 
 This is a [SaltyRTC](https://github.com/saltyrtc/saltyrtc-meta) implementation
