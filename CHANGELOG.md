@@ -12,9 +12,13 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.1.5 (2016-10-13)
+
+- [changed] Internal cleanup
+
 ### v0.1.4 (2016-10-13)
 
-- [added] Fix exposed classes in `main.ts`
+- [fixed] Fix exposed classes in `main.ts`
 
 ### v0.1.3 (2016-10-13)
 
