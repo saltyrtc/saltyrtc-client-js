@@ -4,8 +4,8 @@
   "description": "SaltyRTC JavaScript implementation",
   "scripts": {
     "test": "karma start --single-run --log-level=debug --colors",
-    "dist": "rollup -c rollup.dist.js && cp saltyrtc/saltyrtc.d.ts dist/",
-    "rollup_tests": "rollup -c rollup.testing.js",
+    "dist": "rollup -c rollup/rollup.dist.js && cp saltyrtc/saltyrtc.d.ts dist/",
+    "rollup_tests": "rollup -c rollup/rollup.testing.js",
     "validate": "tsc --noEmit",
     "clean": "rm -rf saltyrtc/*.js tests/testsuite.js*"
   },
