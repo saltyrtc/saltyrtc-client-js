@@ -12,7 +12,7 @@
 
 import { KeyStore, AuthToken, Box } from "../keystore";
 import { Cookie, CookiePair } from "../cookie";
-import { SignalingChannelNonce } from "../nonce";
+import { Nonce } from "../nonce";
 import { CombinedSequence } from "../csn";
 import { ProtocolError, ValidationError } from "../exceptions";
 import { SignalingError, ConnectionError } from "../exceptions";
@@ -252,10 +252,10 @@ export abstract class Signaling implements saltyrtc.Signaling {
         console.debug(this.logTag, 'New ws message (' + (ev.data as ArrayBuffer).byteLength + ' bytes)');
         try {
             // Parse buffer
-            const box: saltyrtc.Box = Box.fromUint8Array(new Uint8Array(ev.data), SignalingChannelNonce.TOTAL_LENGTH);
+            const box: saltyrtc.Box = Box.fromUint8Array(new Uint8Array(ev.data), Nonce.TOTAL_LENGTH);
 
             // Parse nonce
-            const nonce: SignalingChannelNonce = SignalingChannelNonce.fromArrayBuffer(box.nonce.buffer);
+            const nonce: Nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
 
             // Dispatch message
             switch (this.getState()) {
@@ -292,7 +292,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      *
      * @throws SignalingError
      */
-    protected onServerHandshakeMessage(box: saltyrtc.Box, nonce: SignalingChannelNonce): void {
+    protected onServerHandshakeMessage(box: saltyrtc.Box, nonce: Nonce): void {
         // Decrypt if necessary
         let payload: Uint8Array;
         if (this.serverHandshakeState === 'new') {
@@ -347,12 +347,12 @@ export abstract class Signaling implements saltyrtc.Signaling {
     /**
      * Handle messages received during peer handshake.
      */
-    protected abstract onPeerHandshakeMessage(box: saltyrtc.Box, nonce: SignalingChannelNonce): void;
+    protected abstract onPeerHandshakeMessage(box: saltyrtc.Box, nonce: Nonce): void;
 
     /**
      * Handle messages received from peer *after* the handshake is done.
      */
-    protected onSignalingMessage(box: saltyrtc.Box, nonce: SignalingChannelNonce): void {
+    protected onSignalingMessage(box: saltyrtc.Box, nonce: Nonce): void {
         // TODO: Validate nonce?
         console.debug('Message received');
         if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
@@ -413,7 +413,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
     /**
      * Handle an incoming server-hello message.
      */
-    protected handleServerHello(msg: saltyrtc.messages.ServerHello, nonce: SignalingChannelNonce): void {
+    protected handleServerHello(msg: saltyrtc.messages.ServerHello, nonce: Nonce): void {
         // Store server public key
         this.serverKey = new Uint8Array(msg.key);
 
@@ -448,7 +448,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
     /**
      * Handle an incoming server-auth message.
      */
-    protected abstract handleServerAuth(msg: saltyrtc.messages.ServerAuth, nonce: SignalingChannelNonce): void;
+    protected abstract handleServerAuth(msg: saltyrtc.messages.ServerAuth, nonce: Nonce): void;
 
     /**
      * Initialize the peer handshake.
@@ -493,7 +493,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * - bad-nonce-source
      * - bad-nonce-destination
      */
-    protected validateNonce(nonce: SignalingChannelNonce, destination?: number, source?: number): void {
+    protected validateNonce(nonce: Nonce, destination?: number, source?: number): void {
         // Validate destination
         if (destination !== undefined && nonce.destination !== destination) {
             console.error(this.logTag, 'Nonce destination is', nonce.destination, 'but we\'re', this.address);
@@ -563,7 +563,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         const csn: saltyrtc.NextCombinedSequence = this.getNextCsn(receiver);
 
         // Create nonce
-        const nonce = new SignalingChannelNonce(
+        const nonce = new Nonce(
             this.cookiePair.ours, csn.overflow, csn.sequenceNumber, this.address, receiver);
         const nonceBytes = new Uint8Array(nonce.toArrayBuffer());
 
@@ -692,7 +692,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
             return this.decodeMessage(decrypted, 'peer');
         } catch(e) {
             if (convertErrors === true && e === 'decryption-failed') {
-                const nonce = SignalingChannelNonce.fromArrayBuffer(box.nonce.buffer);
+                const nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
                 throw new ProtocolError('Could not decrypt peer message from ' + byteToHex(nonce.source));
             } else { throw e; }
         }

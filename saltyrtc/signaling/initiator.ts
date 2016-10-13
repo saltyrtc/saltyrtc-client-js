@@ -8,7 +8,7 @@
 /// <reference path='../saltyrtc.d.ts' />
 
 import { KeyStore, AuthToken } from "../keystore";
-import { SignalingChannelNonce } from "../nonce";
+import { Nonce } from "../nonce";
 import { Responder } from "../peers";
 import { ProtocolError, SignalingError, ValidationError } from "../exceptions";
 import { CloseCode } from "../closecode";
@@ -149,7 +149,7 @@ export class InitiatorSignaling extends Signaling {
         }
     }
 
-    protected onPeerHandshakeMessage(box: saltyrtc.Box, nonce: SignalingChannelNonce): void {
+    protected onPeerHandshakeMessage(box: saltyrtc.Box, nonce: Nonce): void {
         // Validate nonce destination
         // TODO: Can we do this earlier?
         if (nonce.destination != this.address) {
@@ -264,7 +264,7 @@ export class InitiatorSignaling extends Signaling {
         // No-op as initiator.
     }
 
-    protected handleServerAuth(msg: saltyrtc.messages.ServerAuth, nonce: SignalingChannelNonce): void {
+    protected handleServerAuth(msg: saltyrtc.messages.ServerAuth, nonce: Nonce): void {
         this.address = Signaling.SALTYRTC_ADDR_INITIATOR;
         this.validateNonce(nonce, this.address, Signaling.SALTYRTC_ADDR_SERVER);
         this.validateRepeatedCookie(msg);
@@ -324,7 +324,7 @@ export class InitiatorSignaling extends Signaling {
     /**
      * Repeat the responder's cookie.
      */
-    private sendAuth(responder: Responder, nonce: SignalingChannelNonce): void {
+    private sendAuth(responder: Responder, nonce: Nonce): void {
         // Ensure again that cookies are different
         if (nonce.cookie.equals(this.cookiePair.ours)) {
             throw new ProtocolError('Their cookie and our cookie are the same.');
@@ -354,7 +354,7 @@ export class InitiatorSignaling extends Signaling {
      *
      * @throws SignalingError
      */
-    private handleAuth(msg: saltyrtc.messages.ResponderAuth, responder: Responder, nonce: SignalingChannelNonce): void {
+    private handleAuth(msg: saltyrtc.messages.ResponderAuth, responder: Responder, nonce: Nonce): void {
         // Validate cookie
         this.validateRepeatedCookie(msg);
 

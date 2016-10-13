@@ -1,11 +1,11 @@
 /// <reference path="jasmine.d.ts" />
 
-import { SignalingChannelNonce } from "../saltyrtc/nonce";
+import { Nonce } from "../saltyrtc/nonce";
 import { Cookie } from "../saltyrtc/cookie";
 
 export default () => { describe('nonce', function() {
 
-    describe('SignalingChannelNonce', function() {
+    describe('Nonce', function() {
 
         beforeEach(() => {
             this.array = new Uint8Array([
@@ -23,7 +23,7 @@ export default () => { describe('nonce', function() {
         });
 
         it('parses correctly', () => {
-            let nonce = SignalingChannelNonce.fromArrayBuffer(this.array.buffer);
+            let nonce = Nonce.fromArrayBuffer(this.array.buffer);
             expect(nonce.cookie.bytes).toEqual(
                 Uint8Array.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
             expect(nonce.source).toEqual(17);
@@ -38,13 +38,13 @@ export default () => { describe('nonce', function() {
             let destination = 18;
             let overflow = 258;
             let sequenceNumber = 50595078;
-            let nonce = new SignalingChannelNonce(cookie, overflow, sequenceNumber, source, destination);
+            let nonce = new Nonce(cookie, overflow, sequenceNumber, source, destination);
             let buf = nonce.toArrayBuffer();
             expect(new Uint8Array(buf)).toEqual(this.array);
         });
 
         it('returns the correct combined sequence number', () => {
-            let nonce = SignalingChannelNonce.fromArrayBuffer(this.array.buffer);
+            let nonce = Nonce.fromArrayBuffer(this.array.buffer);
             expect(nonce.combinedSequenceNumber).toEqual((258 << 32) + 50595078);
         });
 

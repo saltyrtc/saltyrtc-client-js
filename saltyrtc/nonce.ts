@@ -7,28 +7,6 @@
 
 import { Cookie } from "./cookie";
 
-/**
- * Base class for all nonces.
- */
-export abstract class Nonce {
-    protected _cookie: Cookie;
-    protected _overflow: number;
-    protected _sequenceNumber: number;
-
-    public static TOTAL_LENGTH = 24;
-
-    constructor(cookie: Cookie, overflow: number, sequenceNumber: number) {
-        this._cookie = cookie;
-        this._overflow = overflow;
-        this._sequenceNumber = sequenceNumber;
-    }
-
-    get cookie() { return this._cookie; }
-    get overflow() { return this._overflow; }
-    get sequenceNumber() { return this._sequenceNumber; }
-    get combinedSequenceNumber() { return (this._overflow << 32) + this._sequenceNumber; }
-}
-
 
 /**
  * A SaltyRTC signaling channel nonce.
@@ -46,18 +24,29 @@ export abstract class Nonce {
  * - O: Overflow number (2 bytes)
  * - Q: Sequence number (4 bytes)
  */
-export class SignalingChannelNonce extends Nonce {
+export class Nonce {
 
-    protected _source: number;
-    protected _destination: number;
+    public static TOTAL_LENGTH = 24;
+
+    private _cookie: Cookie;
+    private _overflow: number;
+    private _sequenceNumber: number;
+    private _source: number;
+    private _destination: number;
 
     constructor(cookie: Cookie, overflow: number, sequenceNumber: number,
                 source: number, destination: number) {
-        super(cookie, overflow, sequenceNumber);
+        this._cookie = cookie;
+        this._overflow = overflow;
+        this._sequenceNumber = sequenceNumber;
         this._source = source;
         this._destination = destination;
     }
 
+    get cookie() { return this._cookie; }
+    get overflow() { return this._overflow; }
+    get sequenceNumber() { return this._sequenceNumber; }
+    get combinedSequenceNumber() { return (this._overflow << 32) + this._sequenceNumber; }
     get source() { return this._source; }
     get destination() { return this._destination; }
 
@@ -66,7 +55,7 @@ export class SignalingChannelNonce extends Nonce {
      *
      * If packet is not exactly 24 bytes long, throw an exception.
      */
-    public static fromArrayBuffer(packet: ArrayBuffer): SignalingChannelNonce {
+    public static fromArrayBuffer(packet: ArrayBuffer): Nonce {
         if (packet.byteLength != this.TOTAL_LENGTH) {
             throw 'bad-packet-length';
         }
@@ -81,7 +70,7 @@ export class SignalingChannelNonce extends Nonce {
         const overflow = view.getUint16(18);
         const sequenceNumber = view.getUint32(20);
 
-        return new SignalingChannelNonce(cookie, overflow, sequenceNumber, source, destination);
+        return new Nonce(cookie, overflow, sequenceNumber, source, destination);
     }
 
     /**

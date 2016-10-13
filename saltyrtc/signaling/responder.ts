@@ -8,7 +8,7 @@
 /// <reference path='../saltyrtc.d.ts' />
 
 import { KeyStore, AuthToken } from "../keystore";
-import { SignalingChannelNonce } from "../nonce";
+import { Nonce } from "../nonce";
 import { Initiator } from "../peers";
 import { ProtocolError, SignalingError, ValidationError } from "../exceptions";
 import { CloseCode } from "../closecode";
@@ -105,7 +105,7 @@ export class ResponderSignaling extends Signaling {
         return null;
     }
 
-    protected onPeerHandshakeMessage(box: saltyrtc.Box, nonce: SignalingChannelNonce): void {
+    protected onPeerHandshakeMessage(box: saltyrtc.Box, nonce: Nonce): void {
         // Validate nonce destination
         // TODO: Can we do this earlier?
         if (nonce.destination != this.address) {
@@ -204,7 +204,7 @@ export class ResponderSignaling extends Signaling {
         this.serverHandshakeState = 'hello-sent';
     }
 
-    protected handleServerAuth(msg: saltyrtc.messages.ServerAuth, nonce: SignalingChannelNonce): void {
+    protected handleServerAuth(msg: saltyrtc.messages.ServerAuth, nonce: Nonce): void {
         this.validateNonce(nonce, undefined, Signaling.SALTYRTC_ADDR_SERVER);
         if (nonce.destination > 0xff || nonce.destination < 0x02) {
             console.error(this.logTag, 'Invalid nonce destination:', nonce.destination);
@@ -291,7 +291,7 @@ export class ResponderSignaling extends Signaling {
     /**
      * Repeat the initiator's cookie.
      */
-    private sendAuth(nonce: SignalingChannelNonce): void {
+    private sendAuth(nonce: Nonce): void {
         // Ensure again that cookies are different
         if (nonce.cookie.equals(this.cookiePair.ours)) {
             throw new ProtocolError('Their cookie and our cookie are the same.');
@@ -320,7 +320,7 @@ export class ResponderSignaling extends Signaling {
     /**
      * The initiator repeats our cookie and sends the chosen task.
      */
-    private handleAuth(msg: saltyrtc.messages.InitiatorAuth, nonce: SignalingChannelNonce): void {
+    private handleAuth(msg: saltyrtc.messages.InitiatorAuth, nonce: Nonce): void {
         // Validate cookie
         this.validateRepeatedCookie(msg);
 
