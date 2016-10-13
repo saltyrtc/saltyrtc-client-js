@@ -7,7 +7,6 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 import "../node_modules/babel-polyfill/dist/polyfill";
-import "../node_modules/tweetnacl/nacl-fast";
 import "../vendor/msgpack.min.js";
 
 // Main API

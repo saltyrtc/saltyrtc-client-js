@@ -34,9 +34,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
     protected protocol: string = 'wss';
     protected ws: WebSocket = null;
 
-    // WebRTC / ORTC
-    protected dc: RTCDataChannel = null;
-
     // Msgpack
     protected msgpackOptions: Object = {
         codec: msgpack.createCodec({binarraybuffer: true}),
@@ -336,7 +333,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         }
 
         // Check if we're done yet
-        if (this.serverHandshakeState === 'done') {
+        if (this.serverHandshakeState as string === 'done') {
             this.setState('peer-handshake');
             console.debug(this.logTag, 'Server handshake done');
             this.initPeerHandshake();

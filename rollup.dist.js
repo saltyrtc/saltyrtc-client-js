@@ -1,28 +1,43 @@
+import typescript from 'rollup-plugin-typescript';
 import babel from 'rollup-plugin-babel';
 import uglify from 'rollup-plugin-uglify';
 
 export default {
-    entry: 'build/es2015/saltyrtc/main.js',
-    dest: 'dist/saltyrtc.min.js',
+    entry: 'saltyrtc/main.ts',
+    dest: 'dist/saltyrtc-client.min.js',
     format: 'iife',
-    moduleName: 'saltyrtc',
+    moduleName: 'saltyrtc.client',
     sourceMap: false,
     treeshake: true,
     useStrict: true,
     plugins: [
+        typescript({
+            typescript: require('typescript')
+        }),
         babel({
             babelrc: false,
-            presets: [
-                'es2015-rollup'
-            ]
-        }),
-        uglify()
+            exclude: 'node_modules/**',
+            presets: ['es2015-rollup'],
+            plugins: ['external-helpers']
+        })/*,
+        uglify({
+            output: {
+                comments: (node, comment) => {
+                    const text = comment.value;
+                    const type = comment.type;
+                    if (type == "comment2") { // multiline comment
+                        return /MIT license/.test(text);
+                    }
+
+                }
+            }
+        })*/
     ],
     banner: "/**\n" +
             " * SaltyRTC JavaScript implementation\n" +
             " * https://github.com/saltyrtc/saltyrtc-client-js\n" +
             " *\n" +
-            " * Copyright (C) 2016 Threema GmbH / SaltyRTC Contributors\n" +
+            " * Copyright (C) 2016 Threema GmbH\n" +
             " *\n" +
             " * This software may be modified and distributed under the terms\n" +
             " * of the MIT license:\n" +

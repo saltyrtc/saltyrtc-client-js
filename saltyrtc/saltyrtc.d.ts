@@ -50,10 +50,7 @@ declare namespace saltyrtc {
         type: string;
         data?: any;
     }
-
-    type EventHandler = (event: Event) => void;
-    type SaltyEventHandler = (event: SaltyRTCEvent) => boolean | void;
-    type MessageEventHandler = (event: RTCMessageEvent) => void;
+    type SaltyRTCEventHandler = (event: SaltyRTCEvent) => boolean | void;
 
     interface Signaling {
         handoverState: HandoverState;
@@ -196,9 +193,9 @@ declare namespace saltyrtc {
         disconnect(): void;
 
         // Event handling
-        on(event: string | string[], handler: SaltyEventHandler): void;
-        once(event: string | string[], handler: SaltyEventHandler): void;
-        off(event: string | string[], handler?: SaltyEventHandler): void;
+        on(event: string | string[], handler: SaltyRTCEventHandler): void;
+        once(event: string | string[], handler: SaltyRTCEventHandler): void;
+        off(event: string | string[], handler?: SaltyRTCEventHandler): void;
         emit(event: SaltyRTCEvent): void;
     }
 
@@ -206,13 +203,13 @@ declare namespace saltyrtc {
         /**
          * Register an event handler for the specified event(s).
          */
-        register(eventType: string | string[], handler: SaltyEventHandler): void;
+        register(eventType: string | string[], handler: SaltyRTCEventHandler): void;
 
         /**
          * Unregister an event handler for the specified event(s).
          * If no handler is specified, all handlers for the specified event(s) are removed.
          */
-        unregister(eventType: string | string[], handler?: SaltyEventHandler): void;
+        unregister(eventType: string | string[], handler?: SaltyRTCEventHandler): void;
 
         /**
          * Return all event handlers for the specified event(s).
@@ -222,7 +219,7 @@ declare namespace saltyrtc {
          *
          * Even if a handler is registered for multiple events, it is only returned once.
          */
-        get(eventType: string | string[]): SaltyEventHandler[];
+        get(eventType: string | string[]): SaltyRTCEventHandler[];
     }
 
     interface Cookie {

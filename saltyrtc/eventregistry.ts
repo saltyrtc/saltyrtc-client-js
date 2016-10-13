@@ -8,7 +8,7 @@
 /// <reference path='saltyrtc.d.ts' />
 
 export class EventRegistry {
-    private map: Map<string, saltyrtc.SaltyEventHandler[]>;
+    private map: Map<string, saltyrtc.SaltyRTCEventHandler[]>;
 
     constructor() {
         this.map = new Map();
@@ -17,7 +17,7 @@ export class EventRegistry {
     /**
      * Register an event handler for the specified event(s).
      */
-    public register(eventType: string | string[], handler: saltyrtc.SaltyEventHandler): void {
+    public register(eventType: string | string[], handler: saltyrtc.SaltyRTCEventHandler): void {
         if (typeof eventType === 'string') {
             this.set(eventType, handler);
         } else {
@@ -31,7 +31,7 @@ export class EventRegistry {
      * Unregister an event handler for the specified event(s).
      * If no handler is specified, all handlers for the specified event(s) are removed.
      */
-    public unregister(eventType: string | string[], handler?: saltyrtc.SaltyEventHandler): void {
+    public unregister(eventType: string | string[], handler?: saltyrtc.SaltyRTCEventHandler): void {
         if (typeof eventType === 'string') {
             // If the event does not exist, return
             if (!this.map.has(eventType)) {
@@ -58,7 +58,7 @@ export class EventRegistry {
     /**
      * Store a single event handler in the map.
      */
-    private set(key: string, value: saltyrtc.SaltyEventHandler) {
+    private set(key: string, value: saltyrtc.SaltyRTCEventHandler) {
         if (this.map.has(key)) {
             const list = this.map.get(key);
             if (list.indexOf(value) === -1) {
@@ -77,8 +77,8 @@ export class EventRegistry {
      *
      * Even if a handler is registered for multiple events, it is only returned once.
      */
-    public get(eventType: string | string[]): saltyrtc.SaltyEventHandler[] {
-        const handlers: saltyrtc.SaltyEventHandler[] = [];
+    public get(eventType: string | string[]): saltyrtc.SaltyRTCEventHandler[] {
+        const handlers: saltyrtc.SaltyRTCEventHandler[] = [];
         if (typeof eventType === 'string') {
             if (this.map.has(eventType)) {
                 handlers.push.apply(handlers, this.map.get(eventType));

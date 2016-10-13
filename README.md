@@ -66,7 +66,7 @@ The following events are available:
 
 ## Development
 
-Install dependencies with npm (or alternatively install them manually):
+Install dependencies:
 
     $ npm install
 
@@ -74,11 +74,7 @@ To compile the TypeScript sources to a single minified JavaScript (ES5) file:
 
     $ npm run dist
 
-The resulting file will be located in `dist/saltyrtc.min.js`.
-
-You can also watch the source code for changes and recompile automatically:
-
-    $ npm run watch
+The resulting file will be located in `dist/saltyrtc-client.min.js`.
 
 Due to a bug (https://github.com/rollup/rollup-plugin-typescript/issues/43),
 rollup does not currently output non-fatal errors from TypeScript. To see
@@ -91,11 +87,6 @@ those, simply issue `npm run validate` in your main directory.
 To compile the test sources, run:
 
     $ npm run rollup_tests
-
-You can also watch the tests and sources for changes and recompile
-automatically:
-
-    $ npm run watch_tests
 
 Then simply open `tests/testsuite.html` in your browser!
 

@@ -3,7 +3,6 @@ module.exports = function(config) {
   var configuration = {
     frameworks: ['jasmine'],
     files: [
-      'node_modules/webrtc-adapter/out/adapter.js',
       'dist/tests.js'
     ],
     customLaunchers: {

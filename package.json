@@ -4,11 +4,10 @@
   "description": "SaltyRTC JavaScript implementation",
   "scripts": {
     "test": "karma start --single-run --log-level=debug --colors",
-    "dist": "tsc && ln -sf ../../node_modules build/es2015/node_modules && rollup -c rollup.dist.js && cp saltyrtc/saltyrtc.d.ts dist/",
-    "rollup_tests": "tsc && rollup -c rollup.testing.js",
-    "watch": "watch \"npm run dist\" saltyrtc/",
-    "watch_tests": "watch \"npm run rollup_tests\" tests/ saltyrtc/",
-    "clean": "rm -rf js/ build/ saltyrtc/*.js"
+    "dist": "rollup -c rollup.dist.js && cp saltyrtc/saltyrtc.d.ts dist/",
+    "rollup_tests": "rollup -c rollup.testing.js",
+    "validate": "tsc --noEmit",
+    "clean": "rm -rf js/ saltyrtc/*.js"
   },
   "repository": {
     "type": "git",
@@ -28,19 +27,18 @@
   },
   "homepage": "https://github.com/saltyrtc/saltyrtc-client-js#readme",
   "devDependencies": {
-    "babel-polyfill": "^6.9.1",
-    "babel-preset-es2015-rollup": "^1.1.1",
+    "babel-polyfill": "^6.16.0",
+    "babel-preset-es2015-rollup": "^1.2.0",
     "jasmine-core": "^2.4",
     "karma": "^0.13.22",
     "karma-chrome-launcher": "^1.0.1",
     "karma-firefox-launcher": "^1.0.0",
     "karma-jasmine": "^1.0.2",
-    "rollup": "^0.33",
+    "rollup": "^0.36.3",
     "rollup-plugin-babel": "^2.6.1",
-    "rollup-plugin-typescript": "^0.7.6",
+    "rollup-plugin-typescript": "^0.8.1",
     "rollup-plugin-uglify": "^1.0.1",
-    "typescript": "^1.8.9",
-    "watch": "^0.18.0"
+    "typescript": "^2.0.3"
   },
   "dependencies": {
     "tweetnacl": "^0.14.3"

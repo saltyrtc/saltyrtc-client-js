@@ -351,7 +351,7 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
      * Note: The same event handler cannot be registered twice. It will only
      * run once.
      */
-    public on(event: string | string[], handler: saltyrtc.SaltyEventHandler): void {
+    public on(event: string | string[], handler: saltyrtc.SaltyRTCEventHandler): void {
         this.eventRegistry.register(event, handler);
     }
 
@@ -361,8 +361,8 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
      * Note: If the same handler was already registered previously as a regular
      * event handler, it will be completely removed after running once.
      */
-    public once(event: string | string[], handler: saltyrtc.SaltyEventHandler): void {
-        const onceHandler: saltyrtc.SaltyEventHandler = (ev: saltyrtc.SaltyRTCEvent) => {
+    public once(event: string | string[], handler: saltyrtc.SaltyRTCEventHandler): void {
+        const onceHandler: saltyrtc.SaltyRTCEventHandler = (ev: saltyrtc.SaltyRTCEvent) => {
             try {
                 handler(ev);
             } catch (e) {
@@ -381,7 +381,7 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
      * If no handler is specified, remove all handlers for the specified
      * event(s).
      */
-    public off(event: string | string[], handler?: saltyrtc.SaltyEventHandler): void {
+    public off(event: string | string[], handler?: saltyrtc.SaltyRTCEventHandler): void {
         this.eventRegistry.unregister(event, handler);
     }
 
@@ -405,7 +405,7 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
      *
      * If the handler returns `false`, unregister it.
      */
-    private callHandler(handler: saltyrtc.SaltyEventHandler, event: saltyrtc.SaltyRTCEvent) {
+    private callHandler(handler: saltyrtc.SaltyRTCEventHandler, event: saltyrtc.SaltyRTCEvent) {
         const response = handler(event);
         if (response === false) {
             this.eventRegistry.unregister(event.type, handler);
