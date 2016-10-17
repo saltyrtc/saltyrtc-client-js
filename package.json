@@ -5,9 +5,10 @@
   "main": "dist/saltyrtc-client.es5.min.js",
   "module": "dist/saltyrtc-client.es2015.js",
   "jsnext:main": "dist/saltyrtc-client.es2015.js",
+  "types": "dist/saltyrtc-client.d.ts",
   "scripts": {
     "test": "karma start --single-run --log-level=debug --colors",
-    "dist": "npm run dist_es5 && npm run dist_es5_min && npm run dist_es5_min_polyfill && npm run dist_es2015 && cp saltyrtc/saltyrtc.d.ts dist/",
+    "dist": "npm run dist_es5 && npm run dist_es5_min && npm run dist_es5_min_polyfill && npm run dist_es2015 && cp saltyrtc/saltyrtc.d.ts dist/saltyrtc-client.d.ts",
     "dist_es5": "rollup -c rollup/es5.js",
     "dist_es5_min": "rollup -c rollup/es5.min.js",
     "dist_es5_min_polyfill": "rollup -c rollup/es5.min.polyfill.js",
