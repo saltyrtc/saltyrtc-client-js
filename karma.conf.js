@@ -4,6 +4,7 @@ module.exports = function(config) {
     frameworks: ['jasmine'],
     files: [
       'node_modules/tweetnacl/nacl-fast.min.js',
+      'node_modules/msgpack-lite/dist/msgpack.min.js',
       'tests/testsuite.js'
     ],
     customLaunchers: {

@@ -15,6 +15,10 @@ config.plugins.push(
         ],
         plugins: ['external-helpers']
     })
-)
+);
+config.globals = {
+    'msgpack-lite': 'msgpack',
+    'tweetnacl': 'nacl'
+};
 
 export default config;

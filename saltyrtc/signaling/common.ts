@@ -6,9 +6,10 @@
  */
 
 /// <reference path='../saltyrtc.d.ts' />
-/// <reference path='../types/msgpack-lite.d.ts' />
 /// <reference path='../types/tweetnacl.d.ts' />
+/// <reference types='msgpack-lite' />
 
+import * as msgpack from "msgpack-lite";
 import { KeyStore, AuthToken, Box } from "../keystore";
 import { Cookie, CookiePair } from "../cookie";
 import { Nonce } from "../nonce";
@@ -35,7 +36,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
     protected ws: WebSocket = null;
 
     // Msgpack
-    protected msgpackOptions: Object = {
+    protected msgpackOptions: msgpack.BufferOptions = {
         codec: msgpack.createCodec({binarraybuffer: true}),
     };
 
