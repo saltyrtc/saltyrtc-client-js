@@ -4,11 +4,11 @@
 // Configure the server in `tests/config.ts`.
 
 /// <reference path="jasmine.d.ts" />
-/// <reference path="../saltyrtc/saltyrtc.d.ts" />
+/// <reference path="../src/saltyrtc-client.d.ts" />
 
 import { Config } from "./config";
 import { sleep } from "./utils";
-import { SaltyRTCBuilder, KeyStore } from "../saltyrtc/main";
+import { SaltyRTCBuilder, KeyStore } from "../src/main";
 import { DummyTask, PingPongTask } from "./testtasks";
 
 export default () => { describe('Integration Tests', function() {

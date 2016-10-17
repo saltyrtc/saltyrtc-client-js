@@ -5,7 +5,7 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-/// <reference path='saltyrtc.d.ts' />
+/// <reference path='saltyrtc-client.d.ts' />
 
 import { KeyStore, AuthToken, Box } from "./keystore";
 import { Signaling, InitiatorSignaling, ResponderSignaling } from "./signaling";

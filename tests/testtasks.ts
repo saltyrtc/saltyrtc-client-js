@@ -1,4 +1,4 @@
-/// <reference path="../saltyrtc/saltyrtc.d.ts" />
+/// <reference path="../src/saltyrtc-client.d.ts" />
 
 export class DummyTask implements saltyrtc.Task {
 

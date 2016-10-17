@@ -4,8 +4,8 @@
 
 ///// WARNING: OUTDATED EXAMPLE (TODO) /////
 
-/// <reference path='saltyrtc/types/RTCPeerConnection.d.ts' />
-import { SaltyRTC, KeyStore, SecureDataChannel } from './saltyrtc/main';
+/// <reference path='src/types/RTCPeerConnection.d.ts' />
+import { SaltyRTC, KeyStore, SecureDataChannel } from './src/main';
 
 // Create a new keypair
 let permanentKey = new KeyStore();

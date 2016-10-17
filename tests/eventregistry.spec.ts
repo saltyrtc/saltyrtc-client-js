@@ -1,6 +1,6 @@
 /// <reference path="jasmine.d.ts" />
 
-import { SaltyRTCEvent, EventHandler, EventRegistry } from "../saltyrtc/eventregistry";
+import { SaltyRTCEvent, EventHandler, EventRegistry } from "../src/eventregistry";
 
 export default () => { describe('eventregistry', function() {
 

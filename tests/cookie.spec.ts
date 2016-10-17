@@ -1,6 +1,6 @@
 /// <reference path="jasmine.d.ts" />
 
-import { Cookie } from "../saltyrtc/cookie";
+import { Cookie } from "../src/cookie";
 
 export default () => { describe('cookie', function() {
 

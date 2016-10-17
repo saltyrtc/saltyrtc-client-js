@@ -1,8 +1,8 @@
 /// <reference path="jasmine.d.ts" />
 
 import { sleep } from "./utils";
-import { SaltyRTCBuilder } from "../saltyrtc/client";
-import { KeyStore } from "../saltyrtc/keystore";
+import { SaltyRTCBuilder } from "../src/client";
+import { KeyStore } from "../src/keystore";
 import { DummyTask } from "./testtasks";
 
 export default () => { describe('client', function() {

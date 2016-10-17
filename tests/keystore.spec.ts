@@ -1,6 +1,6 @@
 /// <reference path="jasmine.d.ts" />
 
-import { Box, KeyStore, AuthToken } from "../saltyrtc/keystore";
+import { Box, KeyStore, AuthToken } from "../src/keystore";
 
 declare var nacl: any; // TODO
 

@@ -1,6 +1,6 @@
 /// <reference path="jasmine.d.ts" />
 
-import { u8aToHex, hexToU8a, randomString, concat, randomUint32, byteToHex, waitFor } from "../saltyrtc/utils";
+import { u8aToHex, hexToU8a, randomString, concat, randomUint32, byteToHex, waitFor } from "../src/utils";
 
 export default () => { describe('utils', function() {
 

@@ -1,7 +1,7 @@
 /// <reference path="jasmine.d.ts" />
 
-import { Nonce } from "../saltyrtc/nonce";
-import { Cookie } from "../saltyrtc/cookie";
+import { Nonce } from "../src/nonce";
+import { Cookie } from "../src/cookie";
 
 export default () => { describe('nonce', function() {
 

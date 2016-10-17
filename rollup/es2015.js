@@ -4,7 +4,7 @@ import fs from 'fs';
 let p = JSON.parse(fs.readFileSync('package.json'));
 
 export default {
-    entry: 'saltyrtc/main.ts',
+    entry: 'src/main.ts',
     dest: 'dist/saltyrtc-client.es2015.js',
     format: 'es',
     sourceMap: false,

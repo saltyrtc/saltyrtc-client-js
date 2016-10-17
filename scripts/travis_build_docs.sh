@@ -21,7 +21,7 @@ then
         --includeDeclarations \
         --target ES6 \
         --out docs \
-        saltyrtc/
+        src/
 
     # Clone gh-pages repo
     git clone https://github.com/saltyrtc/saltyrtc-client-js.git travis_docs_build
