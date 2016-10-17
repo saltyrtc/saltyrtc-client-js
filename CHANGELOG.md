@@ -12,9 +12,9 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
-### v0.1.10 (2016-10-17)
+### v0.2.0 (2016-10-17)
 
-- [changed] Make msgpack-lite an external dependency
+- [changed] Rename saltyrtc/ directory to src/
 
 ### v0.1.9 (2016-10-17)
 
