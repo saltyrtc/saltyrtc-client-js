@@ -1,7 +1,6 @@
 import config from './es2015.js';
 import babel from 'rollup-plugin-babel';
 
-config.entry = 'saltyrtc/main.es5.ts';
 config.dest = 'dist/saltyrtc-client.es5.js';
 config.format = 'iife';
 config.moduleName = 'saltyrtc.client';
