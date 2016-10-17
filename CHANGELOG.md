@@ -12,6 +12,10 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.2.1 (2016-10-17)
+
+- [added] Make saltyrtc.messages.TaskMessage an open interface
+
 ### v0.2.0 (2016-10-17)
 
 - [changed] Rename saltyrtc/ directory to src/

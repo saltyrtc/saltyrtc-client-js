@@ -345,6 +345,7 @@ declare namespace saltyrtc.messages {
      */
     interface TaskMessage extends Message {
         type: string;
+        [others: string]: any; // Make this an open interface
     }
 
 }
