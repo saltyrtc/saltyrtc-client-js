@@ -3,6 +3,7 @@
   "version": "0.1.7",
   "description": "SaltyRTC JavaScript implementation",
   "main": "dist/saltyrtc-client.es5.min.js",
+  "module": "dist/saltyrtc-client.es2015.js",
   "jsnext:main": "dist/saltyrtc-client.es2015.js",
   "scripts": {
     "test": "karma start --single-run --log-level=debug --colors",
