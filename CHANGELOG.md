@@ -12,6 +12,10 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.1.8 (2016-10-17)
+
+- [changed] Make polyfills in ES5 distribution optional
+
 ### v0.1.7 (2016-10-13)
 
 - [changed] Build ES2015 version as ES module, not as IIFE
