@@ -723,8 +723,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         if (this.handoverState.local === false) {
             this.ws.send(payload);
         } else {
-            // TODO: Send via task
-            // this.task.sendSignalingMessage(payload)
+            this.task.sendSignalingMessage(payload);
         }
     }
 
