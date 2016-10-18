@@ -12,6 +12,11 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.2.3 (2016-10-18)
+
+- [fixed] Use interface types in SaltyRTCBuilder
+- [changed] Move type declarations to root directory
+
 ### v0.2.2 (2016-10-18)
 
 - [fixed] Fix sending of signaling messages after handshake
