@@ -84,6 +84,7 @@
 					<li>ES2015: <code>dist/saltyrtc-client.es2015.js</code></li>
 					<li>ES5: <code>dist/saltyrtc-client.es5.js</code></li>
 					<li>ES5 minified: <code>dist/saltyrtc-client.es5.min.js</code></li>
+					<li>ES5 minified polyfilled: <code>dist/saltyrtc-client.es5.min.polyfill.js</code></li>
 				</ul>
 				<p>Make sure to manually add the following external dependencies to your project:</p>
 				<ul>
@@ -117,7 +118,7 @@ responder.<span class="hljs-literal">on</span>(<span class="hljs-string">'state-
 					<li><code>state-change:&lt;new-state&gt;(void)</code>: The signaling state change event, filtered by state.</li>
 					<li><code>new-responder(responderId)</code>: A responder has connected. This event is only dispatched for the initiator.</li>
 					<li><code>handover(void)</code>: The handover to the data channel is done.</li>
-					<li><code>connection-error(ErrorEvent)</code>: A connection error occured.</li>
+					<li><code>connection-error(ErrorEvent)</code>: A websocket connection error occured.</li>
 					<li><code>connection-closed(CloseEvent)</code>: The websocket connection was closed. (Note: This might be due to handover.)</li>
 				</ul>
 				<h2 id="development">Development</h2>
@@ -165,65 +166,74 @@ $ npm publish
 					<li class="globals  ">
 						<a href="globals.html"><em>Globals</em></a>
 					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="modules/_client_.html">"client"</a>
+					<li class="label tsd-is-external">
+						<span>Internals</span>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_closecode_.html">"closecode"</a>
+						<a href="modules/_src_client_.html">"src/client"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_cookie_.html">"cookie"</a>
+						<a href="modules/_src_closecode_.html">"src/closecode"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_csn_.html">"csn"</a>
+						<a href="modules/_src_cookie_.html">"src/cookie"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_eventregistry_.html">"eventregistry"</a>
+						<a href="modules/_src_csn_.html">"src/csn"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_exceptions_.html">"exceptions"</a>
+						<a href="modules/_src_eventregistry_.html">"src/eventregistry"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_keystore_.html">"keystore"</a>
+						<a href="modules/_src_exceptions_.html">"src/exceptions"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_main_.html">"main"</a>
+						<a href="modules/_src_keystore_.html">"src/keystore"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_main_es5_.html">"main.es5"</a>
+						<a href="modules/_src_main_.html">"src/main"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_nonce_.html">"nonce"</a>
+						<a href="modules/_src_main_es5_.html">"src/main.es5"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_peers_.html">"peers"</a>
+						<a href="modules/_src_nonce_.html">"src/nonce"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_saltyrtc_d_.html">"saltyrtc.d"</a>
+						<a href="modules/_src_peers_.html">"src/peers"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_signaling_.html">"signaling"</a>
+						<a href="modules/_src_signaling_.html">"src/signaling"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_signaling_common_.html">"signaling/common"</a>
+						<a href="modules/_src_signaling_common_.html">"src/signaling/common"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_signaling_helpers_.html">"signaling/helpers"</a>
+						<a href="modules/_src_signaling_helpers_.html">"src/signaling/helpers"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_signaling_initiator_.html">"signaling/initiator"</a>
+						<a href="modules/_src_signaling_initiator_.html">"src/signaling/initiator"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_signaling_responder_.html">"signaling/responder"</a>
+						<a href="modules/_src_signaling_responder_.html">"src/signaling/responder"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_types_msgpack_lite_d_.html">"types/msgpack-<wbr>lite.d"</a>
+						<a href="modules/_src_types_tweetnacl_d_.html">"src/types/tweetnacl.d"</a>
 					</li>
 					<li class=" tsd-kind-external-module">
-						<a href="modules/_types_tweetnacl_d_.html">"types/tweetnacl.d"</a>
+						<a href="modules/_src_utils_.html">"src/utils"</a>
 					</li>
-					<li class=" tsd-kind-external-module">
-						<a href="modules/_utils_.html">"utils"</a>
+					<li class="label tsd-is-external">
+						<span>Externals</span>
+					</li>
+					<li class=" tsd-kind-external-module tsd-is-external">
+						<a href="modules/_node_modules__types_msgpack_lite_index_d_.html">"node_<wbr>modules/@types/msgpack-<wbr>lite/index.d"</a>
+					</li>
+					<li class=" tsd-kind-external-module tsd-is-external">
+						<a href="modules/_node_modules__types_node_index_d_.html">"node_<wbr>modules/@types/node/index.d"</a>
+					</li>
+					<li class=" tsd-kind-external-module tsd-is-external">
+						<a href="modules/_saltyrtc_client_d_.html">"saltyrtc-<wbr>client.d"</a>
 					</li>
 				</ul>
 			</nav>
