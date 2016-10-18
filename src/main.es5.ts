@@ -1,2 +1,2 @@
-import "../node_modules/babel-polyfill/dist/polyfill";
+import "../node_modules/babel-es6-polyfill/polyfill.js";
 export * from './main';

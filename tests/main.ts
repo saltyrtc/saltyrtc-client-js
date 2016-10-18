@@ -1,4 +1,4 @@
-import "../node_modules/babel-polyfill/dist/polyfill";
+import "../node_modules/babel-es6-polyfill/polyfill.js";
 
 import test_utils from "./utils.spec";
 import test_keystore from "./keystore.spec";
