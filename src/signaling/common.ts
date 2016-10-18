@@ -10,7 +10,7 @@
 /// <reference types='msgpack-lite' />
 
 import * as msgpack from "msgpack-lite";
-import { KeyStore, AuthToken, Box } from "../keystore";
+import { Box } from "../keystore";
 import { Cookie, CookiePair } from "../cookie";
 import { Nonce } from "../nonce";
 import { CombinedSequence } from "../csn";
@@ -57,9 +57,9 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
     // Keys
     protected serverKey: Uint8Array = null;
-    protected permanentKey: KeyStore;
-    protected sessionKey: KeyStore = null;
-    protected authToken: AuthToken = null;
+    protected permanentKey: saltyrtc.KeyStore;
+    protected sessionKey: saltyrtc.KeyStore = null;
+    protected authToken: saltyrtc.AuthToken = null;
     protected peerTrustedKey: Uint8Array = null;
 
     // Signaling
@@ -73,7 +73,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Create a new signaling instance.
      */
     constructor(client: saltyrtc.SaltyRTC, host: string, port: number, tasks: saltyrtc.Task[],
-                permanentKey: KeyStore, peerTrustedKey?: Uint8Array) {
+                permanentKey: saltyrtc.KeyStore, peerTrustedKey?: Uint8Array) {
         this.client = client;
         this.permanentKey = permanentKey;
         this.host = host;

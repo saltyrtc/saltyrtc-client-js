@@ -5,8 +5,9 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
+/// <reference path='../../saltyrtc-client.d.ts' />
+
 import { SignalingError } from "../exceptions";
-import { KeyStore, AuthToken } from "../keystore";
 import { CloseCode } from "../closecode";
 
 /**
@@ -14,7 +15,7 @@ import { CloseCode } from "../closecode";
  *
  * @throws SignalingError
  */
-export function decryptKeystore(box: saltyrtc.Box, keyStore: KeyStore, otherKey: Uint8Array,
+export function decryptKeystore(box: saltyrtc.Box, keyStore: saltyrtc.KeyStore, otherKey: Uint8Array,
                                 msgType?: string): Uint8Array {
     try {
         return keyStore.decrypt(box, otherKey);
@@ -30,7 +31,7 @@ export function decryptKeystore(box: saltyrtc.Box, keyStore: KeyStore, otherKey:
  *
  * @throws SignalingError
  */
-export function decryptAuthtoken(box: saltyrtc.Box, authToken: AuthToken, msgType: string): Uint8Array {
+export function decryptAuthtoken(box: saltyrtc.Box, authToken: saltyrtc.AuthToken, msgType: string): Uint8Array {
     try {
         return authToken.decrypt(box);
     } catch (e) {

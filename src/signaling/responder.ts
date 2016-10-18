@@ -7,7 +7,7 @@
 
 /// <reference path='../../saltyrtc-client.d.ts' />
 
-import { KeyStore, AuthToken } from "../keystore";
+import { KeyStore } from "../keystore";
 import { Nonce } from "../nonce";
 import { Initiator } from "../peers";
 import { ProtocolError, SignalingError, ValidationError } from "../exceptions";
@@ -27,7 +27,7 @@ export class ResponderSignaling extends Signaling {
      * Create a new responder signaling instance.
      */
     constructor(client: saltyrtc.SaltyRTC, host: string, port: number, tasks: saltyrtc.Task[],
-                permanentKey: KeyStore, initiatorPubKey: Uint8Array, authToken?: AuthToken) {
+                permanentKey: saltyrtc.KeyStore, initiatorPubKey: Uint8Array, authToken?: saltyrtc.AuthToken) {
         super(client, host, port, tasks, permanentKey, authToken === undefined ? initiatorPubKey : undefined);
         this.role = 'responder';
         this.initiator = new Initiator(initiatorPubKey);

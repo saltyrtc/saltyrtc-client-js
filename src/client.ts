@@ -186,7 +186,7 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
 class SaltyRTC implements saltyrtc.SaltyRTC {
     private host: string;
     private port: number;
-    private permanentKey: KeyStore;
+    private permanentKey: saltyrtc.KeyStore;
     private tasks: saltyrtc.Task[];
     private peerTrustedKey: Uint8Array = null;
     private _signaling: Signaling = null;
@@ -195,7 +195,7 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     /**
      * Create a new SaltyRTC instance.
      */
-    constructor(permanentKey: KeyStore, host: string, port: number,
+    constructor(permanentKey: saltyrtc.KeyStore, host: string, port: number,
                 tasks: saltyrtc.Task[], peerTrustedKey?: Uint8Array) {
         // Validate arguments
         if (permanentKey === undefined) {
@@ -272,7 +272,7 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     /**
      * Return the keystore containing the personal permanent key private/public keypair.
      */
-    public get keyStore(): KeyStore {
+    public get keyStore(): saltyrtc.KeyStore {
         return this.permanentKey;
     }
 
