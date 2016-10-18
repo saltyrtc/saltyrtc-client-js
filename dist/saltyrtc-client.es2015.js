@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.2.1
+ * saltyrtc-client-js v0.2.2
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -793,6 +793,7 @@ class Signaling {
             this.ws.send(payload);
         }
         else {
+            this.task.sendSignalingMessage(payload);
         }
     }
     sendTaskMessage(msg) {
@@ -1680,4 +1681,4 @@ class SaltyRTC {
     }
 }
 
-export { SaltyRTCBuilder, KeyStore, Box, Cookie, CookiePair, CombinedSequence, CombinedSequencePair, EventRegistry };
+export { SaltyRTCBuilder, KeyStore, Box, Cookie, CookiePair, CombinedSequence, CombinedSequencePair, EventRegistry, CloseCode, explainCloseCode, SignalingError, ConnectionError };

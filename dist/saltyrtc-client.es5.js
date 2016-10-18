@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.2.1
+ * saltyrtc-client-js v0.2.2
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -710,7 +710,6 @@ var CombinedSequencePair = function CombinedSequencePair(ours, theirs) {
     }
 };
 
-var CloseCode;
 (function (CloseCode) {
     CloseCode[CloseCode["ClosingNormal"] = 1000] = "ClosingNormal";
     CloseCode[CloseCode["GoingAway"] = 1001] = "GoingAway";
@@ -722,28 +721,28 @@ var CloseCode;
     CloseCode[CloseCode["DroppedByInitiator"] = 3004] = "DroppedByInitiator";
     CloseCode[CloseCode["InitiatorCouldNotDecrypt"] = 3005] = "InitiatorCouldNotDecrypt";
     CloseCode[CloseCode["NoSharedTask"] = 3006] = "NoSharedTask";
-})(CloseCode || (CloseCode = {}));
+})(exports.CloseCode || (exports.CloseCode = {}));
 function explainCloseCode(code) {
     switch (code) {
-        case CloseCode.ClosingNormal:
+        case exports.CloseCode.ClosingNormal:
             return 'Normal closing';
-        case CloseCode.GoingAway:
+        case exports.CloseCode.GoingAway:
             return 'The endpoint is going away';
-        case CloseCode.NoSharedSubprotocol:
+        case exports.CloseCode.NoSharedSubprotocol:
             return 'No shared subprotocol could be found';
-        case CloseCode.PathFull:
+        case exports.CloseCode.PathFull:
             return 'No free responder byte';
-        case CloseCode.ProtocolError:
+        case exports.CloseCode.ProtocolError:
             return 'Protocol error';
-        case CloseCode.InternalError:
+        case exports.CloseCode.InternalError:
             return 'Internal error';
-        case CloseCode.Handover:
+        case exports.CloseCode.Handover:
             return 'Handover finished';
-        case CloseCode.DroppedByInitiator:
+        case exports.CloseCode.DroppedByInitiator:
             return 'Dropped by initiator';
-        case CloseCode.InitiatorCouldNotDecrypt:
+        case exports.CloseCode.InitiatorCouldNotDecrypt:
             return 'Initiator could not decrypt a message';
-        case CloseCode.NoSharedTask:
+        case exports.CloseCode.NoSharedTask:
             return 'No shared task was found';
         default:
             return 'Unknown';
@@ -784,7 +783,7 @@ var ProtocolError = function (_SignalingError) {
 
     function ProtocolError(message) {
         classCallCheck(this, ProtocolError);
-        return possibleConstructorReturn(this, (ProtocolError.__proto__ || Object.getPrototypeOf(ProtocolError)).call(this, CloseCode.ProtocolError, message));
+        return possibleConstructorReturn(this, (ProtocolError.__proto__ || Object.getPrototypeOf(ProtocolError)).call(this, exports.CloseCode.ProtocolError, message));
     }
 
     return ProtocolError;
@@ -827,7 +826,7 @@ function decryptKeystore(box, keyStore, otherKey, msgType) {
         return keyStore.decrypt(box, otherKey);
     } catch (e) {
         if (e === 'decryption-failed') {
-            throw new SignalingError(CloseCode.ProtocolError, 'Could not decrypt ' + msgType + ' message.');
+            throw new SignalingError(exports.CloseCode.ProtocolError, 'Could not decrypt ' + msgType + ' message.');
         } else {
             throw e;
         }
@@ -874,7 +873,7 @@ var Signaling = function () {
             _this.client.emit({ type: 'connection-error', data: ev });
         };
         this.onClose = function (ev) {
-            if (ev.code === CloseCode.Handover) {
+            if (ev.code === exports.CloseCode.Handover) {
                 console.info(_this.logTag, 'Closed WebSocket connection due to handover');
             } else {
                 console.info(_this.logTag, 'Closed WebSocket connection');
@@ -883,22 +882,22 @@ var Signaling = function () {
                     return console.error(_this.logTag, 'Server closed connection:', reason);
                 };
                 switch (ev.code) {
-                    case CloseCode.GoingAway:
+                    case exports.CloseCode.GoingAway:
                         log('Server is being shut down');
                         break;
-                    case CloseCode.NoSharedSubprotocol:
+                    case exports.CloseCode.NoSharedSubprotocol:
                         log('No shared sub-protocol could be found');
                         break;
-                    case CloseCode.PathFull:
+                    case exports.CloseCode.PathFull:
                         log('Path full (no free responder byte)');
                         break;
-                    case CloseCode.ProtocolError:
+                    case exports.CloseCode.ProtocolError:
                         log('Protocol error');
                         break;
-                    case CloseCode.InternalError:
+                    case exports.CloseCode.InternalError:
                         log('Internal server error');
                         break;
-                    case CloseCode.DroppedByInitiator:
+                    case exports.CloseCode.DroppedByInitiator:
                         log('Dropped by initiator');
                         break;
                 }
@@ -932,7 +931,7 @@ var Signaling = function () {
                     _this.resetConnection(e.closeCode);
                 } else if (e instanceof ConnectionError) {
                     console.warn(_this.logTag, 'Connection error. Resetting connection.');
-                    _this.resetConnection(CloseCode.InternalError);
+                    _this.resetConnection(exports.CloseCode.InternalError);
                 }
                 throw e;
             }
@@ -1029,9 +1028,9 @@ var Signaling = function () {
                     this.handleServerAuth(msg, nonce);
                     break;
                 case 'done':
-                    throw new SignalingError(CloseCode.InternalError, 'Received server handshake message even though server handshake state is set to \'done\'');
+                    throw new SignalingError(exports.CloseCode.InternalError, 'Received server handshake message even though server handshake state is set to \'done\'');
                 default:
-                    throw new SignalingError(CloseCode.InternalError, 'Unknown server handshake state: ' + this.serverHandshakeState);
+                    throw new SignalingError(exports.CloseCode.InternalError, 'Unknown server handshake state: ' + this.serverHandshakeState);
             }
             if (this.serverHandshakeState === 'done') {
                 this.setState('peer-handshake');
@@ -1204,7 +1203,7 @@ var Signaling = function () {
     }, {
         key: "resetConnection",
         value: function resetConnection() {
-            var closeCode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : CloseCode.ClosingNormal;
+            var closeCode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : exports.CloseCode.ClosingNormal;
 
             this.setState('new');
             this.serverCsn = new CombinedSequence();
@@ -1267,14 +1266,16 @@ var Signaling = function () {
             }
             if (this.handoverState.local === false) {
                 this.ws.send(payload);
-            } else {}
+            } else {
+                this.task.sendSignalingMessage(payload);
+            }
         }
     }, {
         key: "sendTaskMessage",
         value: function sendTaskMessage(msg) {
             var receiver = this.getPeerAddress();
             if (receiver === null) {
-                throw new SignalingError(CloseCode.InternalError, 'No peer address could be found');
+                throw new SignalingError(exports.CloseCode.InternalError, 'No peer address could be found');
             }
             var packet = this.buildPacket(msg, receiver);
             this.send(packet);
@@ -1514,7 +1515,7 @@ var InitiatorSignaling = function (_Signaling) {
                 switch (responder.handshakeState) {
                     case 'new':
                         if (this.peerTrustedKey !== null) {
-                            throw new SignalingError(CloseCode.InternalError, 'Handshake state is "new" even though a trusted key is available');
+                            throw new SignalingError(exports.CloseCode.InternalError, 'Handshake state is "new" even though a trusted key is available');
                         }
                         try {
                             payload = this.authToken.decrypt(box);
@@ -1559,10 +1560,10 @@ var InitiatorSignaling = function (_Signaling) {
                         this.task.onPeerHandshakeDone();
                         break;
                     default:
-                        throw new SignalingError(CloseCode.InternalError, 'Unknown responder handshake state');
+                        throw new SignalingError(exports.CloseCode.InternalError, 'Unknown responder handshake state');
                 }
             } else {
-                throw new SignalingError(CloseCode.InternalError, 'Message source is neither the server nor a responder');
+                throw new SignalingError(exports.CloseCode.InternalError, 'Message source is neither the server nor a responder');
             }
         }
     }, {
@@ -1668,7 +1669,7 @@ var InitiatorSignaling = function (_Signaling) {
             }
             var task = InitiatorSignaling.chooseCommonTask(this.tasks, msg.tasks);
             if (task === null) {
-                throw new SignalingError(CloseCode.NoSharedTask, "No shared task could be found");
+                throw new SignalingError(exports.CloseCode.NoSharedTask, "No shared task could be found");
             } else {
                 console.log(this.logTag, "Task", task.getName(), "has been selected");
             }
@@ -1917,10 +1918,10 @@ var ResponderSignaling = function (_Signaling) {
                         console.info(this.logTag, 'Peer handshake done');
                         break;
                     default:
-                        throw new SignalingError(CloseCode.InternalError, 'Unknown initiator handshake state');
+                        throw new SignalingError(exports.CloseCode.InternalError, 'Unknown initiator handshake state');
                 }
             } else {
-                throw new SignalingError(CloseCode.InternalError, 'Message source is neither the server nor the initiator');
+                throw new SignalingError(exports.CloseCode.InternalError, 'Message source is neither the server nor the initiator');
             }
         }
     }, {
@@ -2104,7 +2105,7 @@ var ResponderSignaling = function (_Signaling) {
             }
 
             if (selectedTask === null) {
-                throw new SignalingError(CloseCode.ProtocolError, "Initiator selected unknown task");
+                throw new SignalingError(exports.CloseCode.ProtocolError, "Initiator selected unknown task");
             } else {
                 this.initTask(selectedTask, msg.data[selectedTask.getName()]);
             }
@@ -2600,5 +2601,8 @@ exports.CookiePair = CookiePair;
 exports.CombinedSequence = CombinedSequence;
 exports.CombinedSequencePair = CombinedSequencePair;
 exports.EventRegistry = EventRegistry;
+exports.explainCloseCode = explainCloseCode;
+exports.SignalingError = SignalingError;
+exports.ConnectionError = ConnectionError;
 
 }((this.saltyrtc.client = this.saltyrtc.client || {}),msgpack));

@@ -141,6 +141,8 @@ declare namespace saltyrtc {
          * Send bytes through the task signaling channel.
          *
          * This method should only be called after the handover.
+         *
+         * @throws SignalingError if something goes wrong.
          */
         sendSignalingMessage(payload: Uint8Array);
 

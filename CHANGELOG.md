@@ -12,6 +12,11 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.2.2 (2016-10-18)
+
+- [fixed] Fix sending of signaling messages after handshake
+- [added] Expose close codes and exceptions
+
 ### v0.2.1 (2016-10-17)
 
 - [added] Make saltyrtc.messages.TaskMessage an open interface
