@@ -22,7 +22,7 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
 
     private host: string;
     private port: number;
-    private keyStore: KeyStore;
+    private keyStore: saltyrtc.KeyStore;
     private initiatorPublicKey: Uint8Array;
     private authToken: Uint8Array;
     private peerTrustedKey: Uint8Array;
@@ -97,7 +97,7 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
      *
      * @param keyStore The KeyStore instance containing the public and private permanent key to use.
      */
-    public withKeyStore(keyStore: KeyStore): SaltyRTCBuilder {
+    public withKeyStore(keyStore: saltyrtc.KeyStore): SaltyRTCBuilder {
         this.keyStore = keyStore;
         this.hasKeyStore = true;
         return this;
