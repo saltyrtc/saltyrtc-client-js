@@ -4,7 +4,7 @@
 // Configure the server in `tests/config.ts`.
 
 /// <reference path="jasmine.d.ts" />
-/// <reference path="../src/saltyrtc-client.d.ts" />
+/// <reference path="../saltyrtc-client.d.ts" />
 
 import { Config } from "./config";
 import { sleep } from "./utils";
