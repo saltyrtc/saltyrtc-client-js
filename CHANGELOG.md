@@ -12,9 +12,10 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
-### v0.2.X (2016-10-18)
+### v0.2.4 (2016-10-18)
 
 - [fixed] Use interface types for KeyStore and AuthToken
+- [fixed] Fix path to ES6 polyfill
 
 ### v0.2.3 (2016-10-18)
 
