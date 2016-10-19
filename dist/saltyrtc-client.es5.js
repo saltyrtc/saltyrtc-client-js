@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.2.5
+ * saltyrtc-client-js v0.2.6
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -28,7 +28,6 @@
  */
 'use strict';
 
-this.saltyrtc = this.saltyrtc || {};
 (function (exports,msgpack) {
 'use strict';
 
@@ -2605,4 +2604,4 @@ exports.explainCloseCode = explainCloseCode;
 exports.SignalingError = SignalingError;
 exports.ConnectionError = ConnectionError;
 
-}((this.saltyrtc.client = this.saltyrtc.client || {}),msgpack));
+}((this.saltyrtcClient = this.saltyrtcClient || {}),msgpack));

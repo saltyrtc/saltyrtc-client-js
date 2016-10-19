@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.2.5
+ * saltyrtc-client-js v0.2.6
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *

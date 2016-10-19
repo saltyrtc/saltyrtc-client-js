@@ -12,6 +12,11 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.2.6 (2016-10-19)
+
+- [fixed] Extend type declarations with missing static types
+- [changed] Change iife dist namespace to `saltyrtcClient`
+
 ### v0.2.5 (2016-10-19)
 
 - [fixed] Fix filename of polyfilled dist file
