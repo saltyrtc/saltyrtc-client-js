@@ -3,7 +3,7 @@ import babel from 'rollup-plugin-babel';
 
 config.dest = 'dist/saltyrtc-client.es5.js';
 config.format = 'iife';
-config.moduleName = 'saltyrtc.client';
+config.moduleName = 'saltyrtcClient';
 config.useStrict = true;
 config.plugins.push(
     babel({

@@ -423,7 +423,7 @@ declare namespace saltyrtc.static {
     }
 }
 
-declare var saltyrtc: {
+declare var saltyrtcClient: {
     SaltyRTCBuilder: saltyrtc.static.SaltyRTCBuilder;
     KeyStore: saltyrtc.static.KeyStore;
     Box: saltyrtc.static.Box;
