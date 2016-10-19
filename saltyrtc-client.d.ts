@@ -246,6 +246,13 @@ declare namespace saltyrtc {
         theirs: number;
     }
 
+    interface SignalingError extends Error {
+        closeCode: number;
+    }
+
+    interface ConnectionError extends Error {
+    }
+
 }
 
 declare namespace saltyrtc.messages {
@@ -354,17 +361,79 @@ declare namespace saltyrtc.messages {
 
 declare namespace saltyrtc.static {
 
-    interface KeyStore {
-        new(publicKey?: Uint8Array, secretKey?: Uint8Array): saltyrtc.KeyStore;
-    }
-
     interface SaltyRTCBuilder {
         new(): saltyrtc.SaltyRTCBuilder;
     }
 
+    interface KeyStore {
+        new(publicKey?: Uint8Array, secretKey?: Uint8Array): saltyrtc.KeyStore;
+    }
+
+    interface Box {
+        new(nonce: Uint8Array, data: Uint8Array, nonceLength: number): saltyrtc.Box;
+        fromUint8Array(array: Uint8Array, nonceLength: number): saltyrtc.Box;
+    }
+
+    interface Cookie {
+        COOKIE_LENGTH: number;
+        new(bytes?: Uint8Array): saltyrtc.Cookie;
+        fromArrayBuffer(buffer: ArrayBuffer): saltyrtc.Cookie;
+    }
+
+    interface CookiePair {
+        new(ours?: saltyrtc.Cookie, theirs?: saltyrtc.Cookie): saltyrtc.CookiePair;
+    }
+
+    interface CombinedSequence {
+        SEQUENCE_NUMBER_MAX: number;
+        OVERFLOW_MAX: number;
+        new(): saltyrtc.CombinedSequence;
+    }
+
+    interface CombinedSequencePair {
+        new(ours?: saltyrtc.CombinedSequence, theirs?: number): saltyrtc.CombinedSequencePair;
+    }
+
+    interface EventRegistry {
+        new(): saltyrtc.EventRegistry;
+    }
+
+    interface SignalingError {
+        new(closeCode: number, message: string): saltyrtc.SignalingError;
+    }
+
+    interface ConnectionError {
+        new(message: string): saltyrtc.ConnectionError;
+    }
+
+    /**
+     * Static list of close codes.
+     */
+    interface CloseCode {
+        ClosingNormal: number;
+        GoingAway: number;
+        NoSharedSubprotocol: number;
+        PathFull: number;
+        ProtocolError: number;
+        InternalError: number;
+        Handover: number;
+        DroppedByInitiator: number;
+        InitiatorCouldNotDecrypt: number;
+        NoSharedTask: number;
+    }
 }
 
 declare var saltyrtc: {
-    KeyStore: saltyrtc.static.KeyStore;
     SaltyRTCBuilder: saltyrtc.static.SaltyRTCBuilder;
+    KeyStore: saltyrtc.static.KeyStore;
+    Box: saltyrtc.static.Box;
+    Cookie: saltyrtc.static.Cookie;
+    CookiePair: saltyrtc.static.CookiePair;
+    CombinedSequence: saltyrtc.static.CombinedSequence;
+    CombinedSequencePair: saltyrtc.static.CombinedSequencePair;
+    EventRegistry: saltyrtc.static.EventRegistry;
+    CloseCode: saltyrtc.static.CloseCode;
+    explainCloseCode: (code: number) => string;
+    SignalingError: saltyrtc.static.SignalingError;
+    ConnectionError: saltyrtc.static.ConnectionError;
 };
