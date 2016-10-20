@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.2.6
+ * saltyrtc-client-js v0.2.7
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -400,6 +400,42 @@ function isResponderId(receiver) {
     return receiver >= 0x02 && receiver <= 0xff;
 }
 
+class HandoverState {
+    constructor() {
+        this.reset();
+    }
+    get local() {
+        return this._local;
+    }
+    get peer() {
+        return this._peer;
+    }
+    set local(state) {
+        const wasBoth = this.both;
+        this._local = state;
+        if (!wasBoth && this.both && this.onBoth !== undefined) {
+            this.onBoth();
+        }
+    }
+    set peer(state) {
+        const wasBoth = this.both;
+        this._peer = state;
+        if (!wasBoth && this.both && this.onBoth !== undefined) {
+            this.onBoth();
+        }
+    }
+    get both() {
+        return this._local === true && this._peer === true;
+    }
+    get any() {
+        return this._local === true || this._peer === true;
+    }
+    reset() {
+        this._local = false;
+        this._peer = false;
+    }
+}
+
 class Signaling {
     constructor(client, host, port, tasks, permanentKey, peerTrustedKey) {
         this.protocol = 'wss';
@@ -409,10 +445,7 @@ class Signaling {
         };
         this.state = 'new';
         this.serverHandshakeState = 'new';
-        this.handoverState = {
-            local: false,
-            peer: false,
-        };
+        this.handoverState = new HandoverState();
         this.task = null;
         this.serverKey = null;
         this.sessionKey = null;
@@ -464,6 +497,12 @@ class Signaling {
         };
         this.onMessage = (ev) => {
             console.debug(this.logTag, 'New ws message (' + ev.data.byteLength + ' bytes)');
+            if (this.handoverState.peer) {
+                console.error(this.logTag, 'Protocol error: Received WebSocket message from peer ' +
+                    'even though it has already handed over to task.');
+                this.resetConnection(CloseCode.ProtocolError);
+                return;
+            }
             try {
                 const box = Box.fromUint8Array(new Uint8Array(ev.data), Nonce.TOTAL_LENGTH);
                 const nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
@@ -504,6 +543,9 @@ class Signaling {
         if (peerTrustedKey !== undefined) {
             this.peerTrustedKey = peerTrustedKey;
         }
+        this.handoverState.onBoth = () => {
+            this.client.emit({ type: 'handover' });
+        };
     }
     setState(newState) {
         this.state = newState;
@@ -737,6 +779,7 @@ class Signaling {
     resetConnection(closeCode = CloseCode.ClosingNormal) {
         this.setState('new');
         this.serverCsn = new CombinedSequence();
+        this.handoverState.reset();
         if (this.ws !== null) {
             console.debug(this.logTag, 'Disconnecting WebSocket (close code ' + closeCode + ')');
             this.ws.close(closeCode);

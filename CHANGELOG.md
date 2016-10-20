@@ -12,6 +12,11 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.2.7 (2016-10-20)
+
+- [added] Add HandoverState helper class
+- [fixed] Check peer handover state when receiving ws message
+
 ### v0.2.6 (2016-10-19)
 
 - [fixed] Extend type declarations with missing static types

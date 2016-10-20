@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.2.6
+ * saltyrtc-client-js v0.2.7
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -836,6 +836,57 @@ function isResponderId(receiver) {
     return receiver >= 0x02 && receiver <= 0xff;
 }
 
+var HandoverState = function () {
+    function HandoverState() {
+        classCallCheck(this, HandoverState);
+
+        this.reset();
+    }
+
+    createClass(HandoverState, [{
+        key: 'reset',
+        value: function reset() {
+            this._local = false;
+            this._peer = false;
+        }
+    }, {
+        key: 'local',
+        get: function get() {
+            return this._local;
+        },
+        set: function set(state) {
+            var wasBoth = this.both;
+            this._local = state;
+            if (!wasBoth && this.both && this.onBoth !== undefined) {
+                this.onBoth();
+            }
+        }
+    }, {
+        key: 'peer',
+        get: function get() {
+            return this._peer;
+        },
+        set: function set(state) {
+            var wasBoth = this.both;
+            this._peer = state;
+            if (!wasBoth && this.both && this.onBoth !== undefined) {
+                this.onBoth();
+            }
+        }
+    }, {
+        key: 'both',
+        get: function get() {
+            return this._local === true && this._peer === true;
+        }
+    }, {
+        key: 'any',
+        get: function get() {
+            return this._local === true || this._peer === true;
+        }
+    }]);
+    return HandoverState;
+}();
+
 var Signaling = function () {
     function Signaling(client, host, port, tasks, permanentKey, peerTrustedKey) {
         var _this = this;
@@ -849,10 +900,7 @@ var Signaling = function () {
         };
         this.state = 'new';
         this.serverHandshakeState = 'new';
-        this.handoverState = {
-            local: false,
-            peer: false
-        };
+        this.handoverState = new HandoverState();
         this.task = null;
         this.serverKey = null;
         this.sessionKey = null;
@@ -905,6 +953,11 @@ var Signaling = function () {
         };
         this.onMessage = function (ev) {
             console.debug(_this.logTag, 'New ws message (' + ev.data.byteLength + ' bytes)');
+            if (_this.handoverState.peer) {
+                console.error(_this.logTag, 'Protocol error: Received WebSocket message from peer ' + 'even though it has already handed over to task.');
+                _this.resetConnection(exports.CloseCode.ProtocolError);
+                return;
+            }
             try {
                 var box = Box.fromUint8Array(new Uint8Array(ev.data), Nonce.TOTAL_LENGTH);
                 var nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
@@ -943,6 +996,9 @@ var Signaling = function () {
         if (peerTrustedKey !== undefined) {
             this.peerTrustedKey = peerTrustedKey;
         }
+        this.handoverState.onBoth = function () {
+            _this.client.emit({ type: 'handover' });
+        };
     }
 
     createClass(Signaling, [{
@@ -1206,6 +1262,7 @@ var Signaling = function () {
 
             this.setState('new');
             this.serverCsn = new CombinedSequence();
+            this.handoverState.reset();
             if (this.ws !== null) {
                 console.debug(this.logTag, 'Disconnecting WebSocket (close code ' + closeCode + ')');
                 this.ws.close(closeCode);
