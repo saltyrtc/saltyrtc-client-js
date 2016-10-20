@@ -18,6 +18,7 @@ import { ProtocolError, ValidationError } from "../exceptions";
 import { SignalingError, ConnectionError } from "../exceptions";
 import { concat, byteToHex } from "../utils";
 import { isResponderId } from "./helpers";
+import { HandoverState } from "./handoverstate";
 import { CloseCode, explainCloseCode } from "../closecode";
 
 /**
@@ -43,10 +44,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
     // Connection state
     protected state: saltyrtc.SignalingState = 'new';
     protected serverHandshakeState: 'new' | 'hello-sent' | 'auth-sent' | 'done' = 'new';
-    public handoverState: saltyrtc.HandoverState = {
-        local: false,
-        peer: false,
-    };
+    public handoverState = new HandoverState();
 
     // Main class
     protected client: saltyrtc.SaltyRTC;
@@ -82,6 +80,9 @@ export abstract class Signaling implements saltyrtc.Signaling {
         if (peerTrustedKey !== undefined) {
             this.peerTrustedKey = peerTrustedKey;
         }
+        this.handoverState.onBoth = () => {
+            this.client.emit({type: 'handover'});
+        };
     }
 
     /**
@@ -644,6 +645,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
     public resetConnection(closeCode = CloseCode.ClosingNormal): void {
         this.setState('new');
         this.serverCsn = new CombinedSequence();
+        this.handoverState.reset();
 
         // Close WebSocket instance
         if (this.ws !== null) {

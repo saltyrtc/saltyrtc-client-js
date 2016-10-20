@@ -40,7 +40,14 @@ declare namespace saltyrtc {
 
     type SignalingState = 'new' | 'ws-connecting' | 'server-handshake' | 'peer-handshake' | 'task' | 'closing' | 'closed';
 
-    type HandoverState = {local: boolean, peer: boolean};
+    interface HandoverState {
+        local: boolean;
+        peer: boolean;
+        readonly any: boolean;
+        readonly both: boolean;
+        onBoth: () => void;
+        reset(): void;
+    }
 
     type SignalingChannel = 'websocket' | 'datachannel';
 
