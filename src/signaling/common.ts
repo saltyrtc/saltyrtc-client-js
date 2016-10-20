@@ -248,6 +248,14 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
     protected onMessage = (ev: MessageEvent) => {
         console.debug(this.logTag, 'New ws message (' + (ev.data as ArrayBuffer).byteLength + ' bytes)');
+
+        if (this.handoverState.peer) {
+            console.error(this.logTag, 'Protocol error: Received WebSocket message from peer ' +
+                'even though it has already handed over to task.');
+            this.resetConnection(CloseCode.ProtocolError);
+            return;
+        }
+
         try {
             // Parse buffer
             const box: saltyrtc.Box = Box.fromUint8Array(new Uint8Array(ev.data), Nonce.TOTAL_LENGTH);
