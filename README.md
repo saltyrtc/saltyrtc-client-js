@@ -40,11 +40,11 @@ Make sure to manually add the following external dependencies to your project:
 
 First, create a keypair:
 
-    let permanentKey = new saltyrtc.KeyStore();
+    let permanentKey = new saltyrtcClient.KeyStore();
 
 Then, create a SaltyRTCBuilder instance:
 
-    let builder = new saltyrtc.SaltyRTCBuilder()
+    let builder = new saltyrtcClient.SaltyRTCBuilder()
         .connectTo(saltyrtcHost, saltyrtcPort)
         .withKeyStore(permanentKey);
 
@@ -75,7 +75,7 @@ And you can register callbacks for certain events:
 
 The following events are available:
 
- - `state-change(saltyrtc.SignalingState)`: The signaling state changed.
+ - `state-change(saltyrtcClient.SignalingState)`: The signaling state changed.
  - `state-change:<new-state>(void)`: The signaling state change event, filtered by state.
  - `new-responder(responderId)`: A responder has connected. This event is only dispatched for the initiator.
  - `handover(void)`: The handover to the data channel is done.
