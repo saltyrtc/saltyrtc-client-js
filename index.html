@@ -92,9 +92,9 @@
 				</ul>
 				<h2 id="usage">Usage</h2>
 				<p>First, create a keypair:</p>
-				<pre><code><span class="hljs-keyword">let</span> permanentKey = <span class="hljs-function"><span class="hljs-keyword">new</span> <span class="hljs-title">saltyrtc</span>.<span class="hljs-title">KeyStore</span>();</span>
+				<pre><code><span class="hljs-keyword">let</span> permanentKey = <span class="hljs-function"><span class="hljs-keyword">new</span> <span class="hljs-title">saltyrtcClient</span>.<span class="hljs-title">KeyStore</span>();</span>
 </code></pre><p>Then, create a SaltyRTCBuilder instance:</p>
-				<pre><code><span class="hljs-keyword">let</span> builder = <span class="hljs-function"><span class="hljs-keyword">new</span> <span class="hljs-title">saltyrtc</span>.<span class="hljs-title">SaltyRTCBuilder</span>()
+				<pre><code><span class="hljs-keyword">let</span> builder = <span class="hljs-function"><span class="hljs-keyword">new</span> <span class="hljs-title">saltyrtcClient</span>.<span class="hljs-title">SaltyRTCBuilder</span>()
     .<span class="hljs-title">connectTo</span>(saltyrtcHost, saltyrtcPort)
     .<span class="hljs-title">withKeyStore</span>(permanentKey);</span>
 </code></pre><p>Depending on whether you&#39;re the initiator or the responder, initialize the SaltyRTC instance:</p>
@@ -114,7 +114,7 @@ server-handshake
 responder.<span class="hljs-literal">on</span>(<span class="hljs-string">'state-change'</span>, <span class="hljs-function"><span class="hljs-params">(newState)</span> =&gt;</span> <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'New signaling state:'</span>, newState));
 </code></pre><p>The following events are available:</p>
 				<ul>
-					<li><code>state-change(saltyrtc.SignalingState)</code>: The signaling state changed.</li>
+					<li><code>state-change(saltyrtcClient.SignalingState)</code>: The signaling state changed.</li>
 					<li><code>state-change:&lt;new-state&gt;(void)</code>: The signaling state change event, filtered by state.</li>
 					<li><code>new-responder(responderId)</code>: A responder has connected. This event is only dispatched for the initiator.</li>
 					<li><code>handover(void)</code>: The handover to the data channel is done.</li>
