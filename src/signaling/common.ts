@@ -20,6 +20,7 @@ import { concat, byteToHex } from "../utils";
 import { isResponderId } from "./helpers";
 import { HandoverState } from "./handoverstate";
 import { CloseCode, explainCloseCode } from "../closecode";
+import SignalingState = saltyrtc.SignalingState;
 
 /**
  * Signaling base class.
@@ -286,6 +287,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
                 if (this.state === 'task') {
                     this.sendClose(e.closeCode);
                 }
+                // Close connection
                 this.resetConnection(e.closeCode);
             } else if (e instanceof ConnectionError) {
                 console.warn(this.logTag, 'Connection error. Resetting connection.');
@@ -787,7 +789,21 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * This method should primarily be used by tasks.
      */
     public decryptFromPeer(box: saltyrtc.Box): Uint8Array {
-        return this.sessionKey.decrypt(box, this.getPeerSessionKey());
+        try {
+            return this.sessionKey.decrypt(box, this.getPeerSessionKey());
+        } catch (e) {
+            if (e === 'decryption-failed') {
+                // This could only happen if the session keys are somehow broken.
+                // If that happens, something went massively wrong.
+                if (this.state === 'task') {
+                    this.sendClose(CloseCode.InternalError);
+                }
+                this.resetConnection(CloseCode.InternalError);
+                return null;
+            } else {
+                throw e;
+            }
+        }
     }
 
 }
