@@ -7,10 +7,10 @@
 
 /// <reference path='../saltyrtc-client.d.ts' />
 
-import { KeyStore, AuthToken, Box } from "./keystore";
+import { AuthToken } from "./keystore";
 import { Signaling, InitiatorSignaling, ResponderSignaling } from "./signaling";
 import { EventRegistry } from "./eventregistry";
-import { u8aToHex } from "./utils";
+import { u8aToHex, validateKey } from "./utils";
 import { CloseCode } from "./closecode";
 
 
@@ -107,10 +107,10 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
     /**
      * Set the trusted public key of the peer.
      *
-     * @param peerTrustedKey The trusted public permanent key of the peer.
+     * @param peerTrustedKey The trusted public permanent key of the peer as hex string or Uint8Array.
      */
-    public withTrustedPeerKey(peerTrustedKey: Uint8Array): SaltyRTCBuilder {
-        this.peerTrustedKey = peerTrustedKey;
+    public withTrustedPeerKey(peerTrustedKey: Uint8Array | string): SaltyRTCBuilder {
+        this.peerTrustedKey = validateKey(peerTrustedKey, "Peer key");
         this.hasTrustedPeerKey = true;
         return this;
     }
@@ -132,12 +132,12 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
     /**
      * Set initiator connection info transferred via a secure data channel.
      *
-     * @param initiatorPublicKey The public key of the initiator.
-     * @param authToken The secret auth token.
+     * @param initiatorPublicKey The public key of the initiator as hex string or Uint8Array.
+     * @param authToken The secret auth token as hex string or Uint8Array.
      */
-    public initiatorInfo(initiatorPublicKey: Uint8Array, authToken: Uint8Array): SaltyRTCBuilder {
-        this.initiatorPublicKey = initiatorPublicKey;
-        this.authToken = authToken;
+    public initiatorInfo(initiatorPublicKey: Uint8Array | string, authToken: Uint8Array | string): SaltyRTCBuilder {
+        this.initiatorPublicKey = validateKey(initiatorPublicKey, "Initiator public key");
+        this.authToken = validateKey(authToken, "Auth token");
         this.hasInitiatorInfo = true;
         return this;
     }

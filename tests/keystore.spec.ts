@@ -125,13 +125,13 @@ export default () => { describe('keystore', function() {
             expect(create1).toThrowError('Either both keys or no keys may be passed in');
 
             const create2 = () => new KeyStore(Uint8Array.of(1, 2, 3), nacl.randomBytes(32));
-            expect(create2).toThrowError('Public key "1,2,3" is invalid');
+            expect(create2).toThrowError('Public key must be 32 bytes long');
 
             const create3 = () => new KeyStore(nacl.randomBytes(32), 42 as any);
-            expect(create3).toThrowError('Private key "42" is invalid');
+            expect(create3).toThrowError('Private key must be an Uint8Array or a hex string');
 
             const create4 = () => new KeyStore("ffgghh", nacl.randomBytes(32));
-            expect(create4).toThrowError('Public key "255,0,0" is invalid');
+            expect(create4).toThrowError('Public key must be 32 bytes long');
         });
 
     });

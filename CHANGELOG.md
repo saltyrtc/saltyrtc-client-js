@@ -15,6 +15,7 @@ Possible log types:
 ### UNRELEASED
 
 - [changed] The connection-closed event now has the reason code as payload
+- [added] The `KeyStore` and `SaltyRTCBuilder` interfaces now accept hex strings as keys
 
 ### v0.2.7 (2016-10-20)
 

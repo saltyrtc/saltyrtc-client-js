@@ -5,6 +5,7 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
+import {ValidationError} from "./exceptions";
 /**
  * Convert an Uint8Array to a hex string.
  *
@@ -124,6 +125,32 @@ export function waitFor(test: () => boolean, delay_ms: number, retries: number, 
 /**
  * Determine whether a value is a string.
  */
-export function isString(value: any): boolean {
+export function isString(value: any): value is string {
     return typeof value === 'string' || value instanceof String;
+}
+
+
+/**
+ * Validate a 32 byte key.
+ *
+ * @param key Either an Uint8Array or a hex string.
+ * @throws ValidationError if key is invalid.
+ */
+export function validateKey(key: Uint8Array | string, name = "Key"): Uint8Array {
+    // Validate type
+    let out: Uint8Array;
+    if (isString(key)) {
+        out = hexToU8a(key);
+    } else if (key instanceof Uint8Array) {
+        out = key;
+    } else {
+        throw new ValidationError(name + " must be an Uint8Array or a hex string");
+    }
+
+    // Validate length
+    if (out.byteLength != 32) {
+        throw new ValidationError(name + " must be 32 bytes long");
+    }
+
+    return out;
 }

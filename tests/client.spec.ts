@@ -4,6 +4,7 @@ import { sleep } from "./utils";
 import { SaltyRTCBuilder } from "../src/client";
 import { KeyStore } from "../src/keystore";
 import { DummyTask } from "./testtasks";
+import {u8aToHex} from "../src/utils";
 
 export default () => { describe('client', function() {
 
@@ -66,6 +67,30 @@ export default () => { describe('client', function() {
             expect(((salty as any).signaling as any).initiator.permanentKey).toEqual(trustedKey);
             expect(((salty as any).signaling as any).authToken).toBeNull();
             expect(((salty as any).signaling as any).tasks).toEqual(tasks);
+        });
+
+        it('accepts hex strings as initiator pub key / auth token', () => {
+            const pubKey = nacl.randomBytes(32);
+            const authToken = nacl.randomBytes(32);
+            const salty = new SaltyRTCBuilder()
+                .connectTo('localhost')
+                .withKeyStore(new KeyStore())
+                .initiatorInfo(u8aToHex(pubKey), u8aToHex(authToken))
+                .usingTasks([new DummyTask()])
+                .asResponder();
+            expect(((salty as any).signaling as any).initiator.permanentKey).toEqual(pubKey);
+            expect(((salty as any).signaling as any).authToken.keyBytes).toEqual(authToken);
+        });
+
+        it('accepts hex strings as peer trusted key', () => {
+            const trustedKey = nacl.randomBytes(32);
+            const salty = new SaltyRTCBuilder()
+                .connectTo('localhost')
+                .withKeyStore(new KeyStore())
+                .withTrustedPeerKey(u8aToHex(trustedKey))
+                .usingTasks([new DummyTask()])
+                .asResponder();
+            expect(((salty as any).signaling as any).peerTrustedKey).toEqual(trustedKey);
         });
 
     });
