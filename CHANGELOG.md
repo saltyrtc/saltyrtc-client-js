@@ -16,6 +16,7 @@ Possible log types:
 
 - [changed] The connection-closed event now has the reason code as payload
 - [added] The `KeyStore` and `SaltyRTCBuilder` interfaces now accept hex strings as keys
+- [added] The `SaltyRTCBuilder` now supports the `withPingInterval` method
 
 ### v0.2.7 (2016-10-20)
 
