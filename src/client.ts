@@ -11,6 +11,7 @@ import { KeyStore, AuthToken, Box } from "./keystore";
 import { Signaling, InitiatorSignaling, ResponderSignaling } from "./signaling";
 import { EventRegistry } from "./eventregistry";
 import { u8aToHex } from "./utils";
+import { CloseCode } from "./closecode";
 
 
 export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
@@ -342,7 +343,7 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
      * been closed, subscribe to the `connection-closed` event.
      */
     public disconnect(): void {
-        this.signaling.disconnect();
+        this.signaling.disconnect(CloseCode.ClosingNormal);
     }
 
     /**
