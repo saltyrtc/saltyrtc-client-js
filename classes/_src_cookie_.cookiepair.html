@@ -73,6 +73,7 @@
 					<div class="lead">
 						<p>A cookie pair.</p>
 					</div>
+					<p>The implementation ensures that the two cookies cannot be equal.</p>
 				</div>
 			</section>
 			<section class="tsd-panel tsd-hierarchy">
@@ -100,10 +101,16 @@
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
-							<h3>Properties</h3>
+							<h3>Accessors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_src_cookie_.cookiepair.html#ours" class="tsd-kind-icon">ours</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_src_cookie_.cookiepair.html#theirs" class="tsd-kind-icon">theirs</a></li>
+								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="_src_cookie_.cookiepair.html#ours" class="tsd-kind-icon">ours</a></li>
+								<li class="tsd-kind-accessor tsd-parent-kind-class"><a href="_src_cookie_.cookiepair.html#theirs" class="tsd-kind-icon">theirs</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Methods</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-static"><a href="_src_cookie_.cookiepair.html#fromtheirs" class="tsd-kind-icon">from<wbr>Theirs</a></li>
 							</ul>
 						</section>
 					</div>
@@ -121,9 +128,21 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/c815a43/src/cookie.ts#L66">src/cookie.ts:66</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/9b8e47b/src/cookie.ts#L81">src/cookie.ts:81</a></li>
 								</ul>
 							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Create a new cookie pair. Either both or no cookies must be specified.</p>
+								</div>
+								<p>If you want to create a cookie pair from a predefined peer cookie,
+								use the static <code>fromTheirs</code> method instead.</p>
+								<dl class="tsd-comment-tags">
+									<dt>throws</dt>
+									<dd><p>SignalingError if both cookies are defined and equal.</p>
+									</dd>
+								</dl>
+							</div>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
@@ -139,26 +158,106 @@
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
-				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+				<h2>Accessors</h2>
+				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class">
 					<a name="ours" class="tsd-anchor"></a>
 					<h3>ours</h3>
-					<div class="tsd-signature tsd-kind-icon">ours<span class="tsd-signature-symbol">:</span> <a href="_src_cookie_.cookie.html" class="tsd-signature-type">Cookie</a><span class="tsd-signature-symbol"> =&nbsp;null</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/c815a43/src/cookie.ts#L65">src/cookie.ts:65</a></li>
-						</ul>
-					</aside>
+					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> ours<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Cookie</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/9b8e47b/src/cookie.ts#L108">src/cookie.ts:108</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Get our own cookie.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Cookie</span></h4>
+						</li>
+					</ul>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+				<section class="tsd-panel tsd-member tsd-kind-accessor tsd-parent-kind-class">
 					<a name="theirs" class="tsd-anchor"></a>
 					<h3>theirs</h3>
-					<div class="tsd-signature tsd-kind-icon">theirs<span class="tsd-signature-symbol">:</span> <a href="_src_cookie_.cookie.html" class="tsd-signature-type">Cookie</a><span class="tsd-signature-symbol"> =&nbsp;null</span></div>
-					<aside class="tsd-sources">
-						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/c815a43/src/cookie.ts#L66">src/cookie.ts:66</a></li>
-						</ul>
-					</aside>
+					<ul class="tsd-signatures tsd-kind-accessor tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> theirs<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Cookie</span></li>
+						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">set</span> theirs<span class="tsd-signature-symbol">(</span>cookie<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Cookie</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/9b8e47b/src/cookie.ts#L115">src/cookie.ts:115</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Get the peer cookie.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Cookie</span></h4>
+						</li>
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/9b8e47b/src/cookie.ts#L124">src/cookie.ts:124</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Set the peer cookie.</p>
+								</div>
+								<dl class="tsd-comment-tags">
+									<dt>throws</dt>
+									<dd><p>SignalingError if cookie matches our cookie.</p>
+									</dd>
+								</dl>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>cookie: <span class="tsd-signature-type">Cookie</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Methods</h2>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-static">
+					<a name="fromtheirs" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> from<wbr>Theirs</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">from<wbr>Theirs<span class="tsd-signature-symbol">(</span>theirs<span class="tsd-signature-symbol">: </span><a href="_src_cookie_.cookie.html" class="tsd-signature-type">Cookie</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">CookiePair</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/9b8e47b/src/cookie.ts#L75">src/cookie.ts:75</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Create a new cookie pair with a predefined peer cookie.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>theirs: <a href="_src_cookie_.cookie.html" class="tsd-signature-type">Cookie</a></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">CookiePair</span></h4>
+						</li>
+					</ul>
 				</section>
 			</section>
 		</div>
@@ -255,11 +354,14 @@
 							<li class=" tsd-kind-constructor tsd-parent-kind-class">
 								<a href="_src_cookie_.cookiepair.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class">
+							<li class=" tsd-kind-get-signature tsd-parent-kind-class">
 								<a href="_src_cookie_.cookiepair.html#ours" class="tsd-kind-icon">ours</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class">
+							<li class=" tsd-kind-accessor tsd-parent-kind-class">
 								<a href="_src_cookie_.cookiepair.html#theirs" class="tsd-kind-icon">theirs</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-static">
+								<a href="_src_cookie_.cookiepair.html#fromtheirs" class="tsd-kind-icon">from<wbr>Theirs</a>
 							</li>
 						</ul>
 					</li>

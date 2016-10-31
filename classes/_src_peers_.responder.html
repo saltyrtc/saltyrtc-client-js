@@ -101,9 +101,9 @@
 						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected"><a href="_src_peers_.responder.html#_csn" class="tsd-kind-icon">_csn</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected"><a href="_src_peers_.responder.html#_cookiepair" class="tsd-kind-icon">_cookie<wbr>Pair</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected"><a href="_src_peers_.responder.html#_csnpair" class="tsd-kind-icon">_csn<wbr>Pair</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected"><a href="_src_peers_.responder.html#_id" class="tsd-kind-icon">_id</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="_src_peers_.responder.html#cookie" class="tsd-kind-icon">cookie</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_src_peers_.responder.html#handshakestate" class="tsd-kind-icon">handshake<wbr>State</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_src_peers_.responder.html#keystore" class="tsd-kind-icon">key<wbr>Store</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="_src_peers_.responder.html#permanentkey" class="tsd-kind-icon">permanent<wbr>Key</a></li>
@@ -113,7 +113,8 @@
 						<section class="tsd-index-section tsd-is-inherited">
 							<h3>Accessors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited"><a href="_src_peers_.responder.html#csn" class="tsd-kind-icon">csn</a></li>
+								<li class="tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited"><a href="_src_peers_.responder.html#cookiepair" class="tsd-kind-icon">cookie<wbr>Pair</a></li>
+								<li class="tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited"><a href="_src_peers_.responder.html#csnpair" class="tsd-kind-icon">csn<wbr>Pair</a></li>
 								<li class="tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited"><a href="_src_peers_.responder.html#hexid" class="tsd-kind-icon">hex<wbr>Id</a></li>
 								<li class="tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited"><a href="_src_peers_.responder.html#id" class="tsd-kind-icon">id</a></li>
 							</ul>
@@ -134,7 +135,7 @@
 							<aside class="tsd-sources">
 								<p>Overwrites <a href="_src_peers_.peer.html">Peer</a>.<a href="_src_peers_.peer.html#constructor">constructor</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/c815a43/src/peers.ts#L57">src/peers.ts:57</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/9b8e47b/src/peers.ts#L69">src/peers.ts:69</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -151,13 +152,24 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected">
-					<a name="_csn" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagProtected">Protected</span> _csn</h3>
-					<div class="tsd-signature tsd-kind-icon">_csn<span class="tsd-signature-symbol">:</span> <a href="_src_csn_.combinedsequence.html" class="tsd-signature-type">CombinedSequence</a><span class="tsd-signature-symbol"> =&nbsp;new CombinedSequence()</span></div>
+					<a name="_cookiepair" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagProtected">Protected</span> _cookie<wbr>Pair</h3>
+					<div class="tsd-signature tsd-kind-icon">_cookie<wbr>Pair<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">CookiePair</span></div>
 					<aside class="tsd-sources">
-						<p>Inherited from <a href="_src_peers_.peer.html">Peer</a>.<a href="_src_peers_.peer.html#_csn">_csn</a></p>
+						<p>Inherited from <a href="_src_peers_.peer.html">Peer</a>.<a href="_src_peers_.peer.html#_cookiepair">_cookiePair</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/c815a43/src/peers.ts#L21">src/peers.ts:21</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/9b8e47b/src/peers.ts#L21">src/peers.ts:21</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected">
+					<a name="_csnpair" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagProtected">Protected</span> _csn<wbr>Pair</h3>
+					<div class="tsd-signature tsd-kind-icon">_csn<wbr>Pair<span class="tsd-signature-symbol">:</span> <a href="_src_csn_.combinedsequencepair.html" class="tsd-signature-type">CombinedSequencePair</a><span class="tsd-signature-symbol"> =&nbsp;new CombinedSequencePair()</span></div>
+					<aside class="tsd-sources">
+						<p>Inherited from <a href="_src_peers_.peer.html">Peer</a>.<a href="_src_peers_.peer.html#_csnpair">_csnPair</a></p>
+						<ul>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/9b8e47b/src/peers.ts#L20">src/peers.ts:20</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -168,18 +180,7 @@
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="_src_peers_.peer.html">Peer</a>.<a href="_src_peers_.peer.html#_id">_id</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/c815a43/src/peers.ts#L20">src/peers.ts:20</a></li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
-					<a name="cookie" class="tsd-anchor"></a>
-					<h3>cookie</h3>
-					<div class="tsd-signature tsd-kind-icon">cookie<span class="tsd-signature-symbol">:</span> <a href="_src_cookie_.cookie.html" class="tsd-signature-type">Cookie</a></div>
-					<aside class="tsd-sources">
-						<p>Inherited from <a href="_src_peers_.peer.html">Peer</a>.<a href="_src_peers_.peer.html#cookie">cookie</a></p>
-						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/c815a43/src/peers.ts#L19">src/peers.ts:19</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/9b8e47b/src/peers.ts#L17">src/peers.ts:17</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -189,7 +190,7 @@
 					<div class="tsd-signature tsd-kind-icon">handshake<wbr>State<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">"new"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"token-received"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"key-received"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"key-sent"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"auth-received"</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">"auth-sent"</span><span class="tsd-signature-symbol"> =&nbsp;&quot;new&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/c815a43/src/peers.ts#L57">src/peers.ts:57</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/9b8e47b/src/peers.ts#L69">src/peers.ts:69</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -199,29 +200,29 @@
 					<div class="tsd-signature tsd-kind-icon">key<wbr>Store<span class="tsd-signature-symbol">:</span> <a href="_src_keystore_.keystore.html" class="tsd-signature-type">KeyStore</a><span class="tsd-signature-symbol"> =&nbsp;new KeyStore()</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/c815a43/src/peers.ts#L56">src/peers.ts:56</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/9b8e47b/src/peers.ts#L68">src/peers.ts:68</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
 					<a name="permanentkey" class="tsd-anchor"></a>
 					<h3>permanent<wbr>Key</h3>
-					<div class="tsd-signature tsd-kind-icon">permanent<wbr>Key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span></div>
+					<div class="tsd-signature tsd-kind-icon">permanent<wbr>Key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span></div>
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="_src_peers_.peer.html">Peer</a>.<a href="_src_peers_.peer.html#permanentkey">permanentKey</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/c815a43/src/peers.ts#L17">src/peers.ts:17</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/9b8e47b/src/peers.ts#L18">src/peers.ts:18</a></li>
 						</ul>
 					</aside>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
 					<a name="sessionkey" class="tsd-anchor"></a>
 					<h3>session<wbr>Key</h3>
-					<div class="tsd-signature tsd-kind-icon">session<wbr>Key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span></div>
+					<div class="tsd-signature tsd-kind-icon">session<wbr>Key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">null</span></div>
 					<aside class="tsd-sources">
 						<p>Inherited from <a href="_src_peers_.peer.html">Peer</a>.<a href="_src_peers_.peer.html#sessionkey">sessionKey</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/c815a43/src/peers.ts#L18">src/peers.ts:18</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/9b8e47b/src/peers.ts#L19">src/peers.ts:19</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -229,20 +230,38 @@
 			<section class="tsd-panel-group tsd-member-group tsd-is-inherited">
 				<h2>Accessors</h2>
 				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
-					<a name="csn" class="tsd-anchor"></a>
-					<h3>csn</h3>
+					<a name="cookiepair" class="tsd-anchor"></a>
+					<h3>cookie<wbr>Pair</h3>
 					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
-						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> csn<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_src_csn_.combinedsequence.html" class="tsd-signature-type">CombinedSequence</a></li>
+						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> cookiePair<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">CookiePair</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Inherited from <a href="_src_peers_.peer.html">Peer</a>.<a href="_src_peers_.peer.html#csn">csn</a></p>
+								<p>Inherited from <a href="_src_peers_.peer.html">Peer</a>.<a href="_src_peers_.peer.html#cookiepair">cookiePair</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/c815a43/src/peers.ts#L35">src/peers.ts:35</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/9b8e47b/src/peers.ts#L44">src/peers.ts:44</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-returns-title">Returns <a href="_src_csn_.combinedsequence.html" class="tsd-signature-type">CombinedSequence</a></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">CookiePair</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
+					<a name="csnpair" class="tsd-anchor"></a>
+					<h3>csn<wbr>Pair</h3>
+					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
+						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> csnPair<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_src_csn_.combinedsequencepair.html" class="tsd-signature-type">CombinedSequencePair</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<p>Inherited from <a href="_src_peers_.peer.html">Peer</a>.<a href="_src_peers_.peer.html#csnpair">csnPair</a></p>
+								<ul>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/9b8e47b/src/peers.ts#L40">src/peers.ts:40</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <a href="_src_csn_.combinedsequencepair.html" class="tsd-signature-type">CombinedSequencePair</a></h4>
 						</li>
 					</ul>
 				</section>
@@ -257,7 +276,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_src_peers_.peer.html">Peer</a>.<a href="_src_peers_.peer.html#hexid">hexId</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/c815a43/src/peers.ts#L31">src/peers.ts:31</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/9b8e47b/src/peers.ts#L36">src/peers.ts:36</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
@@ -275,7 +294,7 @@
 							<aside class="tsd-sources">
 								<p>Inherited from <a href="_src_peers_.peer.html">Peer</a>.<a href="_src_peers_.peer.html#id">id</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/c815a43/src/peers.ts#L27">src/peers.ts:27</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/9b8e47b/src/peers.ts#L32">src/peers.ts:32</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">number</span></h4>
@@ -381,13 +400,13 @@
 								<a href="_src_peers_.responder.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected">
-								<a href="_src_peers_.responder.html#_csn" class="tsd-kind-icon">_csn</a>
+								<a href="_src_peers_.responder.html#_cookiepair" class="tsd-kind-icon">_cookie<wbr>Pair</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected">
+								<a href="_src_peers_.responder.html#_csnpair" class="tsd-kind-icon">_csn<wbr>Pair</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-protected">
 								<a href="_src_peers_.responder.html#_id" class="tsd-kind-icon">_id</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
-								<a href="_src_peers_.responder.html#cookie" class="tsd-kind-icon">cookie</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class">
 								<a href="_src_peers_.responder.html#handshakestate" class="tsd-kind-icon">handshake<wbr>State</a>
@@ -402,7 +421,10 @@
 								<a href="_src_peers_.responder.html#sessionkey" class="tsd-kind-icon">session<wbr>Key</a>
 							</li>
 							<li class=" tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
-								<a href="_src_peers_.responder.html#csn" class="tsd-kind-icon">csn</a>
+								<a href="_src_peers_.responder.html#cookiepair" class="tsd-kind-icon">cookie<wbr>Pair</a>
+							</li>
+							<li class=" tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
+								<a href="_src_peers_.responder.html#csnpair" class="tsd-kind-icon">csn<wbr>Pair</a>
 							</li>
 							<li class=" tsd-kind-get-signature tsd-parent-kind-class tsd-is-inherited">
 								<a href="_src_peers_.responder.html#hexid" class="tsd-kind-icon">hex<wbr>Id</a>
@@ -414,6 +436,9 @@
 					</li>
 				</ul>
 				<ul class="after-current">
+					<li class=" tsd-kind-class tsd-parent-kind-external-module">
+						<a href="_src_peers_.server.html" class="tsd-kind-icon">Server</a>
+					</li>
 				</ul>
 			</nav>
 		</div>
