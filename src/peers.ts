@@ -5,10 +5,10 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-import { CombinedSequence } from "./csn";
-import { KeyStore } from "./keystore";
-import { byteToHex } from "./utils";
-import {Cookie, CookiePair} from "./cookie";
+import {CombinedSequencePair} from "./csn";
+import {KeyStore} from "./keystore";
+import {byteToHex} from "./utils";
+import {CookiePair} from "./cookie";
 
 /**
  * Base class for peers (initiator or responder).
@@ -17,7 +17,7 @@ export abstract class Peer {
     protected _id: number;
     public permanentKey: Uint8Array | null;
     public sessionKey: Uint8Array | null;
-    protected _csn = new CombinedSequence();
+    protected _csnPair = new CombinedSequencePair();
     protected _cookiePair: saltyrtc.CookiePair;
 
     constructor(id: number, cookiePair?: saltyrtc.CookiePair) {
@@ -37,8 +37,8 @@ export abstract class Peer {
         return byteToHex(this._id);
     }
 
-    public get csn(): CombinedSequence {
-        return this._csn;
+    public get csnPair(): CombinedSequencePair {
+        return this._csnPair;
     }
 
     public get cookiePair(): saltyrtc.CookiePair {
@@ -67,7 +67,21 @@ export class Initiator extends Peer {
 export class Responder extends Peer {
     public keyStore = new KeyStore();
     public handshakeState: 'new' | 'token-received' | 'key-received' | 'key-sent' | 'auth-received' | 'auth-sent' = 'new';
+
     constructor(id: number) {
         super(id);
+    }
+}
+
+/**
+ * Information about the server.
+ */
+export class Server extends Peer {
+    public static ID = 0x00;
+
+    public handshakeState: 'new' | 'hello-sent' | 'auth-sent' | 'done' = 'new';
+
+    constructor() {
+        super(Server.ID);
     }
 }

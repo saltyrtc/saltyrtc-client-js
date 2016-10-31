@@ -9,7 +9,7 @@
 
 import { AuthToken } from "../keystore";
 import { Nonce } from "../nonce";
-import { Responder } from "../peers";
+import { Responder, Peer } from "../peers";
 import { ProtocolError, SignalingError, ValidationError } from "../exceptions";
 import { CloseCode } from "../closecode";
 import { Signaling } from "./common";
@@ -45,24 +45,6 @@ export class InitiatorSignaling extends Signaling {
         return this.permanentKey.publicKeyHex;
     }
 
-    protected getNextCsn(receiver: number): saltyrtc.NextCombinedSequence {
-        if (receiver === Signaling.SALTYRTC_ADDR_SERVER) {
-            return this.serverCsn.next();
-        } else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR) {
-            throw new ProtocolError('Initiator cannot send messages to initiator');
-        } else if (isResponderId(receiver)) {
-            if (this.getState() === 'task') {
-                return this.responder.csn.next();
-            } else if (this.responders.has(receiver)) {
-                return this.responders.get(receiver).csn.next();
-            } else {
-                throw new ProtocolError('Unknown responder: ' + receiver);
-            }
-        } else {
-            throw new ProtocolError('Bad receiver byte: ' + receiver);
-        }
-    }
-
     /**
      * Encrypt data for the responder.
      */
@@ -94,9 +76,9 @@ export class InitiatorSignaling extends Signaling {
         }
     }
 
-    protected getPeerAddress(): number {
+    protected getPeer(): Peer {
         if (this.responder !== null) {
-            return this.responder.id;
+            return this.responder;
         }
         return null;
     }
@@ -162,7 +144,7 @@ export class InitiatorSignaling extends Signaling {
         if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
             // Nonce claims to come from server.
             // Try to decrypt data accordingly.
-            payload = decryptKeystore(box, this.permanentKey, this.serverKey, 'server');
+            payload = decryptKeystore(box, this.permanentKey, this.server.sessionKey, 'server');
 
             const msg: saltyrtc.Message = this.decodeMessage(payload, 'server');
             switch (msg.type) {
@@ -267,7 +249,9 @@ export class InitiatorSignaling extends Signaling {
     protected handleServerAuth(msg: saltyrtc.messages.ServerAuth, nonce: Nonce): void {
         this.address = Signaling.SALTYRTC_ADDR_INITIATOR;
         this.validateNonce(nonce, this.address, Signaling.SALTYRTC_ADDR_SERVER);
-        this.validateRepeatedCookie(msg);
+
+        // Validate repeated cookie
+        this.validateRepeatedCookie(this.server, msg.your_cookie);
 
         // Store responders
         this.responders = new Map<number, Responder>();
@@ -276,7 +260,7 @@ export class InitiatorSignaling extends Signaling {
         }
         console.debug(this.logTag, this.responders.size, 'responders connected');
 
-        this.serverHandshakeState = 'done';
+        this.server.handshakeState = 'done';
     }
 
     protected initPeerHandshake(): void {
@@ -315,7 +299,7 @@ export class InitiatorSignaling extends Signaling {
             type: 'key',
             key: responder.keyStore.publicKeyBytes.buffer,
         };
-        const packet: Uint8Array = this.buildPacket(message, responder.id);
+        const packet: Uint8Array = this.buildPacket(message, responder);
         console.debug(this.logTag, 'Sending key');
         this.ws.send(packet);
         responder.handshakeState = 'key-sent';
@@ -326,7 +310,7 @@ export class InitiatorSignaling extends Signaling {
      */
     private sendAuth(responder: Responder, nonce: Nonce): void {
         // Ensure again that cookies are different
-        if (nonce.cookie.equals(this.cookiePair.ours)) {
+        if (nonce.cookie.equals(responder.cookiePair.ours)) {
             throw new ProtocolError('Their cookie and our cookie are the same.');
         }
 
@@ -341,7 +325,7 @@ export class InitiatorSignaling extends Signaling {
             task: this.task.getName(),
             data: taskData,
         };
-        const packet: Uint8Array = this.buildPacket(message, responder.id);
+        const packet: Uint8Array = this.buildPacket(message, responder);
         console.debug(this.logTag, 'Sending auth');
         this.ws.send(packet);
 
@@ -355,8 +339,8 @@ export class InitiatorSignaling extends Signaling {
      * @throws SignalingError
      */
     private handleAuth(msg: saltyrtc.messages.ResponderAuth, responder: Responder, nonce: Nonce): void {
-        // Validate cookie
-        this.validateRepeatedCookie(msg);
+        // Validate repeated cookie
+        this.validateRepeatedCookie(responder, msg.your_cookie);
 
         // Validate task info
         try {
@@ -382,9 +366,6 @@ export class InitiatorSignaling extends Signaling {
         console.debug(this.logTag, 'Responder', responder.hexId, 'authenticated');
 
         // Store cookie
-        if (nonce.cookie.equals(this.cookiePair.ours)) {
-            throw new ProtocolError('Local and remote cookies are equal');
-        }
         responder.cookiePair.theirs = nonce.cookie;
 
         // Update state
@@ -448,7 +429,7 @@ export class InitiatorSignaling extends Signaling {
             id: responderId,
             reason: reason,
         };
-        const packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
+        const packet: Uint8Array = this.buildPacket(message, this.server);
         console.debug(this.logTag, 'Sending drop-responder', byteToHex(responderId));
         this.ws.send(packet);
         this.responders.delete(responderId);
