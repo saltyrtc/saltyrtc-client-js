@@ -215,9 +215,8 @@ export class ResponderSignaling extends Signaling {
      * Handle an incoming new-initiator message.
      */
     private handleNewInitiator(msg: saltyrtc.messages.NewInitiator): void {
-        // A new initiator connected.
+        this.initiator = new Initiator(this.initiator.permanentKey);
         this.initiator.connected = true;
-        // TODO: Replace old initiator?
         this.initPeerHandshake();
     }
 

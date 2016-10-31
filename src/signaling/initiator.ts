@@ -103,32 +103,29 @@ export class InitiatorSignaling extends Signaling {
      * @throws SignalingError
      */
     protected processNewResponder(responderId: number): void {
-        if (!this.responders.has(responderId)) {
-            // Validate responder id
-            if (!isResponderId(responderId)) {
-                throw new ProtocolError('Invalid responder id: ' + responderId);
-            }
-
-            // Create responder instance
-            const responder = new Responder(responderId);
-
-            // If we trust the responder...
-            if (this.peerTrustedKey !== null) {
-                // ...don't expect a token message.
-                responder.handshakeState = 'token-received';
-
-                // Set the public permanent key.
-                responder.permanentKey = this.peerTrustedKey;
-            }
-
-            // Store responder
-            this.responders.set(responderId, responder);
-
-            // Notify listeners
-            this.client.emit({type: 'new-responder', data: responderId});
-        } else {
-            console.warn(this.logTag, 'Got new-responder message for an already known responder.');
+        // Drop responder if it's already known
+        if (this.responders.has(responderId)) {
+            this.responders.delete(responderId);
         }
+
+        // Create responder instance
+        const responder = new Responder(responderId);
+
+
+        // If we trust the responder...
+        if (this.peerTrustedKey !== null) {
+            // ...don't expect a token message.
+            responder.handshakeState = 'token-received';
+
+            // Set the public permanent key.
+            responder.permanentKey = this.peerTrustedKey;
+        }
+
+        // Store responder
+        this.responders.set(responderId, responder);
+
+        // Notify listeners
+        this.client.emit({type: 'new-responder', data: responderId});
     }
 
     protected onPeerHandshakeMessage(box: saltyrtc.Box, nonce: Nonce): void {
@@ -256,6 +253,9 @@ export class InitiatorSignaling extends Signaling {
         // Store responders
         this.responders = new Map<number, Responder>();
         for (let id of msg.responders) {
+            if (!isResponderId(id)) {
+                throw new ProtocolError("Responder id " + id + " must be in the range 0x02-0xff");
+            }
             this.processNewResponder(id);
         }
         console.debug(this.logTag, this.responders.size, 'responders connected');
@@ -271,7 +271,12 @@ export class InitiatorSignaling extends Signaling {
      * Handle an incoming new-responder message.
      */
     private handleNewResponder(msg: saltyrtc.messages.NewResponder): void {
-        // A new responder wants to connect. Store id.
+        // Validate responder id
+        if (!isResponderId(msg.id)) {
+            throw new ProtocolError("Responder id " + msg.id + " must be in the range 0x02-0xff");
+        }
+
+        // Process responder
         this.processNewResponder(msg.id);
     }
 
