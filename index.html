@@ -118,8 +118,8 @@ responder.<span class="hljs-literal">on</span>(<span class="hljs-string">'state-
 					<li><code>state-change:&lt;new-state&gt;(void)</code>: The signaling state change event, filtered by state.</li>
 					<li><code>new-responder(responderId)</code>: A responder has connected. This event is only dispatched for the initiator.</li>
 					<li><code>handover(void)</code>: The handover to the data channel is done.</li>
+					<li><code>connection-closed(closeCode)</code>: The connection was closed.</li>
 					<li><code>connection-error(ErrorEvent)</code>: A websocket connection error occured.</li>
-					<li><code>connection-closed(CloseEvent)</code>: The websocket connection was closed. (Note: This might be due to handover.)</li>
 				</ul>
 				<h2 id="development">Development</h2>
 				<p>Install dependencies:</p>
