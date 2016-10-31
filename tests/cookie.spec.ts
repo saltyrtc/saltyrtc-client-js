@@ -1,6 +1,7 @@
 /// <reference path="jasmine.d.ts" />
 
-import { Cookie } from "../src/cookie";
+import {Cookie, CookiePair} from "../src/cookie";
+import {ProtocolError} from "../src/exceptions";
 
 export default () => { describe('cookie', function() {
 
@@ -41,6 +42,22 @@ export default () => { describe('cookie', function() {
             expect(c3.equals(c4)).toBe(false);
         });
 
+    });
+
+    describe('CookiePair', function() {
+        it('cannot be instantiated from two equal cookies', () => {
+            const c = new Cookie();
+            const construct = () => new CookiePair(c, c);
+            expect(construct).toThrow(new ProtocolError("Their cookie matches our cookie"));
+        });
+
+        it('cannot set their cookie to our cookie', () => {
+            const pair = new CookiePair();
+            const setDifferent = () => pair.theirs = new Cookie();
+            const setSame = () => pair.theirs = pair.ours;
+            expect(setDifferent).not.toThrow();
+            expect(setSame).toThrow(new ProtocolError("Their cookie matches our cookie"));
+        });
     });
 
 }); }

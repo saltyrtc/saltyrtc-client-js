@@ -65,7 +65,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
     public role: saltyrtc.SignalingRole = null;
     protected logTag: string = 'Signaling:';
     protected address: number = Signaling.SALTYRTC_ADDR_UNKNOWN;
-    protected cookiePair: CookiePair = null;
+    protected cookiePair: saltyrtc.CookiePair = null;
     protected serverCsn = new CombinedSequence();
 
     /**
@@ -424,12 +424,8 @@ export abstract class Signaling implements saltyrtc.Signaling {
         // Store server public key
         this.serverKey = new Uint8Array(msg.key);
 
-        // Generate cookie
-        let cookie: Cookie;
-        do {
-            cookie = new Cookie();
-        } while (cookie.equals(nonce.cookie));
-        this.cookiePair = new CookiePair(cookie, nonce.cookie);
+        // Generate cookie pair
+        this.cookiePair = CookiePair.fromTheirs(nonce.cookie);
     }
 
     /**
