@@ -196,7 +196,7 @@ export class InitiatorSignaling extends Signaling {
                         payload = this.authToken.decrypt(box);
                     } catch (e) {
                         console.warn(this.logTag, 'Could not decrypt token message: ', e);
-                        this.dropResponder(responder.id); // TODO: Reason
+                        this.dropResponder(responder.id, CloseCode.InitiatorCouldNotDecrypt);
                         return;
                     }
 
@@ -214,7 +214,7 @@ export class InitiatorSignaling extends Signaling {
                             // Decryption failed.
                             // We trust a responder, but this particular responder used a different key.
                             console.warn(this.logTag, 'Could not decrypt key message');
-                            this.dropResponder(responder.id); // TODO: Reason
+                            this.dropResponder(responder.id, CloseCode.InitiatorCouldNotDecrypt);
                             return;
                         }
                         throw e;
@@ -242,7 +242,7 @@ export class InitiatorSignaling extends Signaling {
                     this.responders.delete(responder.id);
 
                     // Drop other responders
-                    this.dropResponders();
+                    this.dropResponders(CloseCode.DroppedByInitiator);
 
                     // Peer handshake done
                     this.setState('task');
@@ -432,21 +432,21 @@ export class InitiatorSignaling extends Signaling {
     /**
      * Drop all responders.
      */
-    private dropResponders(): void {
+    private dropResponders(reason: number): void {
         console.debug(this.logTag, 'Dropping', this.responders.size, 'other responders.');
         for (let id of this.responders.keys()) {
-            this.dropResponder(id);
+            this.dropResponder(id, reason);
         }
     }
-
 
     /**
      * Send a drop-responder request to the server.
      */
-    private dropResponder(responderId: number) {
+    private dropResponder(responderId: number, reason: number) {
         const message: saltyrtc.messages.DropResponder = {
             type: 'drop-responder',
             id: responderId,
+            reason: reason,
         };
         const packet: Uint8Array = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
         console.debug(this.logTag, 'Sending drop-responder', byteToHex(responderId));

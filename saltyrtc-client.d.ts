@@ -312,6 +312,7 @@ declare namespace saltyrtc.messages {
     interface DropResponder extends SignalingMessage {
         type: 'drop-responder';
         id: number;
+        reason?: number;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#send-error
