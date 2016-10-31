@@ -65,15 +65,6 @@
 <div class="container container-main">
 	<div class="row">
 		<div class="col-8 col-content">
-			<section class="tsd-panel tsd-comment">
-				<div class="tsd-comment tsd-typography">
-					<div class="lead">
-						<p>Copyright (C) 2016 Threema GmbH / SaltyRTC Contributors</p>
-					</div>
-					<p>This software may be modified and distributed under the terms
-					of the MIT license.  See the <code>LICENSE.md</code> file for details.</p>
-				</div>
-			</section>
 			<section class="tsd-panel-group tsd-index-group">
 				<h2>Index</h2>
 				<section class="tsd-panel tsd-index-panel">
@@ -84,9 +75,11 @@
 								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="_src_utils_.html#bytetohex" class="tsd-kind-icon">byte<wbr>ToHex</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="_src_utils_.html#concat" class="tsd-kind-icon">concat</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="_src_utils_.html#hextou8a" class="tsd-kind-icon">hex<wbr>ToU8a</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="_src_utils_.html#isstring" class="tsd-kind-icon">is<wbr>String</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="_src_utils_.html#randomstring" class="tsd-kind-icon">random<wbr>String</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="_src_utils_.html#randomuint32" class="tsd-kind-icon">random<wbr>Uint32</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="_src_utils_.html#u8atohex" class="tsd-kind-icon">u8a<wbr>ToHex</a></li>
+								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="_src_utils_.html#validatekey" class="tsd-kind-icon">validate<wbr>Key</a></li>
 								<li class="tsd-kind-function tsd-parent-kind-external-module"><a href="_src_utils_.html#waitfor" class="tsd-kind-icon">wait<wbr>For</a></li>
 							</ul>
 						</section>
@@ -105,7 +98,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8b07f5c/src/utils.ts#L52">src/utils.ts:52</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/eef960d/src/utils.ts#L53">src/utils.ts:53</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -133,7 +126,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8b07f5c/src/utils.ts#L84">src/utils.ts:84</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/eef960d/src/utils.ts#L85">src/utils.ts:85</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -162,7 +155,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8b07f5c/src/utils.ts#L33">src/utils.ts:33</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/eef960d/src/utils.ts#L34">src/utils.ts:34</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -190,6 +183,34 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module">
+					<a name="isstring" class="tsd-anchor"></a>
+					<h3>is<wbr>String</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module">
+						<li class="tsd-signature tsd-kind-icon">is<wbr>String<span class="tsd-signature-symbol">(</span>value<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">any</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/eef960d/src/utils.ts#L128">src/utils.ts:128</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Determine whether a value is a string.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>value: <span class="tsd-signature-type">any</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module">
 					<a name="randomstring" class="tsd-anchor"></a>
 					<h3>random<wbr>String</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module">
@@ -199,7 +220,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8b07f5c/src/utils.ts#L62">src/utils.ts:62</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/eef960d/src/utils.ts#L63">src/utils.ts:63</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -231,7 +252,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8b07f5c/src/utils.ts#L73">src/utils.ts:73</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/eef960d/src/utils.ts#L74">src/utils.ts:74</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -253,7 +274,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8b07f5c/src/utils.ts#L16">src/utils.ts:16</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/eef960d/src/utils.ts#L17">src/utils.ts:17</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -281,6 +302,45 @@
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module">
+					<a name="validatekey" class="tsd-anchor"></a>
+					<h3>validate<wbr>Key</h3>
+					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module">
+						<li class="tsd-signature tsd-kind-icon">validate<wbr>Key<span class="tsd-signature-symbol">(</span>key<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span>, name<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Uint8Array</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/eef960d/src/utils.ts#L139">src/utils.ts:139</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Validate a 32 byte key.</p>
+								</div>
+								<dl class="tsd-comment-tags">
+									<dt>throws</dt>
+									<dd><p>ValidationError if key is invalid.</p>
+									</dd>
+								</dl>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>key: <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>Either an Uint8Array or a hex string.</p>
+									</div>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagDefault value">Default value</span> name: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;Key&quot;</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Uint8Array</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-function tsd-parent-kind-external-module">
 					<a name="waitfor" class="tsd-anchor"></a>
 					<h3>wait<wbr>For</h3>
 					<ul class="tsd-signatures tsd-kind-function tsd-parent-kind-external-module">
@@ -290,7 +350,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/8b07f5c/src/utils.ts#L108">src/utils.ts:108</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/eef960d/src/utils.ts#L109">src/utils.ts:109</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -465,6 +525,9 @@
 						<a href="_src_utils_.html#hextou8a" class="tsd-kind-icon">hex<wbr>ToU8a</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-external-module">
+						<a href="_src_utils_.html#isstring" class="tsd-kind-icon">is<wbr>String</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module">
 						<a href="_src_utils_.html#randomstring" class="tsd-kind-icon">random<wbr>String</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-external-module">
@@ -472,6 +535,9 @@
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-external-module">
 						<a href="_src_utils_.html#u8atohex" class="tsd-kind-icon">u8a<wbr>ToHex</a>
+					</li>
+					<li class=" tsd-kind-function tsd-parent-kind-external-module">
+						<a href="_src_utils_.html#validatekey" class="tsd-kind-icon">validate<wbr>Key</a>
 					</li>
 					<li class=" tsd-kind-function tsd-parent-kind-external-module">
 						<a href="_src_utils_.html#waitfor" class="tsd-kind-icon">wait<wbr>For</a>
