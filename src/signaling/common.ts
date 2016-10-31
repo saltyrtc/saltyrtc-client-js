@@ -473,6 +473,33 @@ export abstract class Signaling implements saltyrtc.Signaling {
     }
 
     /**
+     * Send a close message to the peer.
+     */
+    public sendClose(reason: number): void {
+        const message: saltyrtc.messages.Close = {
+            type: 'close',
+            reason: reason,
+        };
+        const packet: Uint8Array = this.buildPacket(message, this.getPeerAddress());
+        console.debug(this.logTag, 'Sending close');
+        this.ws.send(packet);
+    }
+
+    /**
+     * Handle an incoming close message.
+     */
+    protected handleClose(msg: saltyrtc.messages.Close): void {
+        console.warn(this.logTag, 'Received close message. Reason:',
+            msg.reason, '(' + explainCloseCode(msg.reason) + ')');
+
+        // Notify the task
+        this.task.close(msg.reason);
+
+        // Reset signaling
+        this.resetConnection(CloseCode.GoingAway);
+    }
+
+    /**
      * Return the next CSN for the specified receiver.
      *
      * May throw a `ProtocolError`.
@@ -754,13 +781,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
      */
     public decryptFromPeer(box: saltyrtc.Box): Uint8Array {
         return this.sessionKey.decrypt(box, this.getPeerSessionKey());
-    }
-
-    /**
-     * Send a close message to the peer.
-     */
-    public sendClose(reason: number): void {
-        // TODO: Implement
     }
 
 }
