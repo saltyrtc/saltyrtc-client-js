@@ -401,9 +401,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
         if (msg.type === 'close') {
             console.debug('Received close');
             // TODO: Handle
-        } else if (msg.type === 'data') {
-            console.debug(this.logTag, 'Received data');
-            this.handleData(msg as saltyrtc.messages.Data);
         } else if (msg.type === 'restart') {
             console.debug(this.logTag, 'Received restart');
             this.handleRestart(msg as saltyrtc.messages.Restart);
@@ -460,16 +457,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Initialize the peer handshake.
      */
     protected abstract initPeerHandshake(): void;
-
-    /**
-     * Handle an incoming data message.
-     */
-    protected handleData(msg: saltyrtc.messages.Data): void {
-        this.client.emit({type: 'data', data: msg.data});
-        if (typeof msg.data_type === 'string') {
-            this.client.emit({type: 'data:' + msg.data_type, data: msg.data});
-        }
-    }
 
     /**
      * Handle an incoming restart message.

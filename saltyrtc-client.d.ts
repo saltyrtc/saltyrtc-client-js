@@ -267,7 +267,7 @@ declare namespace saltyrtc.messages {
     type MessageType = 'server-hello' | 'client-hello' | 'client-auth'
                      | 'server-auth' | 'new-initiator' | 'new-responder'
                      | 'drop-responder' | 'send-error' | 'token' | 'key'
-                     | 'auth' | 'restart' | 'data';
+                     | 'auth' | 'restart';
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#server-hello
     interface ServerHello extends SignalingMessage {
@@ -349,12 +349,6 @@ declare namespace saltyrtc.messages {
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#restart
     interface Restart extends SignalingMessage {
         type: 'restart';
-    }
-
-    interface Data extends SignalingMessage {
-        type: 'data';
-        data_type?: string;
-        data: any;
     }
 
     /**
