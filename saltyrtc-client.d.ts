@@ -186,6 +186,7 @@ declare namespace saltyrtc {
         withTrustedPeerKey(peerTrustedKey: Uint8Array | string): SaltyRTCBuilder;
         initiatorInfo(initiatorPublicKey: Uint8Array | string, authToken: Uint8Array | string): SaltyRTCBuilder;
         usingTasks(tasks: Task[]): SaltyRTCBuilder;
+        withPingInterval(interval: number);
 
         asInitiator(): SaltyRTC;
         asResponder(): SaltyRTC;
@@ -290,6 +291,7 @@ declare namespace saltyrtc.messages {
         type: 'client-auth';
         your_cookie: ArrayBuffer;
         subprotocols: string[];
+        ping_interval: number;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#server-auth

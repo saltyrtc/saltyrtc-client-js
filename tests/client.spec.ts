@@ -20,6 +20,7 @@ export default () => { describe('client', function() {
             expect(((salty as any).signaling as any).role).toEqual('initiator');
             expect(((salty as any).signaling as any).peerTrustedKey).toBeNull();
             expect(((salty as any).signaling as any).tasks).toEqual(tasks);
+            expect(((salty as any).signaling as any).pingInterval).toEqual(0);
         });
 
         it('can construct a trusted initiator', () => {
@@ -34,6 +35,7 @@ export default () => { describe('client', function() {
             expect(((salty as any).signaling as any).role).toEqual('initiator');
             expect(((salty as any).signaling as any).peerTrustedKey).toEqual(trustedKey);
             expect(((salty as any).signaling as any).tasks).toEqual(tasks);
+            expect(((salty as any).signaling as any).pingInterval).toEqual(0);
         });
 
         it('can construct an untrusted responder', () => {
@@ -51,6 +53,7 @@ export default () => { describe('client', function() {
             expect(((salty as any).signaling as any).authToken.keyBytes).toEqual(authToken);
             expect(((salty as any).signaling as any).peerTrustedKey).toBeNull();
             expect(((salty as any).signaling as any).tasks).toEqual(tasks);
+            expect(((salty as any).signaling as any).pingInterval).toEqual(0);
         });
 
         it('can construct a trusted responder', () => {
@@ -67,6 +70,7 @@ export default () => { describe('client', function() {
             expect(((salty as any).signaling as any).initiator.permanentKey).toEqual(trustedKey);
             expect(((salty as any).signaling as any).authToken).toBeNull();
             expect(((salty as any).signaling as any).tasks).toEqual(tasks);
+            expect(((salty as any).signaling as any).pingInterval).toEqual(0);
         });
 
         it('accepts hex strings as initiator pub key / auth token', () => {
@@ -91,6 +95,21 @@ export default () => { describe('client', function() {
                 .usingTasks([new DummyTask()])
                 .asResponder();
             expect(((salty as any).signaling as any).peerTrustedKey).toEqual(trustedKey);
+        });
+
+        it('accepts websocket ping interval', () => {
+            const salty = new SaltyRTCBuilder()
+                .connectTo('localhost')
+                .withKeyStore(new KeyStore())
+                .usingTasks([new DummyTask()])
+                .withPingInterval(10)
+                .asInitiator();
+            expect(((salty as any).signaling as any).pingInterval).toEqual(10);
+        });
+
+        it('validates websocket ping interval', () => {
+            const builder = new SaltyRTCBuilder();
+            expect(() => builder.withPingInterval(-10)).toThrowError("Ping interval may not be negative");
         });
 
     });

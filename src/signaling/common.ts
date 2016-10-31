@@ -36,6 +36,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
     protected port: number;
     protected protocol: string = 'wss';
     protected ws: WebSocket = null;
+    protected pingInterval: number;
 
     // Msgpack
     protected msgpackOptions: msgpack.BufferOptions = {
@@ -74,13 +75,14 @@ export abstract class Signaling implements saltyrtc.Signaling {
     /**
      * Create a new signaling instance.
      */
-    constructor(client: saltyrtc.SaltyRTC, host: string, port: number, tasks: saltyrtc.Task[],
+    constructor(client: saltyrtc.SaltyRTC, host: string, port: number, tasks: saltyrtc.Task[], pingInterval: number,
                 permanentKey: saltyrtc.KeyStore, peerTrustedKey?: Uint8Array) {
         this.client = client;
         this.permanentKey = permanentKey;
         this.host = host;
         this.port = port;
         this.tasks = tasks;
+        this.pingInterval = pingInterval;
         if (peerTrustedKey !== undefined) {
             this.peerTrustedKey = peerTrustedKey;
         }
@@ -442,6 +444,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
             type: 'client-auth',
             your_cookie: this.server.cookiePair.theirs.asArrayBuffer(),
             subprotocols: [Signaling.SALTYRTC_SUBPROTOCOL],
+            ping_interval: this.pingInterval,
         };
         const packet: Uint8Array = this.buildPacket(message, this.server);
         console.debug(this.logTag, 'Sending client-auth');
