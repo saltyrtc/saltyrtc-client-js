@@ -14,13 +14,14 @@ import { Cookie } from "./cookie";
  * Base class for peers (initiator or responder).
  */
 export abstract class Peer {
-    public permanentKey: Uint8Array;
-    public sessionKey: Uint8Array;
+    public permanentKey: Uint8Array | null;
+    public sessionKey: Uint8Array | null;
     public cookie: Cookie;
     protected _id: number;
     protected _csn = new CombinedSequence();
 
-    constructor(permanentKey?: Uint8Array) {
+    constructor(id: number, permanentKey?: Uint8Array) {
+        this._id = id;
         this.permanentKey = permanentKey;
     }
 
@@ -41,11 +42,13 @@ export abstract class Peer {
  * Information about the initiator. Used by responder during handshake.
  */
 export class Initiator extends Peer {
+    public static ID = 0x01;
+
     public connected = false;
     public handshakeState: 'new' | 'token-sent' | 'key-sent' | 'key-received' | 'auth-sent' | 'auth-received' = 'new';
+
     constructor(permanentKey: Uint8Array) {
-        super(permanentKey);
-        this._id = 0x01;
+        super(Initiator.ID, permanentKey);
     }
 }
 
@@ -56,7 +59,6 @@ export class Responder extends Peer {
     public keyStore = new KeyStore();
     public handshakeState: 'new' | 'token-received' | 'key-received' | 'key-sent' | 'auth-received' | 'auth-sent' = 'new';
     constructor(id: number) {
-        super();
-        this._id = id;
+        super(id);
     }
 }
