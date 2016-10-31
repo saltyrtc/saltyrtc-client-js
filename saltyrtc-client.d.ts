@@ -112,9 +112,13 @@ declare namespace saltyrtc {
 
         /**
          * Close and reset the connection with the specified close code.
+         *
+         * If no reason is passed in, this will be treated as a quiet
+         * reset - no listeners will be notified.
+         *
          * @param reason The close code to use.
          */
-        resetConnection(reason: number): void;
+        resetConnection(reason?: number): void;
     }
 
     interface Task {

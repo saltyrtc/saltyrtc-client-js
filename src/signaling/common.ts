@@ -242,7 +242,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
                     log('Dropped by initiator');
                     break;
             }
-            this.client.emit({type: 'connection-closed', data: ev});
         }
     };
 
@@ -664,15 +663,20 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * - Set `this.status` to `new`
      * - Reset the server combined sequence
      */
-    public resetConnection(closeCode = CloseCode.ClosingNormal): void {
+    public resetConnection(reason?: number): void {
+        // Notify listeners
+        if (reason !== undefined) {
+            this.client.emit({type: 'connection-closed', data: reason});
+        }
+
         this.setState('new');
         this.serverCsn = new CombinedSequence();
         this.handoverState.reset();
 
         // Close WebSocket instance
         if (this.ws !== null) {
-            console.debug(this.logTag, 'Disconnecting WebSocket (close code ' + closeCode + ')');
-            this.ws.close(closeCode);
+            console.debug(this.logTag, 'Disconnecting WebSocket (close code ' + reason + ')');
+            this.ws.close(reason);
         }
         this.ws = null;
 

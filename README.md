@@ -79,8 +79,8 @@ The following events are available:
  - `state-change:<new-state>(void)`: The signaling state change event, filtered by state.
  - `new-responder(responderId)`: A responder has connected. This event is only dispatched for the initiator.
  - `handover(void)`: The handover to the data channel is done.
+ - `connection-closed(closeCode)`: The connection was closed.
  - `connection-error(ErrorEvent)`: A websocket connection error occured.
- - `connection-closed(CloseEvent)`: The websocket connection was closed. (Note: This might be due to handover.)
 
 ## Development
 

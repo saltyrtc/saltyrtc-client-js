@@ -12,6 +12,10 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### UNRELEASED
+
+- [changed] The connection-closed event now has the reason code as payload
+
 ### v0.2.7 (2016-10-20)
 
 - [added] Add HandoverState helper class

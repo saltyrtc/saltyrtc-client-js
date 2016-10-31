@@ -105,7 +105,8 @@ export default () => { describe('Integration Tests', function() {
             await sleep(1000);
             expect(this.initiator.state).toEqual('peer-handshake');
             expect(this.responder.state).toEqual('new');
-            this.initiator.once('connection-closed', (ev) => {
+            this.initiator.once('connection-closed', (reason) => {
+                expect(reason).toEqual(1000);
                 expect(this.initiator.state).toEqual('closed');
                 done();
             });
@@ -116,7 +117,8 @@ export default () => { describe('Integration Tests', function() {
             expect(this.initiator.state).toEqual('new');
             expect(this.responder.state).toEqual('new');
             await this.connectBoth(this.initiator, this.responder);
-            this.initiator.once('connection-closed', (ev) => {
+            this.initiator.once('connection-closed', (reason) => {
+                expect(reason).toEqual(1000);
                 expect(this.initiator.state).toEqual('closed');
                 done();
             });
