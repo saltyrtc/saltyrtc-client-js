@@ -1,6 +1,7 @@
 /// <reference path="jasmine.d.ts" />
 
 import { Box, KeyStore, AuthToken } from "../src/keystore";
+import { u8aToHex } from "../src/utils";
 
 declare var nacl: any; // TODO
 
@@ -98,6 +99,39 @@ export default () => { describe('keystore', function() {
         it('cannot encrypt without a proper nonce', () => {
             let encrypt = () => ks.encrypt(data, nacl.randomBytes(3), nacl.randomBytes(32));
             expect(encrypt).toThrow(new Error('bad nonce size'));
+        });
+
+        it('can be created from an Uint8Array or hex string', () => {
+            const pkBytes = nacl.randomBytes(32);
+            const skBytes = nacl.randomBytes(32);
+            const pkHex = u8aToHex(pkBytes);
+            const skHex = u8aToHex(skBytes);
+
+            let ksBytes = new KeyStore(pkBytes, skBytes);
+            let ksHex = new KeyStore(pkHex, skHex);
+            let ksMixed1 = new KeyStore(pkBytes, skHex);
+            let ksMixed2 = new KeyStore(pkHex, skBytes);
+
+            for (let ks of [ksBytes, ksHex, ksMixed1, ksMixed2]) {
+                expect(ks.publicKeyBytes).toEqual(pkBytes);
+                expect(ks.secretKeyBytes).toEqual(skBytes);
+                expect(ks.publicKeyHex).toEqual(pkHex);
+                expect(ks.secretKeyHex).toEqual(skHex);
+            }
+        });
+
+        it('shows a nice error message if key is invalid', () => {
+            const create1 = () => new KeyStore(undefined, nacl.randomBytes(32));
+            expect(create1).toThrowError('Either both keys or no keys may be passed in');
+
+            const create2 = () => new KeyStore(Uint8Array.of(1, 2, 3), nacl.randomBytes(32));
+            expect(create2).toThrowError('Public key "1,2,3" is invalid');
+
+            const create3 = () => new KeyStore(nacl.randomBytes(32), 42 as any);
+            expect(create3).toThrowError('Private key "42" is invalid');
+
+            const create4 = () => new KeyStore("ffgghh", nacl.randomBytes(32));
+            expect(create4).toThrowError('Public key "255,0,0" is invalid');
         });
 
     });

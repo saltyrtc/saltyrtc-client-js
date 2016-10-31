@@ -8,7 +8,7 @@
 /// <reference path='../saltyrtc-client.d.ts' />
 /// <reference path='types/tweetnacl.d.ts' />
 
-import { u8aToHex } from "./utils";
+import {u8aToHex, hexToU8a, isString} from "./utils";
 
 /**
  * A `Box` contains a nonce and encrypted data.
@@ -84,17 +84,23 @@ export class KeyStore implements saltyrtc.KeyStore {
     // The NaCl key pair
     private _keyPair: nacl.KeyPair;
 
-    constructor(publicKey?: Uint8Array, secretKey?: Uint8Array) {
+    constructor(publicKey?: Uint8Array | string, privateKey?: Uint8Array | string) {
         // Create new key pair if necessary
-        if (publicKey === undefined || secretKey === undefined) {
+        if (publicKey === undefined && privateKey === undefined) {
             this._keyPair = nacl.box.keyPair();
             console.debug('KeyStore: New public key:', u8aToHex(this._keyPair.publicKey));
-        } else {
+        } else if (publicKey !== undefined && privateKey !== undefined) {
+            const pub = isString(publicKey) ? hexToU8a(publicKey as string) : publicKey as Uint8Array;
+            const priv = isString(privateKey) ? hexToU8a(privateKey as string) : privateKey as Uint8Array;
+            if (pub.byteLength != 32) throw new Error('Public key "' + pub + '" is invalid');
+            if (priv.byteLength != 32) throw new Error('Private key "' + priv + '" is invalid');
             this._keyPair = {
-                publicKey: publicKey,
-                secretKey: secretKey,
+                publicKey: pub,
+                secretKey: priv,
             };
             console.debug('KeyStore: Restored public key:', u8aToHex(this._keyPair.publicKey));
+        } else {
+            throw new Error('Either both keys or no keys may be passed in');
         }
     }
 

@@ -1,6 +1,6 @@
 /// <reference path="jasmine.d.ts" />
 
-import { u8aToHex, hexToU8a, randomString, concat, randomUint32, byteToHex, waitFor } from "../src/utils";
+import { u8aToHex, hexToU8a, randomString, concat, randomUint32, byteToHex, waitFor, isString } from "../src/utils";
 
 export default () => { describe('utils', function() {
 
@@ -113,7 +113,7 @@ export default () => { describe('utils', function() {
             const test = () => {
                 i--;
                 return i < 0;
-            }
+            };
             waitFor(test, 20, 10, () => {
                 expect(i).toBe(-1);
                 done();
@@ -125,7 +125,7 @@ export default () => { describe('utils', function() {
             const test = () => {
                 tries += 1;
                 return false;
-            }
+            };
             waitFor(test, 20, 3, done.fail, () => {
                 expect(tries).toBe(3);
                 done();
@@ -133,5 +133,15 @@ export default () => { describe('utils', function() {
         });
 
     });
+
+    describe('isString', function() {
+        it('detects strings', () => {
+            expect(isString("hello")).toEqual(true);
+            //noinspection JSPrimitiveTypeWrapperUsage
+            expect(isString(new String("hello"))).toEqual(true);
+            expect(isString(String)).toEqual(false);
+            expect(isString(1232)).toEqual(false);
+        })
+    })
 
 }); }

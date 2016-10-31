@@ -119,3 +119,11 @@ export function waitFor(test: () => boolean, delay_ms: number, retries: number, 
     // Otherwise, run success callback.
     success();
 }
+
+
+/**
+ * Determine whether a value is a string.
+ */
+export function isString(value: any): boolean {
+    return typeof value === 'string' || value instanceof String;
+}

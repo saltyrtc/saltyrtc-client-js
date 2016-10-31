@@ -111,7 +111,6 @@ export class InitiatorSignaling extends Signaling {
         // Create responder instance
         const responder = new Responder(responderId);
 
-
         // If we trust the responder...
         if (this.peerTrustedKey !== null) {
             // ...don't expect a token message.
