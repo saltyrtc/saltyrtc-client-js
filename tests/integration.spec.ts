@@ -105,24 +105,24 @@ export default () => { describe('Integration Tests', function() {
             await sleep(1000);
             expect(this.initiator.state).toEqual('peer-handshake');
             expect(this.responder.state).toEqual('new');
-            this.initiator.once('connection-closed', (reason) => {
-                expect(reason).toEqual(1000);
+            this.initiator.once('connection-closed', (ev: saltyrtc.SaltyRTCEvent) => {
+                expect(ev.data).toEqual(1000);
                 expect(this.initiator.state).toEqual('closed');
                 done();
             });
-            this.initiator.disconnect();
+            this.initiator.disconnect(1000);
         });
 
         it('disconnect after peer handshake', async (done) => {
             expect(this.initiator.state).toEqual('new');
             expect(this.responder.state).toEqual('new');
             await this.connectBoth(this.initiator, this.responder);
-            this.initiator.once('connection-closed', (reason) => {
-                expect(reason).toEqual(1000);
+            this.initiator.once('connection-closed', (ev: saltyrtc.SaltyRTCEvent) => {
+                expect(ev.data).toEqual(1000);
                 expect(this.initiator.state).toEqual('closed');
                 done();
             });
-            this.initiator.disconnect();
+            this.initiator.disconnect(1000);
         });
 
         it('new-responder event (responder first)', async (done) => {

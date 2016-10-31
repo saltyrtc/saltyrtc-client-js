@@ -165,6 +165,9 @@ export abstract class Signaling implements saltyrtc.Signaling {
         // TODO: Do we need to close the task dc?
 
         this.setState('closed');
+
+        // Notify subscribers
+        this.client.emit({type: 'connection-closed', data: closeCode});
     }
 
     /**
