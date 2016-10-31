@@ -52,7 +52,7 @@ export class Cookie implements saltyrtc.Cookie {
         if (otherCookie.bytes === this.bytes) return true;
         if (otherCookie.bytes == null || this.bytes == null) return false;
         if (otherCookie.bytes.byteLength != this.bytes.byteLength) return false;
-        for (var i = 0; i < this.bytes.byteLength; i++) {
+        for (let i = 0; i < this.bytes.byteLength; i++) {
             if (otherCookie.bytes[i] != this.bytes[i]) return false;
         }
         return true;

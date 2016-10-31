@@ -385,7 +385,7 @@ export class InitiatorSignaling extends Signaling {
         if (nonce.cookie.equals(this.cookiePair.ours)) {
             throw new ProtocolError('Local and remote cookies are equal');
         }
-        responder.cookie = nonce.cookie;
+        responder.cookiePair.theirs = nonce.cookie;
 
         // Update state
         responder.handshakeState = 'auth-received';

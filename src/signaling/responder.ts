@@ -352,7 +352,7 @@ export class ResponderSignaling extends Signaling {
 
         // Ok!
         console.debug(this.logTag, 'Initiator authenticated');
-        this.initiator.cookie = nonce.cookie;
+        this.initiator.cookiePair.theirs = nonce.cookie;
         this.initiator.handshakeState = 'auth-received';
     }
 

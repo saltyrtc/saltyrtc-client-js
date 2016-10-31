@@ -8,21 +8,25 @@
 import { CombinedSequence } from "./csn";
 import { KeyStore } from "./keystore";
 import { byteToHex } from "./utils";
-import { Cookie } from "./cookie";
+import {Cookie, CookiePair} from "./cookie";
 
 /**
  * Base class for peers (initiator or responder).
  */
 export abstract class Peer {
+    protected _id: number;
     public permanentKey: Uint8Array | null;
     public sessionKey: Uint8Array | null;
-    public cookie: Cookie;
-    protected _id: number;
     protected _csn = new CombinedSequence();
+    protected _cookiePair: saltyrtc.CookiePair;
 
-    constructor(id: number, permanentKey?: Uint8Array) {
+    constructor(id: number, cookiePair?: saltyrtc.CookiePair) {
         this._id = id;
-        this.permanentKey = permanentKey;
+        if (cookiePair === undefined) {
+            this._cookiePair = new CookiePair();
+        } else {
+            this._cookiePair = cookiePair;
+        }
     }
 
     public get id(): number {
@@ -36,6 +40,10 @@ export abstract class Peer {
     public get csn(): CombinedSequence {
         return this._csn;
     }
+
+    public get cookiePair(): saltyrtc.CookiePair {
+        return this._cookiePair;
+    }
 }
 
 /**
@@ -48,7 +56,8 @@ export class Initiator extends Peer {
     public handshakeState: 'new' | 'token-sent' | 'key-sent' | 'key-received' | 'auth-sent' | 'auth-received' = 'new';
 
     constructor(permanentKey: Uint8Array) {
-        super(Initiator.ID, permanentKey);
+        super(Initiator.ID);
+        this.permanentKey = permanentKey;
     }
 }
 
