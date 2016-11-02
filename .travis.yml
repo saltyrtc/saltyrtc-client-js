@@ -36,7 +36,7 @@ before_script:
     cd saltyrtc-server-python
     pyvenv venv
     venv/bin/pip install .[logging]
-    venv/bin/saltyrtc-server -v 5 serve -sc ../saltyrtc.crt -sk ../saltyrtc.key -p 8765 -k $SALTYRTC_SERVER_PERMANENT_KEY > serverlog.txt 2>&1 &
+    venv/bin/saltyrtc-server -v 6 serve -sc ../saltyrtc.crt -sk ../saltyrtc.key -p 8765 -k $SALTYRTC_SERVER_PERMANENT_KEY > serverlog.txt 2>&1 &
     export SALTYRTC_SERVER_PID=$!
     sleep 2
     cd ..
