@@ -157,7 +157,7 @@ export class InitiatorSignaling extends Signaling {
             // Get responder instance
             const responder: Responder = this.responders.get(nonce.source);
             if (responder === null) {
-                throw new ProtocolError('Unknown message sender: ' + nonce.source);
+                throw new ProtocolError('Unknown message source: ' + nonce.source);
             }
 
             // Dispatch message

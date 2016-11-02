@@ -11,8 +11,8 @@ import { Cookie } from "./cookie";
 /**
  * A SaltyRTC signaling channel nonce.
  *
- * This is very similar to the regular nonce, but also contains a sender and
- * receiver byte. That reduces the length of the overflow number to 2 bytes.
+ * This is very similar to the regular nonce, but also contains a source and
+ * destination byte. That reduces the length of the overflow number to 2 bytes.
  *
  * Nonce structure:
  *

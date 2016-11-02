@@ -373,7 +373,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
             this.onSignalingServerMessage(box);
         } else {
-            // TODO: Do we need to validate the sender id or does that happen deeper down?
+            // TODO: Do we need to validate the source id or does that happen deeper down?
             let decrypted: Uint8Array;
             try {
                 decrypted = this.decryptFromPeer(box);
