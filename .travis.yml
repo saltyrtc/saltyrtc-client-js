@@ -55,6 +55,11 @@ after_script:
     echo "---------- Server Log ----------\n"
     cat saltyrtc-server-python/serverlog.txt
     echo -e "\n---------- End Server Log ----------"
+  # Print test file
+  - |
+    echo "---------- testsuite.js ----------\n"
+    cat -n tests/testsuite.js
+    echo -e "\n---------- End testsuite.js ----------"
   # Build docs
   - bash scripts/travis_build_docs.sh
   - ls -la ~/.mozilla/firefox
