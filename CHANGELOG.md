@@ -12,11 +12,13 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
-### UNRELEASED
+### v0.3.0 (2016-11-02)
 
-- [changed] The connection-closed event now has the reason code as payload
 - [added] The `KeyStore` and `SaltyRTCBuilder` interfaces now accept hex strings as keys
-- [added] The `SaltyRTCBuilder` now supports the `withPingInterval` method
+- [added] The `SaltyRTCBuilder` now supports the `withPingInterval(...)` method
+- [added] Notify client on all disconnects
+- [changed] The connection-closed event now has the reason code as payload
+- [changed] Many refactorings
 
 ### v0.2.7 (2016-10-20)
 

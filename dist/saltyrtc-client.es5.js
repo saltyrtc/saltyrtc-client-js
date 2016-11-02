@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.2.7
+ * saltyrtc-client-js v0.3.0
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -31,118 +31,43 @@
 (function (exports,msgpack) {
 'use strict';
 
-function u8aToHex(array) {
-    var results = [];
-    var _iteratorNormalCompletion = true;
-    var _didIteratorError = false;
-    var _iteratorError = undefined;
-
-    try {
-        for (var _iterator = array[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-            var arrayByte = _step.value;
-
-            results.push(arrayByte.toString(16).replace(/^([\da-f])$/, '0$1'));
-        }
-    } catch (err) {
-        _didIteratorError = true;
-        _iteratorError = err;
-    } finally {
-        try {
-            if (!_iteratorNormalCompletion && _iterator.return) {
-                _iterator.return();
-            }
-        } finally {
-            if (_didIteratorError) {
-                throw _iteratorError;
-            }
-        }
+(function (CloseCode) {
+    CloseCode[CloseCode["ClosingNormal"] = 1000] = "ClosingNormal";
+    CloseCode[CloseCode["GoingAway"] = 1001] = "GoingAway";
+    CloseCode[CloseCode["NoSharedSubprotocol"] = 1002] = "NoSharedSubprotocol";
+    CloseCode[CloseCode["PathFull"] = 3000] = "PathFull";
+    CloseCode[CloseCode["ProtocolError"] = 3001] = "ProtocolError";
+    CloseCode[CloseCode["InternalError"] = 3002] = "InternalError";
+    CloseCode[CloseCode["Handover"] = 3003] = "Handover";
+    CloseCode[CloseCode["DroppedByInitiator"] = 3004] = "DroppedByInitiator";
+    CloseCode[CloseCode["InitiatorCouldNotDecrypt"] = 3005] = "InitiatorCouldNotDecrypt";
+    CloseCode[CloseCode["NoSharedTask"] = 3006] = "NoSharedTask";
+})(exports.CloseCode || (exports.CloseCode = {}));
+function explainCloseCode(code) {
+    switch (code) {
+        case exports.CloseCode.ClosingNormal:
+            return 'Normal closing';
+        case exports.CloseCode.GoingAway:
+            return 'The endpoint is going away';
+        case exports.CloseCode.NoSharedSubprotocol:
+            return 'No shared subprotocol could be found';
+        case exports.CloseCode.PathFull:
+            return 'No free responder byte';
+        case exports.CloseCode.ProtocolError:
+            return 'Protocol error';
+        case exports.CloseCode.InternalError:
+            return 'Internal error';
+        case exports.CloseCode.Handover:
+            return 'Handover finished';
+        case exports.CloseCode.DroppedByInitiator:
+            return 'Dropped by initiator';
+        case exports.CloseCode.InitiatorCouldNotDecrypt:
+            return 'Initiator could not decrypt a message';
+        case exports.CloseCode.NoSharedTask:
+            return 'No shared task was found';
+        default:
+            return 'Unknown';
     }
-
-    return results.join('');
-}
-
-function byteToHex(value) {
-    return '0x' + ('00' + value.toString(16)).substr(-2);
-}
-
-function randomUint32() {
-    var crypto = window.crypto || window.msCrypto;
-    return crypto.getRandomValues(new Uint32Array(1))[0];
-}
-function concat() {
-    var totalLength = 0;
-
-    for (var _len = arguments.length, arrays = Array(_len), _key = 0; _key < _len; _key++) {
-        arrays[_key] = arguments[_key];
-    }
-
-    var _iteratorNormalCompletion2 = true;
-    var _didIteratorError2 = false;
-    var _iteratorError2 = undefined;
-
-    try {
-        for (var _iterator2 = arrays[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
-            var arr = _step2.value;
-
-            totalLength += arr.length;
-        }
-    } catch (err) {
-        _didIteratorError2 = true;
-        _iteratorError2 = err;
-    } finally {
-        try {
-            if (!_iteratorNormalCompletion2 && _iterator2.return) {
-                _iterator2.return();
-            }
-        } finally {
-            if (_didIteratorError2) {
-                throw _iteratorError2;
-            }
-        }
-    }
-
-    var result = new Uint8Array(totalLength);
-    var offset = 0;
-    var _iteratorNormalCompletion3 = true;
-    var _didIteratorError3 = false;
-    var _iteratorError3 = undefined;
-
-    try {
-        for (var _iterator3 = arrays[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
-            var _arr = _step3.value;
-
-            result.set(_arr, offset);
-            offset += _arr.length;
-        }
-    } catch (err) {
-        _didIteratorError3 = true;
-        _iteratorError3 = err;
-    } finally {
-        try {
-            if (!_iteratorNormalCompletion3 && _iterator3.return) {
-                _iterator3.return();
-            }
-        } finally {
-            if (_didIteratorError3) {
-                throw _iteratorError3;
-            }
-        }
-    }
-
-    return result;
-}
-function waitFor(test, delay_ms, retries, success, error) {
-    if (test() === false) {
-        if (retries === 1) {
-            error();
-        } else {
-            setTimeout(function () {
-                return waitFor(test, delay_ms, retries - 1, success, error);
-            }, delay_ms);
-        }
-        return;
-    }
-    success();
 }
 
 var asyncGenerator = function () {
@@ -375,6 +300,226 @@ var set$1 = function set$1(object, property, value, receiver) {
   return value;
 };
 
+function InternalError(message) {
+    this.message = message;
+    if ('captureStackTrace' in Error) {
+        Error.captureStackTrace(this, InternalError);
+    } else {
+        this.stack = new Error().stack;
+    }
+}
+InternalError.prototype = Object.create(Error.prototype);
+InternalError.prototype.name = 'InternalError';
+InternalError.prototype.constructor = InternalError;
+
+var SignalingError = function (_Error) {
+    inherits(SignalingError, _Error);
+
+    function SignalingError(closeCode, message) {
+        classCallCheck(this, SignalingError);
+
+        var _this = possibleConstructorReturn(this, (SignalingError.__proto__ || Object.getPrototypeOf(SignalingError)).call(this, message));
+
+        _this.message = message;
+        _this.closeCode = closeCode;
+        _this.name = 'SignalingError';
+        return _this;
+    }
+
+    return SignalingError;
+}(Error);
+
+var ProtocolError = function (_SignalingError) {
+    inherits(ProtocolError, _SignalingError);
+
+    function ProtocolError(message) {
+        classCallCheck(this, ProtocolError);
+        return possibleConstructorReturn(this, (ProtocolError.__proto__ || Object.getPrototypeOf(ProtocolError)).call(this, exports.CloseCode.ProtocolError, message));
+    }
+
+    return ProtocolError;
+}(SignalingError);
+
+var ConnectionError = function (_Error2) {
+    inherits(ConnectionError, _Error2);
+
+    function ConnectionError(message) {
+        classCallCheck(this, ConnectionError);
+
+        var _this3 = possibleConstructorReturn(this, (ConnectionError.__proto__ || Object.getPrototypeOf(ConnectionError)).call(this, message));
+
+        _this3.message = message;
+        _this3.name = 'ConnectionError';
+        return _this3;
+    }
+
+    return ConnectionError;
+}(Error);
+
+var ValidationError = function (_Error3) {
+    inherits(ValidationError, _Error3);
+
+    function ValidationError(message) {
+        classCallCheck(this, ValidationError);
+
+        var _this4 = possibleConstructorReturn(this, (ValidationError.__proto__ || Object.getPrototypeOf(ValidationError)).call(this, message));
+
+        _this4.message = message;
+        _this4.name = 'ValidationError';
+        return _this4;
+    }
+
+    return ValidationError;
+}(Error);
+
+function u8aToHex(array) {
+    var results = [];
+    var _iteratorNormalCompletion = true;
+    var _didIteratorError = false;
+    var _iteratorError = undefined;
+
+    try {
+        for (var _iterator = array[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
+            var arrayByte = _step.value;
+
+            results.push(arrayByte.toString(16).replace(/^([\da-f])$/, '0$1'));
+        }
+    } catch (err) {
+        _didIteratorError = true;
+        _iteratorError = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion && _iterator.return) {
+                _iterator.return();
+            }
+        } finally {
+            if (_didIteratorError) {
+                throw _iteratorError;
+            }
+        }
+    }
+
+    return results.join('');
+}
+function hexToU8a(hexstring) {
+    var array = void 0,
+        i = void 0,
+        j = void 0,
+        k = void 0,
+        ref = void 0;
+    j = 0;
+    if (hexstring.length % 2 == 1) {
+        hexstring = '0' + hexstring;
+    }
+    array = new Uint8Array(hexstring.length / 2);
+    for (i = k = 0, ref = hexstring.length; k <= ref; i = k += 2) {
+        array[j++] = parseInt(hexstring.substr(i, 2), 16);
+    }
+    return array;
+}
+function byteToHex(value) {
+    return '0x' + ('00' + value.toString(16)).substr(-2);
+}
+
+function randomUint32() {
+    var crypto = window.crypto || window.msCrypto;
+    return crypto.getRandomValues(new Uint32Array(1))[0];
+}
+function concat() {
+    var totalLength = 0;
+
+    for (var _len = arguments.length, arrays = Array(_len), _key = 0; _key < _len; _key++) {
+        arrays[_key] = arguments[_key];
+    }
+
+    var _iteratorNormalCompletion2 = true;
+    var _didIteratorError2 = false;
+    var _iteratorError2 = undefined;
+
+    try {
+        for (var _iterator2 = arrays[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
+            var arr = _step2.value;
+
+            totalLength += arr.length;
+        }
+    } catch (err) {
+        _didIteratorError2 = true;
+        _iteratorError2 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion2 && _iterator2.return) {
+                _iterator2.return();
+            }
+        } finally {
+            if (_didIteratorError2) {
+                throw _iteratorError2;
+            }
+        }
+    }
+
+    var result = new Uint8Array(totalLength);
+    var offset = 0;
+    var _iteratorNormalCompletion3 = true;
+    var _didIteratorError3 = false;
+    var _iteratorError3 = undefined;
+
+    try {
+        for (var _iterator3 = arrays[Symbol.iterator](), _step3; !(_iteratorNormalCompletion3 = (_step3 = _iterator3.next()).done); _iteratorNormalCompletion3 = true) {
+            var _arr = _step3.value;
+
+            result.set(_arr, offset);
+            offset += _arr.length;
+        }
+    } catch (err) {
+        _didIteratorError3 = true;
+        _iteratorError3 = err;
+    } finally {
+        try {
+            if (!_iteratorNormalCompletion3 && _iterator3.return) {
+                _iterator3.return();
+            }
+        } finally {
+            if (_didIteratorError3) {
+                throw _iteratorError3;
+            }
+        }
+    }
+
+    return result;
+}
+function waitFor(test, delay_ms, retries, success, error) {
+    if (test() === false) {
+        if (retries === 1) {
+            error();
+        } else {
+            setTimeout(function () {
+                return waitFor(test, delay_ms, retries - 1, success, error);
+            }, delay_ms);
+        }
+        return;
+    }
+    success();
+}
+function isString(value) {
+    return typeof value === 'string' || value instanceof String;
+}
+function validateKey(key) {
+    var name = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "Key";
+
+    var out = void 0;
+    if (isString(key)) {
+        out = hexToU8a(key);
+    } else if (key instanceof Uint8Array) {
+        out = key;
+    } else {
+        throw new ValidationError(name + " must be an Uint8Array or a hex string");
+    }
+    if (out.byteLength != 32) {
+        throw new ValidationError(name + " must be 32 bytes long");
+    }
+    return out;
+}
+
 var Box = function () {
     function Box(nonce, data, nonceLength) {
         classCallCheck(this, Box);
@@ -425,18 +570,20 @@ var Box = function () {
 }();
 
 var KeyStore = function () {
-    function KeyStore(publicKey, secretKey) {
+    function KeyStore(publicKey, privateKey) {
         classCallCheck(this, KeyStore);
 
-        if (publicKey === undefined || secretKey === undefined) {
+        if (publicKey === undefined && privateKey === undefined) {
             this._keyPair = nacl.box.keyPair();
             console.debug('KeyStore: New public key:', u8aToHex(this._keyPair.publicKey));
-        } else {
+        } else if (publicKey !== undefined && privateKey !== undefined) {
             this._keyPair = {
-                publicKey: publicKey,
-                secretKey: secretKey
+                publicKey: validateKey(publicKey, "Public key"),
+                secretKey: validateKey(privateKey, "Private key")
             };
             console.debug('KeyStore: Restored public key:', u8aToHex(this._keyPair.publicKey));
+        } else {
+            throw new Error('Either both keys or no keys may be passed in');
         }
     }
 
@@ -572,20 +719,53 @@ var Cookie = function () {
 
 Cookie.COOKIE_LENGTH = 16;
 
-var CookiePair = function CookiePair(ours, theirs) {
-    classCallCheck(this, CookiePair);
+var CookiePair = function () {
+    function CookiePair(ours, theirs) {
+        classCallCheck(this, CookiePair);
 
-    this.ours = null;
-    this.theirs = null;
-    if (typeof ours !== 'undefined' && typeof theirs !== 'undefined') {
-        this.ours = ours;
-        this.theirs = theirs;
-    } else if (typeof ours === 'undefined' && typeof theirs === 'undefined') {
-        this.ours = new Cookie();
-    } else {
-        throw new Error('Either both or no cookies must be specified');
+        this._ours = null;
+        this._theirs = null;
+        if (typeof ours !== 'undefined' && typeof theirs !== 'undefined') {
+            if (theirs.equals(ours)) {
+                throw new ProtocolError("Their cookie matches our cookie");
+            }
+            this._ours = ours;
+            this._theirs = theirs;
+        } else if (typeof ours === 'undefined' && typeof theirs === 'undefined') {
+            this._ours = new Cookie();
+        } else {
+            throw new Error('Either both or no cookies must be specified');
+        }
     }
-};
+
+    createClass(CookiePair, [{
+        key: 'ours',
+        get: function get() {
+            return this._ours;
+        }
+    }, {
+        key: 'theirs',
+        get: function get() {
+            return this._theirs;
+        },
+        set: function set(cookie) {
+            if (cookie.equals(this._ours)) {
+                throw new ProtocolError("Their cookie matches our cookie");
+            }
+            this._theirs = cookie;
+        }
+    }], [{
+        key: 'fromTheirs',
+        value: function fromTheirs(theirs) {
+            var ours = void 0;
+            do {
+                ours = new Cookie();
+            } while (ours.equals(theirs));
+            return new CookiePair(ours, theirs);
+        }
+    }]);
+    return CookiePair;
+}();
 
 var Nonce = function () {
     function Nonce(cookie, overflow, sequenceNumber, source, destination) {
@@ -661,165 +841,6 @@ var Nonce = function () {
 
 Nonce.TOTAL_LENGTH = 24;
 
-var CombinedSequence = function () {
-    function CombinedSequence() {
-        classCallCheck(this, CombinedSequence);
-
-        this.sequenceNumber = randomUint32();
-        this.overflow = 0;
-    }
-
-    createClass(CombinedSequence, [{
-        key: 'next',
-        value: function next() {
-            if (this.sequenceNumber + 1 >= CombinedSequence.SEQUENCE_NUMBER_MAX) {
-                this.sequenceNumber = 0;
-                this.overflow += 1;
-                if (this.overflow >= CombinedSequence.OVERFLOW_MAX) {
-                    console.error('Overflow number just overflowed!');
-                    throw new Error('overflow-overflow');
-                }
-            } else {
-                this.sequenceNumber += 1;
-            }
-            return {
-                sequenceNumber: this.sequenceNumber,
-                overflow: this.overflow
-            };
-        }
-    }]);
-    return CombinedSequence;
-}();
-
-CombinedSequence.SEQUENCE_NUMBER_MAX = 0x100000000;
-CombinedSequence.OVERFLOW_MAX = 0x100000;
-
-var CombinedSequencePair = function CombinedSequencePair(ours, theirs) {
-    classCallCheck(this, CombinedSequencePair);
-
-    this.ours = null;
-    this.theirs = null;
-    if (typeof ours !== 'undefined' && typeof theirs !== 'undefined') {
-        this.ours = ours;
-        this.theirs = theirs;
-    } else if (typeof ours === 'undefined' && typeof theirs === 'undefined') {
-        this.ours = new CombinedSequence();
-    } else {
-        throw new Error('Either both or no combined sequences must be specified');
-    }
-};
-
-(function (CloseCode) {
-    CloseCode[CloseCode["ClosingNormal"] = 1000] = "ClosingNormal";
-    CloseCode[CloseCode["GoingAway"] = 1001] = "GoingAway";
-    CloseCode[CloseCode["NoSharedSubprotocol"] = 1002] = "NoSharedSubprotocol";
-    CloseCode[CloseCode["PathFull"] = 3000] = "PathFull";
-    CloseCode[CloseCode["ProtocolError"] = 3001] = "ProtocolError";
-    CloseCode[CloseCode["InternalError"] = 3002] = "InternalError";
-    CloseCode[CloseCode["Handover"] = 3003] = "Handover";
-    CloseCode[CloseCode["DroppedByInitiator"] = 3004] = "DroppedByInitiator";
-    CloseCode[CloseCode["InitiatorCouldNotDecrypt"] = 3005] = "InitiatorCouldNotDecrypt";
-    CloseCode[CloseCode["NoSharedTask"] = 3006] = "NoSharedTask";
-})(exports.CloseCode || (exports.CloseCode = {}));
-function explainCloseCode(code) {
-    switch (code) {
-        case exports.CloseCode.ClosingNormal:
-            return 'Normal closing';
-        case exports.CloseCode.GoingAway:
-            return 'The endpoint is going away';
-        case exports.CloseCode.NoSharedSubprotocol:
-            return 'No shared subprotocol could be found';
-        case exports.CloseCode.PathFull:
-            return 'No free responder byte';
-        case exports.CloseCode.ProtocolError:
-            return 'Protocol error';
-        case exports.CloseCode.InternalError:
-            return 'Internal error';
-        case exports.CloseCode.Handover:
-            return 'Handover finished';
-        case exports.CloseCode.DroppedByInitiator:
-            return 'Dropped by initiator';
-        case exports.CloseCode.InitiatorCouldNotDecrypt:
-            return 'Initiator could not decrypt a message';
-        case exports.CloseCode.NoSharedTask:
-            return 'No shared task was found';
-        default:
-            return 'Unknown';
-    }
-}
-
-function InternalError(message) {
-    this.message = message;
-    if ('captureStackTrace' in Error) {
-        Error.captureStackTrace(this, InternalError);
-    } else {
-        this.stack = new Error().stack;
-    }
-}
-InternalError.prototype = Object.create(Error.prototype);
-InternalError.prototype.name = 'InternalError';
-InternalError.prototype.constructor = InternalError;
-
-var SignalingError = function (_Error) {
-    inherits(SignalingError, _Error);
-
-    function SignalingError(closeCode, message) {
-        classCallCheck(this, SignalingError);
-
-        var _this = possibleConstructorReturn(this, (SignalingError.__proto__ || Object.getPrototypeOf(SignalingError)).call(this, message));
-
-        _this.message = message;
-        _this.closeCode = closeCode;
-        _this.name = 'SignalingError';
-        return _this;
-    }
-
-    return SignalingError;
-}(Error);
-
-var ProtocolError = function (_SignalingError) {
-    inherits(ProtocolError, _SignalingError);
-
-    function ProtocolError(message) {
-        classCallCheck(this, ProtocolError);
-        return possibleConstructorReturn(this, (ProtocolError.__proto__ || Object.getPrototypeOf(ProtocolError)).call(this, exports.CloseCode.ProtocolError, message));
-    }
-
-    return ProtocolError;
-}(SignalingError);
-
-var ConnectionError = function (_Error2) {
-    inherits(ConnectionError, _Error2);
-
-    function ConnectionError(message) {
-        classCallCheck(this, ConnectionError);
-
-        var _this3 = possibleConstructorReturn(this, (ConnectionError.__proto__ || Object.getPrototypeOf(ConnectionError)).call(this, message));
-
-        _this3.message = message;
-        _this3.name = 'ConnectionError';
-        return _this3;
-    }
-
-    return ConnectionError;
-}(Error);
-
-var ValidationError = function (_Error3) {
-    inherits(ValidationError, _Error3);
-
-    function ValidationError(message) {
-        classCallCheck(this, ValidationError);
-
-        var _this4 = possibleConstructorReturn(this, (ValidationError.__proto__ || Object.getPrototypeOf(ValidationError)).call(this, message));
-
-        _this4.message = message;
-        _this4.name = 'ValidationError';
-        return _this4;
-    }
-
-    return ValidationError;
-}(Error);
-
 function decryptKeystore(box, keyStore, otherKey, msgType) {
     try {
         return keyStore.decrypt(box, otherKey);
@@ -832,8 +853,8 @@ function decryptKeystore(box, keyStore, otherKey, msgType) {
     }
 }
 
-function isResponderId(receiver) {
-    return receiver >= 0x02 && receiver <= 0xff;
+function isResponderId(id) {
+    return id >= 0x02 && id <= 0xff;
 }
 
 var HandoverState = function () {
@@ -887,8 +908,145 @@ var HandoverState = function () {
     return HandoverState;
 }();
 
+var CombinedSequence = function () {
+    function CombinedSequence() {
+        classCallCheck(this, CombinedSequence);
+
+        this.sequenceNumber = randomUint32();
+        this.overflow = 0;
+    }
+
+    createClass(CombinedSequence, [{
+        key: 'next',
+        value: function next() {
+            if (this.sequenceNumber + 1 >= CombinedSequence.SEQUENCE_NUMBER_MAX) {
+                this.sequenceNumber = 0;
+                this.overflow += 1;
+                if (this.overflow >= CombinedSequence.OVERFLOW_MAX) {
+                    console.error('Overflow number just overflowed!');
+                    throw new Error('overflow-overflow');
+                }
+            } else {
+                this.sequenceNumber += 1;
+            }
+            return {
+                sequenceNumber: this.sequenceNumber,
+                overflow: this.overflow
+            };
+        }
+    }]);
+    return CombinedSequence;
+}();
+
+CombinedSequence.SEQUENCE_NUMBER_MAX = 0x100000000;
+CombinedSequence.OVERFLOW_MAX = 0x100000;
+
+var CombinedSequencePair = function CombinedSequencePair(ours, theirs) {
+    classCallCheck(this, CombinedSequencePair);
+
+    this.ours = null;
+    this.theirs = null;
+    if (typeof ours !== 'undefined' && typeof theirs !== 'undefined') {
+        this.ours = ours;
+        this.theirs = theirs;
+    } else if (typeof ours === 'undefined' && typeof theirs === 'undefined') {
+        this.ours = new CombinedSequence();
+    } else {
+        throw new Error('Either both or no combined sequences must be specified');
+    }
+};
+
+var Peer = function () {
+    function Peer(id, cookiePair) {
+        classCallCheck(this, Peer);
+
+        this._csnPair = new CombinedSequencePair();
+        this._id = id;
+        if (cookiePair === undefined) {
+            this._cookiePair = new CookiePair();
+        } else {
+            this._cookiePair = cookiePair;
+        }
+    }
+
+    createClass(Peer, [{
+        key: "id",
+        get: function get() {
+            return this._id;
+        }
+    }, {
+        key: "hexId",
+        get: function get() {
+            return byteToHex(this._id);
+        }
+    }, {
+        key: "csnPair",
+        get: function get() {
+            return this._csnPair;
+        }
+    }, {
+        key: "cookiePair",
+        get: function get() {
+            return this._cookiePair;
+        }
+    }]);
+    return Peer;
+}();
+
+var Initiator = function (_Peer) {
+    inherits(Initiator, _Peer);
+
+    function Initiator(permanentKey) {
+        classCallCheck(this, Initiator);
+
+        var _this = possibleConstructorReturn(this, (Initiator.__proto__ || Object.getPrototypeOf(Initiator)).call(this, Initiator.ID));
+
+        _this.connected = false;
+        _this.handshakeState = 'new';
+        _this.permanentKey = permanentKey;
+        return _this;
+    }
+
+    return Initiator;
+}(Peer);
+
+Initiator.ID = 0x01;
+
+var Responder = function (_Peer2) {
+    inherits(Responder, _Peer2);
+
+    function Responder(id) {
+        classCallCheck(this, Responder);
+
+        var _this2 = possibleConstructorReturn(this, (Responder.__proto__ || Object.getPrototypeOf(Responder)).call(this, id));
+
+        _this2.keyStore = new KeyStore();
+        _this2.handshakeState = 'new';
+        return _this2;
+    }
+
+    return Responder;
+}(Peer);
+
+var Server = function (_Peer3) {
+    inherits(Server, _Peer3);
+
+    function Server() {
+        classCallCheck(this, Server);
+
+        var _this3 = possibleConstructorReturn(this, (Server.__proto__ || Object.getPrototypeOf(Server)).call(this, Server.ID));
+
+        _this3.handshakeState = 'new';
+        return _this3;
+    }
+
+    return Server;
+}(Peer);
+
+Server.ID = 0x00;
+
 var Signaling = function () {
-    function Signaling(client, host, port, tasks, permanentKey, peerTrustedKey) {
+    function Signaling(client, host, port, tasks, pingInterval, permanentKey, peerTrustedKey) {
         var _this = this;
 
         classCallCheck(this, Signaling);
@@ -899,18 +1057,15 @@ var Signaling = function () {
             codec: msgpack.createCodec({ binarraybuffer: true })
         };
         this.state = 'new';
-        this.serverHandshakeState = 'new';
         this.handoverState = new HandoverState();
         this.task = null;
-        this.serverKey = null;
+        this.server = new Server();
         this.sessionKey = null;
-        this.authToken = null;
         this.peerTrustedKey = null;
+        this.authToken = null;
         this.role = null;
         this.logTag = 'Signaling:';
         this.address = Signaling.SALTYRTC_ADDR_UNKNOWN;
-        this.cookiePair = null;
-        this.serverCsn = new CombinedSequence();
         this.onOpen = function (ev) {
             console.info(_this.logTag, 'Opened connection');
             _this.setState('server-handshake');
@@ -948,7 +1103,6 @@ var Signaling = function () {
                         log('Dropped by initiator');
                         break;
                 }
-                _this.client.emit({ type: 'connection-closed', data: ev });
             }
         };
         this.onMessage = function (ev) {
@@ -993,6 +1147,7 @@ var Signaling = function () {
         this.host = host;
         this.port = port;
         this.tasks = tasks;
+        this.pingInterval = pingInterval;
         if (peerTrustedKey !== undefined) {
             this.peerTrustedKey = peerTrustedKey;
         }
@@ -1031,13 +1186,14 @@ var Signaling = function () {
         }
     }, {
         key: "disconnect",
-        value: function disconnect() {
+        value: function disconnect(closeCode) {
             if (this.ws !== null) {
                 console.debug(this.logTag, 'Disconnecting WebSocket');
-                this.ws.close();
+                this.ws.close(closeCode);
             }
             this.ws = null;
             this.setState('closed');
+            this.client.emit({ type: 'connection-closed', data: closeCode });
         }
     }, {
         key: "initWebsocket",
@@ -1057,13 +1213,13 @@ var Signaling = function () {
         key: "onServerHandshakeMessage",
         value: function onServerHandshakeMessage(box, nonce) {
             var payload = void 0;
-            if (this.serverHandshakeState === 'new') {
+            if (this.server.handshakeState === 'new') {
                 payload = box.data;
             } else {
-                payload = this.permanentKey.decrypt(box, this.serverKey);
+                payload = this.permanentKey.decrypt(box, this.server.sessionKey);
             }
             var msg = this.decodeMessage(payload, 'server handshake');
-            switch (this.serverHandshakeState) {
+            switch (this.server.handshakeState) {
                 case 'new':
                     if (msg.type !== 'server-hello') {
                         throw new ProtocolError('Expected server-hello message, but got ' + msg.type);
@@ -1085,9 +1241,9 @@ var Signaling = function () {
                 case 'done':
                     throw new SignalingError(exports.CloseCode.InternalError, 'Received server handshake message even though server handshake state is set to \'done\'');
                 default:
-                    throw new SignalingError(exports.CloseCode.InternalError, 'Unknown server handshake state: ' + this.serverHandshakeState);
+                    throw new SignalingError(exports.CloseCode.InternalError, 'Unknown server handshake state: ' + this.server.handshakeState);
             }
-            if (this.serverHandshakeState === 'done') {
+            if (this.server.handshakeState === 'done') {
                 this.setState('peer-handshake');
                 console.debug(this.logTag, 'Server handshake done');
                 this.initPeerHandshake();
@@ -1130,9 +1286,6 @@ var Signaling = function () {
             var msg = this.decodeMessage(decrypted);
             if (msg.type === 'close') {
                 console.debug('Received close');
-            } else if (msg.type === 'data') {
-                console.debug(this.logTag, 'Received data');
-                this.handleData(msg);
             } else if (msg.type === 'restart') {
                 console.debug(this.logTag, 'Received restart');
                 this.handleRestart(msg);
@@ -1146,33 +1299,22 @@ var Signaling = function () {
     }, {
         key: "handleServerHello",
         value: function handleServerHello(msg, nonce) {
-            this.serverKey = new Uint8Array(msg.key);
-            var cookie = void 0;
-            do {
-                cookie = new Cookie();
-            } while (cookie.equals(nonce.cookie));
-            this.cookiePair = new CookiePair(cookie, nonce.cookie);
+            this.server.sessionKey = new Uint8Array(msg.key);
+            this.server.cookiePair.theirs = nonce.cookie;
         }
     }, {
         key: "sendClientAuth",
         value: function sendClientAuth() {
             var message = {
                 type: 'client-auth',
-                your_cookie: this.cookiePair.theirs.asArrayBuffer(),
-                subprotocols: [Signaling.SALTYRTC_SUBPROTOCOL]
+                your_cookie: this.server.cookiePair.theirs.asArrayBuffer(),
+                subprotocols: [Signaling.SALTYRTC_SUBPROTOCOL],
+                ping_interval: this.pingInterval
             };
-            var packet = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
+            var packet = this.buildPacket(message, this.server);
             console.debug(this.logTag, 'Sending client-auth');
             this.ws.send(packet);
-            this.serverHandshakeState = 'auth-sent';
-        }
-    }, {
-        key: "handleData",
-        value: function handleData(msg) {
-            this.client.emit({ type: 'data', data: msg.data });
-            if (typeof msg.data_type === 'string') {
-                this.client.emit({ type: 'data:' + msg.data_type, data: msg.data });
-            }
+            this.server.handshakeState = 'auth-sent';
         }
     }, {
         key: "handleRestart",
@@ -1183,6 +1325,24 @@ var Signaling = function () {
         key: "handleSendError",
         value: function handleSendError(msg) {
             throw new ProtocolError('Send error messages not yet implemented');
+        }
+    }, {
+        key: "sendClose",
+        value: function sendClose(reason) {
+            var message = {
+                type: 'close',
+                reason: reason
+            };
+            var packet = this.buildPacket(message, this.getPeer());
+            console.debug(this.logTag, 'Sending close');
+            this.ws.send(packet);
+        }
+    }, {
+        key: "handleClose",
+        value: function handleClose(msg) {
+            console.warn(this.logTag, 'Received close message. Reason:', msg.reason, '(' + explainCloseCode(msg.reason) + ')');
+            this.task.close(msg.reason);
+            this.resetConnection(exports.CloseCode.GoingAway);
         }
     }, {
         key: "validateNonce",
@@ -1198,11 +1358,11 @@ var Signaling = function () {
         }
     }, {
         key: "validateRepeatedCookie",
-        value: function validateRepeatedCookie(msg) {
-            var repeatedCookie = Cookie.fromArrayBuffer(msg.your_cookie);
-            if (!repeatedCookie.equals(this.cookiePair.ours)) {
+        value: function validateRepeatedCookie(peer, repeatedCookieBytes) {
+            var repeatedCookie = Cookie.fromArrayBuffer(repeatedCookieBytes);
+            if (!repeatedCookie.equals(peer.cookiePair.ours)) {
                 console.debug(this.logTag, 'Their cookie:', repeatedCookie.bytes);
-                console.debug(this.logTag, 'Our cookie:', this.cookiePair.ours.bytes);
+                console.debug(this.logTag, 'Our cookie:', peer.cookiePair.ours.bytes);
                 throw new ProtocolError('Peer repeated cookie does not match our cookie');
             }
         }
@@ -1225,18 +1385,23 @@ var Signaling = function () {
         value: function buildPacket(message, receiver) {
             var encrypt = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
 
-            var csn = this.getNextCsn(receiver);
-            var nonce = new Nonce(this.cookiePair.ours, csn.overflow, csn.sequenceNumber, this.address, receiver);
+            var csn = void 0;
+            try {
+                csn = receiver.csnPair.ours.next();
+            } catch (e) {
+                throw new ProtocolError("CSN overflow: " + e.message);
+            }
+            var nonce = new Nonce(receiver.cookiePair.ours, csn.overflow, csn.sequenceNumber, this.address, receiver.id);
             var nonceBytes = new Uint8Array(nonce.toArrayBuffer());
             var data = this.msgpackEncode(message);
             if (encrypt === false) {
                 return concat(nonceBytes, data);
             }
             var box = void 0;
-            if (receiver === Signaling.SALTYRTC_ADDR_SERVER) {
+            if (receiver.id === Signaling.SALTYRTC_ADDR_SERVER) {
                 box = this.encryptHandshakeDataForServer(data, nonceBytes);
-            } else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR || isResponderId(receiver)) {
-                box = this.encryptHandshakeDataForPeer(receiver, message.type, data, nonceBytes);
+            } else if (receiver.id === Signaling.SALTYRTC_ADDR_INITIATOR || isResponderId(receiver.id)) {
+                box = this.encryptHandshakeDataForPeer(receiver.id, message.type, data, nonceBytes);
             } else {
                 throw new ProtocolError('Bad receiver byte: ' + receiver);
             }
@@ -1245,7 +1410,7 @@ var Signaling = function () {
     }, {
         key: "encryptHandshakeDataForServer",
         value: function encryptHandshakeDataForServer(payload, nonceBytes) {
-            return this.permanentKey.encrypt(payload, nonceBytes, this.serverKey);
+            return this.permanentKey.encrypt(payload, nonceBytes, this.server.sessionKey);
         }
     }, {
         key: "decryptData",
@@ -1257,17 +1422,19 @@ var Signaling = function () {
         }
     }, {
         key: "resetConnection",
-        value: function resetConnection() {
-            var closeCode = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : exports.CloseCode.ClosingNormal;
-
-            this.setState('new');
-            this.serverCsn = new CombinedSequence();
-            this.handoverState.reset();
+        value: function resetConnection(reason) {
+            if (reason !== undefined) {
+                this.client.emit({ type: 'connection-closed', data: reason });
+            }
             if (this.ws !== null) {
-                console.debug(this.logTag, 'Disconnecting WebSocket (close code ' + closeCode + ')');
-                this.ws.close(closeCode);
+                console.debug(this.logTag, 'Disconnecting WebSocket (close code ' + reason + ')');
+                this.ws.close(reason);
             }
             this.ws = null;
+            this.server = new Server();
+            this.handoverState.reset();
+            this.setState('new');
+            console.debug('Connection reset');
         }
     }, {
         key: "initTask",
@@ -1303,7 +1470,7 @@ var Signaling = function () {
         key: "decryptServerMessage",
         value: function decryptServerMessage(box) {
             try {
-                var decrypted = this.permanentKey.decrypt(box, this.serverKey);
+                var decrypted = this.permanentKey.decrypt(box, this.server.sessionKey);
                 return this.decodeMessage(decrypted, 'server');
             } catch (e) {
                 if (e === 'decryption-failed') {
@@ -1329,7 +1496,7 @@ var Signaling = function () {
     }, {
         key: "sendTaskMessage",
         value: function sendTaskMessage(msg) {
-            var receiver = this.getPeerAddress();
+            var receiver = this.getPeer();
             if (receiver === null) {
                 throw new SignalingError(exports.CloseCode.InternalError, 'No peer address could be found');
             }
@@ -1344,11 +1511,20 @@ var Signaling = function () {
     }, {
         key: "decryptFromPeer",
         value: function decryptFromPeer(box) {
-            return this.sessionKey.decrypt(box, this.getPeerSessionKey());
+            try {
+                return this.sessionKey.decrypt(box, this.getPeerSessionKey());
+            } catch (e) {
+                if (e === 'decryption-failed') {
+                    if (this.state === 'task') {
+                        this.sendClose(exports.CloseCode.InternalError);
+                    }
+                    this.resetConnection(exports.CloseCode.InternalError);
+                    return null;
+                } else {
+                    throw e;
+                }
+            }
         }
-    }, {
-        key: "sendClose",
-        value: function sendClose(reason) {}
     }, {
         key: "permanentKeyBytes",
         get: function get() {
@@ -1376,74 +1552,13 @@ Signaling.SALTYRTC_ADDR_UNKNOWN = 0x00;
 Signaling.SALTYRTC_ADDR_SERVER = 0x00;
 Signaling.SALTYRTC_ADDR_INITIATOR = 0x01;
 
-var Peer = function () {
-    function Peer(permanentKey) {
-        classCallCheck(this, Peer);
-
-        this._csn = new CombinedSequence();
-        this.permanentKey = permanentKey;
-    }
-
-    createClass(Peer, [{
-        key: "id",
-        get: function get() {
-            return this._id;
-        }
-    }, {
-        key: "hexId",
-        get: function get() {
-            return byteToHex(this._id);
-        }
-    }, {
-        key: "csn",
-        get: function get() {
-            return this._csn;
-        }
-    }]);
-    return Peer;
-}();
-
-var Initiator = function (_Peer) {
-    inherits(Initiator, _Peer);
-
-    function Initiator(permanentKey) {
-        classCallCheck(this, Initiator);
-
-        var _this = possibleConstructorReturn(this, (Initiator.__proto__ || Object.getPrototypeOf(Initiator)).call(this, permanentKey));
-
-        _this.connected = false;
-        _this.handshakeState = 'new';
-        _this._id = 0x01;
-        return _this;
-    }
-
-    return Initiator;
-}(Peer);
-
-var Responder = function (_Peer2) {
-    inherits(Responder, _Peer2);
-
-    function Responder(id) {
-        classCallCheck(this, Responder);
-
-        var _this2 = possibleConstructorReturn(this, (Responder.__proto__ || Object.getPrototypeOf(Responder)).call(this));
-
-        _this2.keyStore = new KeyStore();
-        _this2.handshakeState = 'new';
-        _this2._id = id;
-        return _this2;
-    }
-
-    return Responder;
-}(Peer);
-
 var InitiatorSignaling = function (_Signaling) {
     inherits(InitiatorSignaling, _Signaling);
 
-    function InitiatorSignaling(client, host, port, tasks, permanentKey, responderTrustedKey) {
+    function InitiatorSignaling(client, host, port, tasks, pingInterval, permanentKey, responderTrustedKey) {
         classCallCheck(this, InitiatorSignaling);
 
-        var _this = possibleConstructorReturn(this, (InitiatorSignaling.__proto__ || Object.getPrototypeOf(InitiatorSignaling)).call(this, client, host, port, tasks, permanentKey, responderTrustedKey));
+        var _this = possibleConstructorReturn(this, (InitiatorSignaling.__proto__ || Object.getPrototypeOf(InitiatorSignaling)).call(this, client, host, port, tasks, pingInterval, permanentKey, responderTrustedKey));
 
         _this.logTag = 'Initiator:';
         _this.responders = null;
@@ -1459,25 +1574,6 @@ var InitiatorSignaling = function (_Signaling) {
         key: "getWebsocketPath",
         value: function getWebsocketPath() {
             return this.permanentKey.publicKeyHex;
-        }
-    }, {
-        key: "getNextCsn",
-        value: function getNextCsn(receiver) {
-            if (receiver === Signaling.SALTYRTC_ADDR_SERVER) {
-                return this.serverCsn.next();
-            } else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR) {
-                throw new ProtocolError('Initiator cannot send messages to initiator');
-            } else if (isResponderId(receiver)) {
-                if (this.getState() === 'task') {
-                    return this.responder.csn.next();
-                } else if (this.responders.has(receiver)) {
-                    return this.responders.get(receiver).csn.next();
-                } else {
-                    throw new ProtocolError('Unknown responder: ' + receiver);
-                }
-            } else {
-                throw new ProtocolError('Bad receiver byte: ' + receiver);
-            }
         }
     }, {
         key: "encryptHandshakeDataForPeer",
@@ -1503,10 +1599,10 @@ var InitiatorSignaling = function (_Signaling) {
             }
         }
     }, {
-        key: "getPeerAddress",
-        value: function getPeerAddress() {
+        key: "getPeer",
+        value: function getPeer() {
             if (this.responder !== null) {
-                return this.responder.id;
+                return this.responder;
             }
             return null;
         }
@@ -1529,20 +1625,16 @@ var InitiatorSignaling = function (_Signaling) {
     }, {
         key: "processNewResponder",
         value: function processNewResponder(responderId) {
-            if (!this.responders.has(responderId)) {
-                if (!isResponderId(responderId)) {
-                    throw new ProtocolError('Invalid responder id: ' + responderId);
-                }
-                var responder = new Responder(responderId);
-                if (this.peerTrustedKey !== null) {
-                    responder.handshakeState = 'token-received';
-                    responder.permanentKey = this.peerTrustedKey;
-                }
-                this.responders.set(responderId, responder);
-                this.client.emit({ type: 'new-responder', data: responderId });
-            } else {
-                console.warn(this.logTag, 'Got new-responder message for an already known responder.');
+            if (this.responders.has(responderId)) {
+                this.responders.delete(responderId);
             }
+            var responder = new Responder(responderId);
+            if (this.peerTrustedKey !== null) {
+                responder.handshakeState = 'token-received';
+                responder.permanentKey = this.peerTrustedKey;
+            }
+            this.responders.set(responderId, responder);
+            this.client.emit({ type: 'new-responder', data: responderId });
         }
     }, {
         key: "onPeerHandshakeMessage",
@@ -1552,7 +1644,7 @@ var InitiatorSignaling = function (_Signaling) {
             }
             var payload = void 0;
             if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
-                payload = decryptKeystore(box, this.permanentKey, this.serverKey, 'server');
+                payload = decryptKeystore(box, this.permanentKey, this.server.sessionKey, 'server');
                 var msg = this.decodeMessage(payload, 'server');
                 switch (msg.type) {
                     case 'new-responder':
@@ -1565,7 +1657,7 @@ var InitiatorSignaling = function (_Signaling) {
             } else if (isResponderId(nonce.source)) {
                 var responder = this.responders.get(nonce.source);
                 if (responder === null) {
-                    throw new ProtocolError('Unknown message sender: ' + nonce.source);
+                    throw new ProtocolError('Unknown message source: ' + nonce.source);
                 }
                 var _msg = void 0;
                 switch (responder.handshakeState) {
@@ -1577,7 +1669,7 @@ var InitiatorSignaling = function (_Signaling) {
                             payload = this.authToken.decrypt(box);
                         } catch (e) {
                             console.warn(this.logTag, 'Could not decrypt token message: ', e);
-                            this.dropResponder(responder.id);
+                            this.dropResponder(responder.id, exports.CloseCode.InitiatorCouldNotDecrypt);
                             return;
                         }
                         _msg = this.decodeMessage(payload, 'token', true);
@@ -1591,7 +1683,7 @@ var InitiatorSignaling = function (_Signaling) {
                         } catch (e) {
                             if (this.peerTrustedKey !== null) {
                                 console.warn(this.logTag, 'Could not decrypt key message');
-                                this.dropResponder(responder.id);
+                                this.dropResponder(responder.id, exports.CloseCode.InitiatorCouldNotDecrypt);
                                 return;
                             }
                             throw e;
@@ -1610,7 +1702,7 @@ var InitiatorSignaling = function (_Signaling) {
                         this.responder = this.responders.get(responder.id);
                         this.sessionKey = responder.keyStore;
                         this.responders.delete(responder.id);
-                        this.dropResponders();
+                        this.dropResponders(exports.CloseCode.DroppedByInitiator);
                         this.setState('task');
                         console.info(this.logTag, 'Peer handshake done');
                         this.task.onPeerHandshakeDone();
@@ -1630,7 +1722,7 @@ var InitiatorSignaling = function (_Signaling) {
         value: function handleServerAuth(msg, nonce) {
             this.address = Signaling.SALTYRTC_ADDR_INITIATOR;
             this.validateNonce(nonce, this.address, Signaling.SALTYRTC_ADDR_SERVER);
-            this.validateRepeatedCookie(msg);
+            this.validateRepeatedCookie(this.server, msg.your_cookie);
             this.responders = new Map();
             var _iteratorNormalCompletion = true;
             var _didIteratorError = false;
@@ -1640,6 +1732,9 @@ var InitiatorSignaling = function (_Signaling) {
                 for (var _iterator = msg.responders[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
                     var id = _step.value;
 
+                    if (!isResponderId(id)) {
+                        throw new ProtocolError("Responder id " + id + " must be in the range 0x02-0xff");
+                    }
                     this.processNewResponder(id);
                 }
             } catch (err) {
@@ -1658,7 +1753,7 @@ var InitiatorSignaling = function (_Signaling) {
             }
 
             console.debug(this.logTag, this.responders.size, 'responders connected');
-            this.serverHandshakeState = 'done';
+            this.server.handshakeState = 'done';
         }
     }, {
         key: "initPeerHandshake",
@@ -1666,6 +1761,9 @@ var InitiatorSignaling = function (_Signaling) {
     }, {
         key: "handleNewResponder",
         value: function handleNewResponder(msg) {
+            if (!isResponderId(msg.id)) {
+                throw new ProtocolError("Responder id " + msg.id + " must be in the range 0x02-0xff");
+            }
             this.processNewResponder(msg.id);
         }
     }, {
@@ -1687,7 +1785,7 @@ var InitiatorSignaling = function (_Signaling) {
                 type: 'key',
                 key: responder.keyStore.publicKeyBytes.buffer
             };
-            var packet = this.buildPacket(message, responder.id);
+            var packet = this.buildPacket(message, responder);
             console.debug(this.logTag, 'Sending key');
             this.ws.send(packet);
             responder.handshakeState = 'key-sent';
@@ -1695,7 +1793,7 @@ var InitiatorSignaling = function (_Signaling) {
     }, {
         key: "sendAuth",
         value: function sendAuth(responder, nonce) {
-            if (nonce.cookie.equals(this.cookiePair.ours)) {
+            if (nonce.cookie.equals(responder.cookiePair.ours)) {
                 throw new ProtocolError('Their cookie and our cookie are the same.');
             }
             var taskData = {};
@@ -1706,7 +1804,7 @@ var InitiatorSignaling = function (_Signaling) {
                 task: this.task.getName(),
                 data: taskData
             };
-            var packet = this.buildPacket(message, responder.id);
+            var packet = this.buildPacket(message, responder);
             console.debug(this.logTag, 'Sending auth');
             this.ws.send(packet);
             responder.handshakeState = 'auth-sent';
@@ -1714,7 +1812,7 @@ var InitiatorSignaling = function (_Signaling) {
     }, {
         key: "handleAuth",
         value: function handleAuth(msg, responder, nonce) {
-            this.validateRepeatedCookie(msg);
+            this.validateRepeatedCookie(responder, msg.your_cookie);
             try {
                 InitiatorSignaling.validateTaskInfo(msg.tasks, msg.data);
             } catch (e) {
@@ -1731,15 +1829,12 @@ var InitiatorSignaling = function (_Signaling) {
             }
             this.initTask(task, msg.data[task.getName()]);
             console.debug(this.logTag, 'Responder', responder.hexId, 'authenticated');
-            if (nonce.cookie.equals(this.cookiePair.ours)) {
-                throw new ProtocolError('Local and remote cookies are equal');
-            }
-            responder.cookie = nonce.cookie;
+            responder.cookiePair.theirs = nonce.cookie;
             responder.handshakeState = 'auth-received';
         }
     }, {
         key: "dropResponders",
-        value: function dropResponders() {
+        value: function dropResponders(reason) {
             console.debug(this.logTag, 'Dropping', this.responders.size, 'other responders.');
             var _iteratorNormalCompletion2 = true;
             var _didIteratorError2 = false;
@@ -1749,7 +1844,7 @@ var InitiatorSignaling = function (_Signaling) {
                 for (var _iterator2 = this.responders.keys()[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {
                     var id = _step2.value;
 
-                    this.dropResponder(id);
+                    this.dropResponder(id, reason);
                 }
             } catch (err) {
                 _didIteratorError2 = true;
@@ -1768,12 +1863,13 @@ var InitiatorSignaling = function (_Signaling) {
         }
     }, {
         key: "dropResponder",
-        value: function dropResponder(responderId) {
+        value: function dropResponder(responderId, reason) {
             var message = {
                 type: 'drop-responder',
-                id: responderId
+                id: responderId,
+                reason: reason
             };
-            var packet = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
+            var packet = this.buildPacket(message, this.server);
             console.debug(this.logTag, 'Sending drop-responder', byteToHex(responderId));
             this.ws.send(packet);
             this.responders.delete(responderId);
@@ -1856,10 +1952,10 @@ var InitiatorSignaling = function (_Signaling) {
 var ResponderSignaling = function (_Signaling) {
     inherits(ResponderSignaling, _Signaling);
 
-    function ResponderSignaling(client, host, port, tasks, permanentKey, initiatorPubKey, authToken) {
+    function ResponderSignaling(client, host, port, tasks, pingInterval, permanentKey, initiatorPubKey, authToken) {
         classCallCheck(this, ResponderSignaling);
 
-        var _this = possibleConstructorReturn(this, (ResponderSignaling.__proto__ || Object.getPrototypeOf(ResponderSignaling)).call(this, client, host, port, tasks, permanentKey, authToken === undefined ? initiatorPubKey : undefined));
+        var _this = possibleConstructorReturn(this, (ResponderSignaling.__proto__ || Object.getPrototypeOf(ResponderSignaling)).call(this, client, host, port, tasks, pingInterval, permanentKey, authToken === undefined ? initiatorPubKey : undefined));
 
         _this.logTag = 'Responder:';
         _this.initiator = null;
@@ -1877,19 +1973,6 @@ var ResponderSignaling = function (_Signaling) {
         key: "getWebsocketPath",
         value: function getWebsocketPath() {
             return u8aToHex(this.initiator.permanentKey);
-        }
-    }, {
-        key: "getNextCsn",
-        value: function getNextCsn(receiver) {
-            if (receiver === Signaling.SALTYRTC_ADDR_SERVER) {
-                return this.serverCsn.next();
-            } else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR) {
-                return this.initiator.csn.next();
-            } else if (isResponderId(receiver)) {
-                throw new ProtocolError('Responder may not send messages to other responders: ' + receiver);
-            } else {
-                throw new ProtocolError('Bad receiver byte: ' + receiver);
-            }
         }
     }, {
         key: "encryptHandshakeDataForPeer",
@@ -1913,10 +1996,10 @@ var ResponderSignaling = function (_Signaling) {
             }
         }
     }, {
-        key: "getPeerAddress",
-        value: function getPeerAddress() {
+        key: "getPeer",
+        value: function getPeer() {
             if (this.initiator !== null) {
-                return this.initiator.id;
+                return this.initiator;
             }
             return null;
         }
@@ -1944,7 +2027,7 @@ var ResponderSignaling = function (_Signaling) {
             }
             var payload = void 0;
             if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
-                payload = decryptKeystore(box, this.permanentKey, this.serverKey, 'server');
+                payload = decryptKeystore(box, this.permanentKey, this.server.sessionKey, 'server');
                 var msg = this.decodeMessage(payload, 'server');
                 switch (msg.type) {
                     case 'new-initiator':
@@ -2004,10 +2087,10 @@ var ResponderSignaling = function (_Signaling) {
                 type: 'client-hello',
                 key: this.permanentKey.publicKeyBytes.buffer
             };
-            var packet = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER, false);
+            var packet = this.buildPacket(message, this.server, false);
             console.debug(this.logTag, 'Sending client-hello');
             this.ws.send(packet);
-            this.serverHandshakeState = 'hello-sent';
+            this.server.handshakeState = 'hello-sent';
         }
     }, {
         key: "handleServerAuth",
@@ -2020,14 +2103,15 @@ var ResponderSignaling = function (_Signaling) {
             this.address = nonce.destination;
             console.debug(this.logTag, 'Server assigned address', byteToHex(this.address));
             this.logTag = 'Responder[' + byteToHex(this.address) + ']:';
-            this.validateRepeatedCookie(msg);
+            this.validateRepeatedCookie(this.server, msg.your_cookie);
             this.initiator.connected = msg.initiator_connected;
             console.debug(this.logTag, 'Initiator', this.initiator.connected ? '' : 'not', 'connected');
-            this.serverHandshakeState = 'done';
+            this.server.handshakeState = 'done';
         }
     }, {
         key: "handleNewInitiator",
         value: function handleNewInitiator(msg) {
+            this.initiator = new Initiator(this.initiator.permanentKey);
             this.initiator.connected = true;
             this.initPeerHandshake();
         }
@@ -2048,7 +2132,7 @@ var ResponderSignaling = function (_Signaling) {
                 type: 'token',
                 key: this.permanentKey.publicKeyBytes.buffer
             };
-            var packet = this.buildPacket(message, Signaling.SALTYRTC_ADDR_INITIATOR);
+            var packet = this.buildPacket(message, this.initiator);
             console.debug(this.logTag, 'Sending token');
             this.ws.send(packet);
             this.initiator.handshakeState = 'token-sent';
@@ -2061,7 +2145,7 @@ var ResponderSignaling = function (_Signaling) {
                 type: 'key',
                 key: this.sessionKey.publicKeyBytes.buffer
             };
-            var packet = this.buildPacket(replyMessage, Signaling.SALTYRTC_ADDR_INITIATOR);
+            var packet = this.buildPacket(replyMessage, this.initiator);
             console.debug(this.logTag, 'Sending key');
             this.ws.send(packet);
             this.initiator.handshakeState = 'key-sent';
@@ -2075,7 +2159,7 @@ var ResponderSignaling = function (_Signaling) {
     }, {
         key: "sendAuth",
         value: function sendAuth(nonce) {
-            if (nonce.cookie.equals(this.cookiePair.ours)) {
+            if (nonce.cookie.equals(this.initiator.cookiePair.ours)) {
                 throw new ProtocolError('Their cookie and our cookie are the same.');
             }
             var taskData = {};
@@ -2113,7 +2197,7 @@ var ResponderSignaling = function (_Signaling) {
                 tasks: taskNames,
                 data: taskData
             };
-            var packet = this.buildPacket(message, Signaling.SALTYRTC_ADDR_INITIATOR);
+            var packet = this.buildPacket(message, this.initiator);
             console.debug(this.logTag, 'Sending auth');
             this.ws.send(packet);
             this.initiator.handshakeState = 'auth-sent';
@@ -2121,7 +2205,7 @@ var ResponderSignaling = function (_Signaling) {
     }, {
         key: "handleAuth",
         value: function handleAuth(msg, nonce) {
-            this.validateRepeatedCookie(msg);
+            this.validateRepeatedCookie(this.initiator, msg.your_cookie);
             try {
                 ResponderSignaling.validateTaskInfo(msg.task, msg.data);
             } catch (e) {
@@ -2166,7 +2250,7 @@ var ResponderSignaling = function (_Signaling) {
                 this.initTask(selectedTask, msg.data[selectedTask.getName()]);
             }
             console.debug(this.logTag, 'Initiator authenticated');
-            this.initiator.cookie = nonce.cookie;
+            this.initiator.cookiePair.theirs = nonce.cookie;
             this.initiator.handshakeState = 'auth-received';
         }
     }], [{
@@ -2356,6 +2440,7 @@ var SaltyRTCBuilder = function () {
         this.hasInitiatorInfo = false;
         this.hasTrustedPeerKey = false;
         this.hasTasks = false;
+        this.pingInterval = 0;
     }
 
     createClass(SaltyRTCBuilder, [{
@@ -2417,7 +2502,7 @@ var SaltyRTCBuilder = function () {
     }, {
         key: "withTrustedPeerKey",
         value: function withTrustedPeerKey(peerTrustedKey) {
-            this.peerTrustedKey = peerTrustedKey;
+            this.peerTrustedKey = validateKey(peerTrustedKey, "Peer key");
             this.hasTrustedPeerKey = true;
             return this;
         }
@@ -2432,10 +2517,19 @@ var SaltyRTCBuilder = function () {
             return this;
         }
     }, {
+        key: "withPingInterval",
+        value: function withPingInterval(interval) {
+            if (interval < 0) {
+                throw new Error("Ping interval may not be negative");
+            }
+            this.pingInterval = interval;
+            return this;
+        }
+    }, {
         key: "initiatorInfo",
         value: function initiatorInfo(initiatorPublicKey, authToken) {
-            this.initiatorPublicKey = initiatorPublicKey;
-            this.authToken = authToken;
+            this.initiatorPublicKey = validateKey(initiatorPublicKey, "Initiator public key");
+            this.authToken = validateKey(authToken, "Auth token");
             this.hasInitiatorInfo = true;
             return this;
         }
@@ -2446,9 +2540,9 @@ var SaltyRTCBuilder = function () {
             this.requireKeyStore();
             this.requireTasks();
             if (this.hasTrustedPeerKey) {
-                return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks, this.peerTrustedKey).asInitiator();
+                return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks, this.pingInterval, this.peerTrustedKey).asInitiator();
             } else {
-                return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks).asInitiator();
+                return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks, this.pingInterval).asInitiator();
             }
         }
     }, {
@@ -2458,10 +2552,10 @@ var SaltyRTCBuilder = function () {
             this.requireKeyStore();
             this.requireTasks();
             if (this.hasTrustedPeerKey) {
-                return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks, this.peerTrustedKey).asResponder();
+                return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks, this.pingInterval, this.peerTrustedKey).asResponder();
             } else {
                 this.requireInitiatorInfo();
-                return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks).asResponder(this.initiatorPublicKey, this.authToken);
+                return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks, this.pingInterval).asResponder(this.initiatorPublicKey, this.authToken);
             }
         }
     }]);
@@ -2469,7 +2563,7 @@ var SaltyRTCBuilder = function () {
 }();
 
 var SaltyRTC = function () {
-    function SaltyRTC(permanentKey, host, port, tasks, peerTrustedKey) {
+    function SaltyRTC(permanentKey, host, port, tasks, pingInterval, peerTrustedKey) {
         classCallCheck(this, SaltyRTC);
 
         this.peerTrustedKey = null;
@@ -2487,6 +2581,7 @@ var SaltyRTC = function () {
         this.port = port;
         this.permanentKey = permanentKey;
         this.tasks = tasks;
+        this.pingInterval = pingInterval;
         if (peerTrustedKey !== undefined) {
             this.peerTrustedKey = peerTrustedKey;
         }
@@ -2497,9 +2592,9 @@ var SaltyRTC = function () {
         key: "asInitiator",
         value: function asInitiator() {
             if (this.peerTrustedKey !== null) {
-                this._signaling = new InitiatorSignaling(this, this.host, this.port, this.tasks, this.permanentKey, this.peerTrustedKey);
+                this._signaling = new InitiatorSignaling(this, this.host, this.port, this.tasks, this.pingInterval, this.permanentKey, this.peerTrustedKey);
             } else {
-                this._signaling = new InitiatorSignaling(this, this.host, this.port, this.tasks, this.permanentKey);
+                this._signaling = new InitiatorSignaling(this, this.host, this.port, this.tasks, this.pingInterval, this.permanentKey);
             }
             return this;
         }
@@ -2507,10 +2602,10 @@ var SaltyRTC = function () {
         key: "asResponder",
         value: function asResponder(initiatorPubKey, authToken) {
             if (this.peerTrustedKey !== null) {
-                this._signaling = new ResponderSignaling(this, this.host, this.port, this.tasks, this.permanentKey, this.peerTrustedKey);
+                this._signaling = new ResponderSignaling(this, this.host, this.port, this.tasks, this.pingInterval, this.permanentKey, this.peerTrustedKey);
             } else {
                 var token = new AuthToken(authToken);
-                this._signaling = new ResponderSignaling(this, this.host, this.port, this.tasks, this.permanentKey, initiatorPubKey, token);
+                this._signaling = new ResponderSignaling(this, this.host, this.port, this.tasks, this.pingInterval, this.permanentKey, initiatorPubKey, token);
             }
             return this;
         }
@@ -2527,7 +2622,7 @@ var SaltyRTC = function () {
     }, {
         key: "disconnect",
         value: function disconnect() {
-            this.signaling.disconnect();
+            this.signaling.disconnect(exports.CloseCode.ClosingNormal);
         }
     }, {
         key: "on",

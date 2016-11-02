@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.2.7
+ * saltyrtc-client-js v0.3.0
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -30,277 +30,6 @@
 
 import { createCodec, decode, encode } from 'msgpack-lite';
 import * as msgpack from 'msgpack-lite';
-
-function u8aToHex(array) {
-    const results = [];
-    for (let arrayByte of array) {
-        results.push(arrayByte.toString(16).replace(/^([\da-f])$/, '0$1'));
-    }
-    return results.join('');
-}
-
-function byteToHex(value) {
-    return '0x' + ('00' + value.toString(16)).substr(-2);
-}
-
-function randomUint32() {
-    const crypto = window.crypto || window.msCrypto;
-    return crypto.getRandomValues(new Uint32Array(1))[0];
-}
-function concat(...arrays) {
-    let totalLength = 0;
-    for (let arr of arrays) {
-        totalLength += arr.length;
-    }
-    const result = new Uint8Array(totalLength);
-    let offset = 0;
-    for (let arr of arrays) {
-        result.set(arr, offset);
-        offset += arr.length;
-    }
-    return result;
-}
-function waitFor(test, delay_ms, retries, success, error) {
-    if (test() === false) {
-        if (retries === 1) {
-            error();
-        }
-        else {
-            setTimeout(() => waitFor(test, delay_ms, retries - 1, success, error), delay_ms);
-        }
-        return;
-    }
-    success();
-}
-
-class Box {
-    constructor(nonce, data, nonceLength) {
-        this._nonce = nonce;
-        this._nonceLength = nonceLength;
-        this._data = data;
-    }
-    get length() {
-        return this._nonce.length + this._data.length;
-    }
-    get data() {
-        return this._data;
-    }
-    get nonce() {
-        return this._nonce;
-    }
-    static fromUint8Array(array, nonceLength) {
-        if (nonceLength === undefined) {
-            throw new Error('nonceLength parameter not specified');
-        }
-        if (array.byteLength <= nonceLength) {
-            throw 'bad-message-length';
-        }
-        const nonce = array.slice(0, nonceLength);
-        const data = array.slice(nonceLength);
-        return new Box(nonce, data, nonceLength);
-    }
-    toUint8Array() {
-        const box = new Uint8Array(this.length);
-        box.set(this._nonce);
-        box.set(this._data, this._nonceLength);
-        return box;
-    }
-}
-class KeyStore {
-    constructor(publicKey, secretKey) {
-        if (publicKey === undefined || secretKey === undefined) {
-            this._keyPair = nacl.box.keyPair();
-            console.debug('KeyStore: New public key:', u8aToHex(this._keyPair.publicKey));
-        }
-        else {
-            this._keyPair = {
-                publicKey: publicKey,
-                secretKey: secretKey,
-            };
-            console.debug('KeyStore: Restored public key:', u8aToHex(this._keyPair.publicKey));
-        }
-    }
-    get publicKeyHex() { return u8aToHex(this._keyPair.publicKey); }
-    get publicKeyBytes() { return this._keyPair.publicKey; }
-    get secretKeyHex() { return u8aToHex(this._keyPair.secretKey); }
-    get secretKeyBytes() { return this._keyPair.secretKey; }
-    get keypair() {
-        return this._keyPair;
-    }
-    encrypt(bytes, nonce, otherKey) {
-        const encrypted = nacl.box(bytes, nonce, otherKey, this._keyPair.secretKey);
-        return new Box(nonce, encrypted, nacl.box.nonceLength);
-    }
-    decrypt(box, otherKey) {
-        const data = nacl.box.open(box.data, box.nonce, otherKey, this._keyPair.secretKey);
-        if (data === false) {
-            throw 'decryption-failed';
-        }
-        return data;
-    }
-}
-class AuthToken {
-    constructor(bytes) {
-        this._authToken = null;
-        if (typeof bytes === 'undefined') {
-            this._authToken = nacl.randomBytes(nacl.secretbox.keyLength);
-            console.debug('AuthToken: Generated auth token');
-        }
-        else {
-            if (bytes.byteLength != nacl.secretbox.keyLength) {
-                console.error('Auth token must be', nacl.secretbox.keyLength, 'bytes long.');
-                throw 'bad-token-length';
-            }
-            this._authToken = bytes;
-            console.debug('AuthToken: Initialized auth token');
-        }
-    }
-    get keyBytes() { return this._authToken; }
-    get keyHex() { return u8aToHex(this._authToken); }
-    encrypt(bytes, nonce) {
-        const encrypted = nacl.secretbox(bytes, nonce, this._authToken);
-        return new Box(nonce, encrypted, nacl.secretbox.nonceLength);
-    }
-    decrypt(box) {
-        const data = nacl.secretbox.open(box.data, box.nonce, this._authToken);
-        if (data === false) {
-            throw 'decryption-failed';
-        }
-        return data;
-    }
-}
-
-class Cookie {
-    constructor(bytes) {
-        if (typeof bytes !== 'undefined') {
-            if (bytes.length !== 16) {
-                throw 'bad-cookie-length';
-            }
-            this.bytes = bytes;
-        }
-        else {
-            this.bytes = nacl.randomBytes(Cookie.COOKIE_LENGTH);
-        }
-    }
-    static fromArrayBuffer(buffer) {
-        return new Cookie(new Uint8Array(buffer));
-    }
-    asArrayBuffer() {
-        return this.bytes.buffer.slice(this.bytes.byteOffset, this.bytes.byteLength);
-    }
-    equals(otherCookie) {
-        if (otherCookie.bytes === this.bytes)
-            return true;
-        if (otherCookie.bytes == null || this.bytes == null)
-            return false;
-        if (otherCookie.bytes.byteLength != this.bytes.byteLength)
-            return false;
-        for (var i = 0; i < this.bytes.byteLength; i++) {
-            if (otherCookie.bytes[i] != this.bytes[i])
-                return false;
-        }
-        return true;
-    }
-}
-Cookie.COOKIE_LENGTH = 16;
-class CookiePair {
-    constructor(ours, theirs) {
-        this.ours = null;
-        this.theirs = null;
-        if (typeof ours !== 'undefined' && typeof theirs !== 'undefined') {
-            this.ours = ours;
-            this.theirs = theirs;
-        }
-        else if (typeof ours === 'undefined' && typeof theirs === 'undefined') {
-            this.ours = new Cookie();
-        }
-        else {
-            throw new Error('Either both or no cookies must be specified');
-        }
-    }
-}
-
-class Nonce {
-    constructor(cookie, overflow, sequenceNumber, source, destination) {
-        this._cookie = cookie;
-        this._overflow = overflow;
-        this._sequenceNumber = sequenceNumber;
-        this._source = source;
-        this._destination = destination;
-    }
-    get cookie() { return this._cookie; }
-    get overflow() { return this._overflow; }
-    get sequenceNumber() { return this._sequenceNumber; }
-    get combinedSequenceNumber() { return (this._overflow << 32) + this._sequenceNumber; }
-    get source() { return this._source; }
-    get destination() { return this._destination; }
-    static fromArrayBuffer(packet) {
-        if (packet.byteLength != this.TOTAL_LENGTH) {
-            throw 'bad-packet-length';
-        }
-        const view = new DataView(packet);
-        const cookie = new Cookie(new Uint8Array(packet, 0, 16));
-        const source = view.getUint8(16);
-        const destination = view.getUint8(17);
-        const overflow = view.getUint16(18);
-        const sequenceNumber = view.getUint32(20);
-        return new Nonce(cookie, overflow, sequenceNumber, source, destination);
-    }
-    toArrayBuffer() {
-        const buf = new ArrayBuffer(Nonce.TOTAL_LENGTH);
-        const uint8view = new Uint8Array(buf);
-        uint8view.set(this._cookie.bytes);
-        const view = new DataView(buf);
-        view.setUint8(16, this._source);
-        view.setUint8(17, this._destination);
-        view.setUint16(18, this._overflow);
-        view.setUint32(20, this._sequenceNumber);
-        return buf;
-    }
-}
-Nonce.TOTAL_LENGTH = 24;
-
-class CombinedSequence {
-    constructor() {
-        this.sequenceNumber = randomUint32();
-        this.overflow = 0;
-    }
-    next() {
-        if (this.sequenceNumber + 1 >= CombinedSequence.SEQUENCE_NUMBER_MAX) {
-            this.sequenceNumber = 0;
-            this.overflow += 1;
-            if (this.overflow >= CombinedSequence.OVERFLOW_MAX) {
-                console.error('Overflow number just overflowed!');
-                throw new Error('overflow-overflow');
-            }
-        }
-        else {
-            this.sequenceNumber += 1;
-        }
-        return {
-            sequenceNumber: this.sequenceNumber,
-            overflow: this.overflow,
-        };
-    }
-}
-CombinedSequence.SEQUENCE_NUMBER_MAX = 0x100000000;
-CombinedSequence.OVERFLOW_MAX = 0x100000;
-class CombinedSequencePair {
-    constructor(ours, theirs) {
-        this.ours = null;
-        this.theirs = null;
-        if (typeof ours !== 'undefined' && typeof theirs !== 'undefined') {
-            this.ours = ours;
-            this.theirs = theirs;
-        }
-        else if (typeof ours === 'undefined' && typeof theirs === 'undefined') {
-            this.ours = new CombinedSequence();
-        }
-        else {
-            throw new Error('Either both or no combined sequences must be specified');
-        }
-    }
-}
 
 var CloseCode;
 (function (CloseCode) {
@@ -382,6 +111,290 @@ class ValidationError extends Error {
     }
 }
 
+function u8aToHex(array) {
+    const results = [];
+    for (let arrayByte of array) {
+        results.push(arrayByte.toString(16).replace(/^([\da-f])$/, '0$1'));
+    }
+    return results.join('');
+}
+function hexToU8a(hexstring) {
+    let array, i, j, k, ref;
+    j = 0;
+    if (hexstring.length % 2 == 1) {
+        hexstring = '0' + hexstring;
+    }
+    array = new Uint8Array(hexstring.length / 2);
+    for (i = k = 0, ref = hexstring.length; k <= ref; i = k += 2) {
+        array[j++] = parseInt(hexstring.substr(i, 2), 16);
+    }
+    return array;
+}
+function byteToHex(value) {
+    return '0x' + ('00' + value.toString(16)).substr(-2);
+}
+
+function randomUint32() {
+    const crypto = window.crypto || window.msCrypto;
+    return crypto.getRandomValues(new Uint32Array(1))[0];
+}
+function concat(...arrays) {
+    let totalLength = 0;
+    for (let arr of arrays) {
+        totalLength += arr.length;
+    }
+    const result = new Uint8Array(totalLength);
+    let offset = 0;
+    for (let arr of arrays) {
+        result.set(arr, offset);
+        offset += arr.length;
+    }
+    return result;
+}
+function waitFor(test, delay_ms, retries, success, error) {
+    if (test() === false) {
+        if (retries === 1) {
+            error();
+        }
+        else {
+            setTimeout(() => waitFor(test, delay_ms, retries - 1, success, error), delay_ms);
+        }
+        return;
+    }
+    success();
+}
+function isString(value) {
+    return typeof value === 'string' || value instanceof String;
+}
+function validateKey(key, name = "Key") {
+    let out;
+    if (isString(key)) {
+        out = hexToU8a(key);
+    }
+    else if (key instanceof Uint8Array) {
+        out = key;
+    }
+    else {
+        throw new ValidationError(name + " must be an Uint8Array or a hex string");
+    }
+    if (out.byteLength != 32) {
+        throw new ValidationError(name + " must be 32 bytes long");
+    }
+    return out;
+}
+
+class Box {
+    constructor(nonce, data, nonceLength) {
+        this._nonce = nonce;
+        this._nonceLength = nonceLength;
+        this._data = data;
+    }
+    get length() {
+        return this._nonce.length + this._data.length;
+    }
+    get data() {
+        return this._data;
+    }
+    get nonce() {
+        return this._nonce;
+    }
+    static fromUint8Array(array, nonceLength) {
+        if (nonceLength === undefined) {
+            throw new Error('nonceLength parameter not specified');
+        }
+        if (array.byteLength <= nonceLength) {
+            throw 'bad-message-length';
+        }
+        const nonce = array.slice(0, nonceLength);
+        const data = array.slice(nonceLength);
+        return new Box(nonce, data, nonceLength);
+    }
+    toUint8Array() {
+        const box = new Uint8Array(this.length);
+        box.set(this._nonce);
+        box.set(this._data, this._nonceLength);
+        return box;
+    }
+}
+class KeyStore {
+    constructor(publicKey, privateKey) {
+        if (publicKey === undefined && privateKey === undefined) {
+            this._keyPair = nacl.box.keyPair();
+            console.debug('KeyStore: New public key:', u8aToHex(this._keyPair.publicKey));
+        }
+        else if (publicKey !== undefined && privateKey !== undefined) {
+            this._keyPair = {
+                publicKey: validateKey(publicKey, "Public key"),
+                secretKey: validateKey(privateKey, "Private key"),
+            };
+            console.debug('KeyStore: Restored public key:', u8aToHex(this._keyPair.publicKey));
+        }
+        else {
+            throw new Error('Either both keys or no keys may be passed in');
+        }
+    }
+    get publicKeyHex() { return u8aToHex(this._keyPair.publicKey); }
+    get publicKeyBytes() { return this._keyPair.publicKey; }
+    get secretKeyHex() { return u8aToHex(this._keyPair.secretKey); }
+    get secretKeyBytes() { return this._keyPair.secretKey; }
+    get keypair() {
+        return this._keyPair;
+    }
+    encrypt(bytes, nonce, otherKey) {
+        const encrypted = nacl.box(bytes, nonce, otherKey, this._keyPair.secretKey);
+        return new Box(nonce, encrypted, nacl.box.nonceLength);
+    }
+    decrypt(box, otherKey) {
+        const data = nacl.box.open(box.data, box.nonce, otherKey, this._keyPair.secretKey);
+        if (data === false) {
+            throw 'decryption-failed';
+        }
+        return data;
+    }
+}
+class AuthToken {
+    constructor(bytes) {
+        this._authToken = null;
+        if (typeof bytes === 'undefined') {
+            this._authToken = nacl.randomBytes(nacl.secretbox.keyLength);
+            console.debug('AuthToken: Generated auth token');
+        }
+        else {
+            if (bytes.byteLength != nacl.secretbox.keyLength) {
+                console.error('Auth token must be', nacl.secretbox.keyLength, 'bytes long.');
+                throw 'bad-token-length';
+            }
+            this._authToken = bytes;
+            console.debug('AuthToken: Initialized auth token');
+        }
+    }
+    get keyBytes() { return this._authToken; }
+    get keyHex() { return u8aToHex(this._authToken); }
+    encrypt(bytes, nonce) {
+        const encrypted = nacl.secretbox(bytes, nonce, this._authToken);
+        return new Box(nonce, encrypted, nacl.secretbox.nonceLength);
+    }
+    decrypt(box) {
+        const data = nacl.secretbox.open(box.data, box.nonce, this._authToken);
+        if (data === false) {
+            throw 'decryption-failed';
+        }
+        return data;
+    }
+}
+
+class Cookie {
+    constructor(bytes) {
+        if (typeof bytes !== 'undefined') {
+            if (bytes.length !== 16) {
+                throw 'bad-cookie-length';
+            }
+            this.bytes = bytes;
+        }
+        else {
+            this.bytes = nacl.randomBytes(Cookie.COOKIE_LENGTH);
+        }
+    }
+    static fromArrayBuffer(buffer) {
+        return new Cookie(new Uint8Array(buffer));
+    }
+    asArrayBuffer() {
+        return this.bytes.buffer.slice(this.bytes.byteOffset, this.bytes.byteLength);
+    }
+    equals(otherCookie) {
+        if (otherCookie.bytes === this.bytes)
+            return true;
+        if (otherCookie.bytes == null || this.bytes == null)
+            return false;
+        if (otherCookie.bytes.byteLength != this.bytes.byteLength)
+            return false;
+        for (let i = 0; i < this.bytes.byteLength; i++) {
+            if (otherCookie.bytes[i] != this.bytes[i])
+                return false;
+        }
+        return true;
+    }
+}
+Cookie.COOKIE_LENGTH = 16;
+class CookiePair {
+    constructor(ours, theirs) {
+        this._ours = null;
+        this._theirs = null;
+        if (typeof ours !== 'undefined' && typeof theirs !== 'undefined') {
+            if (theirs.equals(ours)) {
+                throw new ProtocolError("Their cookie matches our cookie");
+            }
+            this._ours = ours;
+            this._theirs = theirs;
+        }
+        else if (typeof ours === 'undefined' && typeof theirs === 'undefined') {
+            this._ours = new Cookie();
+        }
+        else {
+            throw new Error('Either both or no cookies must be specified');
+        }
+    }
+    static fromTheirs(theirs) {
+        let ours;
+        do {
+            ours = new Cookie();
+        } while (ours.equals(theirs));
+        return new CookiePair(ours, theirs);
+    }
+    get ours() {
+        return this._ours;
+    }
+    get theirs() {
+        return this._theirs;
+    }
+    set theirs(cookie) {
+        if (cookie.equals(this._ours)) {
+            throw new ProtocolError("Their cookie matches our cookie");
+        }
+        this._theirs = cookie;
+    }
+}
+
+class Nonce {
+    constructor(cookie, overflow, sequenceNumber, source, destination) {
+        this._cookie = cookie;
+        this._overflow = overflow;
+        this._sequenceNumber = sequenceNumber;
+        this._source = source;
+        this._destination = destination;
+    }
+    get cookie() { return this._cookie; }
+    get overflow() { return this._overflow; }
+    get sequenceNumber() { return this._sequenceNumber; }
+    get combinedSequenceNumber() { return (this._overflow << 32) + this._sequenceNumber; }
+    get source() { return this._source; }
+    get destination() { return this._destination; }
+    static fromArrayBuffer(packet) {
+        if (packet.byteLength != this.TOTAL_LENGTH) {
+            throw 'bad-packet-length';
+        }
+        const view = new DataView(packet);
+        const cookie = new Cookie(new Uint8Array(packet, 0, 16));
+        const source = view.getUint8(16);
+        const destination = view.getUint8(17);
+        const overflow = view.getUint16(18);
+        const sequenceNumber = view.getUint32(20);
+        return new Nonce(cookie, overflow, sequenceNumber, source, destination);
+    }
+    toArrayBuffer() {
+        const buf = new ArrayBuffer(Nonce.TOTAL_LENGTH);
+        const uint8view = new Uint8Array(buf);
+        uint8view.set(this._cookie.bytes);
+        const view = new DataView(buf);
+        view.setUint8(16, this._source);
+        view.setUint8(17, this._destination);
+        view.setUint16(18, this._overflow);
+        view.setUint32(20, this._sequenceNumber);
+        return buf;
+    }
+}
+Nonce.TOTAL_LENGTH = 24;
+
 function decryptKeystore(box, keyStore, otherKey, msgType) {
     try {
         return keyStore.decrypt(box, otherKey);
@@ -396,8 +409,8 @@ function decryptKeystore(box, keyStore, otherKey, msgType) {
     }
 }
 
-function isResponderId(receiver) {
-    return receiver >= 0x02 && receiver <= 0xff;
+function isResponderId(id) {
+    return id >= 0x02 && id <= 0xff;
 }
 
 class HandoverState {
@@ -436,26 +449,113 @@ class HandoverState {
     }
 }
 
+class CombinedSequence {
+    constructor() {
+        this.sequenceNumber = randomUint32();
+        this.overflow = 0;
+    }
+    next() {
+        if (this.sequenceNumber + 1 >= CombinedSequence.SEQUENCE_NUMBER_MAX) {
+            this.sequenceNumber = 0;
+            this.overflow += 1;
+            if (this.overflow >= CombinedSequence.OVERFLOW_MAX) {
+                console.error('Overflow number just overflowed!');
+                throw new Error('overflow-overflow');
+            }
+        }
+        else {
+            this.sequenceNumber += 1;
+        }
+        return {
+            sequenceNumber: this.sequenceNumber,
+            overflow: this.overflow,
+        };
+    }
+}
+CombinedSequence.SEQUENCE_NUMBER_MAX = 0x100000000;
+CombinedSequence.OVERFLOW_MAX = 0x100000;
+class CombinedSequencePair {
+    constructor(ours, theirs) {
+        this.ours = null;
+        this.theirs = null;
+        if (typeof ours !== 'undefined' && typeof theirs !== 'undefined') {
+            this.ours = ours;
+            this.theirs = theirs;
+        }
+        else if (typeof ours === 'undefined' && typeof theirs === 'undefined') {
+            this.ours = new CombinedSequence();
+        }
+        else {
+            throw new Error('Either both or no combined sequences must be specified');
+        }
+    }
+}
+
+class Peer {
+    constructor(id, cookiePair) {
+        this._csnPair = new CombinedSequencePair();
+        this._id = id;
+        if (cookiePair === undefined) {
+            this._cookiePair = new CookiePair();
+        }
+        else {
+            this._cookiePair = cookiePair;
+        }
+    }
+    get id() {
+        return this._id;
+    }
+    get hexId() {
+        return byteToHex(this._id);
+    }
+    get csnPair() {
+        return this._csnPair;
+    }
+    get cookiePair() {
+        return this._cookiePair;
+    }
+}
+class Initiator extends Peer {
+    constructor(permanentKey) {
+        super(Initiator.ID);
+        this.connected = false;
+        this.handshakeState = 'new';
+        this.permanentKey = permanentKey;
+    }
+}
+Initiator.ID = 0x01;
+class Responder extends Peer {
+    constructor(id) {
+        super(id);
+        this.keyStore = new KeyStore();
+        this.handshakeState = 'new';
+    }
+}
+class Server extends Peer {
+    constructor() {
+        super(Server.ID);
+        this.handshakeState = 'new';
+    }
+}
+Server.ID = 0x00;
+
 class Signaling {
-    constructor(client, host, port, tasks, permanentKey, peerTrustedKey) {
+    constructor(client, host, port, tasks, pingInterval, permanentKey, peerTrustedKey) {
         this.protocol = 'wss';
         this.ws = null;
         this.msgpackOptions = {
             codec: createCodec({ binarraybuffer: true }),
         };
         this.state = 'new';
-        this.serverHandshakeState = 'new';
         this.handoverState = new HandoverState();
         this.task = null;
-        this.serverKey = null;
+        this.server = new Server();
         this.sessionKey = null;
-        this.authToken = null;
         this.peerTrustedKey = null;
+        this.authToken = null;
         this.role = null;
         this.logTag = 'Signaling:';
         this.address = Signaling.SALTYRTC_ADDR_UNKNOWN;
-        this.cookiePair = null;
-        this.serverCsn = new CombinedSequence();
         this.onOpen = (ev) => {
             console.info(this.logTag, 'Opened connection');
             this.setState('server-handshake');
@@ -492,7 +592,6 @@ class Signaling {
                         log('Dropped by initiator');
                         break;
                 }
-                this.client.emit({ type: 'connection-closed', data: ev });
             }
         };
         this.onMessage = (ev) => {
@@ -540,6 +639,7 @@ class Signaling {
         this.host = host;
         this.port = port;
         this.tasks = tasks;
+        this.pingInterval = pingInterval;
         if (peerTrustedKey !== undefined) {
             this.peerTrustedKey = peerTrustedKey;
         }
@@ -577,13 +677,14 @@ class Signaling {
         this.resetConnection();
         this.initWebsocket();
     }
-    disconnect() {
+    disconnect(closeCode) {
         if (this.ws !== null) {
             console.debug(this.logTag, 'Disconnecting WebSocket');
-            this.ws.close();
+            this.ws.close(closeCode);
         }
         this.ws = null;
         this.setState('closed');
+        this.client.emit({ type: 'connection-closed', data: closeCode });
     }
     initWebsocket() {
         const url = this.protocol + '://' + this.host + ':' + this.port + '/';
@@ -599,14 +700,14 @@ class Signaling {
     }
     onServerHandshakeMessage(box, nonce) {
         let payload;
-        if (this.serverHandshakeState === 'new') {
+        if (this.server.handshakeState === 'new') {
             payload = box.data;
         }
         else {
-            payload = this.permanentKey.decrypt(box, this.serverKey);
+            payload = this.permanentKey.decrypt(box, this.server.sessionKey);
         }
         const msg = this.decodeMessage(payload, 'server handshake');
-        switch (this.serverHandshakeState) {
+        switch (this.server.handshakeState) {
             case 'new':
                 if (msg.type !== 'server-hello') {
                     throw new ProtocolError('Expected server-hello message, but got ' + msg.type);
@@ -628,9 +729,9 @@ class Signaling {
             case 'done':
                 throw new SignalingError(CloseCode.InternalError, 'Received server handshake message even though server handshake state is set to \'done\'');
             default:
-                throw new SignalingError(CloseCode.InternalError, 'Unknown server handshake state: ' + this.serverHandshakeState);
+                throw new SignalingError(CloseCode.InternalError, 'Unknown server handshake state: ' + this.server.handshakeState);
         }
-        if (this.serverHandshakeState === 'done') {
+        if (this.server.handshakeState === 'done') {
             this.setState('peer-handshake');
             console.debug(this.logTag, 'Server handshake done');
             this.initPeerHandshake();
@@ -672,10 +773,6 @@ class Signaling {
         if (msg.type === 'close') {
             console.debug('Received close');
         }
-        else if (msg.type === 'data') {
-            console.debug(this.logTag, 'Received data');
-            this.handleData(msg);
-        }
         else if (msg.type === 'restart') {
             console.debug(this.logTag, 'Received restart');
             this.handleRestart(msg);
@@ -689,35 +786,40 @@ class Signaling {
         }
     }
     handleServerHello(msg, nonce) {
-        this.serverKey = new Uint8Array(msg.key);
-        let cookie;
-        do {
-            cookie = new Cookie();
-        } while (cookie.equals(nonce.cookie));
-        this.cookiePair = new CookiePair(cookie, nonce.cookie);
+        this.server.sessionKey = new Uint8Array(msg.key);
+        this.server.cookiePair.theirs = nonce.cookie;
     }
     sendClientAuth() {
         const message = {
             type: 'client-auth',
-            your_cookie: this.cookiePair.theirs.asArrayBuffer(),
+            your_cookie: this.server.cookiePair.theirs.asArrayBuffer(),
             subprotocols: [Signaling.SALTYRTC_SUBPROTOCOL],
+            ping_interval: this.pingInterval,
         };
-        const packet = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
+        const packet = this.buildPacket(message, this.server);
         console.debug(this.logTag, 'Sending client-auth');
         this.ws.send(packet);
-        this.serverHandshakeState = 'auth-sent';
-    }
-    handleData(msg) {
-        this.client.emit({ type: 'data', data: msg.data });
-        if (typeof msg.data_type === 'string') {
-            this.client.emit({ type: 'data:' + msg.data_type, data: msg.data });
-        }
+        this.server.handshakeState = 'auth-sent';
     }
     handleRestart(msg) {
         throw new ProtocolError('Restart messages not yet implemented');
     }
     handleSendError(msg) {
         throw new ProtocolError('Send error messages not yet implemented');
+    }
+    sendClose(reason) {
+        const message = {
+            type: 'close',
+            reason: reason,
+        };
+        const packet = this.buildPacket(message, this.getPeer());
+        console.debug(this.logTag, 'Sending close');
+        this.ws.send(packet);
+    }
+    handleClose(msg) {
+        console.warn(this.logTag, 'Received close message. Reason:', msg.reason, '(' + explainCloseCode(msg.reason) + ')');
+        this.task.close(msg.reason);
+        this.resetConnection(CloseCode.GoingAway);
     }
     validateNonce(nonce, destination, source) {
         if (destination !== undefined && nonce.destination !== destination) {
@@ -729,11 +831,11 @@ class Signaling {
             throw 'bad-nonce-source';
         }
     }
-    validateRepeatedCookie(msg) {
-        const repeatedCookie = Cookie.fromArrayBuffer(msg.your_cookie);
-        if (!repeatedCookie.equals(this.cookiePair.ours)) {
+    validateRepeatedCookie(peer, repeatedCookieBytes) {
+        const repeatedCookie = Cookie.fromArrayBuffer(repeatedCookieBytes);
+        if (!repeatedCookie.equals(peer.cookiePair.ours)) {
             console.debug(this.logTag, 'Their cookie:', repeatedCookie.bytes);
-            console.debug(this.logTag, 'Our cookie:', this.cookiePair.ours.bytes);
+            console.debug(this.logTag, 'Our cookie:', peer.cookiePair.ours.bytes);
             throw new ProtocolError('Peer repeated cookie does not match our cookie');
         }
     }
@@ -748,19 +850,25 @@ class Signaling {
         return msg;
     }
     buildPacket(message, receiver, encrypt = true) {
-        const csn = this.getNextCsn(receiver);
-        const nonce = new Nonce(this.cookiePair.ours, csn.overflow, csn.sequenceNumber, this.address, receiver);
+        let csn;
+        try {
+            csn = receiver.csnPair.ours.next();
+        }
+        catch (e) {
+            throw new ProtocolError("CSN overflow: " + e.message);
+        }
+        const nonce = new Nonce(receiver.cookiePair.ours, csn.overflow, csn.sequenceNumber, this.address, receiver.id);
         const nonceBytes = new Uint8Array(nonce.toArrayBuffer());
         const data = this.msgpackEncode(message);
         if (encrypt === false) {
             return concat(nonceBytes, data);
         }
         let box;
-        if (receiver === Signaling.SALTYRTC_ADDR_SERVER) {
+        if (receiver.id === Signaling.SALTYRTC_ADDR_SERVER) {
             box = this.encryptHandshakeDataForServer(data, nonceBytes);
         }
-        else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR || isResponderId(receiver)) {
-            box = this.encryptHandshakeDataForPeer(receiver, message.type, data, nonceBytes);
+        else if (receiver.id === Signaling.SALTYRTC_ADDR_INITIATOR || isResponderId(receiver.id)) {
+            box = this.encryptHandshakeDataForPeer(receiver.id, message.type, data, nonceBytes);
         }
         else {
             throw new ProtocolError('Bad receiver byte: ' + receiver);
@@ -768,7 +876,7 @@ class Signaling {
         return box.toUint8Array();
     }
     encryptHandshakeDataForServer(payload, nonceBytes) {
-        return this.permanentKey.encrypt(payload, nonceBytes, this.serverKey);
+        return this.permanentKey.encrypt(payload, nonceBytes, this.server.sessionKey);
     }
     decryptData(box) {
         const decryptedBytes = this.sessionKey.decrypt(box, this.getPeerSessionKey());
@@ -776,15 +884,19 @@ class Signaling {
         const end = start + decryptedBytes.byteLength;
         return decryptedBytes.buffer.slice(start, end);
     }
-    resetConnection(closeCode = CloseCode.ClosingNormal) {
-        this.setState('new');
-        this.serverCsn = new CombinedSequence();
-        this.handoverState.reset();
+    resetConnection(reason) {
+        if (reason !== undefined) {
+            this.client.emit({ type: 'connection-closed', data: reason });
+        }
         if (this.ws !== null) {
-            console.debug(this.logTag, 'Disconnecting WebSocket (close code ' + closeCode + ')');
-            this.ws.close(closeCode);
+            console.debug(this.logTag, 'Disconnecting WebSocket (close code ' + reason + ')');
+            this.ws.close(reason);
         }
         this.ws = null;
+        this.server = new Server();
+        this.handoverState.reset();
+        this.setState('new');
+        console.debug('Connection reset');
     }
     initTask(task, data) {
         try {
@@ -815,7 +927,7 @@ class Signaling {
     }
     decryptServerMessage(box) {
         try {
-            const decrypted = this.permanentKey.decrypt(box, this.serverKey);
+            const decrypted = this.permanentKey.decrypt(box, this.server.sessionKey);
             return this.decodeMessage(decrypted, 'server');
         }
         catch (e) {
@@ -840,7 +952,7 @@ class Signaling {
         }
     }
     sendTaskMessage(msg) {
-        const receiver = this.getPeerAddress();
+        const receiver = this.getPeer();
         if (receiver === null) {
             throw new SignalingError(CloseCode.InternalError, 'No peer address could be found');
         }
@@ -851,9 +963,21 @@ class Signaling {
         return this.sessionKey.encrypt(data, nonce, this.getPeerSessionKey());
     }
     decryptFromPeer(box) {
-        return this.sessionKey.decrypt(box, this.getPeerSessionKey());
-    }
-    sendClose(reason) {
+        try {
+            return this.sessionKey.decrypt(box, this.getPeerSessionKey());
+        }
+        catch (e) {
+            if (e === 'decryption-failed') {
+                if (this.state === 'task') {
+                    this.sendClose(CloseCode.InternalError);
+                }
+                this.resetConnection(CloseCode.InternalError);
+                return null;
+            }
+            else {
+                throw e;
+            }
+        }
     }
 }
 Signaling.SALTYRTC_SUBPROTOCOL = 'v0.saltyrtc.org';
@@ -861,41 +985,9 @@ Signaling.SALTYRTC_ADDR_UNKNOWN = 0x00;
 Signaling.SALTYRTC_ADDR_SERVER = 0x00;
 Signaling.SALTYRTC_ADDR_INITIATOR = 0x01;
 
-class Peer {
-    constructor(permanentKey) {
-        this._csn = new CombinedSequence();
-        this.permanentKey = permanentKey;
-    }
-    get id() {
-        return this._id;
-    }
-    get hexId() {
-        return byteToHex(this._id);
-    }
-    get csn() {
-        return this._csn;
-    }
-}
-class Initiator extends Peer {
-    constructor(permanentKey) {
-        super(permanentKey);
-        this.connected = false;
-        this.handshakeState = 'new';
-        this._id = 0x01;
-    }
-}
-class Responder extends Peer {
-    constructor(id) {
-        super();
-        this.keyStore = new KeyStore();
-        this.handshakeState = 'new';
-        this._id = id;
-    }
-}
-
 class InitiatorSignaling extends Signaling {
-    constructor(client, host, port, tasks, permanentKey, responderTrustedKey) {
-        super(client, host, port, tasks, permanentKey, responderTrustedKey);
+    constructor(client, host, port, tasks, pingInterval, permanentKey, responderTrustedKey) {
+        super(client, host, port, tasks, pingInterval, permanentKey, responderTrustedKey);
         this.logTag = 'Initiator:';
         this.responders = null;
         this.responder = null;
@@ -906,28 +998,6 @@ class InitiatorSignaling extends Signaling {
     }
     getWebsocketPath() {
         return this.permanentKey.publicKeyHex;
-    }
-    getNextCsn(receiver) {
-        if (receiver === Signaling.SALTYRTC_ADDR_SERVER) {
-            return this.serverCsn.next();
-        }
-        else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR) {
-            throw new ProtocolError('Initiator cannot send messages to initiator');
-        }
-        else if (isResponderId(receiver)) {
-            if (this.getState() === 'task') {
-                return this.responder.csn.next();
-            }
-            else if (this.responders.has(receiver)) {
-                return this.responders.get(receiver).csn.next();
-            }
-            else {
-                throw new ProtocolError('Unknown responder: ' + receiver);
-            }
-        }
-        else {
-            throw new ProtocolError('Bad receiver byte: ' + receiver);
-        }
     }
     encryptHandshakeDataForPeer(receiver, messageType, payload, nonceBytes) {
         if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR) {
@@ -953,9 +1023,9 @@ class InitiatorSignaling extends Signaling {
                 return responder.keyStore.encrypt(payload, nonceBytes, responder.sessionKey);
         }
     }
-    getPeerAddress() {
+    getPeer() {
         if (this.responder !== null) {
-            return this.responder.id;
+            return this.responder;
         }
         return null;
     }
@@ -972,21 +1042,16 @@ class InitiatorSignaling extends Signaling {
         return null;
     }
     processNewResponder(responderId) {
-        if (!this.responders.has(responderId)) {
-            if (!isResponderId(responderId)) {
-                throw new ProtocolError('Invalid responder id: ' + responderId);
-            }
-            const responder = new Responder(responderId);
-            if (this.peerTrustedKey !== null) {
-                responder.handshakeState = 'token-received';
-                responder.permanentKey = this.peerTrustedKey;
-            }
-            this.responders.set(responderId, responder);
-            this.client.emit({ type: 'new-responder', data: responderId });
+        if (this.responders.has(responderId)) {
+            this.responders.delete(responderId);
         }
-        else {
-            console.warn(this.logTag, 'Got new-responder message for an already known responder.');
+        const responder = new Responder(responderId);
+        if (this.peerTrustedKey !== null) {
+            responder.handshakeState = 'token-received';
+            responder.permanentKey = this.peerTrustedKey;
         }
+        this.responders.set(responderId, responder);
+        this.client.emit({ type: 'new-responder', data: responderId });
     }
     onPeerHandshakeMessage(box, nonce) {
         if (nonce.destination != this.address) {
@@ -994,7 +1059,7 @@ class InitiatorSignaling extends Signaling {
         }
         let payload;
         if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
-            payload = decryptKeystore(box, this.permanentKey, this.serverKey, 'server');
+            payload = decryptKeystore(box, this.permanentKey, this.server.sessionKey, 'server');
             const msg = this.decodeMessage(payload, 'server');
             switch (msg.type) {
                 case 'new-responder':
@@ -1008,7 +1073,7 @@ class InitiatorSignaling extends Signaling {
         else if (isResponderId(nonce.source)) {
             const responder = this.responders.get(nonce.source);
             if (responder === null) {
-                throw new ProtocolError('Unknown message sender: ' + nonce.source);
+                throw new ProtocolError('Unknown message source: ' + nonce.source);
             }
             let msg;
             switch (responder.handshakeState) {
@@ -1021,7 +1086,7 @@ class InitiatorSignaling extends Signaling {
                     }
                     catch (e) {
                         console.warn(this.logTag, 'Could not decrypt token message: ', e);
-                        this.dropResponder(responder.id);
+                        this.dropResponder(responder.id, CloseCode.InitiatorCouldNotDecrypt);
                         return;
                     }
                     msg = this.decodeMessage(payload, 'token', true);
@@ -1036,7 +1101,7 @@ class InitiatorSignaling extends Signaling {
                     catch (e) {
                         if (this.peerTrustedKey !== null) {
                             console.warn(this.logTag, 'Could not decrypt key message');
-                            this.dropResponder(responder.id);
+                            this.dropResponder(responder.id, CloseCode.InitiatorCouldNotDecrypt);
                             return;
                         }
                         throw e;
@@ -1055,7 +1120,7 @@ class InitiatorSignaling extends Signaling {
                     this.responder = this.responders.get(responder.id);
                     this.sessionKey = responder.keyStore;
                     this.responders.delete(responder.id);
-                    this.dropResponders();
+                    this.dropResponders(CloseCode.DroppedByInitiator);
                     this.setState('task');
                     console.info(this.logTag, 'Peer handshake done');
                     this.task.onPeerHandshakeDone();
@@ -1073,17 +1138,23 @@ class InitiatorSignaling extends Signaling {
     handleServerAuth(msg, nonce) {
         this.address = Signaling.SALTYRTC_ADDR_INITIATOR;
         this.validateNonce(nonce, this.address, Signaling.SALTYRTC_ADDR_SERVER);
-        this.validateRepeatedCookie(msg);
+        this.validateRepeatedCookie(this.server, msg.your_cookie);
         this.responders = new Map();
         for (let id of msg.responders) {
+            if (!isResponderId(id)) {
+                throw new ProtocolError("Responder id " + id + " must be in the range 0x02-0xff");
+            }
             this.processNewResponder(id);
         }
         console.debug(this.logTag, this.responders.size, 'responders connected');
-        this.serverHandshakeState = 'done';
+        this.server.handshakeState = 'done';
     }
     initPeerHandshake() {
     }
     handleNewResponder(msg) {
+        if (!isResponderId(msg.id)) {
+            throw new ProtocolError("Responder id " + msg.id + " must be in the range 0x02-0xff");
+        }
         this.processNewResponder(msg.id);
     }
     handleToken(msg, responder) {
@@ -1099,13 +1170,13 @@ class InitiatorSignaling extends Signaling {
             type: 'key',
             key: responder.keyStore.publicKeyBytes.buffer,
         };
-        const packet = this.buildPacket(message, responder.id);
+        const packet = this.buildPacket(message, responder);
         console.debug(this.logTag, 'Sending key');
         this.ws.send(packet);
         responder.handshakeState = 'key-sent';
     }
     sendAuth(responder, nonce) {
-        if (nonce.cookie.equals(this.cookiePair.ours)) {
+        if (nonce.cookie.equals(responder.cookiePair.ours)) {
             throw new ProtocolError('Their cookie and our cookie are the same.');
         }
         const taskData = {};
@@ -1116,13 +1187,13 @@ class InitiatorSignaling extends Signaling {
             task: this.task.getName(),
             data: taskData,
         };
-        const packet = this.buildPacket(message, responder.id);
+        const packet = this.buildPacket(message, responder);
         console.debug(this.logTag, 'Sending auth');
         this.ws.send(packet);
         responder.handshakeState = 'auth-sent';
     }
     handleAuth(msg, responder, nonce) {
-        this.validateRepeatedCookie(msg);
+        this.validateRepeatedCookie(responder, msg.your_cookie);
         try {
             InitiatorSignaling.validateTaskInfo(msg.tasks, msg.data);
         }
@@ -1141,10 +1212,7 @@ class InitiatorSignaling extends Signaling {
         }
         this.initTask(task, msg.data[task.getName()]);
         console.debug(this.logTag, 'Responder', responder.hexId, 'authenticated');
-        if (nonce.cookie.equals(this.cookiePair.ours)) {
-            throw new ProtocolError('Local and remote cookies are equal');
-        }
-        responder.cookie = nonce.cookie;
+        responder.cookiePair.theirs = nonce.cookie;
         responder.handshakeState = 'auth-received';
     }
     static validateTaskInfo(names, data) {
@@ -1171,18 +1239,19 @@ class InitiatorSignaling extends Signaling {
         }
         return null;
     }
-    dropResponders() {
+    dropResponders(reason) {
         console.debug(this.logTag, 'Dropping', this.responders.size, 'other responders.');
         for (let id of this.responders.keys()) {
-            this.dropResponder(id);
+            this.dropResponder(id, reason);
         }
     }
-    dropResponder(responderId) {
+    dropResponder(responderId, reason) {
         const message = {
             type: 'drop-responder',
             id: responderId,
+            reason: reason,
         };
-        const packet = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER);
+        const packet = this.buildPacket(message, this.server);
         console.debug(this.logTag, 'Sending drop-responder', byteToHex(responderId));
         this.ws.send(packet);
         this.responders.delete(responderId);
@@ -1190,8 +1259,8 @@ class InitiatorSignaling extends Signaling {
 }
 
 class ResponderSignaling extends Signaling {
-    constructor(client, host, port, tasks, permanentKey, initiatorPubKey, authToken) {
-        super(client, host, port, tasks, permanentKey, authToken === undefined ? initiatorPubKey : undefined);
+    constructor(client, host, port, tasks, pingInterval, permanentKey, initiatorPubKey, authToken) {
+        super(client, host, port, tasks, pingInterval, permanentKey, authToken === undefined ? initiatorPubKey : undefined);
         this.logTag = 'Responder:';
         this.initiator = null;
         this.role = 'responder';
@@ -1205,20 +1274,6 @@ class ResponderSignaling extends Signaling {
     }
     getWebsocketPath() {
         return u8aToHex(this.initiator.permanentKey);
-    }
-    getNextCsn(receiver) {
-        if (receiver === Signaling.SALTYRTC_ADDR_SERVER) {
-            return this.serverCsn.next();
-        }
-        else if (receiver === Signaling.SALTYRTC_ADDR_INITIATOR) {
-            return this.initiator.csn.next();
-        }
-        else if (isResponderId(receiver)) {
-            throw new ProtocolError('Responder may not send messages to other responders: ' + receiver);
-        }
-        else {
-            throw new ProtocolError('Bad receiver byte: ' + receiver);
-        }
     }
     encryptHandshakeDataForPeer(receiver, messageType, payload, nonceBytes) {
         if (isResponderId(receiver)) {
@@ -1240,9 +1295,9 @@ class ResponderSignaling extends Signaling {
                 return this.sessionKey.encrypt(payload, nonceBytes, peerSessionKey);
         }
     }
-    getPeerAddress() {
+    getPeer() {
         if (this.initiator !== null) {
-            return this.initiator.id;
+            return this.initiator;
         }
         return null;
     }
@@ -1264,7 +1319,7 @@ class ResponderSignaling extends Signaling {
         }
         let payload;
         if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
-            payload = decryptKeystore(box, this.permanentKey, this.serverKey, 'server');
+            payload = decryptKeystore(box, this.permanentKey, this.server.sessionKey, 'server');
             const msg = this.decodeMessage(payload, 'server');
             switch (msg.type) {
                 case 'new-initiator':
@@ -1322,10 +1377,10 @@ class ResponderSignaling extends Signaling {
             type: 'client-hello',
             key: this.permanentKey.publicKeyBytes.buffer,
         };
-        const packet = this.buildPacket(message, Signaling.SALTYRTC_ADDR_SERVER, false);
+        const packet = this.buildPacket(message, this.server, false);
         console.debug(this.logTag, 'Sending client-hello');
         this.ws.send(packet);
-        this.serverHandshakeState = 'hello-sent';
+        this.server.handshakeState = 'hello-sent';
     }
     handleServerAuth(msg, nonce) {
         this.validateNonce(nonce, undefined, Signaling.SALTYRTC_ADDR_SERVER);
@@ -1336,12 +1391,13 @@ class ResponderSignaling extends Signaling {
         this.address = nonce.destination;
         console.debug(this.logTag, 'Server assigned address', byteToHex(this.address));
         this.logTag = 'Responder[' + byteToHex(this.address) + ']:';
-        this.validateRepeatedCookie(msg);
+        this.validateRepeatedCookie(this.server, msg.your_cookie);
         this.initiator.connected = msg.initiator_connected;
         console.debug(this.logTag, 'Initiator', this.initiator.connected ? '' : 'not', 'connected');
-        this.serverHandshakeState = 'done';
+        this.server.handshakeState = 'done';
     }
     handleNewInitiator(msg) {
+        this.initiator = new Initiator(this.initiator.permanentKey);
         this.initiator.connected = true;
         this.initPeerHandshake();
     }
@@ -1358,7 +1414,7 @@ class ResponderSignaling extends Signaling {
             type: 'token',
             key: this.permanentKey.publicKeyBytes.buffer,
         };
-        const packet = this.buildPacket(message, Signaling.SALTYRTC_ADDR_INITIATOR);
+        const packet = this.buildPacket(message, this.initiator);
         console.debug(this.logTag, 'Sending token');
         this.ws.send(packet);
         this.initiator.handshakeState = 'token-sent';
@@ -1369,7 +1425,7 @@ class ResponderSignaling extends Signaling {
             type: 'key',
             key: this.sessionKey.publicKeyBytes.buffer,
         };
-        const packet = this.buildPacket(replyMessage, Signaling.SALTYRTC_ADDR_INITIATOR);
+        const packet = this.buildPacket(replyMessage, this.initiator);
         console.debug(this.logTag, 'Sending key');
         this.ws.send(packet);
         this.initiator.handshakeState = 'key-sent';
@@ -1379,7 +1435,7 @@ class ResponderSignaling extends Signaling {
         this.initiator.handshakeState = 'key-received';
     }
     sendAuth(nonce) {
-        if (nonce.cookie.equals(this.cookiePair.ours)) {
+        if (nonce.cookie.equals(this.initiator.cookiePair.ours)) {
             throw new ProtocolError('Their cookie and our cookie are the same.');
         }
         const taskData = {};
@@ -1393,13 +1449,13 @@ class ResponderSignaling extends Signaling {
             tasks: taskNames,
             data: taskData,
         };
-        const packet = this.buildPacket(message, Signaling.SALTYRTC_ADDR_INITIATOR);
+        const packet = this.buildPacket(message, this.initiator);
         console.debug(this.logTag, 'Sending auth');
         this.ws.send(packet);
         this.initiator.handshakeState = 'auth-sent';
     }
     handleAuth(msg, nonce) {
-        this.validateRepeatedCookie(msg);
+        this.validateRepeatedCookie(this.initiator, msg.your_cookie);
         try {
             ResponderSignaling.validateTaskInfo(msg.task, msg.data);
         }
@@ -1424,7 +1480,7 @@ class ResponderSignaling extends Signaling {
             this.initTask(selectedTask, msg.data[selectedTask.getName()]);
         }
         console.debug(this.logTag, 'Initiator authenticated');
-        this.initiator.cookie = nonce.cookie;
+        this.initiator.cookiePair.theirs = nonce.cookie;
         this.initiator.handshakeState = 'auth-received';
     }
     static validateTaskInfo(name, data) {
@@ -1517,6 +1573,7 @@ class SaltyRTCBuilder {
         this.hasInitiatorInfo = false;
         this.hasTrustedPeerKey = false;
         this.hasTasks = false;
+        this.pingInterval = 0;
     }
     validateHost(host) {
         if (host.endsWith('/')) {
@@ -1559,7 +1616,7 @@ class SaltyRTCBuilder {
         return this;
     }
     withTrustedPeerKey(peerTrustedKey) {
-        this.peerTrustedKey = peerTrustedKey;
+        this.peerTrustedKey = validateKey(peerTrustedKey, "Peer key");
         this.hasTrustedPeerKey = true;
         return this;
     }
@@ -1571,9 +1628,16 @@ class SaltyRTCBuilder {
         this.hasTasks = true;
         return this;
     }
+    withPingInterval(interval) {
+        if (interval < 0) {
+            throw new Error("Ping interval may not be negative");
+        }
+        this.pingInterval = interval;
+        return this;
+    }
     initiatorInfo(initiatorPublicKey, authToken) {
-        this.initiatorPublicKey = initiatorPublicKey;
-        this.authToken = authToken;
+        this.initiatorPublicKey = validateKey(initiatorPublicKey, "Initiator public key");
+        this.authToken = validateKey(authToken, "Auth token");
         this.hasInitiatorInfo = true;
         return this;
     }
@@ -1582,11 +1646,11 @@ class SaltyRTCBuilder {
         this.requireKeyStore();
         this.requireTasks();
         if (this.hasTrustedPeerKey) {
-            return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks, this.peerTrustedKey)
+            return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks, this.pingInterval, this.peerTrustedKey)
                 .asInitiator();
         }
         else {
-            return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks)
+            return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks, this.pingInterval)
                 .asInitiator();
         }
     }
@@ -1595,18 +1659,18 @@ class SaltyRTCBuilder {
         this.requireKeyStore();
         this.requireTasks();
         if (this.hasTrustedPeerKey) {
-            return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks, this.peerTrustedKey)
+            return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks, this.pingInterval, this.peerTrustedKey)
                 .asResponder();
         }
         else {
             this.requireInitiatorInfo();
-            return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks)
+            return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks, this.pingInterval)
                 .asResponder(this.initiatorPublicKey, this.authToken);
         }
     }
 }
 class SaltyRTC {
-    constructor(permanentKey, host, port, tasks, peerTrustedKey) {
+    constructor(permanentKey, host, port, tasks, pingInterval, peerTrustedKey) {
         this.peerTrustedKey = null;
         this._signaling = null;
         if (permanentKey === undefined) {
@@ -1622,6 +1686,7 @@ class SaltyRTC {
         this.port = port;
         this.permanentKey = permanentKey;
         this.tasks = tasks;
+        this.pingInterval = pingInterval;
         if (peerTrustedKey !== undefined) {
             this.peerTrustedKey = peerTrustedKey;
         }
@@ -1629,20 +1694,20 @@ class SaltyRTC {
     }
     asInitiator() {
         if (this.peerTrustedKey !== null) {
-            this._signaling = new InitiatorSignaling(this, this.host, this.port, this.tasks, this.permanentKey, this.peerTrustedKey);
+            this._signaling = new InitiatorSignaling(this, this.host, this.port, this.tasks, this.pingInterval, this.permanentKey, this.peerTrustedKey);
         }
         else {
-            this._signaling = new InitiatorSignaling(this, this.host, this.port, this.tasks, this.permanentKey);
+            this._signaling = new InitiatorSignaling(this, this.host, this.port, this.tasks, this.pingInterval, this.permanentKey);
         }
         return this;
     }
     asResponder(initiatorPubKey, authToken) {
         if (this.peerTrustedKey !== null) {
-            this._signaling = new ResponderSignaling(this, this.host, this.port, this.tasks, this.permanentKey, this.peerTrustedKey);
+            this._signaling = new ResponderSignaling(this, this.host, this.port, this.tasks, this.pingInterval, this.permanentKey, this.peerTrustedKey);
         }
         else {
             const token = new AuthToken(authToken);
-            this._signaling = new ResponderSignaling(this, this.host, this.port, this.tasks, this.permanentKey, initiatorPubKey, token);
+            this._signaling = new ResponderSignaling(this, this.host, this.port, this.tasks, this.pingInterval, this.permanentKey, initiatorPubKey, token);
         }
         return this;
     }
@@ -1683,7 +1748,7 @@ class SaltyRTC {
         this.signaling.connect();
     }
     disconnect() {
-        this.signaling.disconnect();
+        this.signaling.disconnect(CloseCode.ClosingNormal);
     }
     on(event, handler) {
         this.eventRegistry.register(event, handler);
