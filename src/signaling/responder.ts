@@ -26,9 +26,10 @@ export class ResponderSignaling extends Signaling {
     /**
      * Create a new responder signaling instance.
      */
-    constructor(client: saltyrtc.SaltyRTC, host: string, port: number, tasks: saltyrtc.Task[], pingInterval: number,
+    constructor(client: saltyrtc.SaltyRTC, host: string, port: number, serverKey: Uint8Array,
+                tasks: saltyrtc.Task[], pingInterval: number,
                 permanentKey: saltyrtc.KeyStore, initiatorPubKey: Uint8Array, authToken?: saltyrtc.AuthToken) {
-        super(client, host, port, tasks, pingInterval, permanentKey, authToken === undefined ? initiatorPubKey : undefined);
+        super(client, host, port, serverKey, tasks, pingInterval, permanentKey, authToken === undefined ? initiatorPubKey : undefined);
         this.role = 'responder';
         this.initiator = new Initiator(initiatorPubKey);
         if (authToken !== undefined) {
@@ -205,6 +206,19 @@ export class ResponderSignaling extends Signaling {
         // Validate repeated cookie
         this.validateRepeatedCookie(this.server, msg.your_cookie);
 
+        // Validate server public key
+        if (this.serverPublicKey != null) {
+            try {
+                this.validateSignedKeys(msg.signed_keys, nonce, this.serverPublicKey);
+            } catch (e) {
+                if (e.name === 'ValidationError') {
+                    throw new ProtocolError("Verification of signed_keys failed: " + e.message);
+                } throw e;
+            }
+        } else if (msg.signed_keys !== null && msg.signed_keys !== undefined) {
+            console.warn(this.logTag, "Server sent signed keys, but we're not verifying them.")
+        }
+
         this.initiator.connected = msg.initiator_connected;
         console.debug(this.logTag, 'Initiator', this.initiator.connected ? '' : 'not', 'connected');
 
@@ -316,7 +330,7 @@ export class ResponderSignaling extends Signaling {
         try {
             ResponderSignaling.validateTaskInfo(msg.task, msg.data);
         } catch (e) {
-            if (e instanceof ValidationError) {
+            if (e.name === 'ValidationError') {
                 throw new ProtocolError("Peer sent invalid task info: " + e.message);
             } throw e;
         }

@@ -15,12 +15,12 @@ import { Cookie } from "../cookie";
 import { Nonce } from "../nonce";
 import { ProtocolError, ValidationError } from "../exceptions";
 import { SignalingError, ConnectionError } from "../exceptions";
-import { concat, byteToHex } from "../utils";
+import { concat, byteToHex, u8aToHex, arraysAreEqual } from "../utils";
 import { isResponderId } from "./helpers";
 import { HandoverState } from "./handoverstate";
 import { CloseCode, explainCloseCode } from "../closecode";
 import SignalingState = saltyrtc.SignalingState;
-import {Server, Peer} from "../peers";
+import { Server, Peer } from "../peers";
 
 /**
  * Signaling base class.
@@ -65,7 +65,8 @@ export abstract class Signaling implements saltyrtc.Signaling {
     protected peerTrustedKey: Uint8Array = null;
     protected authToken: saltyrtc.AuthToken = null;
 
-    // TODO: Server trusted key
+    // Server trusted key
+    protected serverPublicKey: Uint8Array = null;
 
     // Signaling
     public role: saltyrtc.SignalingRole = null;
@@ -75,7 +76,8 @@ export abstract class Signaling implements saltyrtc.Signaling {
     /**
      * Create a new signaling instance.
      */
-    constructor(client: saltyrtc.SaltyRTC, host: string, port: number, tasks: saltyrtc.Task[], pingInterval: number,
+    constructor(client: saltyrtc.SaltyRTC, host: string, port: number, serverKey: Uint8Array,
+                tasks: saltyrtc.Task[], pingInterval: number,
                 permanentKey: saltyrtc.KeyStore, peerTrustedKey?: Uint8Array) {
         this.client = client;
         this.permanentKey = permanentKey;
@@ -85,6 +87,9 @@ export abstract class Signaling implements saltyrtc.Signaling {
         this.pingInterval = pingInterval;
         if (peerTrustedKey !== undefined) {
             this.peerTrustedKey = peerTrustedKey;
+        }
+        if (serverKey !== undefined) {
+            this.serverPublicKey = serverKey;
         }
         this.handoverState.onBoth = () => {
             this.client.emit({type: 'handover'});
@@ -287,7 +292,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
                     console.warn(this.logTag, 'Received message in', this.getState(), 'signaling state. Ignoring.');
             }
         } catch(e) {
-            if (e instanceof SignalingError) {
+            if (e.name === 'SignalingError' || e.name === 'ProtocolError') {
                 console.error(this.logTag, 'Signaling error: ' + explainCloseCode(e.closeCode));
                 // Send close message if client-to-client handshake has been completed
                 if (this.state === 'task') {
@@ -295,9 +300,13 @@ export abstract class Signaling implements saltyrtc.Signaling {
                 }
                 // Close connection
                 this.resetConnection(e.closeCode);
-            } else if (e instanceof ConnectionError) {
+            } else if (e.name === 'ConnectionError') {
                 console.warn(this.logTag, 'Connection error. Resetting connection.');
                 this.resetConnection(CloseCode.InternalError);
+            }
+            if (e.hasOwnProperty('stack')) {
+                console.error("An unknown error occurred:");
+                console.error(e.stack);
             }
             throw e;
         }
@@ -375,15 +384,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
             this.onSignalingServerMessage(box);
         } else {
             // TODO: Do we need to validate the source id or does that happen deeper down?
-            let decrypted: Uint8Array;
-            try {
-                decrypted = this.decryptFromPeer(box);
-            } catch (e) {
-                if (e === 'decryption-failed') {
-                    console.warn(this.logTag, 'Could not decrypt peer message from', byteToHex(nonce.source));
-                    return;
-                } else { throw e; }
-            }
+            let decrypted: Uint8Array = this.decryptFromPeer(box);
             this.onSignalingPeerMessage(decrypted);
         }
     }
@@ -542,6 +543,35 @@ export abstract class Signaling implements saltyrtc.Signaling {
             console.debug(this.logTag, 'Their cookie:', repeatedCookie.bytes);
             console.debug(this.logTag, 'Our cookie:', peer.cookiePair.ours.bytes);
             throw new ProtocolError('Peer repeated cookie does not match our cookie');
+        }
+    }
+
+    /**
+     * Validate the signed keys sent by the server in the server-auth message.
+     *
+     * @param signed_keys The `signed_keys` field from the server-auth message.
+     * @param nonce The incoming message nonce.
+     * @param serverPublicKey The expected server public permanent key.
+     * @throws ValidationError if the signed keys are not valid.
+     */
+    protected validateSignedKeys(signed_keys: ArrayBuffer, nonce: Nonce, serverPublicKey: Uint8Array): void {
+        if (signed_keys === null || signed_keys === undefined) {
+            throw new ValidationError("Server did not send signed_keys in server-auth message");
+        }
+        const box = new Box(new Uint8Array(nonce.toArrayBuffer()), new Uint8Array(signed_keys), nacl.box.nonceLength);
+        console.debug(this.logTag, "Expected server public permanent key is", u8aToHex(serverPublicKey));
+        console.debug(this.logTag, "Server public session key is", u8aToHex(this.server.sessionKey));
+        let decrypted: Uint8Array;
+        try {
+            decrypted = this.permanentKey.decrypt(box, serverPublicKey);
+        } catch (e) {
+            if (e === 'decryption-failed') {
+                throw new ValidationError("Could not decrypt signed_keys in server_auth message");
+            } throw e;
+        }
+        const expected = concat(this.server.sessionKey, this.permanentKey.publicKeyBytes);
+        if (!arraysAreEqual(decrypted, expected)) {
+            throw new ValidationError("Decrypted signed_keys in server-auth message is invalid");
         }
     }
 
@@ -707,7 +737,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         try {
             task.init(this, data);
         } catch (e) {
-            if (e instanceof ValidationError) {
+            if (e.name === 'ValidationError') {
                 throw new ProtocolError("Peer sent invalid task data");
             } throw e;
         }
@@ -794,7 +824,8 @@ export abstract class Signaling implements saltyrtc.Signaling {
                     this.sendClose(CloseCode.InternalError);
                 }
                 this.resetConnection(CloseCode.InternalError);
-                return null;
+                throw new SignalingError(CloseCode.InternalError,
+                    "Decryption of peer message failed. This should not happen.");
             } else {
                 throw e;
             }

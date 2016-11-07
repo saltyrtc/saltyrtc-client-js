@@ -29,9 +29,10 @@ export class InitiatorSignaling extends Signaling {
     /**
      * Create a new initiator signaling instance.
      */
-    constructor(client: saltyrtc.SaltyRTC, host: string, port: number, tasks: saltyrtc.Task[], pingInterval: number,
+    constructor(client: saltyrtc.SaltyRTC, host: string, port: number, serverKey: Uint8Array,
+                tasks: saltyrtc.Task[], pingInterval: number,
                 permanentKey: saltyrtc.KeyStore, responderTrustedKey?: Uint8Array) {
-        super(client, host, port, tasks, pingInterval, permanentKey, responderTrustedKey);
+        super(client, host, port, serverKey, tasks, pingInterval, permanentKey, responderTrustedKey);
         this.role = 'initiator';
         if (responderTrustedKey === undefined) {
             this.authToken = new AuthToken();
@@ -249,6 +250,19 @@ export class InitiatorSignaling extends Signaling {
         // Validate repeated cookie
         this.validateRepeatedCookie(this.server, msg.your_cookie);
 
+        // Validate server public key
+        if (this.serverPublicKey != null) {
+            try {
+                this.validateSignedKeys(msg.signed_keys, nonce, this.serverPublicKey);
+            } catch (e) {
+                if (e.name === 'ValidationError') {
+                    throw new ProtocolError("Verification of signed_keys failed: " + e.message);
+                } throw e;
+            }
+        } else if (msg.signed_keys !== null && msg.signed_keys !== undefined) {
+            console.warn(this.logTag, "Server sent signed keys, but we're not verifying them.")
+        }
+
         // Store responders
         this.responders = new Map<number, Responder>();
         for (let id of msg.responders) {
@@ -350,7 +364,7 @@ export class InitiatorSignaling extends Signaling {
         try {
             InitiatorSignaling.validateTaskInfo(msg.tasks, msg.data);
         } catch (e) {
-            if (e instanceof ValidationError) {
+            if (e.name === 'ValidationError') {
                 throw new ProtocolError("Peer sent invalid task info: " + e.message);
             } throw e;
         }
