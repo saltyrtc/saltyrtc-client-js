@@ -1,6 +1,9 @@
 /// <reference path="jasmine.d.ts" />
 
-import { u8aToHex, hexToU8a, randomString, concat, randomUint32, byteToHex, waitFor, isString } from "../src/utils";
+import {
+    u8aToHex, hexToU8a, randomString, concat, randomUint32, byteToHex,
+    waitFor, isString, arraysAreEqual
+} from "../src/utils";
 
 export default () => { describe('utils', function() {
 
@@ -141,7 +144,25 @@ export default () => { describe('utils', function() {
             expect(isString(new String("hello"))).toEqual(true);
             expect(isString(String)).toEqual(false);
             expect(isString(1232)).toEqual(false);
-        })
-    })
+        });
+    });
+
+    describe('arraysAreEqual', function() {
+        it('returns false when arrays have different length', () => {
+            expect(arraysAreEqual(Uint8Array.of(1, 1), Uint8Array.of(1))).toEqual(false);
+        });
+
+        it('returns true when arrays are both empty', () => {
+            expect(arraysAreEqual(new Uint8Array([]), new Uint8Array([]))).toEqual(true);
+        });
+
+        it('returns false when arrays are different', () => {
+            expect(arraysAreEqual(new Uint8Array([1,2,3]), new Uint8Array([1,3,2]))).toEqual(false);
+        });
+
+        it('returns true when arrays are the same', () => {
+            expect(arraysAreEqual(new Uint8Array([1,2,3]), new Uint8Array([1,2,3]))).toEqual(true);
+        });
+    });
 
 }); }
