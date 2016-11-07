@@ -15,12 +15,12 @@ import { Cookie } from "../cookie";
 import { Nonce } from "../nonce";
 import { ProtocolError, ValidationError } from "../exceptions";
 import { SignalingError, ConnectionError } from "../exceptions";
-import { concat, byteToHex } from "../utils";
+import { concat, byteToHex, u8aToHex, arraysAreEqual } from "../utils";
 import { isResponderId } from "./helpers";
 import { HandoverState } from "./handoverstate";
 import { CloseCode, explainCloseCode } from "../closecode";
 import SignalingState = saltyrtc.SignalingState;
-import {Server, Peer} from "../peers";
+import { Server, Peer } from "../peers";
 
 /**
  * Signaling base class.
@@ -547,6 +547,35 @@ export abstract class Signaling implements saltyrtc.Signaling {
             console.debug(this.logTag, 'Their cookie:', repeatedCookie.bytes);
             console.debug(this.logTag, 'Our cookie:', peer.cookiePair.ours.bytes);
             throw new ProtocolError('Peer repeated cookie does not match our cookie');
+        }
+    }
+
+    /**
+     * Validate the signed keys sent by the server in the server-auth message.
+     *
+     * @param signed_keys The `signed_keys` field from the server-auth message.
+     * @param nonce The incoming message nonce.
+     * @param serverPublicKey The expected server public permanent key.
+     * @throws ValidationError if the signed keys are not valid.
+     */
+    protected validateSignedKeys(signed_keys: ArrayBuffer, nonce: Nonce, serverPublicKey: Uint8Array): void {
+        if (signed_keys === null || signed_keys === undefined) {
+            throw new ValidationError("Server did not send signed_keys in server-auth message");
+        }
+        const box = new Box(new Uint8Array(nonce.toArrayBuffer()), new Uint8Array(signed_keys), nacl.box.nonceLength);
+        console.debug(this.logTag, "Expected server public permanent key is", u8aToHex(serverPublicKey));
+        console.debug(this.logTag, "Server public session key is", u8aToHex(this.server.sessionKey));
+        let decrypted: Uint8Array;
+        try {
+            decrypted = this.permanentKey.decrypt(box, serverPublicKey);
+        } catch (e) {
+            if (e === 'decryption-failed') {
+                throw new ValidationError("Could not decrypt signed_keys in server_auth message");
+            } throw e;
+        }
+        const expected = concat(this.server.sessionKey, this.permanentKey.publicKeyBytes);
+        if (!arraysAreEqual(decrypted, expected)) {
+            throw new ValidationError("Decrypted signed_keys in server-auth message is invalid");
         }
     }
 

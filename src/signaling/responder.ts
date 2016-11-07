@@ -206,6 +206,19 @@ export class ResponderSignaling extends Signaling {
         // Validate repeated cookie
         this.validateRepeatedCookie(this.server, msg.your_cookie);
 
+        // Validate server public key
+        if (this.serverPublicKey != null) {
+            try {
+                this.validateSignedKeys(msg.signed_keys, nonce, this.serverPublicKey);
+            } catch (e) {
+                if (e instanceof ValidationError) {
+                    throw new ProtocolError("Verification of signed_keys failed: " + e.message);
+                } throw e;
+            }
+        } else if (msg.signed_keys !== null && msg.signed_keys !== undefined) {
+            console.warn(this.logTag, "Server sent signed keys, but we're not verifying them.")
+        }
+
         this.initiator.connected = msg.initiator_connected;
         console.debug(this.logTag, 'Initiator', this.initiator.connected ? '' : 'not', 'connected');
 
