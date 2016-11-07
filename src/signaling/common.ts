@@ -824,7 +824,8 @@ export abstract class Signaling implements saltyrtc.Signaling {
                     this.sendClose(CloseCode.InternalError);
                 }
                 this.resetConnection(CloseCode.InternalError);
-                return null;
+                throw new SignalingError(CloseCode.InternalError,
+                    "Decryption of peer message failed. This should not happen.");
             } else {
                 throw e;
             }
