@@ -445,6 +445,21 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     }
 
     /**
+     * Send an application message to the peer.
+     *
+     * May only be called after client to client handshake has taken place.
+     * Otherwise a SignalingError will be thrown.
+     *
+     * @param data Data to be sent. May be of any type serializable by the msgpack-lite library.
+     */
+    public sendApplicationMessage(data: any): void {
+        this.signaling.sendApplication({
+            type: 'application',
+            data: data,
+        });
+    }
+
+    /**
      * Call a handler with the specified event.
      *
      * If the handler returns `false`, unregister it.

@@ -432,6 +432,9 @@ export abstract class Signaling implements saltyrtc.Signaling {
         } else if (msg.type === 'restart') {
             console.debug(this.logTag, 'Received restart');
             this.handleRestart(msg as saltyrtc.messages.Restart);
+        } else if (msg.type === 'application') {
+            console.debug(this.logTag, 'Received application message');
+            this.handleApplication(msg as saltyrtc.messages.Application);
         } else if (this.task !== null && this.task.getSupportedMessageTypes().indexOf(msg.type) !== -1) {
             console.debug(this.logTag, 'Received', msg.type, '[' + this.task.getName() + ']');
             this.task.onTaskMessage(msg as saltyrtc.messages.TaskMessage);
@@ -511,6 +514,13 @@ export abstract class Signaling implements saltyrtc.Signaling {
     }
 
     protected abstract _handleSendError(receiver: number): void;
+
+    /**
+     * Handle an incoming application message.
+     */
+    protected handleApplication(msg: saltyrtc.messages.Application): void {
+        this.client.emit({type: 'application', data: msg.data});
+    }
 
     /**
      * Send a close message to the peer.
@@ -925,6 +935,14 @@ export abstract class Signaling implements saltyrtc.Signaling {
     }
 
     /**
+     * Send an application message to the peer.
+     * @param msg The message to be sent.
+     */
+    public sendApplication(msg: saltyrtc.messages.Application): void {
+        this.sendPostClientHandshakeMessage(msg, 'application');
+    }
+
+    /**
      * Send a task message through the websocket or - if handover has
      * already happened - through the task channel.
      *
@@ -932,11 +950,25 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * @throws SignalingError
      */
     public sendTaskMessage(msg: saltyrtc.messages.TaskMessage): void {
+        this.sendPostClientHandshakeMessage(msg, 'task');
+    }
+
+    /**
+     * Send messages after the client to client handshake has been completed.
+     * @throws SignalingError if client to client handshake has not been completed.
+     */
+    private sendPostClientHandshakeMessage(msg: saltyrtc.messages.TaskMessage | saltyrtc.messages.Application, name: string): void {
+        if (this.state !== 'task') {
+            throw new SignalingError(CloseCode.ProtocolError,
+                'Cannot send ' + name + ' message in "' + this.state + '" state');
+        }
+
         const receiver = this.getPeer();
         if (receiver === null) {
             throw new SignalingError(CloseCode.InternalError, 'No peer address could be found');
         }
 
+        console.debug('Sending', name, 'message');
         if (this.handoverState.local === true) {
             this.task.sendSignalingMessage(this.msgpackEncode(msg));
         } else {

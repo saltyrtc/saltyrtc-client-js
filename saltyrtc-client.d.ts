@@ -214,6 +214,8 @@ declare namespace saltyrtc {
         connect(): void;
         disconnect(): void;
 
+        sendApplicationMessage(data: any): void;
+
         // Event handling
         on(event: string | string[], handler: SaltyRTCEventHandler): void;
         once(event: string | string[], handler: SaltyRTCEventHandler): void;
@@ -280,7 +282,7 @@ declare namespace saltyrtc.messages {
     type MessageType = 'server-hello' | 'client-hello' | 'client-auth'
                      | 'server-auth' | 'new-initiator' | 'new-responder'
                      | 'drop-responder' | 'send-error' | 'token' | 'key'
-                     | 'auth' | 'restart' | 'close';
+                     | 'auth' | 'restart' | 'close' | 'application';
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#server-hello
     interface ServerHello extends SignalingMessage {
@@ -369,6 +371,12 @@ declare namespace saltyrtc.messages {
     interface Close extends SignalingMessage {
         type: 'close';
         reason: number;
+    }
+
+    // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#application-message
+    interface Application extends Message {
+        type: 'application';
+        data: any;
     }
 
     /**

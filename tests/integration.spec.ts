@@ -310,6 +310,21 @@ export default () => { describe('Integration Tests', function() {
             done();
         });
 
+        it('can send application messages', async (done) => {
+            await this.connectBoth(this.initiator, this.responder);
+            expect(this.initiator.state).toEqual('task');
+            expect(this.responder.state).toEqual('task');
+            this.initiator.once('application', (ev: saltyrtc.SaltyRTCEvent) => {
+                expect(ev.data).toEqual('bonan tagon.');
+                this.initiator.sendApplicationMessage('saluton!');
+            });
+            this.responder.once('application', (ev: saltyrtc.SaltyRTCEvent) => {
+                expect(ev.data).toEqual('saluton!');
+                done();
+            });
+            this.responder.sendApplicationMessage('bonan tagon.');
+        });
+
         let slowdescribe = Config.RUN_LOAD_TESTS ? describe : xdescribe;
         slowdescribe('slow load tests', () => {
             let originalTimeout;

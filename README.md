@@ -78,6 +78,7 @@ The following events are available:
  - `state-change(saltyrtcClient.SignalingState)`: The signaling state changed.
  - `state-change:<new-state>(void)`: The signaling state change event, filtered by state.
  - `new-responder(responderId)`: A responder has connected. This event is only dispatched for the initiator.
+ - `application(data)`: An application message has arrived.
  - `handover(void)`: The handover to the data channel is done.
  - `signaling-connection-lost(responderId)`: The signaling connection to the specified peer was lost.
  - `connection-closed(closeCode)`: The connection was closed.

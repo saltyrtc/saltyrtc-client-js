@@ -242,6 +242,24 @@ export default () => { describe('client', function() {
 
         });
 
+        describe('application messages', function() {
+
+            it('can only send application messages after c2c handshake', () => {
+                const salty = new SaltyRTCBuilder()
+                    .connectTo('localhost')
+                    .withKeyStore(new KeyStore())
+                    .usingTasks([new DummyTask()])
+                    .asInitiator();
+
+                const send = () => salty.sendApplicationMessage("hello");
+                (salty as any).signaling.state = 'peer-handshake';
+                expect(send).toThrowError('Cannot send application message in "peer-handshake" state');
+                (salty as any).signaling.state = 'closing';
+                expect(send).toThrowError('Cannot send application message in "closing" state');
+            });
+
+        });
+
     });
 
 }); }
