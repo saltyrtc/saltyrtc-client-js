@@ -211,7 +211,7 @@ export class ResponderSignaling extends Signaling {
             try {
                 this.validateSignedKeys(msg.signed_keys, nonce, this.serverPublicKey);
             } catch (e) {
-                if (e instanceof ValidationError) {
+                if (e.name === 'ValidationError') {
                     throw new ProtocolError("Verification of signed_keys failed: " + e.message);
                 } throw e;
             }
@@ -330,7 +330,7 @@ export class ResponderSignaling extends Signaling {
         try {
             ResponderSignaling.validateTaskInfo(msg.task, msg.data);
         } catch (e) {
-            if (e instanceof ValidationError) {
+            if (e.name === 'ValidationError') {
                 throw new ProtocolError("Peer sent invalid task info: " + e.message);
             } throw e;
         }

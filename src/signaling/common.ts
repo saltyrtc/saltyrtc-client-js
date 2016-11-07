@@ -292,7 +292,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
                     console.warn(this.logTag, 'Received message in', this.getState(), 'signaling state. Ignoring.');
             }
         } catch(e) {
-            if (e instanceof SignalingError) {
+            if (e.name === 'SignalingError' || e.name === 'ProtocolError') {
                 console.error(this.logTag, 'Signaling error: ' + explainCloseCode(e.closeCode));
                 // Send close message if client-to-client handshake has been completed
                 if (this.state === 'task') {
@@ -300,7 +300,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
                 }
                 // Close connection
                 this.resetConnection(e.closeCode);
-            } else if (e instanceof ConnectionError) {
+            } else if (e.name === 'ConnectionError') {
                 console.warn(this.logTag, 'Connection error. Resetting connection.');
                 this.resetConnection(CloseCode.InternalError);
             }
@@ -741,7 +741,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         try {
             task.init(this, data);
         } catch (e) {
-            if (e instanceof ValidationError) {
+            if (e.name === 'ValidationError') {
                 throw new ProtocolError("Peer sent invalid task data");
             } throw e;
         }
