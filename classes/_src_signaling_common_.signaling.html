@@ -123,6 +123,7 @@
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="_src_signaling_common_.signaling.html#protocol" class="tsd-kind-icon">protocol</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_src_signaling_common_.signaling.html#role" class="tsd-kind-icon">role</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="_src_signaling_common_.signaling.html#server" class="tsd-kind-icon">server</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="_src_signaling_common_.signaling.html#serverpublickey" class="tsd-kind-icon">server<wbr>Public<wbr>Key</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="_src_signaling_common_.signaling.html#sessionkey" class="tsd-kind-icon">session<wbr>Key</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-protected"><a href="_src_signaling_common_.signaling.html#state" class="tsd-kind-icon">state</a></li>
 								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_src_signaling_common_.signaling.html#task" class="tsd-kind-icon">task</a></li>
@@ -188,6 +189,7 @@
 								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_src_signaling_common_.signaling.html#setstate" class="tsd-kind-icon">set<wbr>State</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a href="_src_signaling_common_.signaling.html#validatenonce" class="tsd-kind-icon">validate<wbr>Nonce</a></li>
 								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a href="_src_signaling_common_.signaling.html#validaterepeatedcookie" class="tsd-kind-icon">validate<wbr>Repeated<wbr>Cookie</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-protected"><a href="_src_signaling_common_.signaling.html#validatesignedkeys" class="tsd-kind-icon">validate<wbr>Signed<wbr>Keys</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section tsd-is-private-protected">
@@ -205,13 +207,13 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Signaling<span class="tsd-signature-symbol">(</span>client<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">SaltyRTC</span>, host<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, port<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, tasks<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Task</span><span class="tsd-signature-symbol">[]</span>, pingInterval<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, permanentKey<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">KeyStore</span>, peerTrustedKey<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_src_signaling_common_.signaling.html" class="tsd-signature-type">Signaling</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Signaling<span class="tsd-signature-symbol">(</span>client<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">SaltyRTC</span>, host<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, port<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, serverKey<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Uint8Array</span>, tasks<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Task</span><span class="tsd-signature-symbol">[]</span>, pingInterval<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">number</span>, permanentKey<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">KeyStore</span>, peerTrustedKey<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_src_signaling_common_.signaling.html" class="tsd-signature-type">Signaling</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L73">src/signaling/common.ts:73</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L74">src/signaling/common.ts:74</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -229,6 +231,9 @@
 								</li>
 								<li>
 									<h5>port: <span class="tsd-signature-type">number</span></h5>
+								</li>
+								<li>
+									<h5>serverKey: <span class="tsd-signature-type">Uint8Array</span></h5>
 								</li>
 								<li>
 									<h5>tasks: <span class="tsd-signature-type">Task</span><span class="tsd-signature-symbol">[]</span></h5>
@@ -256,7 +261,7 @@
 					<div class="tsd-signature tsd-kind-icon">address<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;Signaling.SALTYRTC_ADDR_UNKNOWN</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L73">src/signaling/common.ts:73</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L74">src/signaling/common.ts:74</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -266,7 +271,7 @@
 					<div class="tsd-signature tsd-kind-icon">auth<wbr>Token<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">AuthToken</span><span class="tsd-signature-symbol"> =&nbsp;null</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L66">src/signaling/common.ts:66</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L66">src/signaling/common.ts:66</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -276,7 +281,7 @@
 					<div class="tsd-signature tsd-kind-icon">client<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">SaltyRTC</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L51">src/signaling/common.ts:51</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L51">src/signaling/common.ts:51</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -286,7 +291,7 @@
 					<div class="tsd-signature tsd-kind-icon">handover<wbr>State<span class="tsd-signature-symbol">:</span> <a href="_src_signaling_handoverstate_.handoverstate.html" class="tsd-signature-type">HandoverState</a><span class="tsd-signature-symbol"> =&nbsp;new HandoverState()</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L48">src/signaling/common.ts:48</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L48">src/signaling/common.ts:48</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -296,7 +301,7 @@
 					<div class="tsd-signature tsd-kind-icon">host<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L35">src/signaling/common.ts:35</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L35">src/signaling/common.ts:35</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -306,7 +311,7 @@
 					<div class="tsd-signature tsd-kind-icon">log<wbr>Tag<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;Signaling:&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L72">src/signaling/common.ts:72</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L73">src/signaling/common.ts:73</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -316,7 +321,7 @@
 					<div class="tsd-signature tsd-kind-icon">peer<wbr>Trusted<wbr>Key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol"> =&nbsp;null</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L65">src/signaling/common.ts:65</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L65">src/signaling/common.ts:65</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -326,7 +331,7 @@
 					<div class="tsd-signature tsd-kind-icon">permanent<wbr>Key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">KeyStore</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L61">src/signaling/common.ts:61</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L61">src/signaling/common.ts:61</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -336,7 +341,7 @@
 					<div class="tsd-signature tsd-kind-icon">ping<wbr>Interval<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L39">src/signaling/common.ts:39</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L39">src/signaling/common.ts:39</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -346,7 +351,7 @@
 					<div class="tsd-signature tsd-kind-icon">port<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L36">src/signaling/common.ts:36</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L36">src/signaling/common.ts:36</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -356,7 +361,7 @@
 					<div class="tsd-signature tsd-kind-icon">protocol<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;wss&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L37">src/signaling/common.ts:37</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L37">src/signaling/common.ts:37</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -366,7 +371,7 @@
 					<div class="tsd-signature tsd-kind-icon">role<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">saltyrtc.SignalingRole</span><span class="tsd-signature-symbol"> =&nbsp;null</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L71">src/signaling/common.ts:71</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L72">src/signaling/common.ts:72</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -376,7 +381,17 @@
 					<div class="tsd-signature tsd-kind-icon">server<span class="tsd-signature-symbol">:</span> <a href="_src_peers_.server.html" class="tsd-signature-type">Server</a><span class="tsd-signature-symbol"> =&nbsp;new Server()</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L58">src/signaling/common.ts:58</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L58">src/signaling/common.ts:58</a></li>
+						</ul>
+					</aside>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-protected">
+					<a name="serverpublickey" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagProtected">Protected</span> server<wbr>Public<wbr>Key</h3>
+					<div class="tsd-signature tsd-kind-icon">server<wbr>Public<wbr>Key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol"> =&nbsp;null</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L69">src/signaling/common.ts:69</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -386,7 +401,7 @@
 					<div class="tsd-signature tsd-kind-icon">session<wbr>Key<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">KeyStore</span><span class="tsd-signature-symbol"> =&nbsp;null</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L62">src/signaling/common.ts:62</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L62">src/signaling/common.ts:62</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -396,7 +411,7 @@
 					<div class="tsd-signature tsd-kind-icon">state<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">saltyrtc.SignalingState</span><span class="tsd-signature-symbol"> =&nbsp;&quot;new&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L47">src/signaling/common.ts:47</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L47">src/signaling/common.ts:47</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -406,7 +421,7 @@
 					<div class="tsd-signature tsd-kind-icon">task<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Task</span><span class="tsd-signature-symbol"> =&nbsp;null</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L55">src/signaling/common.ts:55</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L55">src/signaling/common.ts:55</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -416,7 +431,7 @@
 					<div class="tsd-signature tsd-kind-icon">tasks<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Task</span><span class="tsd-signature-symbol">[]</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L54">src/signaling/common.ts:54</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L54">src/signaling/common.ts:54</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -426,7 +441,7 @@
 					<div class="tsd-signature tsd-kind-icon">ws<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">WebSocket</span><span class="tsd-signature-symbol"> =&nbsp;null</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L38">src/signaling/common.ts:38</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L38">src/signaling/common.ts:38</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -436,7 +451,7 @@
 					<div class="tsd-signature tsd-kind-icon">SALTYRTC_<wbr>ADDR_<wbr>INITIATOR<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;1</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L32">src/signaling/common.ts:32</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L32">src/signaling/common.ts:32</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -446,7 +461,7 @@
 					<div class="tsd-signature tsd-kind-icon">SALTYRTC_<wbr>ADDR_<wbr>SERVER<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;0</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L31">src/signaling/common.ts:31</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L31">src/signaling/common.ts:31</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -456,7 +471,7 @@
 					<div class="tsd-signature tsd-kind-icon">SALTYRTC_<wbr>ADDR_<wbr>UNKNOWN<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;0</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L30">src/signaling/common.ts:30</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L30">src/signaling/common.ts:30</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -466,7 +481,7 @@
 					<div class="tsd-signature tsd-kind-icon">SALTYRTC_<wbr>SUBPROTOCOL<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol"> =&nbsp;&quot;v0.saltyrtc.org&quot;</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L29">src/signaling/common.ts:29</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L29">src/signaling/common.ts:29</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -483,7 +498,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L125">src/signaling/common.ts:125</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L130">src/signaling/common.ts:130</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -505,7 +520,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L135">src/signaling/common.ts:135</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L140">src/signaling/common.ts:140</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -527,7 +542,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L118">src/signaling/common.ts:118</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L123">src/signaling/common.ts:123</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -552,7 +567,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L583">src/signaling/common.ts:583</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L613">src/signaling/common.ts:613</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -589,7 +604,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L156">src/signaling/common.ts:156</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L161">src/signaling/common.ts:161</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -611,7 +626,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L558">src/signaling/common.ts:558</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L588">src/signaling/common.ts:588</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -653,7 +668,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L655">src/signaling/common.ts:655</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L685">src/signaling/common.ts:685</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -681,7 +696,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L786">src/signaling/common.ts:786</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L816">src/signaling/common.ts:816</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -710,7 +725,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L725">src/signaling/common.ts:725</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L755">src/signaling/common.ts:755</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -744,7 +759,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L740">src/signaling/common.ts:740</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L770">src/signaling/common.ts:770</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -772,7 +787,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L164">src/signaling/common.ts:164</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L169">src/signaling/common.ts:169</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -800,7 +815,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L777">src/signaling/common.ts:777</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L807">src/signaling/common.ts:807</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -832,7 +847,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L628">src/signaling/common.ts:628</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L658">src/signaling/common.ts:658</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -869,7 +884,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L621">src/signaling/common.ts:621</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L651">src/signaling/common.ts:651</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -900,7 +915,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L636">src/signaling/common.ts:636</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L666">src/signaling/common.ts:666</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -923,7 +938,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L650">src/signaling/common.ts:650</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L680">src/signaling/common.ts:680</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -946,7 +961,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L643">src/signaling/common.ts:643</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L673">src/signaling/common.ts:673</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -969,7 +984,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L111">src/signaling/common.ts:111</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L116">src/signaling/common.ts:116</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -991,7 +1006,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L183">src/signaling/common.ts:183</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L188">src/signaling/common.ts:188</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1013,7 +1028,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L500">src/signaling/common.ts:500</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L501">src/signaling/common.ts:501</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1041,7 +1056,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L469">src/signaling/common.ts:469</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L470">src/signaling/common.ts:470</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1069,7 +1084,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L476">src/signaling/common.ts:476</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L477">src/signaling/common.ts:477</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1097,7 +1112,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L459">src/signaling/common.ts:459</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L460">src/signaling/common.ts:460</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1128,7 +1143,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L429">src/signaling/common.ts:429</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L430">src/signaling/common.ts:430</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1159,7 +1174,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L464">src/signaling/common.ts:464</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L465">src/signaling/common.ts:465</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1181,7 +1196,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L706">src/signaling/common.ts:706</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L736">src/signaling/common.ts:736</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1224,7 +1239,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L188">src/signaling/common.ts:188</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L193">src/signaling/common.ts:193</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1246,7 +1261,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L149">src/signaling/common.ts:149</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L154">src/signaling/common.ts:154</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1274,7 +1289,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L142">src/signaling/common.ts:142</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L147">src/signaling/common.ts:147</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1302,7 +1317,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L228">src/signaling/common.ts:228</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L233">src/signaling/common.ts:233</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1330,7 +1345,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L218">src/signaling/common.ts:218</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L223">src/signaling/common.ts:223</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1358,7 +1373,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L258">src/signaling/common.ts:258</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L263">src/signaling/common.ts:263</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1381,7 +1396,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L210">src/signaling/common.ts:210</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L215">src/signaling/common.ts:215</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1409,7 +1424,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L366">src/signaling/common.ts:366</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L375">src/signaling/common.ts:375</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1440,7 +1455,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L311">src/signaling/common.ts:311</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L320">src/signaling/common.ts:320</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1476,7 +1491,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L371">src/signaling/common.ts:371</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L380">src/signaling/common.ts:380</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1507,7 +1522,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L408">src/signaling/common.ts:408</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L409">src/signaling/common.ts:409</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1543,7 +1558,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L391">src/signaling/common.ts:391</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L392">src/signaling/common.ts:392</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
@@ -1566,7 +1581,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L675">src/signaling/common.ts:675</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L705">src/signaling/common.ts:705</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1600,7 +1615,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L443">src/signaling/common.ts:443</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L444">src/signaling/common.ts:444</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1622,7 +1637,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L438">src/signaling/common.ts:438</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L439">src/signaling/common.ts:439</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1644,7 +1659,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L483">src/signaling/common.ts:483</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L484">src/signaling/common.ts:484</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1672,7 +1687,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L758">src/signaling/common.ts:758</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L788">src/signaling/common.ts:788</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1709,7 +1724,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L100">src/signaling/common.ts:100</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L105">src/signaling/common.ts:105</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1738,7 +1753,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L518">src/signaling/common.ts:518</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L519">src/signaling/common.ts:519</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1777,7 +1792,7 @@
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L539">src/signaling/common.ts:539</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L540">src/signaling/common.ts:540</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
@@ -1799,6 +1814,54 @@
 						</li>
 					</ul>
 				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-protected">
+					<a name="validatesignedkeys" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagProtected">Protected</span> validate<wbr>Signed<wbr>Keys</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-protected">
+						<li class="tsd-signature tsd-kind-icon">validate<wbr>Signed<wbr>Keys<span class="tsd-signature-symbol">(</span>signed_keys<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ArrayBuffer</span>, nonce<span class="tsd-signature-symbol">: </span><a href="_src_nonce_.nonce.html" class="tsd-signature-type">Nonce</a>, serverPublicKey<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L557">src/signaling/common.ts:557</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Validate the signed keys sent by the server in the server-auth message.</p>
+								</div>
+								<dl class="tsd-comment-tags">
+									<dt>throws</dt>
+									<dd><p>ValidationError if the signed keys are not valid.</p>
+									</dd>
+								</dl>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>signed_keys: <span class="tsd-signature-type">ArrayBuffer</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The <code>signed_keys</code> field from the server-auth message.</p>
+									</div>
+								</li>
+								<li>
+									<h5>nonce: <a href="_src_nonce_.nonce.html" class="tsd-signature-type">Nonce</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The incoming message nonce.</p>
+									</div>
+								</li>
+								<li>
+									<h5>serverPublicKey: <span class="tsd-signature-type">Uint8Array</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The expected server public permanent key.</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group tsd-is-private-protected">
 				<h2>Object literals</h2>
@@ -1808,7 +1871,7 @@
 					<div class="tsd-signature tsd-kind-icon">msgpack<wbr>Options<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">object</span></div>
 					<aside class="tsd-sources">
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L42">src/signaling/common.ts:42</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L42">src/signaling/common.ts:42</a></li>
 						</ul>
 					</aside>
 					<section class="tsd-panel tsd-member tsd-kind-variable tsd-parent-kind-object-literal">
@@ -1817,7 +1880,7 @@
 						<div class="tsd-signature tsd-kind-icon">codec<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Codec</span><span class="tsd-signature-symbol"> =&nbsp;msgpack.createCodec({binarraybuffer: true})</span></div>
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/ff08619/src/signaling/common.ts#L43">src/signaling/common.ts:43</a></li>
+								<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a569595/src/signaling/common.ts#L43">src/signaling/common.ts:43</a></li>
 							</ul>
 						</aside>
 					</section>
@@ -1952,6 +2015,9 @@
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-protected">
 								<a href="_src_signaling_common_.signaling.html#server" class="tsd-kind-icon">server</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-protected">
+								<a href="_src_signaling_common_.signaling.html#serverpublickey" class="tsd-kind-icon">server<wbr>Public<wbr>Key</a>
 							</li>
 							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-protected">
 								<a href="_src_signaling_common_.signaling.html#sessionkey" class="tsd-kind-icon">session<wbr>Key</a>
@@ -2117,6 +2183,9 @@
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-protected">
 								<a href="_src_signaling_common_.signaling.html#validaterepeatedcookie" class="tsd-kind-icon">validate<wbr>Repeated<wbr>Cookie</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-protected">
+								<a href="_src_signaling_common_.signaling.html#validatesignedkeys" class="tsd-kind-icon">validate<wbr>Signed<wbr>Keys</a>
 							</li>
 							<li class=" tsd-kind-object-literal tsd-parent-kind-class tsd-is-protected">
 								<a href="_src_signaling_common_.signaling.html#msgpackoptions" class="tsd-kind-icon">msgpack<wbr>Options</a>
