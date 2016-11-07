@@ -150,8 +150,8 @@ export default () => { describe('Integration Tests', function() {
             // Register event handler
             let eventCounter = 0;
             this.initiator.on('new-responder', (ev) => eventCounter += 1);
-            responder1.on('new-responder', (id) => expect(true).toBe(false));
-            responder2.on('new-responder', (id) => expect(true).toBe(false));
+            responder1.on('new-responder', (id) => done.fail());
+            responder2.on('new-responder', (id) => done.fail());
 
             // Connect responders
             responder1.connect();
@@ -174,7 +174,7 @@ export default () => { describe('Integration Tests', function() {
             // Register event handler
             let eventCounter = 0;
             this.initiator.on('new-responder', (ev) => eventCounter += 1);
-            this.responder.on('new-responder', (id) => expect(true).toBe(false));
+            this.responder.on('new-responder', (id) => done.fail());
 
             // Connect initiator
             this.initiator.connect();
@@ -236,6 +236,66 @@ export default () => { describe('Integration Tests', function() {
             expect(initiator.state).toEqual('task');
             expect(responder.state).toEqual('task');
             done();
+        });
+
+        it('validate server auth success (initiator)', async (done) => {
+            const initiator = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withKeyStore(new KeyStore())
+                .usingTasks([new DummyTask()])
+                .withServerKey(Config.SALTYRTC_SERVER_PUBLIC_KEY)
+                .asInitiator();
+            expect(initiator.state).toEqual('new');
+            initiator.connect();
+            initiator.once('state-change:peer-handshake', done);
+        });
+
+        it('validate server auth validation fail (initiator)', async (done) => {
+            const initiator = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withKeyStore(new KeyStore())
+                .usingTasks([new DummyTask()])
+                .withServerKey("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+                .asInitiator();
+            initiator.connect();
+            initiator.once('state-change:peer-handshake', () => {
+                done.fail("Invalid server public key was not detected");
+            });
+            initiator.once('state-change:closed', () => {
+                expect(initiator.state).toEqual('closed');
+                done();
+            });
+        });
+
+        it('validate server auth success (responder)', async (done) => {
+            const responder = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withKeyStore(new KeyStore())
+                .usingTasks([new DummyTask()])
+                .withServerKey(Config.SALTYRTC_SERVER_PUBLIC_KEY)
+                .initiatorInfo(nacl.randomBytes(32), nacl.randomBytes(32))
+                .asInitiator();
+            expect(responder.state).toEqual('new');
+            responder.connect();
+            responder.once('state-change:peer-handshake', done);
+        });
+
+        it('validate server auth validation fail (responder)', async (done) => {
+            const responder = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withKeyStore(new KeyStore())
+                .usingTasks([new DummyTask()])
+                .withServerKey("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+                .initiatorInfo(nacl.randomBytes(32), nacl.randomBytes(32))
+                .asInitiator();
+            responder.connect();
+            responder.once('state-change:peer-handshake', () => {
+                done.fail("Invalid server public key was not detected");
+            });
+            responder.once('state-change:closed', () => {
+                expect(responder.state).toEqual('closed');
+                done();
+            });
         });
 
     });
