@@ -12,7 +12,7 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
-### UNRELEASED
+### v0.3.1 (2016-11-07)
 
 - [fixed] Send signaling messages to the task without encrypting (#58)
 - [fixed] Close websocket after handshake (#57)

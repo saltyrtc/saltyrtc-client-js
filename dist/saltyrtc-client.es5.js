@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.3.0
+ * saltyrtc-client-js v0.3.1
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -1153,6 +1153,7 @@ var Signaling = function () {
         }
         this.handoverState.onBoth = function () {
             _this.client.emit({ type: 'handover' });
+            _this.ws.close(exports.CloseCode.Handover);
         };
     }
 
@@ -1333,9 +1334,13 @@ var Signaling = function () {
                 type: 'close',
                 reason: reason
             };
-            var packet = this.buildPacket(message, this.getPeer());
             console.debug(this.logTag, 'Sending close');
-            this.ws.send(packet);
+            if (this.handoverState.local === true) {
+                this.task.sendSignalingMessage(this.msgpackEncode(message));
+            } else {
+                var packet = this.buildPacket(message, this.getPeer());
+                this.ws.send(packet);
+            }
         }
     }, {
         key: "handleClose",
@@ -1481,27 +1486,18 @@ var Signaling = function () {
             }
         }
     }, {
-        key: "send",
-        value: function send(payload) {
-            if (['server-handshake', 'peer-handshake', 'task'].indexOf(this.state) === -1) {
-                console.error('Trying to send message, but connection state is', this.state);
-                throw new ConnectionError("Bad signaling state, cannot send message");
-            }
-            if (this.handoverState.local === false) {
-                this.ws.send(payload);
-            } else {
-                this.task.sendSignalingMessage(payload);
-            }
-        }
-    }, {
         key: "sendTaskMessage",
         value: function sendTaskMessage(msg) {
             var receiver = this.getPeer();
             if (receiver === null) {
                 throw new SignalingError(exports.CloseCode.InternalError, 'No peer address could be found');
             }
-            var packet = this.buildPacket(msg, receiver);
-            this.send(packet);
+            if (this.handoverState.local === true) {
+                this.task.sendSignalingMessage(this.msgpackEncode(msg));
+            } else {
+                var packet = this.buildPacket(msg, receiver);
+                this.ws.send(packet);
+            }
         }
     }, {
         key: "encryptForPeer",

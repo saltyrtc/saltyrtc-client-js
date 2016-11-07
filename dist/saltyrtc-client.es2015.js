@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.3.0
+ * saltyrtc-client-js v0.3.1
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -645,6 +645,7 @@ class Signaling {
         }
         this.handoverState.onBoth = () => {
             this.client.emit({ type: 'handover' });
+            this.ws.close(CloseCode.Handover);
         };
     }
     setState(newState) {
@@ -812,9 +813,14 @@ class Signaling {
             type: 'close',
             reason: reason,
         };
-        const packet = this.buildPacket(message, this.getPeer());
         console.debug(this.logTag, 'Sending close');
-        this.ws.send(packet);
+        if (this.handoverState.local === true) {
+            this.task.sendSignalingMessage(this.msgpackEncode(message));
+        }
+        else {
+            const packet = this.buildPacket(message, this.getPeer());
+            this.ws.send(packet);
+        }
     }
     handleClose(msg) {
         console.warn(this.logTag, 'Received close message. Reason:', msg.reason, '(' + explainCloseCode(msg.reason) + ')');
@@ -939,25 +945,18 @@ class Signaling {
             }
         }
     }
-    send(payload) {
-        if (['server-handshake', 'peer-handshake', 'task'].indexOf(this.state) === -1) {
-            console.error('Trying to send message, but connection state is', this.state);
-            throw new ConnectionError("Bad signaling state, cannot send message");
-        }
-        if (this.handoverState.local === false) {
-            this.ws.send(payload);
-        }
-        else {
-            this.task.sendSignalingMessage(payload);
-        }
-    }
     sendTaskMessage(msg) {
         const receiver = this.getPeer();
         if (receiver === null) {
             throw new SignalingError(CloseCode.InternalError, 'No peer address could be found');
         }
-        const packet = this.buildPacket(msg, receiver);
-        this.send(packet);
+        if (this.handoverState.local === true) {
+            this.task.sendSignalingMessage(this.msgpackEncode(msg));
+        }
+        else {
+            const packet = this.buildPacket(msg, receiver);
+            this.ws.send(packet);
+        }
     }
     encryptForPeer(data, nonce) {
         return this.sessionKey.encrypt(data, nonce, this.getPeerSessionKey());
