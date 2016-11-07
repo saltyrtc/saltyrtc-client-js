@@ -384,15 +384,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
             this.onSignalingServerMessage(box);
         } else {
             // TODO: Do we need to validate the source id or does that happen deeper down?
-            let decrypted: Uint8Array;
-            try {
-                decrypted = this.decryptFromPeer(box);
-            } catch (e) {
-                if (e === 'decryption-failed') {
-                    console.warn(this.logTag, 'Could not decrypt peer message from', byteToHex(nonce.source));
-                    return;
-                } else { throw e; }
-            }
+            let decrypted: Uint8Array = this.decryptFromPeer(box);
             this.onSignalingPeerMessage(decrypted);
         }
     }
