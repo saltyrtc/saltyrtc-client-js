@@ -26,9 +26,10 @@ export class ResponderSignaling extends Signaling {
     /**
      * Create a new responder signaling instance.
      */
-    constructor(client: saltyrtc.SaltyRTC, host: string, port: number, tasks: saltyrtc.Task[], pingInterval: number,
+    constructor(client: saltyrtc.SaltyRTC, host: string, port: number, serverKey: Uint8Array,
+                tasks: saltyrtc.Task[], pingInterval: number,
                 permanentKey: saltyrtc.KeyStore, initiatorPubKey: Uint8Array, authToken?: saltyrtc.AuthToken) {
-        super(client, host, port, tasks, pingInterval, permanentKey, authToken === undefined ? initiatorPubKey : undefined);
+        super(client, host, port, serverKey, tasks, pingInterval, permanentKey, authToken === undefined ? initiatorPubKey : undefined);
         this.role = 'responder';
         this.initiator = new Initiator(initiatorPubKey);
         if (authToken !== undefined) {

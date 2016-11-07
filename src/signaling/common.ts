@@ -65,7 +65,8 @@ export abstract class Signaling implements saltyrtc.Signaling {
     protected peerTrustedKey: Uint8Array = null;
     protected authToken: saltyrtc.AuthToken = null;
 
-    // TODO: Server trusted key
+    // Server trusted key
+    protected serverPublicKey: Uint8Array = null;
 
     // Signaling
     public role: saltyrtc.SignalingRole = null;
@@ -75,7 +76,8 @@ export abstract class Signaling implements saltyrtc.Signaling {
     /**
      * Create a new signaling instance.
      */
-    constructor(client: saltyrtc.SaltyRTC, host: string, port: number, tasks: saltyrtc.Task[], pingInterval: number,
+    constructor(client: saltyrtc.SaltyRTC, host: string, port: number, serverKey: Uint8Array,
+                tasks: saltyrtc.Task[], pingInterval: number,
                 permanentKey: saltyrtc.KeyStore, peerTrustedKey?: Uint8Array) {
         this.client = client;
         this.permanentKey = permanentKey;
@@ -85,6 +87,9 @@ export abstract class Signaling implements saltyrtc.Signaling {
         this.pingInterval = pingInterval;
         if (peerTrustedKey !== undefined) {
             this.peerTrustedKey = peerTrustedKey;
+        }
+        if (serverKey !== undefined) {
+            this.serverPublicKey = serverKey;
         }
         this.handoverState.onBoth = () => {
             this.client.emit({type: 'handover'});
