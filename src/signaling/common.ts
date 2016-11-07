@@ -88,6 +88,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         }
         this.handoverState.onBoth = () => {
             this.client.emit({type: 'handover'});
+            this.ws.close(CloseCode.Handover);
         };
     }
 

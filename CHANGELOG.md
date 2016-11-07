@@ -15,6 +15,7 @@ Possible log types:
 ### UNRELEASED
 
 - [fixed] Send signaling messages to the task without encrypting (#58)
+- [fixed] Close websocket after handshake (#57)
 
 ### v0.3.0 (2016-11-02)
 
