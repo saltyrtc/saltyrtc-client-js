@@ -67,7 +67,8 @@ declare namespace saltyrtc {
         setState(state: SignalingState): void;
 
         /**
-         * Send a task message through the websocket.
+         * Send a task message through the websocket or - if handover has
+         * already happened - through the task channel.
          *
          * @throws SignalingError if message could not be sent.
          */
@@ -149,10 +150,11 @@ declare namespace saltyrtc {
         onTaskMessage(message: messages.TaskMessage): void;
 
         /**
-         * Send bytes through the task signaling channel.
+         * Send a signaling message through the task signaling channel.
          *
          * This method should only be called after the handover.
          *
+         * @param payload The *unencrypted* message bytes. Message will be encrypted by the task.
          * @throws SignalingError if something goes wrong.
          */
         sendSignalingMessage(payload: Uint8Array);

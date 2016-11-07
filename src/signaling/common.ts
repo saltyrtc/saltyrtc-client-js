@@ -484,9 +484,13 @@ export abstract class Signaling implements saltyrtc.Signaling {
             type: 'close',
             reason: reason,
         };
-        const packet: Uint8Array = this.buildPacket(message, this.getPeer());
         console.debug(this.logTag, 'Sending close');
-        this.ws.send(packet);
+        if (this.handoverState.local === true) {
+            this.task.sendSignalingMessage(this.msgpackEncode(message));
+        } else {
+            const packet: Uint8Array = this.buildPacket(message, this.getPeer());
+            this.ws.send(packet);
+        }
     }
 
     /**
@@ -744,25 +748,9 @@ export abstract class Signaling implements saltyrtc.Signaling {
     }
 
     /**
-     * Send binary data through the signaling channel.
+     * Send a task message through the websocket or - if handover has
+     * already happened - through the task channel.
      *
-     * @throws ConnectionError if message cannot be sent due to a bad signaling state.
-     */
-    private send(payload: Uint8Array): void {
-        if (['server-handshake', 'peer-handshake', 'task'].indexOf(this.state) === -1) {
-            console.error('Trying to send message, but connection state is', this.state);
-            throw new ConnectionError("Bad signaling state, cannot send message");
-        }
-
-        if (this.handoverState.local === false) {
-            this.ws.send(payload);
-        } else {
-            this.task.sendSignalingMessage(payload);
-        }
-    }
-
-    /**
-     * Send a task message through the signaling channel.
      * @param msg The message to be sent.
      * @throws SignalingError
      */
@@ -771,8 +759,13 @@ export abstract class Signaling implements saltyrtc.Signaling {
         if (receiver === null) {
             throw new SignalingError(CloseCode.InternalError, 'No peer address could be found');
         }
-        const packet = this.buildPacket(msg, receiver);
-        this.send(packet);
+
+        if (this.handoverState.local === true) {
+            this.task.sendSignalingMessage(this.msgpackEncode(msg));
+        } else {
+            const packet = this.buildPacket(msg, receiver);
+            this.ws.send(packet);
+        }
     }
 
     /**

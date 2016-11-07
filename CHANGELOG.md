@@ -12,6 +12,10 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### UNRELEASED
+
+- [fixed] Send signaling messages to the task without encrypting (#58)
+
 ### v0.3.0 (2016-11-02)
 
 - [added] The `KeyStore` and `SaltyRTCBuilder` interfaces now accept hex strings as keys
