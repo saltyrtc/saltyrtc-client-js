@@ -163,20 +163,27 @@ export abstract class Signaling implements saltyrtc.Signaling {
     /**
      * Disconnect from the signaling server.
      */
-    public disconnect(closeCode: number): void {
+    public disconnect(): void {
+        const reason = CloseCode.ClosingNormal;
+
         // Close WebSocket instance
         if (this.ws !== null) {
             console.debug(this.logTag, 'Disconnecting WebSocket');
-            this.ws.close(closeCode);
+            this.ws.close(reason);
         }
         this.ws = null;
 
-        // TODO: Do we need to close the task dc?
+        // Close task connections
+        if (this.task !== null) {
+            console.debug(this.logTag, 'Closing task connections');
+            this.task.close(reason);
+        }
 
+        // Update state
         this.setState('closed');
 
         // Notify subscribers
-        this.client.emit({type: 'connection-closed', data: closeCode});
+        this.client.emit({type: 'connection-closed', data: reason});
     }
 
     /**
@@ -219,9 +226,9 @@ export abstract class Signaling implements saltyrtc.Signaling {
      */
     protected onError = (ev: ErrorEvent) => {
         console.error(this.logTag, 'General WebSocket error', ev);
-        // TODO: Do we need to update the state here?
-        // TODO: Do we need to emit this event more often?
-        this.client.emit({type: 'connection-error', data: ev});
+        this.client.emit({type: 'connection-error'});
+        // Note: We don't update the state here, because an error event will be followed
+        // by a close event, which is already handled in `onClose`.
     };
 
     /**

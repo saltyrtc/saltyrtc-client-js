@@ -177,7 +177,12 @@ declare namespace saltyrtc {
         getData(): Object;
 
         /**
-         * This method is called by the signaling class when sending and receiving 'close' messages.
+         * Close any task connections that may be open.
+         *
+         * This method is called by the signaling class in two cases:
+         *
+         * - When sending and receiving 'close' messages
+         * - When the user explicitly requests to close the connection
          */
         close(reason: number): void;
     }

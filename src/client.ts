@@ -375,13 +375,15 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     }
 
     /**
-     * Disconnect from the SaltyRTC server.
+     * Close the connection to the server and the peer.
+     *
+     * Both the WebSocket as well as any open task connection will be closed.
      *
      * This method is asynchronous. To get notified when the connection is has
      * been closed, subscribe to the `connection-closed` event.
      */
     public disconnect(): void {
-        this.signaling.disconnect(CloseCode.ClosingNormal);
+        this.signaling.disconnect();
     }
 
     /**
