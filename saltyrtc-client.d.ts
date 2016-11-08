@@ -186,6 +186,7 @@ declare namespace saltyrtc {
         connectTo(host: string, port: number): SaltyRTCBuilder;
         withKeyStore(keyStore: KeyStore): SaltyRTCBuilder;
         withTrustedPeerKey(peerTrustedKey: Uint8Array | string): SaltyRTCBuilder;
+        withServerKey(serverKey: Uint8Array | string): SaltyRTCBuilder;
         initiatorInfo(initiatorPublicKey: Uint8Array | string, authToken: Uint8Array | string): SaltyRTCBuilder;
         usingTasks(tasks: Task[]): SaltyRTCBuilder;
         withPingInterval(interval: number);
