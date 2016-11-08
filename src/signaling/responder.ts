@@ -20,7 +20,6 @@ export class ResponderSignaling extends Signaling {
 
     protected logTag: string = 'Responder:';
 
-    // TODO: initiator class
     protected initiator: Initiator = null;
 
     /**
@@ -96,7 +95,6 @@ export class ResponderSignaling extends Signaling {
 
     protected onPeerHandshakeMessage(box: saltyrtc.Box, nonce: Nonce): void {
         // Validate nonce destination
-        // TODO: Can we do this earlier?
         if (nonce.destination != this.address) {
             throw new ProtocolError('Message destination does not match our address');
         }
@@ -398,6 +396,6 @@ export class ResponderSignaling extends Signaling {
         // Reset connection
         this.resetConnection(CloseCode.ProtocolError);
 
-        // TODO: Maybe keep ws connection open and wait for reconnect
+        // TODO: Maybe keep ws connection open and wait for reconnect (#63)
     }
 }

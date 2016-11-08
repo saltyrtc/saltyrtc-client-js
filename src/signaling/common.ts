@@ -376,12 +376,10 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Handle messages received from peer *after* the handshake is done.
      */
     protected onSignalingMessage(box: saltyrtc.Box, nonce: Nonce): void {
-        // TODO: Validate nonce?
         console.debug('Message received');
         if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
             this.onSignalingServerMessage(box);
         } else {
-            // TODO: Do we need to validate the source id or does that happen deeper down?
             let decrypted: Uint8Array = this.decryptFromPeer(box);
             this.onSignalingPeerMessage(decrypted);
         }
@@ -389,7 +387,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
     protected onSignalingServerMessage(box: saltyrtc.Box): void {
         const msg: saltyrtc.Message = this.decryptServerMessage(box);
-        // TODO: Catch problems?
 
         if (msg.type === 'send-error') {
             this.handleSendError(msg as saltyrtc.messages.SendError);
@@ -409,7 +406,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
         if (msg.type === 'close') {
             console.debug('Received close');
-            // TODO: Handle
+            this.handleClose(msg as saltyrtc.messages.Close);
         } else if (msg.type === 'restart') {
             console.debug(this.logTag, 'Received restart');
             this.handleRestart(msg as saltyrtc.messages.Restart);
@@ -417,7 +414,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
             console.debug(this.logTag, 'Received', msg.type, '[' + this.task.getName() + ']');
             this.task.onTaskMessage(msg as saltyrtc.messages.TaskMessage);
         } else {
-            // TODO: Check if message is a task message
             console.warn(this.logTag, 'Received message with invalid type from peer:', msg.type);
         }
     }
@@ -649,7 +645,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         }
 
         // Otherwise, encrypt packet
-        // TODO: Use polymorphism using peer object
+        // TODO: Use polymorphism using peer object (#65)
         let box;
         if (receiver.id === Signaling.SALTYRTC_ADDR_SERVER) {
             box = this.encryptHandshakeDataForServer(data, nonceBytes);
@@ -737,7 +733,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         this.setState('new');
         console.debug('Connection reset');
 
-        // TODO: Close dc
+        // TODO: Close task? (#64)
     }
 
 
@@ -765,8 +761,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
      *
      * When `convertErrors` is set to `true`, decryption errors will be
      * converted to a `ProtocolError`.
-     *
-     * TODO: Separate cookie / csn per data channel.
      */
     public decryptPeerMessage(box: saltyrtc.Box, convertErrors=true): saltyrtc.Message {
         try {

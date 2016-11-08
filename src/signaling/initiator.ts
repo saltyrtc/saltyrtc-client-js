@@ -130,7 +130,6 @@ export class InitiatorSignaling extends Signaling {
 
     protected onPeerHandshakeMessage(box: saltyrtc.Box, nonce: Nonce): void {
         // Validate nonce destination
-        // TODO: Can we do this earlier?
         if (nonce.destination != this.address) {
             throw new ProtocolError('Message destination does not match our address');
         }
@@ -456,7 +455,7 @@ export class InitiatorSignaling extends Signaling {
             if (this.responder.id === receiver) {
                 notify = true;
                 this.resetConnection(CloseCode.ProtocolError);
-                // TODO: Maybe keep ws connection open and wait for reconnect
+                // TODO: Maybe keep ws connection open and wait for reconnect (#63)
             } else {
                 console.warn(this.logTag, "Got send-error message for unknown responder", receiver);
             }
