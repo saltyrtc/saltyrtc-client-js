@@ -44,6 +44,8 @@ export abstract class Peer {
     public get cookiePair(): saltyrtc.CookiePair {
         return this._cookiePair;
     }
+
+    public abstract get name(): string;
 }
 
 /**
@@ -59,6 +61,10 @@ export class Initiator extends Peer {
         super(Initiator.ID);
         this.permanentKey = permanentKey;
     }
+
+    public get name(): string {
+        return "Initiator";
+    }
 }
 
 /**
@@ -70,6 +76,10 @@ export class Responder extends Peer {
 
     constructor(id: number) {
         super(id);
+    }
+
+    public get name(): string {
+        return "Responder " + this.id;
     }
 }
 
@@ -83,5 +93,9 @@ export class Server extends Peer {
 
     constructor() {
         super(Server.ID);
+    }
+
+    public get name(): string {
+        return "Server";
     }
 }
