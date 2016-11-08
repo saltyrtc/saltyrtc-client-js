@@ -274,7 +274,7 @@ export default () => { describe('Integration Tests', function() {
                 .usingTasks([new DummyTask()])
                 .withServerKey(Config.SALTYRTC_SERVER_PUBLIC_KEY)
                 .initiatorInfo(nacl.randomBytes(32), nacl.randomBytes(32))
-                .asInitiator();
+                .asResponder();
             expect(responder.state).toEqual('new');
             responder.connect();
             responder.once('state-change:peer-handshake', done);
@@ -287,7 +287,7 @@ export default () => { describe('Integration Tests', function() {
                 .usingTasks([new DummyTask()])
                 .withServerKey("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
                 .initiatorInfo(nacl.randomBytes(32), nacl.randomBytes(32))
-                .asInitiator();
+                .asResponder();
             responder.connect();
             responder.once('state-change:peer-handshake', () => {
                 done.fail("Invalid server public key was not detected");

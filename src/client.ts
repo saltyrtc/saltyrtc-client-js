@@ -179,6 +179,9 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
         this.requireConnectionInfo();
         this.requireKeyStore();
         this.requireTasks();
+        if (this.hasInitiatorInfo) {
+            throw new Error('Cannot initialize as initiator if .initiatorInfo(...) has been used')
+        }
         if (this.hasTrustedPeerKey) {
             return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.peerTrustedKey)
                 .asInitiator();
