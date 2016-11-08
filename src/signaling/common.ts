@@ -99,8 +99,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
     /**
      * Register a signaling state change.
-     *
-     * TODO: Regular methods would probably be better.
      */
     public setState(newState: saltyrtc.SignalingState): void {
         this.state = newState;
@@ -475,8 +473,26 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Handle an incoming send-error message.
      */
     protected handleSendError(msg: saltyrtc.messages.SendError): void {
-        throw new ProtocolError('Send error messages not yet implemented');
+        // Get the message id from the send-error message
+        const id: DataView = new DataView(msg.id);
+        const idString: string = u8aToHex(new Uint8Array(msg.id));
+
+        // Determine the sender and receiver of the message
+        const source = id.getUint8(0);
+        const destination = id.getUint8(1);
+
+        // Validate source
+        if (source != this.address) {
+            throw new ProtocolError("Received send-error message for a message not sent by us!");
+        }
+
+        // TODO: Log info about actual message (#62)
+        console.warn(this.logTag, "SendError: Could not send unknown message:", idString);
+
+        this._handleSendError(destination);
     }
+
+    protected abstract _handleSendError(receiver: number): void;
 
     /**
      * Send a close message to the peer.

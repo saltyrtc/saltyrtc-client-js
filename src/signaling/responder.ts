@@ -115,6 +115,10 @@ export class ResponderSignaling extends Signaling {
                     console.debug(this.logTag, 'Received new-initiator');
                     this.handleNewInitiator(msg as saltyrtc.messages.NewInitiator);
                     break;
+                case 'send-error':
+                    console.debug(this.logTag, 'Received send-error');
+                    this.handleSendError(msg as saltyrtc.messages.SendError);
+                    break;
                 default:
                     throw new ProtocolError('Received unexpected server message: ' + msg.type);
             }
@@ -377,5 +381,23 @@ export class ResponderSignaling extends Signaling {
         if (!data.hasOwnProperty(name)) {
             throw new ValidationError("Task data must contain an entry for the chosen task");
         }
+    }
+
+    /**
+     * Handle a send error.
+     */
+    protected _handleSendError(receiver: number): void {
+        // Validate receiver byte
+        if (receiver != Signaling.SALTYRTC_ADDR_INITIATOR) {
+            throw new ProtocolError("Outgoing c2c messages must have been sent to the initiator");
+        }
+
+        // Notify application
+        this.client.emit({type: "signaling-connection-lost", data: receiver});
+
+        // Reset connection
+        this.resetConnection(CloseCode.ProtocolError);
+
+        // TODO: Maybe keep ws connection open and wait for reconnect
     }
 }

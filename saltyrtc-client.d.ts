@@ -327,7 +327,7 @@ declare namespace saltyrtc.messages {
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#send-error
     interface SendError extends SignalingMessage {
         type: 'send-error';
-        hash: ArrayBuffer;
+        id: ArrayBuffer;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#token-message

@@ -149,6 +149,10 @@ export class InitiatorSignaling extends Signaling {
                     console.debug(this.logTag, 'Received new-responder');
                     this.handleNewResponder(msg as saltyrtc.messages.NewResponder);
                     break;
+                case 'send-error':
+                    console.debug(this.logTag, 'Received send-error');
+                    this.handleSendError(msg as saltyrtc.messages.SendError);
+                    break;
                 default:
                     throw new ProtocolError('Received unexpected server message: ' + msg.type);
             }
@@ -426,6 +430,41 @@ export class InitiatorSignaling extends Signaling {
             }
         }
         return null;
+    }
+
+    /**
+     * Handle a send error.
+     */
+    protected _handleSendError(receiver: number): void {
+        // Validate receiver byte
+        if (!isResponderId(receiver)) {
+            throw new ProtocolError("Outgoing c2c messages must have been sent to a responder");
+        }
+
+        let notify = false;
+        if (this.responder === null) { // We're not yet authenticated
+            // Get responder
+            const responder: Responder = this.responders.get(receiver);
+            if (responder === null || responder === undefined) {
+                console.warn(this.logTag, "Got send-error message for unknown responder", receiver);
+            } else {
+                notify = true;
+                // Drop information about responder
+                this.responders.delete(receiver);
+            }
+        } else { // We're authenticated
+            if (this.responder.id === receiver) {
+                notify = true;
+                this.resetConnection(CloseCode.ProtocolError);
+                // TODO: Maybe keep ws connection open and wait for reconnect
+            } else {
+                console.warn(this.logTag, "Got send-error message for unknown responder", receiver);
+            }
+        }
+
+        if (notify === true) {
+            this.client.emit({type: "signaling-connection-lost", data: receiver});
+        }
     }
 
     /**
