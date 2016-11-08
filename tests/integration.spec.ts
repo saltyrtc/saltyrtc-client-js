@@ -110,7 +110,7 @@ export default () => { describe('Integration Tests', function() {
                 expect(this.initiator.state).toEqual('closed');
                 done();
             });
-            this.initiator.disconnect(1000);
+            this.initiator.disconnect();
         });
 
         it('disconnect after peer handshake', async (done) => {
@@ -122,7 +122,7 @@ export default () => { describe('Integration Tests', function() {
                 expect(this.initiator.state).toEqual('closed');
                 done();
             });
-            this.initiator.disconnect(1000);
+            this.initiator.disconnect();
         });
 
         it('new-responder event (responder first)', async (done) => {

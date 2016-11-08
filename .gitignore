@@ -8,3 +8,4 @@ saltyrtc.csr
 saltyrtc.key
 saltyrtc-server-python/
 .idea/
+.rgignore

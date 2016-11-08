@@ -19,8 +19,7 @@ import { concat, byteToHex, u8aToHex, arraysAreEqual } from "../utils";
 import { isResponderId } from "./helpers";
 import { HandoverState } from "./handoverstate";
 import { CloseCode, explainCloseCode } from "../closecode";
-import SignalingState = saltyrtc.SignalingState;
-import { Server, Peer } from "../peers";
+import { Server, Peer, Responder, Initiator } from "../peers";
 
 /**
  * Signaling base class.
@@ -164,20 +163,27 @@ export abstract class Signaling implements saltyrtc.Signaling {
     /**
      * Disconnect from the signaling server.
      */
-    public disconnect(closeCode: number): void {
+    public disconnect(): void {
+        const reason = CloseCode.ClosingNormal;
+
         // Close WebSocket instance
         if (this.ws !== null) {
             console.debug(this.logTag, 'Disconnecting WebSocket');
-            this.ws.close(closeCode);
+            this.ws.close(reason);
         }
         this.ws = null;
 
-        // TODO: Do we need to close the task dc?
+        // Close task connections
+        if (this.task !== null) {
+            console.debug(this.logTag, 'Closing task connections');
+            this.task.close(reason);
+        }
 
+        // Update state
         this.setState('closed');
 
         // Notify subscribers
-        this.client.emit({type: 'connection-closed', data: closeCode});
+        this.client.emit({type: 'connection-closed', data: reason});
     }
 
     /**
@@ -220,9 +226,9 @@ export abstract class Signaling implements saltyrtc.Signaling {
      */
     protected onError = (ev: ErrorEvent) => {
         console.error(this.logTag, 'General WebSocket error', ev);
-        // TODO: Do we need to update the state here?
-        // TODO: Do we need to emit this event more often?
-        this.client.emit({type: 'connection-error', data: ev});
+        this.client.emit({type: 'connection-error'});
+        // Note: We don't update the state here, because an error event will be followed
+        // by a close event, which is already handled in `onClose`.
     };
 
     /**
@@ -272,8 +278,9 @@ export abstract class Signaling implements saltyrtc.Signaling {
             // Parse buffer
             const box: saltyrtc.Box = Box.fromUint8Array(new Uint8Array(ev.data), Nonce.TOTAL_LENGTH);
 
-            // Parse nonce
+            // Parse and validate nonce
             const nonce: Nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
+            this.validateNonce(nonce);
 
             // Dispatch message
             switch (this.getState()) {
@@ -335,7 +342,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
                     throw new ProtocolError('Expected server-hello message, but got ' + msg.type);
                 }
                 console.debug(this.logTag, 'Received server-hello');
-                // TODO: Validate nonce
                 this.handleServerHello(msg as saltyrtc.messages.ServerHello, nonce);
                 this.sendClientHello();
                 this.sendClientAuth();
@@ -348,7 +354,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
                     throw new ProtocolError('Expected server-auth message, but got ' + msg.type);
                 }
                 console.debug(this.logTag, "Received server-auth");
-                // TODO: Validate nonce
                 this.handleServerAuth(msg as saltyrtc.messages.ServerAuth, nonce);
                 break;
             case 'done':
@@ -376,12 +381,10 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Handle messages received from peer *after* the handshake is done.
      */
     protected onSignalingMessage(box: saltyrtc.Box, nonce: Nonce): void {
-        // TODO: Validate nonce?
         console.debug('Message received');
         if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
             this.onSignalingServerMessage(box);
         } else {
-            // TODO: Do we need to validate the source id or does that happen deeper down?
             let decrypted: Uint8Array = this.decryptFromPeer(box);
             this.onSignalingPeerMessage(decrypted);
         }
@@ -389,7 +392,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
     protected onSignalingServerMessage(box: saltyrtc.Box): void {
         const msg: saltyrtc.Message = this.decryptServerMessage(box);
-        // TODO: Catch problems?
 
         if (msg.type === 'send-error') {
             this.handleSendError(msg as saltyrtc.messages.SendError);
@@ -409,7 +411,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
         if (msg.type === 'close') {
             console.debug('Received close');
-            // TODO: Handle
+            this.handleClose(msg as saltyrtc.messages.Close);
         } else if (msg.type === 'restart') {
             console.debug(this.logTag, 'Received restart');
             this.handleRestart(msg as saltyrtc.messages.Restart);
@@ -417,7 +419,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
             console.debug(this.logTag, 'Received', msg.type, '[' + this.task.getName() + ']');
             this.task.onTaskMessage(msg as saltyrtc.messages.TaskMessage);
         } else {
-            // TODO: Check if message is a task message
             console.warn(this.logTag, 'Received message with invalid type from peer:', msg.type);
         }
     }
@@ -526,26 +527,138 @@ export abstract class Signaling implements saltyrtc.Signaling {
     }
 
     /**
-     * Validate destination and optionally source of nonce.
+     * Validate the nonce.
      *
-     * Possible exceptions:
-     * - bad-nonce-source
-     * - bad-nonce-destination
+     * Throw ValidationError if validation fails.
      */
-    protected validateNonce(nonce: Nonce, destination?: number, source?: number): void {
-        // Validate destination
-        if (destination !== undefined && nonce.destination !== destination) {
-            console.error(this.logTag, 'Nonce destination is', nonce.destination, 'but we\'re', this.address);
-            throw 'bad-nonce-destination';
+    protected validateNonce(nonce: Nonce): void {
+        this.validateNonceSource(nonce);
+        this.validateNonceDestination(nonce);
+        this.validateNonceCsn(nonce);
+        this.validateNonceCookie(nonce);
+    }
+
+    /**
+     * Validate the nonce source.
+     */
+    private validateNonceSource(nonce: Nonce): void {
+        switch (this.state) {
+            case 'server-handshake':
+                // Messages during server handshake must come from the server.
+                if (nonce.source !== Signaling.SALTYRTC_ADDR_SERVER) {
+                    throw new ValidationError("Received message during server handshake " +
+                        "with invalid sender address (" + nonce.source + " != " + Signaling.SALTYRTC_ADDR_SERVER + ")");
+                }
+                break;
+            case 'peer-handshake':
+                // Messages during peer handshake may come from server or peer.
+                if (nonce.source !== Signaling.SALTYRTC_ADDR_SERVER) {
+                    if (this.role === 'initiator' && !isResponderId(nonce.source)) {
+                        throw new ValidationError("Initiator peer message does not come from " +
+                            "a valid responder address: " + nonce.source);
+                    } else if (this.role === 'responder' && nonce.source != Signaling.SALTYRTC_ADDR_INITIATOR) {
+                        throw new ValidationError("Responder peer message does not come from " +
+                            "intitiator (" + Signaling.SALTYRTC_ADDR_INITIATOR + "), " +
+                            "but from " + nonce.source);
+                    }
+                }
+                break;
+            case 'task':
+                // Messages after the handshake must come from the peer.
+                if (nonce.source !== this.getPeer().id) {
+                    throw new ValidationError("Received message with invalid sender address (" +
+                        nonce.source + " != " + this.getPeer().id + ")");
+                }
+                break;
+            default:
+                throw new ProtocolError('Cannot validate message nonce in signaling state ' + this.state);
+        }
+    }
+
+    /**
+     * Validate the nonce destination.
+     */
+    private validateNonceDestination(nonce: Nonce): void {
+        let expected: number = null;
+        if (this.state === 'server-handshake') {
+            switch (this.server.handshakeState) {
+                // Before receiving the server auth message, the destination is 0x00
+                case 'new':
+                case 'hello-sent':
+                    expected = Signaling.SALTYRTC_ADDR_UNKNOWN;
+                    break;
+                // The server auth message contains the assigned receiver byte for the first time
+                case 'auth-sent':
+                    if (this.role === 'initiator') {
+                        expected = Signaling.SALTYRTC_ADDR_INITIATOR;
+                    } else { // Responder
+                        if (!isResponderId(nonce.destination)) {
+                            throw new ValidationError("Received message during server handshake with invalid " +
+                                "receiver address (" + nonce.destination + " is not a valid responder id)");
+                        }
+                    }
+                    break;
+                // Afterwards, the receiver byte is the assigned address
+                case 'done':
+                    expected = this.address;
+                    break;
+            }
+        } else if (this.state === 'peer-handshake' || this.state === 'task') {
+            expected = this.address;
+        } else {
+            throw new ValidationError("Cannot validate message nonce in signaling state " + this.state);
         }
 
-        // Validate source
-        if (source !== undefined && nonce.source !== source) {
-            console.error(this.logTag, 'Nonce source is', nonce.source, 'but should be', source);
-            throw 'bad-nonce-source';
+        if (expected !== null && nonce.destination !== expected) {
+            throw new ValidationError("Received message with invalid destination (" +
+                nonce.destination + " != " + expected + ")");
         }
+    }
 
-        // TODO: sequence & overflow & cookie
+    /**
+     * Return the peer instance with the specified id.
+     *
+     * In the case of the initiator, the peer can be one of multiple responders!
+     */
+    protected abstract getPeerWithId(id: number): Peer | null;
+
+    /**
+     * Validate the nonce CSN.
+     */
+    protected validateNonceCsn(nonce: Nonce): void {
+        const peer = this.getPeerWithId(nonce.source);
+
+        // If this is the first message from that sender, validate the overflow number and store the CSN.
+        if (peer.csnPair.theirs === null) {
+            if (nonce.overflow !== 0) {
+                throw new ValidationError("First message from " + peer.name + " must have set the overflow number to 0");
+            }
+            peer.csnPair.theirs = nonce.combinedSequenceNumber;
+
+        // Otherwise, make sure that the CSN has been increased.
+        } else {
+            const previous = peer.csnPair.theirs;
+            const current = nonce.combinedSequenceNumber;
+            if (current < previous) {
+                throw new ValidationError(peer.name + " CSN is lower than last time");
+            } else if (current === previous) {
+                throw new ValidationError(peer.name + " CSN hasn't been incremented");
+            } else {
+                peer.csnPair.theirs = current;
+            }
+        }
+    }
+
+    /**
+     * Validate the nonce cookie.
+     */
+    private validateNonceCookie(nonce: Nonce): void {
+        const peer = this.getPeerWithId(nonce.source);
+        if (peer !== null && peer.cookiePair.theirs !== null) {
+            if (!nonce.cookie.equals(peer.cookiePair.theirs)) {
+                throw new ValidationError(peer.name + " cookie changed");
+            }
+        }
     }
 
     /**
@@ -649,7 +762,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         }
 
         // Otherwise, encrypt packet
-        // TODO: Use polymorphism using peer object
+        // TODO: Use polymorphism using peer object (#65)
         let box;
         if (receiver.id === Signaling.SALTYRTC_ADDR_SERVER) {
             box = this.encryptHandshakeDataForServer(data, nonceBytes);
@@ -675,11 +788,11 @@ export abstract class Signaling implements saltyrtc.Signaling {
                                                    payload: Uint8Array, nonceBytes: Uint8Array): saltyrtc.Box;
 
     /**
-     * Get the peer instance.
+     * Get the peer instance (initiator or responder).
      *
      * May return null if peer is not yet set.
      */
-    protected abstract getPeer(): Peer;
+    protected abstract getPeer(): Initiator | Responder;
 
     /**
      * Get the session key of the peer.
@@ -737,7 +850,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         this.setState('new');
         console.debug('Connection reset');
 
-        // TODO: Close dc
+        // TODO: Close task? (#64)
     }
 
 
@@ -765,8 +878,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
      *
      * When `convertErrors` is set to `true`, decryption errors will be
      * converted to a `ProtocolError`.
-     *
-     * TODO: Separate cookie / csn per data channel.
      */
     public decryptPeerMessage(box: saltyrtc.Box, convertErrors=true): saltyrtc.Message {
         try {
