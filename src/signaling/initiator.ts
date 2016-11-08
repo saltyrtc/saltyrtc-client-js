@@ -118,6 +118,16 @@ export class InitiatorSignaling extends Signaling {
     }
 
     /**
+     * Handle signaling error during peer handshake.
+     */
+    protected handlePeerHandshakeSignalingError(e: SignalingError, source: number | null): void {
+        // Simply dop the responder.
+        if (source !== null) {
+            this.dropResponder(source, e.closeCode);
+        }
+    }
+
+    /**
      * Store a new responder.
      *
      * @throws SignalingError

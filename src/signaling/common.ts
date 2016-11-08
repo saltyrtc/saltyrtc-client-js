@@ -275,12 +275,13 @@ export abstract class Signaling implements saltyrtc.Signaling {
             return;
         }
 
+        let nonce: Nonce;
         try {
             // Parse buffer
             const box: saltyrtc.Box = Box.fromUint8Array(new Uint8Array(ev.data), Nonce.TOTAL_LENGTH);
 
             // Parse and validate nonce
-            const nonce: Nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
+            nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
             this.validateNonce(nonce);
 
             // Dispatch message
@@ -300,13 +301,25 @@ export abstract class Signaling implements saltyrtc.Signaling {
         } catch(e) {
             if (e.name === 'SignalingError' || e.name === 'ProtocolError') {
                 console.error(this.logTag, 'Signaling error: ' + explainCloseCode(e.closeCode));
-                // TODO: Properly handle protocol errors
-                // Send close message if client-to-client handshake has been completed
-                if (this.state === 'task') {
-                    this.sendClose(e.closeCode);
+                switch (this.state) {
+                    //'new' | 'ws-connecting' | 'server-handshake' | 'peer-handshake' | 'task' | 'closing' | 'closed';
+                    case 'new':
+                    case 'ws-connecting':
+                    case 'server-handshake':
+                        this.resetConnection(e.closeCode);
+                        break;
+                    case 'peer-handshake':
+                        this.handlePeerHandshakeSignalingError(e, nonce === undefined ? nonce.id : null);
+                        break;
+                    case 'task':
+                        this.sendClose(e.closeCode);
+                        this.resetConnection(CloseCode.ClosingNormal);
+                        break;
+                    case 'closing':
+                    case 'closed':
+                        // Ignore
+                        break;
                 }
-                // Close connection
-                this.resetConnection(e.closeCode);
             } else if (e.name === 'ConnectionError') {
                 console.warn(this.logTag, 'Connection error. Resetting connection.');
                 this.resetConnection(CloseCode.InternalError);
@@ -318,6 +331,8 @@ export abstract class Signaling implements saltyrtc.Signaling {
             throw e;
         }
     };
+
+    protected abstract handlePeerHandshakeSignalingError(e: SignalingError, source: number | null): void;
 
     /**
      * Handle messages received during server handshake.

@@ -106,6 +106,14 @@ export class ResponderSignaling extends Signaling {
         }
     }
 
+    /**
+     * Handle signaling error during peer handshake.
+     */
+    protected handlePeerHandshakeSignalingError(e: SignalingError, source: number | null): void {
+        // Close the connection to the server
+        this.resetConnection(e.closeCode);
+    }
+
     protected onPeerHandshakeMessage(box: saltyrtc.Box, nonce: Nonce): void {
         // Validate nonce destination
         if (nonce.destination != this.address) {
