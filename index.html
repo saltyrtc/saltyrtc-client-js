@@ -7,7 +7,6 @@
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="assets/css/main.css">
-	<script src="assets/js/modernizr.js"></script>
 </head>
 <body>
 <header>
@@ -118,6 +117,7 @@ responder.<span class="hljs-literal">on</span>(<span class="hljs-string">'state-
 					<li><code>state-change:&lt;new-state&gt;(void)</code>: The signaling state change event, filtered by state.</li>
 					<li><code>new-responder(responderId)</code>: A responder has connected. This event is only dispatched for the initiator.</li>
 					<li><code>handover(void)</code>: The handover to the data channel is done.</li>
+					<li><code>signaling-connection-lost(responderId)</code>: The signaling connection to the specified peer was lost.</li>
 					<li><code>connection-closed(closeCode)</code>: The connection was closed.</li>
 					<li><code>connection-error(ErrorEvent)</code>: A websocket connection error occured.</li>
 				</ul>
@@ -307,7 +307,7 @@ $ npm publish
 	</div>
 </footer>
 <div class="container tsd-generator">
-	<p>Generated using <a href="http://typedoc.io" target="_blank">TypeDoc</a></p>
+	<p>Generated using <a href="http://typedoc.org/" target="_blank">TypeDoc</a></p>
 </div>
 <div class="overlay"></div>
 <script src="assets/js/main.js"></script>
