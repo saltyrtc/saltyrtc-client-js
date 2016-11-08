@@ -6,10 +6,11 @@
 /// <reference path="jasmine.d.ts" />
 /// <reference path="../saltyrtc-client.d.ts" />
 
-import { Config } from "./config";
-import { sleep } from "./utils";
-import { SaltyRTCBuilder, KeyStore } from "../src/main";
-import { DummyTask, PingPongTask } from "./testtasks";
+import {Config} from "./config";
+import {sleep} from "./utils";
+import {SaltyRTCBuilder, KeyStore} from "../src/main";
+import {DummyTask, PingPongTask} from "./testtasks";
+import {explainCloseCode} from "../src/closecode";
 
 export default () => { describe('Integration Tests', function() {
 
@@ -296,6 +297,76 @@ export default () => { describe('Integration Tests', function() {
                 expect(responder.state).toEqual('closed');
                 done();
             });
+        });
+
+        let slowdescribe = Config.RUN_LOAD_TESTS ? describe : xdescribe;
+        slowdescribe('slow load tests', () => {
+            let originalTimeout;
+            beforeEach(function() {
+                originalTimeout = jasmine.DEFAULT_TIMEOUT_INTERVAL;
+                jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
+            });
+            afterEach(function() {
+                jasmine.DEFAULT_TIMEOUT_INTERVAL = originalTimeout;
+            });
+
+            /**
+             * Note: For this test to work, the WebSocket connection limit needs to be increased to at least 260.
+             *
+             * - Firefox: about:config -> network.websocket.max-connections
+             * - Chrome: Not possible.
+             */
+            it('drops inactive responders when the path gets full', async (done) => {
+                this.initiator.connect();
+                await new Promise((resolve) => this.initiator.once('state-change:peer-handshake', resolve));
+
+                // Create 254 responders to fill all available slots
+                let connected = 0;
+                await new Promise((resolve) => {
+                    let responders = [];
+                    for (let i = 0x02; i <= 0xff; i++) {
+                        const r = new SaltyRTCBuilder()
+                            .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                            .withKeyStore(new KeyStore())
+                            .usingTasks([new DummyTask()])
+                            .initiatorInfo(this.initiator.permanentKeyBytes, this.initiator.authTokenBytes)
+                            .asResponder();
+
+                        // Make sure that these responders don't initiate the peer handshake
+                        (r as any).signaling.initPeerHandshake = function() {
+                            console.debug(this.logTag, 'Not starting peer handshake');
+                        };
+
+                        // Wait for all responders to connect
+                        r.once('state-change:peer-handshake', () => {
+                            if (++connected === 254) {
+                                resolve();
+                            }
+                        });
+
+                        r.connect();
+                        responders.push(r);
+                    }
+                });
+                expect(connected).toEqual(254);
+
+                // Connect with the real responder
+                console.debug('====== Connecting real responder ======');
+                const responder = new SaltyRTCBuilder()
+                    .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                    .withKeyStore(new KeyStore())
+                    .usingTasks([new DummyTask()])
+                    .initiatorInfo(this.initiator.permanentKeyBytes, this.initiator.authTokenBytes)
+                    .asResponder();
+                responder.once('state-change:task', () => {
+                    done();
+                });
+                responder.once('connection-closed', (ev) => {
+                    done.fail('Real responder could not connect: ' + explainCloseCode(ev.data));
+                });
+                responder.connect();
+            });
+
         });
 
     });

@@ -300,6 +300,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         } catch(e) {
             if (e.name === 'SignalingError' || e.name === 'ProtocolError') {
                 console.error(this.logTag, 'Signaling error: ' + explainCloseCode(e.closeCode));
+                // TODO: Properly handle protocol errors
                 // Send close message if client-to-client handshake has been completed
                 if (this.state === 'task') {
                     this.sendClose(e.closeCode);
@@ -567,7 +568,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
             case 'task':
                 // Messages after the handshake must come from the peer.
                 if (nonce.source !== this.getPeer().id) {
-                    throw new ValidationError("Received message with invalid sender address (" +
+                    throw new ValidationError("Received message after handshake with invalid sender address (" +
                         nonce.source + " != " + this.getPeer().id + ")");
                 }
                 break;
@@ -628,6 +629,11 @@ export abstract class Signaling implements saltyrtc.Signaling {
      */
     protected validateNonceCsn(nonce: Nonce): void {
         const peer = this.getPeerWithId(nonce.source);
+        if (peer === null) {
+            // This can happen e.g. when a responder was dropped between validating the source
+            // and the csn.
+            throw new ProtocolError("Could not find peer " + nonce.source);
+        }
 
         // If this is the first message from that sender, validate the overflow number and store the CSN.
         if (peer.csnPair.theirs === null) {
@@ -849,7 +855,9 @@ export abstract class Signaling implements saltyrtc.Signaling {
         this.server = new Server();
         this.handoverState.reset();
         this.setState('new');
-        console.debug('Connection reset');
+        if (reason !== undefined) {
+            console.debug(this.logTag, 'Connection reset');
+        }
 
         // TODO: Close task? (#64)
     }

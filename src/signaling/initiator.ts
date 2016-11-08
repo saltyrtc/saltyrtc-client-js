@@ -21,6 +21,7 @@ export class InitiatorSignaling extends Signaling {
     protected logTag: string = 'Initiator:';
 
     // Keep track of responders connected to the server
+    protected responderCounter = 0;
     protected responders: Map<number, Responder> = null;
 
     // Once the handshake is done, this is the chosen responder
@@ -128,7 +129,7 @@ export class InitiatorSignaling extends Signaling {
         }
 
         // Create responder instance
-        const responder = new Responder(responderId);
+        const responder = new Responder(responderId, this.responderCounter++);
 
         // If we trust the responder...
         if (this.peerTrustedKey !== null) {
@@ -142,8 +143,33 @@ export class InitiatorSignaling extends Signaling {
         // Store responder
         this.responders.set(responderId, responder);
 
+        // If we almost reached the limit (254 - 2), drop the oldest responder that hasn't sent any valid data so far.
+        if (this.responders.size > 252) {
+            this.dropOldestInactiveResponder();
+        }
+
         // Notify listeners
         this.client.emit({type: 'new-responder', data: responderId});
+    }
+
+    /**
+     * Drop the oldest inactive responder.
+     */
+    private dropOldestInactiveResponder(): void {
+        console.warn(this.logTag, "Dropping oldest inactive responder");
+        let drop = null;
+        for (let r of this.responders.values()) {
+            if (r.handshakeState == 'new') {
+                if (drop === null) {
+                    drop = r;
+                } else if (r.counter < drop.counter) {
+                    drop = r;
+                }
+            }
+        }
+        if (drop !== null) {
+            this.dropResponder(drop.id, CloseCode.DroppedByInitiator);
+        }
     }
 
     protected onPeerHandshakeMessage(box: saltyrtc.Box, nonce: Nonce): void {
@@ -163,7 +189,7 @@ export class InitiatorSignaling extends Signaling {
             const msg: saltyrtc.Message = this.decodeMessage(payload, 'server');
             switch (msg.type) {
                 case 'new-responder':
-                    console.debug(this.logTag, 'Received new-responder');
+                    console.debug(this.logTag, 'Received new-responder', byteToHex((msg as saltyrtc.messages.NewResponder).id));
                     this.handleNewResponder(msg as saltyrtc.messages.NewResponder);
                     break;
                 case 'send-error':

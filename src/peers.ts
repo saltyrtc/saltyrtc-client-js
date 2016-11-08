@@ -73,13 +73,19 @@ export class Initiator extends Peer {
 export class Responder extends Peer {
     public keyStore = new KeyStore();
     public handshakeState: 'new' | 'token-received' | 'key-received' | 'key-sent' | 'auth-received' | 'auth-sent' = 'new';
+    private _counter: number;
 
-    constructor(id: number) {
+    constructor(id: number, counter: number) {
         super(id);
+        this._counter = counter
     }
 
     public get name(): string {
         return "Responder " + this.id;
+    }
+
+    get counter(): number {
+        return this._counter;
     }
 }
 

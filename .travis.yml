@@ -29,6 +29,8 @@ before_script:
   - mkdir ~/.mozilla/firefox/saltyrtc
   - certutil -d ~/.mozilla/firefox/saltyrtc -A -n saltyrtc-test-ca -t Ccw,, -i saltyrtc.crt
   - certutil -d sql:$HOME/.pki/nssdb -A -n saltyrtc-test-ca -t Ccw,, -i saltyrtc.crt
+  # Increase websocket connection limit
+  - echo 'user_pref("network.websocket.max-connections", 400);' >> ~/.mozilla/firefox/saltyrtc/prefs.js
   # Start SaltyRTC server
   - git clone https://github.com/saltyrtc/saltyrtc-server-python -b master
   - export SALTYRTC_SERVER_PERMANENT_KEY=0919b266ce1855419e4066fc076b39855e728768e3afa773105edd2e37037c20 # Public: 09a59a5fa6b45cb07638a3a6e347ce563a948b756fd22f9527465f7c79c2a864
@@ -43,6 +45,8 @@ before_script:
   # Rollup tests
   - export NODE_ENV=development
   - npm install
+  # Uncomment this to run load tests. They only work in Firefox so far though.
+  #- sed -i 's/RUN_LOAD_TESTS = false/RUN_LOAD_TESTS = true/g' tests/config.ts
   - npm run rollup_tests
 script:
   - npm test
