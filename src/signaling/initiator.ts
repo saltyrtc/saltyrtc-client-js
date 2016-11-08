@@ -9,7 +9,7 @@
 
 import { AuthToken } from "../keystore";
 import { Nonce } from "../nonce";
-import { Responder, Peer } from "../peers";
+import { Responder, Server } from "../peers";
 import { ProtocolError, SignalingError, ValidationError } from "../exceptions";
 import { CloseCode } from "../closecode";
 import { Signaling } from "./common";
@@ -77,25 +77,43 @@ export class InitiatorSignaling extends Signaling {
         }
     }
 
-    protected getPeer(): Peer {
+    protected getPeer(): Responder | null {
         if (this.responder !== null) {
             return this.responder;
         }
         return null;
     }
 
-    protected getPeerSessionKey(): Uint8Array {
+    protected getPeerSessionKey(): Uint8Array | null {
         if (this.responder !== null) {
             return this.responder.sessionKey;
         }
         return null;
     }
 
-    protected getPeerPermanentKey(): Uint8Array {
+    protected getPeerPermanentKey(): Uint8Array | null {
         if (this.responder !== null) {
             return this.responder.permanentKey;
         }
         return null;
+    }
+
+    /**
+     * Get the responder instance with the specified id.
+     */
+    protected getPeerWithId(id: number): Server | Responder | null {
+        if (id === Signaling.SALTYRTC_ADDR_SERVER) {
+            return this.server;
+        } else if (isResponderId(id)) {
+            if (this.state === 'task' && this.responder !== null && this.responder.id === id) {
+                return this.responder;
+            } else if (this.responders.has(id)) {
+                return this.responders.get(id);
+            }
+            return null;
+        } else {
+            throw new ProtocolError("Invalid peer id: " + id);
+        }
     }
 
     /**
@@ -248,7 +266,6 @@ export class InitiatorSignaling extends Signaling {
 
     protected handleServerAuth(msg: saltyrtc.messages.ServerAuth, nonce: Nonce): void {
         this.address = Signaling.SALTYRTC_ADDR_INITIATOR;
-        this.validateNonce(nonce, this.address, Signaling.SALTYRTC_ADDR_SERVER);
 
         // Validate repeated cookie
         this.validateRepeatedCookie(this.server, msg.your_cookie);

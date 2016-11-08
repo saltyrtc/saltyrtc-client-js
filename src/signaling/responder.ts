@@ -9,7 +9,7 @@
 
 import { KeyStore } from "../keystore";
 import { Nonce } from "../nonce";
-import { Initiator, Peer } from "../peers";
+import { Initiator, Server } from "../peers";
 import { ProtocolError, SignalingError, ValidationError } from "../exceptions";
 import { CloseCode } from "../closecode";
 import { u8aToHex, byteToHex } from "../utils";
@@ -72,25 +72,38 @@ export class ResponderSignaling extends Signaling {
         }
     }
 
-    protected getPeer(): Peer {
+    protected getPeer(): Initiator | null {
         if (this.initiator !== null) {
             return this.initiator;
         }
         return null;
     }
 
-    protected getPeerSessionKey(): Uint8Array {
+    protected getPeerSessionKey(): Uint8Array | null {
         if (this.initiator !== null) {
             return this.initiator.sessionKey;
         }
         return null;
     }
 
-    protected getPeerPermanentKey(): Uint8Array {
+    protected getPeerPermanentKey(): Uint8Array | null {
         if (this.initiator !== null) {
             return this.initiator.permanentKey;
         }
         return null;
+    }
+
+    /**
+     * Get the responder instance with the specified id.
+     */
+    protected getPeerWithId(id: number): Server | Initiator | null {
+        if (id === Signaling.SALTYRTC_ADDR_SERVER) {
+            return this.server;
+        } else if (id === Signaling.SALTYRTC_ADDR_INITIATOR) {
+            return this.initiator;
+        } else {
+            throw new ProtocolError("Invalid peer id: " + id);
+        }
     }
 
     protected onPeerHandshakeMessage(box: saltyrtc.Box, nonce: Nonce): void {
@@ -196,7 +209,6 @@ export class ResponderSignaling extends Signaling {
     }
 
     protected handleServerAuth(msg: saltyrtc.messages.ServerAuth, nonce: Nonce): void {
-        this.validateNonce(nonce, undefined, Signaling.SALTYRTC_ADDR_SERVER);
         if (nonce.destination > 0xff || nonce.destination < 0x02) {
             console.error(this.logTag, 'Invalid nonce destination:', nonce.destination);
             throw 'bad-nonce-destination';
