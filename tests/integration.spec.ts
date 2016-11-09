@@ -299,6 +299,17 @@ export default () => { describe('Integration Tests', function() {
             });
         });
 
+        it('send connection-closed event only once', async (done) => {
+            let count = 0;
+            this.initiator.on('connection-closed', (ev) => count += 1);
+            this.initiator.connect();
+            await sleep(100);
+            this.initiator.signaling.resetConnection(3001);
+            await sleep(100);
+            expect(count).toEqual(1);
+            done();
+        });
+
         let slowdescribe = Config.RUN_LOAD_TESTS ? describe : xdescribe;
         slowdescribe('slow load tests', () => {
             let originalTimeout;

@@ -181,9 +181,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
         // Update state
         this.setState('closed');
-
-        // Notify subscribers
-        this.client.emit({type: 'connection-closed', data: reason});
     }
 
     /**
@@ -854,11 +851,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * - Reset the server combined sequence
      */
     public resetConnection(reason?: number): void {
-        // Notify listeners
-        if (reason !== undefined) {
-            this.client.emit({type: 'connection-closed', data: reason});
-        }
-
         // Close WebSocket instance
         if (this.ws !== null) {
             console.debug(this.logTag, 'Disconnecting WebSocket (close code ' + reason + ')');
