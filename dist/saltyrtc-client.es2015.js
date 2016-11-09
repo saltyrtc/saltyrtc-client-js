@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.3.1
+ * saltyrtc-client-js v0.4.0
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -181,6 +181,17 @@ function validateKey(key, name = "Key") {
         throw new ValidationError(name + " must be 32 bytes long");
     }
     return out;
+}
+function arraysAreEqual(a1, a2) {
+    if (a1.length != a2.length) {
+        return false;
+    }
+    for (let i = 0; i < a1.length; i++) {
+        if (a1[i] !== a2[i]) {
+            return false;
+        }
+    }
+    return true;
 }
 
 class Box {
@@ -514,6 +525,7 @@ class Peer {
     get cookiePair() {
         return this._cookiePair;
     }
+    get name() { }
 }
 class Initiator extends Peer {
     constructor(permanentKey) {
@@ -522,13 +534,23 @@ class Initiator extends Peer {
         this.handshakeState = 'new';
         this.permanentKey = permanentKey;
     }
+    get name() {
+        return "Initiator";
+    }
 }
 Initiator.ID = 0x01;
 class Responder extends Peer {
-    constructor(id) {
+    constructor(id, counter) {
         super(id);
         this.keyStore = new KeyStore();
         this.handshakeState = 'new';
+        this._counter = counter;
+    }
+    get name() {
+        return "Responder " + this.id;
+    }
+    get counter() {
+        return this._counter;
     }
 }
 class Server extends Peer {
@@ -536,11 +558,14 @@ class Server extends Peer {
         super(Server.ID);
         this.handshakeState = 'new';
     }
+    get name() {
+        return "Server";
+    }
 }
 Server.ID = 0x00;
 
 class Signaling {
-    constructor(client, host, port, tasks, pingInterval, permanentKey, peerTrustedKey) {
+    constructor(client, host, port, serverKey, tasks, pingInterval, permanentKey, peerTrustedKey) {
         this.protocol = 'wss';
         this.ws = null;
         this.msgpackOptions = {
@@ -553,6 +578,7 @@ class Signaling {
         this.sessionKey = null;
         this.peerTrustedKey = null;
         this.authToken = null;
+        this.serverPublicKey = null;
         this.role = null;
         this.logTag = 'Signaling:';
         this.address = Signaling.SALTYRTC_ADDR_UNKNOWN;
@@ -562,7 +588,7 @@ class Signaling {
         };
         this.onError = (ev) => {
             console.error(this.logTag, 'General WebSocket error', ev);
-            this.client.emit({ type: 'connection-error', data: ev });
+            this.client.emit({ type: 'connection-error' });
         };
         this.onClose = (ev) => {
             if (ev.code === CloseCode.Handover) {
@@ -571,6 +597,7 @@ class Signaling {
             else {
                 console.info(this.logTag, 'Closed WebSocket connection');
                 this.setState('closed');
+                this.client.emit({ type: 'connection-closed', data: ev.code });
                 const log = (reason) => console.error(this.logTag, 'Server closed connection:', reason);
                 switch (ev.code) {
                     case CloseCode.GoingAway:
@@ -602,9 +629,11 @@ class Signaling {
                 this.resetConnection(CloseCode.ProtocolError);
                 return;
             }
+            let nonce;
             try {
                 const box = Box.fromUint8Array(new Uint8Array(ev.data), Nonce.TOTAL_LENGTH);
-                const nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
+                nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
+                this.validateNonce(nonce);
                 switch (this.getState()) {
                     case 'server-handshake':
                         this.onServerHandshakeMessage(box, nonce);
@@ -620,16 +649,33 @@ class Signaling {
                 }
             }
             catch (e) {
-                if (e instanceof SignalingError) {
+                if (e.name === 'SignalingError' || e.name === 'ProtocolError') {
                     console.error(this.logTag, 'Signaling error: ' + explainCloseCode(e.closeCode));
-                    if (this.state === 'task') {
-                        this.sendClose(e.closeCode);
+                    switch (this.state) {
+                        case 'new':
+                        case 'ws-connecting':
+                        case 'server-handshake':
+                            this.resetConnection(e.closeCode);
+                            break;
+                        case 'peer-handshake':
+                            this.handlePeerHandshakeSignalingError(e, nonce === undefined ? nonce.id : null);
+                            break;
+                        case 'task':
+                            this.sendClose(e.closeCode);
+                            this.resetConnection(CloseCode.ClosingNormal);
+                            break;
+                        case 'closing':
+                        case 'closed':
+                            break;
                     }
-                    this.resetConnection(e.closeCode);
                 }
-                else if (e instanceof ConnectionError) {
+                else if (e.name === 'ConnectionError') {
                     console.warn(this.logTag, 'Connection error. Resetting connection.');
                     this.resetConnection(CloseCode.InternalError);
+                }
+                if (e.hasOwnProperty('stack')) {
+                    console.error("An unknown error occurred:");
+                    console.error(e.stack);
                 }
                 throw e;
             }
@@ -642,6 +688,9 @@ class Signaling {
         this.pingInterval = pingInterval;
         if (peerTrustedKey !== undefined) {
             this.peerTrustedKey = peerTrustedKey;
+        }
+        if (serverKey !== undefined) {
+            this.serverPublicKey = serverKey;
         }
         this.handoverState.onBoth = () => {
             this.client.emit({ type: 'handover' });
@@ -678,14 +727,18 @@ class Signaling {
         this.resetConnection();
         this.initWebsocket();
     }
-    disconnect(closeCode) {
+    disconnect() {
+        const reason = CloseCode.ClosingNormal;
         if (this.ws !== null) {
             console.debug(this.logTag, 'Disconnecting WebSocket');
-            this.ws.close(closeCode);
+            this.ws.close(reason);
         }
         this.ws = null;
+        if (this.task !== null) {
+            console.debug(this.logTag, 'Closing task connections');
+            this.task.close(reason);
+        }
         this.setState('closed');
-        this.client.emit({ type: 'connection-closed', data: closeCode });
     }
     initWebsocket() {
         const url = this.protocol + '://' + this.host + ':' + this.port + '/';
@@ -744,19 +797,7 @@ class Signaling {
             this.onSignalingServerMessage(box);
         }
         else {
-            let decrypted;
-            try {
-                decrypted = this.decryptFromPeer(box);
-            }
-            catch (e) {
-                if (e === 'decryption-failed') {
-                    console.warn(this.logTag, 'Could not decrypt peer message from', byteToHex(nonce.source));
-                    return;
-                }
-                else {
-                    throw e;
-                }
-            }
+            let decrypted = this.decryptFromPeer(box);
             this.onSignalingPeerMessage(decrypted);
         }
     }
@@ -773,6 +814,7 @@ class Signaling {
         let msg = this.decodeMessage(decrypted);
         if (msg.type === 'close') {
             console.debug('Received close');
+            this.handleClose(msg);
         }
         else if (msg.type === 'restart') {
             console.debug(this.logTag, 'Received restart');
@@ -806,7 +848,15 @@ class Signaling {
         throw new ProtocolError('Restart messages not yet implemented');
     }
     handleSendError(msg) {
-        throw new ProtocolError('Send error messages not yet implemented');
+        const id = new DataView(msg.id);
+        const idString = u8aToHex(new Uint8Array(msg.id));
+        const source = id.getUint8(0);
+        const destination = id.getUint8(1);
+        if (source != this.address) {
+            throw new ProtocolError("Received send-error message for a message not sent by us!");
+        }
+        console.warn(this.logTag, "SendError: Could not send unknown message:", idString);
+        this._handleSendError(destination);
     }
     sendClose(reason) {
         const message = {
@@ -827,14 +877,109 @@ class Signaling {
         this.task.close(msg.reason);
         this.resetConnection(CloseCode.GoingAway);
     }
-    validateNonce(nonce, destination, source) {
-        if (destination !== undefined && nonce.destination !== destination) {
-            console.error(this.logTag, 'Nonce destination is', nonce.destination, 'but we\'re', this.address);
-            throw 'bad-nonce-destination';
+    validateNonce(nonce) {
+        this.validateNonceSource(nonce);
+        this.validateNonceDestination(nonce);
+        this.validateNonceCsn(nonce);
+        this.validateNonceCookie(nonce);
+    }
+    validateNonceSource(nonce) {
+        switch (this.state) {
+            case 'server-handshake':
+                if (nonce.source !== Signaling.SALTYRTC_ADDR_SERVER) {
+                    throw new ValidationError("Received message during server handshake " +
+                        "with invalid sender address (" + nonce.source + " != " + Signaling.SALTYRTC_ADDR_SERVER + ")");
+                }
+                break;
+            case 'peer-handshake':
+                if (nonce.source !== Signaling.SALTYRTC_ADDR_SERVER) {
+                    if (this.role === 'initiator' && !isResponderId(nonce.source)) {
+                        throw new ValidationError("Initiator peer message does not come from " +
+                            "a valid responder address: " + nonce.source);
+                    }
+                    else if (this.role === 'responder' && nonce.source != Signaling.SALTYRTC_ADDR_INITIATOR) {
+                        throw new ValidationError("Responder peer message does not come from " +
+                            "intitiator (" + Signaling.SALTYRTC_ADDR_INITIATOR + "), " +
+                            "but from " + nonce.source);
+                    }
+                }
+                break;
+            case 'task':
+                if (nonce.source !== this.getPeer().id) {
+                    throw new ValidationError("Received message after handshake with invalid sender address (" +
+                        nonce.source + " != " + this.getPeer().id + ")");
+                }
+                break;
+            default:
+                throw new ProtocolError('Cannot validate message nonce in signaling state ' + this.state);
         }
-        if (source !== undefined && nonce.source !== source) {
-            console.error(this.logTag, 'Nonce source is', nonce.source, 'but should be', source);
-            throw 'bad-nonce-source';
+    }
+    validateNonceDestination(nonce) {
+        let expected = null;
+        if (this.state === 'server-handshake') {
+            switch (this.server.handshakeState) {
+                case 'new':
+                case 'hello-sent':
+                    expected = Signaling.SALTYRTC_ADDR_UNKNOWN;
+                    break;
+                case 'auth-sent':
+                    if (this.role === 'initiator') {
+                        expected = Signaling.SALTYRTC_ADDR_INITIATOR;
+                    }
+                    else {
+                        if (!isResponderId(nonce.destination)) {
+                            throw new ValidationError("Received message during server handshake with invalid " +
+                                "receiver address (" + nonce.destination + " is not a valid responder id)");
+                        }
+                    }
+                    break;
+                case 'done':
+                    expected = this.address;
+                    break;
+            }
+        }
+        else if (this.state === 'peer-handshake' || this.state === 'task') {
+            expected = this.address;
+        }
+        else {
+            throw new ValidationError("Cannot validate message nonce in signaling state " + this.state);
+        }
+        if (expected !== null && nonce.destination !== expected) {
+            throw new ValidationError("Received message with invalid destination (" +
+                nonce.destination + " != " + expected + ")");
+        }
+    }
+    validateNonceCsn(nonce) {
+        const peer = this.getPeerWithId(nonce.source);
+        if (peer === null) {
+            throw new ProtocolError("Could not find peer " + nonce.source);
+        }
+        if (peer.csnPair.theirs === null) {
+            if (nonce.overflow !== 0) {
+                throw new ValidationError("First message from " + peer.name + " must have set the overflow number to 0");
+            }
+            peer.csnPair.theirs = nonce.combinedSequenceNumber;
+        }
+        else {
+            const previous = peer.csnPair.theirs;
+            const current = nonce.combinedSequenceNumber;
+            if (current < previous) {
+                throw new ValidationError(peer.name + " CSN is lower than last time");
+            }
+            else if (current === previous) {
+                throw new ValidationError(peer.name + " CSN hasn't been incremented");
+            }
+            else {
+                peer.csnPair.theirs = current;
+            }
+        }
+    }
+    validateNonceCookie(nonce) {
+        const peer = this.getPeerWithId(nonce.source);
+        if (peer !== null && peer.cookiePair.theirs !== null) {
+            if (!nonce.cookie.equals(peer.cookiePair.theirs)) {
+                throw new ValidationError(peer.name + " cookie changed");
+            }
         }
     }
     validateRepeatedCookie(peer, repeatedCookieBytes) {
@@ -843,6 +988,28 @@ class Signaling {
             console.debug(this.logTag, 'Their cookie:', repeatedCookie.bytes);
             console.debug(this.logTag, 'Our cookie:', peer.cookiePair.ours.bytes);
             throw new ProtocolError('Peer repeated cookie does not match our cookie');
+        }
+    }
+    validateSignedKeys(signed_keys, nonce, serverPublicKey) {
+        if (signed_keys === null || signed_keys === undefined) {
+            throw new ValidationError("Server did not send signed_keys in server-auth message");
+        }
+        const box = new Box(new Uint8Array(nonce.toArrayBuffer()), new Uint8Array(signed_keys), nacl.box.nonceLength);
+        console.debug(this.logTag, "Expected server public permanent key is", u8aToHex(serverPublicKey));
+        console.debug(this.logTag, "Server public session key is", u8aToHex(this.server.sessionKey));
+        let decrypted;
+        try {
+            decrypted = this.permanentKey.decrypt(box, serverPublicKey);
+        }
+        catch (e) {
+            if (e === 'decryption-failed') {
+                throw new ValidationError("Could not decrypt signed_keys in server_auth message");
+            }
+            throw e;
+        }
+        const expected = concat(this.server.sessionKey, this.permanentKey.publicKeyBytes);
+        if (!arraysAreEqual(decrypted, expected)) {
+            throw new ValidationError("Decrypted signed_keys in server-auth message is invalid");
         }
     }
     decodeMessage(data, expectedType, enforce = false) {
@@ -891,9 +1058,6 @@ class Signaling {
         return decryptedBytes.buffer.slice(start, end);
     }
     resetConnection(reason) {
-        if (reason !== undefined) {
-            this.client.emit({ type: 'connection-closed', data: reason });
-        }
         if (this.ws !== null) {
             console.debug(this.logTag, 'Disconnecting WebSocket (close code ' + reason + ')');
             this.ws.close(reason);
@@ -902,14 +1066,16 @@ class Signaling {
         this.server = new Server();
         this.handoverState.reset();
         this.setState('new');
-        console.debug('Connection reset');
+        if (reason !== undefined) {
+            console.debug(this.logTag, 'Connection reset');
+        }
     }
     initTask(task, data) {
         try {
             task.init(this, data);
         }
         catch (e) {
-            if (e instanceof ValidationError) {
+            if (e.name === 'ValidationError') {
                 throw new ProtocolError("Peer sent invalid task data");
             }
             throw e;
@@ -971,7 +1137,7 @@ class Signaling {
                     this.sendClose(CloseCode.InternalError);
                 }
                 this.resetConnection(CloseCode.InternalError);
-                return null;
+                throw new SignalingError(CloseCode.InternalError, "Decryption of peer message failed. This should not happen.");
             }
             else {
                 throw e;
@@ -985,9 +1151,10 @@ Signaling.SALTYRTC_ADDR_SERVER = 0x00;
 Signaling.SALTYRTC_ADDR_INITIATOR = 0x01;
 
 class InitiatorSignaling extends Signaling {
-    constructor(client, host, port, tasks, pingInterval, permanentKey, responderTrustedKey) {
-        super(client, host, port, tasks, pingInterval, permanentKey, responderTrustedKey);
+    constructor(client, host, port, serverKey, tasks, pingInterval, permanentKey, responderTrustedKey) {
+        super(client, host, port, serverKey, tasks, pingInterval, permanentKey, responderTrustedKey);
         this.logTag = 'Initiator:';
+        this.responderCounter = 0;
         this.responders = null;
         this.responder = null;
         this.role = 'initiator';
@@ -1040,17 +1207,59 @@ class InitiatorSignaling extends Signaling {
         }
         return null;
     }
+    getPeerWithId(id) {
+        if (id === Signaling.SALTYRTC_ADDR_SERVER) {
+            return this.server;
+        }
+        else if (isResponderId(id)) {
+            if (this.state === 'task' && this.responder !== null && this.responder.id === id) {
+                return this.responder;
+            }
+            else if (this.responders.has(id)) {
+                return this.responders.get(id);
+            }
+            return null;
+        }
+        else {
+            throw new ProtocolError("Invalid peer id: " + id);
+        }
+    }
+    handlePeerHandshakeSignalingError(e, source) {
+        if (source !== null) {
+            this.dropResponder(source, e.closeCode);
+        }
+    }
     processNewResponder(responderId) {
         if (this.responders.has(responderId)) {
             this.responders.delete(responderId);
         }
-        const responder = new Responder(responderId);
+        const responder = new Responder(responderId, this.responderCounter++);
         if (this.peerTrustedKey !== null) {
             responder.handshakeState = 'token-received';
             responder.permanentKey = this.peerTrustedKey;
         }
         this.responders.set(responderId, responder);
+        if (this.responders.size > 252) {
+            this.dropOldestInactiveResponder();
+        }
         this.client.emit({ type: 'new-responder', data: responderId });
+    }
+    dropOldestInactiveResponder() {
+        console.warn(this.logTag, "Dropping oldest inactive responder");
+        let drop = null;
+        for (let r of this.responders.values()) {
+            if (r.handshakeState == 'new') {
+                if (drop === null) {
+                    drop = r;
+                }
+                else if (r.counter < drop.counter) {
+                    drop = r;
+                }
+            }
+        }
+        if (drop !== null) {
+            this.dropResponder(drop.id, CloseCode.DroppedByInitiator);
+        }
     }
     onPeerHandshakeMessage(box, nonce) {
         if (nonce.destination != this.address) {
@@ -1062,8 +1271,12 @@ class InitiatorSignaling extends Signaling {
             const msg = this.decodeMessage(payload, 'server');
             switch (msg.type) {
                 case 'new-responder':
-                    console.debug(this.logTag, 'Received new-responder');
+                    console.debug(this.logTag, 'Received new-responder', byteToHex(msg.id));
                     this.handleNewResponder(msg);
+                    break;
+                case 'send-error':
+                    console.debug(this.logTag, 'Received send-error');
+                    this.handleSendError(msg);
                     break;
                 default:
                     throw new ProtocolError('Received unexpected server message: ' + msg.type);
@@ -1136,8 +1349,21 @@ class InitiatorSignaling extends Signaling {
     }
     handleServerAuth(msg, nonce) {
         this.address = Signaling.SALTYRTC_ADDR_INITIATOR;
-        this.validateNonce(nonce, this.address, Signaling.SALTYRTC_ADDR_SERVER);
         this.validateRepeatedCookie(this.server, msg.your_cookie);
+        if (this.serverPublicKey != null) {
+            try {
+                this.validateSignedKeys(msg.signed_keys, nonce, this.serverPublicKey);
+            }
+            catch (e) {
+                if (e.name === 'ValidationError') {
+                    throw new ProtocolError("Verification of signed_keys failed: " + e.message);
+                }
+                throw e;
+            }
+        }
+        else if (msg.signed_keys !== null && msg.signed_keys !== undefined) {
+            console.warn(this.logTag, "Server sent signed keys, but we're not verifying them.");
+        }
         this.responders = new Map();
         for (let id of msg.responders) {
             if (!isResponderId(id)) {
@@ -1197,7 +1423,7 @@ class InitiatorSignaling extends Signaling {
             InitiatorSignaling.validateTaskInfo(msg.tasks, msg.data);
         }
         catch (e) {
-            if (e instanceof ValidationError) {
+            if (e.name === 'ValidationError') {
                 throw new ProtocolError("Peer sent invalid task info: " + e.message);
             }
             throw e;
@@ -1238,6 +1464,34 @@ class InitiatorSignaling extends Signaling {
         }
         return null;
     }
+    _handleSendError(receiver) {
+        if (!isResponderId(receiver)) {
+            throw new ProtocolError("Outgoing c2c messages must have been sent to a responder");
+        }
+        let notify = false;
+        if (this.responder === null) {
+            const responder = this.responders.get(receiver);
+            if (responder === null || responder === undefined) {
+                console.warn(this.logTag, "Got send-error message for unknown responder", receiver);
+            }
+            else {
+                notify = true;
+                this.responders.delete(receiver);
+            }
+        }
+        else {
+            if (this.responder.id === receiver) {
+                notify = true;
+                this.resetConnection(CloseCode.ProtocolError);
+            }
+            else {
+                console.warn(this.logTag, "Got send-error message for unknown responder", receiver);
+            }
+        }
+        if (notify === true) {
+            this.client.emit({ type: "signaling-connection-lost", data: receiver });
+        }
+    }
     dropResponders(reason) {
         console.debug(this.logTag, 'Dropping', this.responders.size, 'other responders.');
         for (let id of this.responders.keys()) {
@@ -1258,8 +1512,8 @@ class InitiatorSignaling extends Signaling {
 }
 
 class ResponderSignaling extends Signaling {
-    constructor(client, host, port, tasks, pingInterval, permanentKey, initiatorPubKey, authToken) {
-        super(client, host, port, tasks, pingInterval, permanentKey, authToken === undefined ? initiatorPubKey : undefined);
+    constructor(client, host, port, serverKey, tasks, pingInterval, permanentKey, initiatorPubKey, authToken) {
+        super(client, host, port, serverKey, tasks, pingInterval, permanentKey, authToken === undefined ? initiatorPubKey : undefined);
         this.logTag = 'Responder:';
         this.initiator = null;
         this.role = 'responder';
@@ -1312,6 +1566,20 @@ class ResponderSignaling extends Signaling {
         }
         return null;
     }
+    getPeerWithId(id) {
+        if (id === Signaling.SALTYRTC_ADDR_SERVER) {
+            return this.server;
+        }
+        else if (id === Signaling.SALTYRTC_ADDR_INITIATOR) {
+            return this.initiator;
+        }
+        else {
+            throw new ProtocolError("Invalid peer id: " + id);
+        }
+    }
+    handlePeerHandshakeSignalingError(e, source) {
+        this.resetConnection(e.closeCode);
+    }
     onPeerHandshakeMessage(box, nonce) {
         if (nonce.destination != this.address) {
             throw new ProtocolError('Message destination does not match our address');
@@ -1324,6 +1592,10 @@ class ResponderSignaling extends Signaling {
                 case 'new-initiator':
                     console.debug(this.logTag, 'Received new-initiator');
                     this.handleNewInitiator(msg);
+                    break;
+                case 'send-error':
+                    console.debug(this.logTag, 'Received send-error');
+                    this.handleSendError(msg);
                     break;
                 default:
                     throw new ProtocolError('Received unexpected server message: ' + msg.type);
@@ -1382,7 +1654,6 @@ class ResponderSignaling extends Signaling {
         this.server.handshakeState = 'hello-sent';
     }
     handleServerAuth(msg, nonce) {
-        this.validateNonce(nonce, undefined, Signaling.SALTYRTC_ADDR_SERVER);
         if (nonce.destination > 0xff || nonce.destination < 0x02) {
             console.error(this.logTag, 'Invalid nonce destination:', nonce.destination);
             throw 'bad-nonce-destination';
@@ -1391,6 +1662,20 @@ class ResponderSignaling extends Signaling {
         console.debug(this.logTag, 'Server assigned address', byteToHex(this.address));
         this.logTag = 'Responder[' + byteToHex(this.address) + ']:';
         this.validateRepeatedCookie(this.server, msg.your_cookie);
+        if (this.serverPublicKey != null) {
+            try {
+                this.validateSignedKeys(msg.signed_keys, nonce, this.serverPublicKey);
+            }
+            catch (e) {
+                if (e.name === 'ValidationError') {
+                    throw new ProtocolError("Verification of signed_keys failed: " + e.message);
+                }
+                throw e;
+            }
+        }
+        else if (msg.signed_keys !== null && msg.signed_keys !== undefined) {
+            console.warn(this.logTag, "Server sent signed keys, but we're not verifying them.");
+        }
         this.initiator.connected = msg.initiator_connected;
         console.debug(this.logTag, 'Initiator', this.initiator.connected ? '' : 'not', 'connected');
         this.server.handshakeState = 'done';
@@ -1459,7 +1744,7 @@ class ResponderSignaling extends Signaling {
             ResponderSignaling.validateTaskInfo(msg.task, msg.data);
         }
         catch (e) {
-            if (e instanceof ValidationError) {
+            if (e.name === 'ValidationError') {
                 throw new ProtocolError("Peer sent invalid task info: " + e.message);
             }
             throw e;
@@ -1495,6 +1780,13 @@ class ResponderSignaling extends Signaling {
         if (!data.hasOwnProperty(name)) {
             throw new ValidationError("Task data must contain an entry for the chosen task");
         }
+    }
+    _handleSendError(receiver) {
+        if (receiver != Signaling.SALTYRTC_ADDR_INITIATOR) {
+            throw new ProtocolError("Outgoing c2c messages must have been sent to the initiator");
+        }
+        this.client.emit({ type: "signaling-connection-lost", data: receiver });
+        this.resetConnection(CloseCode.ProtocolError);
     }
 }
 
@@ -1634,6 +1926,10 @@ class SaltyRTCBuilder {
         this.pingInterval = interval;
         return this;
     }
+    withServerKey(serverKey) {
+        this.serverPublicKey = validateKey(serverKey, "Server public key");
+        return this;
+    }
     initiatorInfo(initiatorPublicKey, authToken) {
         this.initiatorPublicKey = validateKey(initiatorPublicKey, "Initiator public key");
         this.authToken = validateKey(authToken, "Auth token");
@@ -1644,12 +1940,15 @@ class SaltyRTCBuilder {
         this.requireConnectionInfo();
         this.requireKeyStore();
         this.requireTasks();
+        if (this.hasInitiatorInfo) {
+            throw new Error('Cannot initialize as initiator if .initiatorInfo(...) has been used');
+        }
         if (this.hasTrustedPeerKey) {
-            return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks, this.pingInterval, this.peerTrustedKey)
+            return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.peerTrustedKey)
                 .asInitiator();
         }
         else {
-            return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks, this.pingInterval)
+            return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval)
                 .asInitiator();
         }
     }
@@ -1658,18 +1957,18 @@ class SaltyRTCBuilder {
         this.requireKeyStore();
         this.requireTasks();
         if (this.hasTrustedPeerKey) {
-            return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks, this.pingInterval, this.peerTrustedKey)
+            return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.peerTrustedKey)
                 .asResponder();
         }
         else {
             this.requireInitiatorInfo();
-            return new SaltyRTC(this.keyStore, this.host, this.port, this.tasks, this.pingInterval)
+            return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval)
                 .asResponder(this.initiatorPublicKey, this.authToken);
         }
     }
 }
 class SaltyRTC {
-    constructor(permanentKey, host, port, tasks, pingInterval, peerTrustedKey) {
+    constructor(permanentKey, host, port, serverKey, tasks, pingInterval, peerTrustedKey) {
         this.peerTrustedKey = null;
         this._signaling = null;
         if (permanentKey === undefined) {
@@ -1689,24 +1988,27 @@ class SaltyRTC {
         if (peerTrustedKey !== undefined) {
             this.peerTrustedKey = peerTrustedKey;
         }
+        if (serverKey !== undefined) {
+            this.serverPublicKey = serverKey;
+        }
         this.eventRegistry = new EventRegistry();
     }
     asInitiator() {
         if (this.peerTrustedKey !== null) {
-            this._signaling = new InitiatorSignaling(this, this.host, this.port, this.tasks, this.pingInterval, this.permanentKey, this.peerTrustedKey);
+            this._signaling = new InitiatorSignaling(this, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.permanentKey, this.peerTrustedKey);
         }
         else {
-            this._signaling = new InitiatorSignaling(this, this.host, this.port, this.tasks, this.pingInterval, this.permanentKey);
+            this._signaling = new InitiatorSignaling(this, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.permanentKey);
         }
         return this;
     }
     asResponder(initiatorPubKey, authToken) {
         if (this.peerTrustedKey !== null) {
-            this._signaling = new ResponderSignaling(this, this.host, this.port, this.tasks, this.pingInterval, this.permanentKey, this.peerTrustedKey);
+            this._signaling = new ResponderSignaling(this, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.permanentKey, this.peerTrustedKey);
         }
         else {
             const token = new AuthToken(authToken);
-            this._signaling = new ResponderSignaling(this, this.host, this.port, this.tasks, this.pingInterval, this.permanentKey, initiatorPubKey, token);
+            this._signaling = new ResponderSignaling(this, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.permanentKey, initiatorPubKey, token);
         }
         return this;
     }
@@ -1747,7 +2049,7 @@ class SaltyRTC {
         this.signaling.connect();
     }
     disconnect() {
-        this.signaling.disconnect(CloseCode.ClosingNormal);
+        this.signaling.disconnect();
     }
     on(event, handler) {
         this.eventRegistry.register(event, handler);

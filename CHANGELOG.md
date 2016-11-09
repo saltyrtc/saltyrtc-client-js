@@ -12,6 +12,15 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.4.0 (2016-11-09)
+
+- [added] Support passing server public key to SaltyRTCBuilder (#59)
+- [added] Implement support for send-error messages (#14)
+- [added] Drop inactive responders (#55)
+- [fixed] Always emit connection-closed event on websocket close
+- [fixed] Properly handle protocol/signaling errors (#53)
+- [fixed] Don't allow calling both `.initiatorInfo` and `.asInitiator` on `SaltyRTCBuilder`
+
 ### v0.3.1 (2016-11-07)
 
 - [fixed] Send signaling messages to the task without encrypting (#58)
