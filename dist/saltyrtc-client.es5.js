@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.4.0
+ * saltyrtc-client-js v0.4.1
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -1121,7 +1121,7 @@ var Signaling = function () {
                 _this.setState('closed');
                 _this.client.emit({ type: 'connection-closed', data: ev.code });
                 var log = function log(reason) {
-                    return console.error(_this.logTag, 'Server closed connection:', reason);
+                    return console.error(_this.logTag, 'Websocket close reason:', reason);
                 };
                 switch (ev.code) {
                     case exports.CloseCode.GoingAway:
@@ -1180,7 +1180,7 @@ var Signaling = function () {
                             _this.resetConnection(e.closeCode);
                             break;
                         case 'peer-handshake':
-                            _this.handlePeerHandshakeSignalingError(e, nonce === undefined ? nonce.id : null);
+                            _this.handlePeerHandshakeSignalingError(e, nonce === undefined ? null : nonce.source);
                             break;
                         case 'task':
                             _this.sendClose(e.closeCode);
@@ -1251,6 +1251,7 @@ var Signaling = function () {
         key: "disconnect",
         value: function disconnect() {
             var reason = exports.CloseCode.ClosingNormal;
+            this.setState('closing');
             if (this.ws !== null) {
                 console.debug(this.logTag, 'Disconnecting WebSocket');
                 this.ws.close(reason);
@@ -1347,6 +1348,9 @@ var Signaling = function () {
             } else if (msg.type === 'restart') {
                 console.debug(this.logTag, 'Received restart');
                 this.handleRestart(msg);
+            } else if (msg.type === 'application') {
+                console.debug(this.logTag, 'Received application message');
+                this.handleApplication(msg);
             } else if (this.task !== null && this.task.getSupportedMessageTypes().indexOf(msg.type) !== -1) {
                 console.debug(this.logTag, 'Received', msg.type, '[' + this.task.getName() + ']');
                 this.task.onTaskMessage(msg);
@@ -1391,6 +1395,11 @@ var Signaling = function () {
             }
             console.warn(this.logTag, "SendError: Could not send unknown message:", idString);
             this._handleSendError(destination);
+        }
+    }, {
+        key: "handleApplication",
+        value: function handleApplication(msg) {
+            this.client.emit({ type: 'application', data: msg.data });
         }
     }, {
         key: "sendClose",
@@ -1662,12 +1671,26 @@ var Signaling = function () {
             }
         }
     }, {
+        key: "sendApplication",
+        value: function sendApplication(msg) {
+            this.sendPostClientHandshakeMessage(msg, 'application');
+        }
+    }, {
         key: "sendTaskMessage",
         value: function sendTaskMessage(msg) {
+            this.sendPostClientHandshakeMessage(msg, 'task');
+        }
+    }, {
+        key: "sendPostClientHandshakeMessage",
+        value: function sendPostClientHandshakeMessage(msg, name) {
+            if (this.state !== 'task') {
+                throw new SignalingError(exports.CloseCode.ProtocolError, 'Cannot send ' + name + ' message in "' + this.state + '" state');
+            }
             var receiver = this.getPeer();
             if (receiver === null) {
                 throw new SignalingError(exports.CloseCode.InternalError, 'No peer address could be found');
             }
+            console.debug('Sending', name, 'message');
             if (this.handoverState.local === true) {
                 this.task.sendSignalingMessage(this.msgpackEncode(msg));
             } else {
@@ -3016,6 +3039,14 @@ var SaltyRTC = function () {
                     }
                 }
             }
+        }
+    }, {
+        key: "sendApplicationMessage",
+        value: function sendApplicationMessage(data) {
+            this.signaling.sendApplication({
+                type: 'application',
+                data: data
+            });
         }
     }, {
         key: "callHandler",

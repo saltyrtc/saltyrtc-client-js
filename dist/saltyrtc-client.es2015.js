@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.4.0
+ * saltyrtc-client-js v0.4.1
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -598,7 +598,7 @@ class Signaling {
                 console.info(this.logTag, 'Closed WebSocket connection');
                 this.setState('closed');
                 this.client.emit({ type: 'connection-closed', data: ev.code });
-                const log = (reason) => console.error(this.logTag, 'Server closed connection:', reason);
+                const log = (reason) => console.error(this.logTag, 'Websocket close reason:', reason);
                 switch (ev.code) {
                     case CloseCode.GoingAway:
                         log('Server is being shut down');
@@ -658,7 +658,7 @@ class Signaling {
                             this.resetConnection(e.closeCode);
                             break;
                         case 'peer-handshake':
-                            this.handlePeerHandshakeSignalingError(e, nonce === undefined ? nonce.id : null);
+                            this.handlePeerHandshakeSignalingError(e, nonce === undefined ? null : nonce.source);
                             break;
                         case 'task':
                             this.sendClose(e.closeCode);
@@ -729,6 +729,7 @@ class Signaling {
     }
     disconnect() {
         const reason = CloseCode.ClosingNormal;
+        this.setState('closing');
         if (this.ws !== null) {
             console.debug(this.logTag, 'Disconnecting WebSocket');
             this.ws.close(reason);
@@ -820,6 +821,10 @@ class Signaling {
             console.debug(this.logTag, 'Received restart');
             this.handleRestart(msg);
         }
+        else if (msg.type === 'application') {
+            console.debug(this.logTag, 'Received application message');
+            this.handleApplication(msg);
+        }
         else if (this.task !== null && this.task.getSupportedMessageTypes().indexOf(msg.type) !== -1) {
             console.debug(this.logTag, 'Received', msg.type, '[' + this.task.getName() + ']');
             this.task.onTaskMessage(msg);
@@ -857,6 +862,9 @@ class Signaling {
         }
         console.warn(this.logTag, "SendError: Could not send unknown message:", idString);
         this._handleSendError(destination);
+    }
+    handleApplication(msg) {
+        this.client.emit({ type: 'application', data: msg.data });
     }
     sendClose(reason) {
         const message = {
@@ -1111,11 +1119,21 @@ class Signaling {
             }
         }
     }
+    sendApplication(msg) {
+        this.sendPostClientHandshakeMessage(msg, 'application');
+    }
     sendTaskMessage(msg) {
+        this.sendPostClientHandshakeMessage(msg, 'task');
+    }
+    sendPostClientHandshakeMessage(msg, name) {
+        if (this.state !== 'task') {
+            throw new SignalingError(CloseCode.ProtocolError, 'Cannot send ' + name + ' message in "' + this.state + '" state');
+        }
         const receiver = this.getPeer();
         if (receiver === null) {
             throw new SignalingError(CloseCode.InternalError, 'No peer address could be found');
         }
+        console.debug('Sending', name, 'message');
         if (this.handoverState.local === true) {
             this.task.sendSignalingMessage(this.msgpackEncode(msg));
         }
@@ -2081,6 +2099,12 @@ class SaltyRTC {
                 console.error('SaltyRTC: Unhandled exception in', event.type, 'handler:', e);
             }
         }
+    }
+    sendApplicationMessage(data) {
+        this.signaling.sendApplication({
+            type: 'application',
+            data: data,
+        });
     }
     callHandler(handler, event) {
         const response = handler(event);

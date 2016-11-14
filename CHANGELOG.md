@@ -12,6 +12,12 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.4.1 (2016-11-14)
+
+- [added] Implement support for application messages (#61)
+- [fixed] Set state to "closing" when starting disconnect
+- [fixed] Fix inverted condition when handling signaling errors
+
 ### v0.4.0 (2016-11-09)
 
 - [added] Support passing server public key to SaltyRTCBuilder (#59)
