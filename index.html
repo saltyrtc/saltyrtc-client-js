@@ -116,6 +116,7 @@ responder.<span class="hljs-literal">on</span>(<span class="hljs-string">'state-
 					<li><code>state-change(saltyrtcClient.SignalingState)</code>: The signaling state changed.</li>
 					<li><code>state-change:&lt;new-state&gt;(void)</code>: The signaling state change event, filtered by state.</li>
 					<li><code>new-responder(responderId)</code>: A responder has connected. This event is only dispatched for the initiator.</li>
+					<li><code>application(data)</code>: An application message has arrived.</li>
 					<li><code>handover(void)</code>: The handover to the data channel is done.</li>
 					<li><code>signaling-connection-lost(responderId)</code>: The signaling connection to the specified peer was lost.</li>
 					<li><code>connection-closed(closeCode)</code>: The connection was closed.</li>
