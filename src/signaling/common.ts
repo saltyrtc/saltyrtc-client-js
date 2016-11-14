@@ -241,7 +241,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
             console.info(this.logTag, 'Closed WebSocket connection');
             this.setState('closed');
             this.client.emit({type: 'connection-closed', data: ev.code});
-            const log = (reason) => console.error(this.logTag, 'Server closed connection:', reason);
+            const log = (reason) => console.error(this.logTag, 'Websocket close reason:', reason);
             switch (ev.code) {
                 case CloseCode.GoingAway:
                     log('Server is being shut down');
