@@ -306,7 +306,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
                         this.resetConnection(e.closeCode);
                         break;
                     case 'peer-handshake':
-                        this.handlePeerHandshakeSignalingError(e, nonce === undefined ? nonce.id : null);
+                        this.handlePeerHandshakeSignalingError(e, nonce === undefined ? null : nonce.source);
                         break;
                     case 'task':
                         this.sendClose(e.closeCode);
