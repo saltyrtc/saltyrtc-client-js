@@ -211,6 +211,8 @@ declare namespace saltyrtc {
         peerPermanentKeyBytes: Uint8Array;
         peerPermanentKeyHex: string;
 
+        getTask(): Task;
+
         connect(): void;
         disconnect(): void;
 
