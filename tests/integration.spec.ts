@@ -281,6 +281,24 @@ export default () => { describe('Integration Tests', function() {
             responder.once('state-change:peer-handshake', done);
         });
 
+        it('connect dynamically using factory function', async (done) => {
+            const responder = new SaltyRTCBuilder()
+                .connectWith((initiatorPublicKeyHex: string) => {
+                    return {
+                        host: Config.SALTYRTC_HOST,
+                        port: Config.SALTYRTC_PORT,
+                    };
+                })
+                .withKeyStore(new KeyStore())
+                .usingTasks([new DummyTask()])
+                .withServerKey(Config.SALTYRTC_SERVER_PUBLIC_KEY)
+                .initiatorInfo(nacl.randomBytes(32), nacl.randomBytes(32))
+                .asResponder();
+            expect(responder.state).toEqual('new');
+            responder.connect();
+            responder.once('state-change:peer-handshake', done);
+        });
+
         it('validate server auth validation fail (responder)', async (done) => {
             const responder = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)

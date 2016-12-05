@@ -11,7 +11,7 @@ import { AuthToken } from "./keystore";
 import { Signaling, InitiatorSignaling, ResponderSignaling } from "./signaling";
 import { EventRegistry } from "./eventregistry";
 import { u8aToHex, validateKey } from "./utils";
-import { CloseCode } from "./closecode";
+import ServerInfoFactory = saltyrtc.ServerInfoFactory;
 
 
 export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
@@ -23,6 +23,7 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
 
     private host: string;
     private port: number;
+    private serverInfoFactory: saltyrtc.ServerInfoFactory = null;
     private keyStore: saltyrtc.KeyStore;
     private initiatorPublicKey: Uint8Array;
     private serverPublicKey: Uint8Array;
@@ -90,6 +91,15 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
         this.validateHost(host);
         this.host = host;
         this.port = port;
+        this.hasConnectionInfo = true;
+        return this;
+    }
+
+    /**
+     * Provide a function that can determine SaltyRTC signalling server connection info.
+     */
+    public connectWith(serverInfoFactory: saltyrtc.ServerInfoFactory): SaltyRTCBuilder {
+        this.serverInfoFactory = serverInfoFactory;
         this.hasConnectionInfo = true;
         return this;
     }
@@ -171,6 +181,16 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
     }
 
     /**
+     * If a ServerInfoFactory is provided, dynamically determine host and port.
+     */
+    private processServerInfo(factory: ServerInfoFactory, publicKey: Uint8Array): void {
+        const publicKeyHex = u8aToHex(publicKey);
+        const data = factory(publicKeyHex);
+        this.host = data.host;
+        this.port = data.port;
+    }
+
+    /**
      * Return a SaltyRTC instance configured as initiator.
      * @throws Error if key or connection info haven't been set yet.
      * @returns {SaltyRTC}
@@ -182,6 +202,11 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
         if (this.hasInitiatorInfo) {
             throw new Error('Cannot initialize as initiator if .initiatorInfo(...) has been used')
         }
+
+        if (this.serverInfoFactory !== null) {
+            this.processServerInfo(this.serverInfoFactory, this.keyStore.publicKeyBytes);
+        }
+
         if (this.hasTrustedPeerKey) {
             return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.peerTrustedKey)
                 .asInitiator();
@@ -201,10 +226,16 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
         this.requireKeyStore();
         this.requireTasks();
         if (this.hasTrustedPeerKey) {
+            if (this.serverInfoFactory !== null) {
+                this.processServerInfo(this.serverInfoFactory, this.peerTrustedKey);
+            }
             return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.peerTrustedKey)
                 .asResponder();
         } else {
             this.requireInitiatorInfo();
+            if (this.serverInfoFactory !== null) {
+                this.processServerInfo(this.serverInfoFactory, this.initiatorPublicKey);
+            }
             return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval)
                 .asResponder(this.initiatorPublicKey, this.authToken);
         }

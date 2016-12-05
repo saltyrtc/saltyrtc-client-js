@@ -187,8 +187,11 @@ declare namespace saltyrtc {
         close(reason: number): void;
     }
 
+    type ServerInfoFactory = (initiatorPublicKey: string) => {host: string, port: number};
+
     interface SaltyRTCBuilder {
         connectTo(host: string, port: number): SaltyRTCBuilder;
+        connectWith(serverInfo: ServerInfoFactory): SaltyRTCBuilder;
         withKeyStore(keyStore: KeyStore): SaltyRTCBuilder;
         withTrustedPeerKey(peerTrustedKey: Uint8Array | string): SaltyRTCBuilder;
         withServerKey(serverKey: Uint8Array | string): SaltyRTCBuilder;
