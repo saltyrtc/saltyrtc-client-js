@@ -323,12 +323,13 @@ export abstract class Signaling implements saltyrtc.Signaling {
             } else if (e.name === 'ConnectionError') {
                 console.warn(this.logTag, 'Connection error. Resetting connection.');
                 this.resetConnection(CloseCode.InternalError);
+            } else {
+                if (e.hasOwnProperty('stack')) {
+                    console.error("An unknown error occurred:");
+                    console.error(e.stack);
+                }
+                throw e;
             }
-            if (e.hasOwnProperty('stack')) {
-                console.error("An unknown error occurred:");
-                console.error(e.stack);
-            }
-            throw e;
         }
     };
 
