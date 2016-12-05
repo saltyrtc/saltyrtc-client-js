@@ -402,7 +402,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
             this.onSignalingServerMessage(box);
         } else {
-            let decrypted: Uint8Array = this.decryptFromPeer(box);
+            let decrypted: Uint8Array = this.sessionKey.decrypt(box, this.getPeerSessionKey());
             this.onSignalingPeerMessage(decrypted);
         }
     }
