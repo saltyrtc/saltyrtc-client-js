@@ -4,13 +4,13 @@ set -e
 
 if [[ $TRAVIS_PULL_REQUEST == false && $TRAVIS_BRANCH == "master" ]]
 then
-    echo "-- will build docs --"
+    echo "-- will build apidocs --"
 
     git config --global user.email "travis@travis-ci.com"
     git config --global user.name "Travis Bot"
 
     # Build docs
-    rm -rf docs/
+    rm -rf apidocs/
     npm install typedoc
     cd node_modules/typedoc/
     ../typescript/bin/tsc
@@ -20,7 +20,7 @@ then
         --excludePrivate \
         --includeDeclarations \
         --target ES6 \
-        --out docs \
+        --out apidocs \
         src/
 
     # Clone gh-pages repo
@@ -34,7 +34,7 @@ then
 
     # Add docs
     rm -rf ./*
-    cp -r ../docs/* ./.
+    cp -r ../apidocs/* ./.
     git add -A
 
     # Make sure to turn off Github Jekyll rendering
@@ -42,8 +42,8 @@ then
     git add .nojekyll
 
     # Commit docs
-    git commit -m "autocommit docs"
+    git commit -m "autocommit apidocs"
     git push origin gh-pages
 else
-    echo "-- will only build docs from master --"
+    echo "-- will only build apidocs from master --"
 fi

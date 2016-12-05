@@ -2,7 +2,7 @@
 node_modules/
 npm-debug.log
 tests/testsuite.js*
-docs/
+apidocs/
 saltyrtc.crt
 saltyrtc.csr
 saltyrtc.key

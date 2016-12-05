@@ -1,0 +1,55 @@
+sudo: required
+dist: trusty
+language: java
+matrix:
+  include:
+    #- jdk: openjdk7 # disable until https://github.com/travis-ci/travis-ci/issues/5227 is fixed
+    - jdk: oraclejdk7
+      env:
+        EXECUTE_BUILD_DOCS=true
+    - jdk: oraclejdk8
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper/
+before_script:
+  # Show OS
+  - cat /etc/os-release
+  - python3 --version
+  # Libsodium
+  - sudo add-apt-repository -y ppa:chris-lea/libsodium
+  - sudo apt-get update && sudo apt-get install -y libsodium-dev
+  # Create test certificate for localhost
+  - openssl req -new -newkey rsa:1024 -nodes -sha256 -out saltyrtc.csr -keyout saltyrtc.key -subj '/C=CH/O=SaltyRTC/CN=localhost/'
+  - openssl x509 -req -days 365 -in saltyrtc.csr -signkey saltyrtc.key -out saltyrtc.crt
+  - keytool -import -trustcacerts -alias root -file saltyrtc.crt -keystore saltyrtc.jks -storetype JKS -storepass saltyrtc -noprompt
+  # Start SaltyRTC server
+  - git clone https://github.com/saltyrtc/saltyrtc-server-python -b master
+  - export SALTYRTC_SERVER_PERMANENT_KEY=0919b266ce1855419e4066fc076b39855e728768e3afa773105edd2e37037c20 # Public: 09a59a5fa6b45cb07638a3a6e347ce563a948b756fd22f9527465f7c79c2a864
+  - |
+    cd saltyrtc-server-python
+    pyvenv venv
+    venv/bin/pip install .[logging]
+    venv/bin/saltyrtc-server -v 5 serve -sc ../saltyrtc.crt -sk ../saltyrtc.key -p 8765 -k $SALTYRTC_SERVER_PERMANENT_KEY > serverlog.txt 2>&1 &
+    export SALTYRTC_SERVER_PID=$!
+    sleep 2
+    cd ..
+  # Enable debug in integration tests
+  - sed -i 's/DEBUG = false/DEBUG = true/' src/test/java/org/saltyrtc/client/tests/integration/ConnectionTest.java
+after_script:
+  # Stop SaltyRTC server
+  - kill -INT $SALTYRTC_SERVER_PID
+  # Print server log
+  - |
+    echo "---------- Server Log ----------\n"
+    cat saltyrtc-server-python/serverlog.txt
+    echo -e "\n---------- End Server Log ----------"
+after_success:
+  - test $TRAVIS_PULL_REQUEST == "false" && test $TRAVIS_BRANCH == "master" && test $EXECUTE_BUILD_DOCS == "true" && bash docs/deploy-docs.sh
+env:
+  global:
+    # Generated with "travis encrypt -r saltyrtc/saltyrtc-client-java GH_TOKEN=<token>"
+    secure: ApN+XHzAGhxgq2Owbtsu/H6596FZaGb0/WXY3kS3Hmp5KVvRl6pTZAH/1cNoYqXWLoRykKR646mghBO1daE7I9rINMKoiVGB40e3qymxA4mt4syyobACmPlDlSn4MM+XhQyvnpsKigPGRoFO9OEjjVZAZZTcamuH7QXFOGCPP+Bk8C52MH2JCa5bFTgjvSfIBpZO/Z13g/0klJLWYUxFZyw1vTCua2Se7wdN5TXfRMOA5V3F8rqIUEt82OyEjNZG0MOG3Q0jhEh/Vele7YqfX1UkQ5hjQBpq55dZMpoWqInTh2eepE3Z/JBgqO4Qw6cvRx9Hf8jPTQQ9MHjqxwHFDeuHNXPk4GukpvrUoRC/kX/BvzFpqZ2ptIvPjezcAkHvCgOLlqJSXoPdp1IO4JQsQNTTZI6NqwSt/XHEA+oLib4chJGEDVCSBrba7K1aAodmcLdrLOk6/ewWfqAxHdCvTOwLy2S7lxSMcD6k99TKUdkfa7/tiSWajIPt5YriutrGLrk9yyUc9LHdVhbFUI0K/HqMcoIfujiAMem1JDmHiV1garMn5k23LDS33C5WgypDEM6Ro53gVB9coy1h4K14f5v9uVW0zsGM/NRr8frBkZ5ySgN8xy0ZJ9e21KqKeswpoQmpJJiDa3Ji8Pg9pweUvGToh15FGAnRQ/8fkMHATpg=

@@ -8,7 +8,7 @@
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/536/badge)](https://bestpractices.coreinfrastructure.org/projects/536)
 
 This is a [SaltyRTC](https://github.com/saltyrtc/saltyrtc-meta) implementation
-for JavaScript (ES5) written in TypeScript 1.8+.
+for JavaScript (ES5) written in TypeScript 2.0+.
 
 The development is still ongoing, the library is not yet production ready.
 
