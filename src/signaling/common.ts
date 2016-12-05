@@ -429,9 +429,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
         if (msg.type === 'close') {
             console.debug('Received close');
             this.handleClose(msg as saltyrtc.messages.Close);
-        } else if (msg.type === 'restart') {
-            console.debug(this.logTag, 'Received restart');
-            this.handleRestart(msg as saltyrtc.messages.Restart);
         } else if (msg.type === 'application') {
             console.debug(this.logTag, 'Received application message');
             this.handleApplication(msg as saltyrtc.messages.Application);
@@ -482,13 +479,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Initialize the peer handshake.
      */
     protected abstract initPeerHandshake(): void;
-
-    /**
-     * Handle an incoming restart message.
-     */
-    protected handleRestart(msg: saltyrtc.messages.Restart): void {
-        throw new ProtocolError('Restart messages not yet implemented');
-    }
 
     /**
      * Handle an incoming send-error message.
