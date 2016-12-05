@@ -115,6 +115,24 @@ Alternatively, run the tests automatically in Firefox and Chrome:
 
     $ npm test
 
+## Security
+
+### Responsible Disclosure / Reporting Security Issues
+
+Please report security issues directly to one or both of the following contacts:
+
+- Danilo Bargen
+    - Email: mail@dbrgn.ch
+    - Threema: EBEP4UCA
+    - GPG: [EA456E8BAF0109429583EED83578F667F2F3A5FA][keybase-dbrgn]
+- Lennart Grahl
+    - Email: lennart.grahl@gmail.com
+    - Threema: MSFVEW6C
+    - GPG: [3FDB14868A2B36D638F3C495F98FBED10482ABA6][keybase-lgrahl]
+
+[keybase-dbrgn]: https://keybase.io/dbrgn
+[keybase-lgrahl]: https://keybase.io/lgrahl
+
 ## Releasing
 
 Set variables:
