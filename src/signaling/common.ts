@@ -282,7 +282,15 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
             // Parse and validate nonce
             nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
-            this.validateNonce(nonce);
+            try {
+                this.validateNonce(nonce);
+            } catch (e) {
+                if (e.name === 'ValidationError') {
+                    throw new ProtocolError('Invalid nonce: ' + e);
+                } else {
+                    throw e;
+                }
+            }
 
             // Dispatch message
             switch (this.getState()) {
