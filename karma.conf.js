@@ -14,14 +14,13 @@ module.exports = function(config) {
       },
       Firefox_travis_ci: {
         base: 'Firefox',
-        profile: '~/.mozilla/firefox/saltyrtc',
+        profile: '/home/travis/.mozilla/firefox/saltyrtc',
       }
     }
   };
 
   if (process.env.TRAVIS) {
-    //configuration.browsers = ['Chrome_travis_ci', 'Firefox_travis_ci'];
-    configuration.browsers = ['Chrome_travis_ci'];
+    configuration.browsers = ['Chrome_travis_ci', 'Firefox_travis_ci'];
   } else {
     configuration.browsers = ['Chrome', 'Firefox'];
   }
