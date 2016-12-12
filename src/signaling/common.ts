@@ -282,7 +282,15 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
             // Parse and validate nonce
             nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
-            this.validateNonce(nonce);
+            try {
+                this.validateNonce(nonce);
+            } catch (e) {
+                if (e.name === 'ValidationError') {
+                    throw new ProtocolError('Invalid nonce: ' + e);
+                } else {
+                    throw e;
+                }
+            }
 
             // Dispatch message
             switch (this.getState()) {
@@ -323,12 +331,13 @@ export abstract class Signaling implements saltyrtc.Signaling {
             } else if (e.name === 'ConnectionError') {
                 console.warn(this.logTag, 'Connection error. Resetting connection.');
                 this.resetConnection(CloseCode.InternalError);
+            } else {
+                if (e.hasOwnProperty('stack')) {
+                    console.error("An unknown error occurred:");
+                    console.error(e.stack);
+                }
+                throw e;
             }
-            if (e.hasOwnProperty('stack')) {
-                console.error("An unknown error occurred:");
-                console.error(e.stack);
-            }
-            throw e;
         }
     };
 
@@ -402,7 +411,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
             this.onSignalingServerMessage(box);
         } else {
-            let decrypted: Uint8Array = this.decryptFromPeer(box);
+            let decrypted: Uint8Array = this.sessionKey.decrypt(box, this.getPeerSessionKey());
             this.onSignalingPeerMessage(decrypted);
         }
     }
@@ -857,7 +866,12 @@ export abstract class Signaling implements saltyrtc.Signaling {
         // Close WebSocket instance
         if (this.ws !== null) {
             console.debug(this.logTag, 'Disconnecting WebSocket (close code ' + reason + ')');
-            this.ws.close(reason);
+            if (reason == CloseCode.GoingAway) {
+                // See https://github.com/saltyrtc/saltyrtc-meta/pull/111/
+                this.ws.close();
+            } else {
+                this.ws.close(reason);
+            }
         }
         this.ws = null;
 
