@@ -169,6 +169,11 @@ export abstract class Signaling implements saltyrtc.Signaling {
         // Update state
         this.setState('closing');
 
+        // Send close message if necessary
+        if (this.state === 'task') {
+            this.sendClose(reason);
+        }
+
         // Close WebSocket instance
         if (this.ws !== null) {
             console.debug(this.logTag, 'Disconnecting WebSocket');
