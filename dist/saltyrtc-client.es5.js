@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.4.1
+ * saltyrtc-client-js v0.5.0
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -1156,7 +1156,15 @@ var Signaling = function () {
             try {
                 var box = Box.fromUint8Array(new Uint8Array(ev.data), Nonce.TOTAL_LENGTH);
                 nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
-                _this.validateNonce(nonce);
+                try {
+                    _this.validateNonce(nonce);
+                } catch (e) {
+                    if (e.name === 'ValidationError') {
+                        throw new ProtocolError('Invalid nonce: ' + e);
+                    } else {
+                        throw e;
+                    }
+                }
                 switch (_this.getState()) {
                     case 'server-handshake':
                         _this.onServerHandshakeMessage(box, nonce);
@@ -1193,12 +1201,13 @@ var Signaling = function () {
                 } else if (e.name === 'ConnectionError') {
                     console.warn(_this.logTag, 'Connection error. Resetting connection.');
                     _this.resetConnection(exports.CloseCode.InternalError);
+                } else {
+                    if (e.hasOwnProperty('stack')) {
+                        console.error("An unknown error occurred:");
+                        console.error(e.stack);
+                    }
+                    throw e;
                 }
-                if (e.hasOwnProperty('stack')) {
-                    console.error("An unknown error occurred:");
-                    console.error(e.stack);
-                }
-                throw e;
             }
         };
         this.client = client;
@@ -1252,6 +1261,9 @@ var Signaling = function () {
         value: function disconnect() {
             var reason = exports.CloseCode.ClosingNormal;
             this.setState('closing');
+            if (this.state === 'task') {
+                this.sendClose(reason);
+            }
             if (this.ws !== null) {
                 console.debug(this.logTag, 'Disconnecting WebSocket');
                 this.ws.close(reason);
@@ -1324,7 +1336,7 @@ var Signaling = function () {
             if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
                 this.onSignalingServerMessage(box);
             } else {
-                var decrypted = this.decryptFromPeer(box);
+                var decrypted = this.sessionKey.decrypt(box, this.getPeerSessionKey());
                 this.onSignalingPeerMessage(decrypted);
             }
         }
@@ -1345,9 +1357,6 @@ var Signaling = function () {
             if (msg.type === 'close') {
                 console.debug('Received close');
                 this.handleClose(msg);
-            } else if (msg.type === 'restart') {
-                console.debug(this.logTag, 'Received restart');
-                this.handleRestart(msg);
             } else if (msg.type === 'application') {
                 console.debug(this.logTag, 'Received application message');
                 this.handleApplication(msg);
@@ -1377,11 +1386,6 @@ var Signaling = function () {
             console.debug(this.logTag, 'Sending client-auth');
             this.ws.send(packet);
             this.server.handshakeState = 'auth-sent';
-        }
-    }, {
-        key: "handleRestart",
-        value: function handleRestart(msg) {
-            throw new ProtocolError('Restart messages not yet implemented');
         }
     }, {
         key: "handleSendError",
@@ -1616,7 +1620,11 @@ var Signaling = function () {
         value: function resetConnection(reason) {
             if (this.ws !== null) {
                 console.debug(this.logTag, 'Disconnecting WebSocket (close code ' + reason + ')');
-                this.ws.close(reason);
+                if (reason == exports.CloseCode.GoingAway) {
+                    this.ws.close();
+                } else {
+                    this.ws.close(reason);
+                }
             }
             this.ws = null;
             this.server = new Server();
@@ -2784,6 +2792,7 @@ var SaltyRTCBuilder = function () {
         this.hasInitiatorInfo = false;
         this.hasTrustedPeerKey = false;
         this.hasTasks = false;
+        this.serverInfoFactory = null;
         this.pingInterval = 0;
     }
 
@@ -2837,6 +2846,13 @@ var SaltyRTCBuilder = function () {
             return this;
         }
     }, {
+        key: "connectWith",
+        value: function connectWith(serverInfoFactory) {
+            this.serverInfoFactory = serverInfoFactory;
+            this.hasConnectionInfo = true;
+            return this;
+        }
+    }, {
         key: "withKeyStore",
         value: function withKeyStore(keyStore) {
             this.keyStore = keyStore;
@@ -2884,6 +2900,14 @@ var SaltyRTCBuilder = function () {
             return this;
         }
     }, {
+        key: "processServerInfo",
+        value: function processServerInfo(factory, publicKey) {
+            var publicKeyHex = u8aToHex(publicKey);
+            var data = factory(publicKeyHex);
+            this.host = data.host;
+            this.port = data.port;
+        }
+    }, {
         key: "asInitiator",
         value: function asInitiator() {
             this.requireConnectionInfo();
@@ -2891,6 +2915,9 @@ var SaltyRTCBuilder = function () {
             this.requireTasks();
             if (this.hasInitiatorInfo) {
                 throw new Error('Cannot initialize as initiator if .initiatorInfo(...) has been used');
+            }
+            if (this.serverInfoFactory !== null) {
+                this.processServerInfo(this.serverInfoFactory, this.keyStore.publicKeyBytes);
             }
             if (this.hasTrustedPeerKey) {
                 return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.peerTrustedKey).asInitiator();
@@ -2905,9 +2932,15 @@ var SaltyRTCBuilder = function () {
             this.requireKeyStore();
             this.requireTasks();
             if (this.hasTrustedPeerKey) {
+                if (this.serverInfoFactory !== null) {
+                    this.processServerInfo(this.serverInfoFactory, this.peerTrustedKey);
+                }
                 return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.peerTrustedKey).asResponder();
             } else {
                 this.requireInitiatorInfo();
+                if (this.serverInfoFactory !== null) {
+                    this.processServerInfo(this.serverInfoFactory, this.initiatorPublicKey);
+                }
                 return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval).asResponder(this.initiatorPublicKey, this.authToken);
             }
         }

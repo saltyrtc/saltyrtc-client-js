@@ -12,6 +12,16 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.5.0 (2016-12-12)
+
+- [added] Implement dynamic server endpoints (#70)
+- [fixed] Never explicitly close WebSocket with 1002 (#75)
+- [fixed] Send close message on disconnect in task state (#68)
+- [fixed] Catch nonce validation errors
+- [fixed] Only re-throw top level exceptions if unhandled
+- [fixed] Don't use decryptFromPeer method in onSignalingMessage
+- [changed] Remove restart message handling (#69)
+
 ### v0.4.1 (2016-11-14)
 
 - [added] Implement support for application messages (#61)

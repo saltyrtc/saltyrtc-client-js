@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.4.1
+ * saltyrtc-client-js v0.5.0
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -633,7 +633,17 @@ class Signaling {
             try {
                 const box = Box.fromUint8Array(new Uint8Array(ev.data), Nonce.TOTAL_LENGTH);
                 nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
-                this.validateNonce(nonce);
+                try {
+                    this.validateNonce(nonce);
+                }
+                catch (e) {
+                    if (e.name === 'ValidationError') {
+                        throw new ProtocolError('Invalid nonce: ' + e);
+                    }
+                    else {
+                        throw e;
+                    }
+                }
                 switch (this.getState()) {
                     case 'server-handshake':
                         this.onServerHandshakeMessage(box, nonce);
@@ -673,11 +683,13 @@ class Signaling {
                     console.warn(this.logTag, 'Connection error. Resetting connection.');
                     this.resetConnection(CloseCode.InternalError);
                 }
-                if (e.hasOwnProperty('stack')) {
-                    console.error("An unknown error occurred:");
-                    console.error(e.stack);
+                else {
+                    if (e.hasOwnProperty('stack')) {
+                        console.error("An unknown error occurred:");
+                        console.error(e.stack);
+                    }
+                    throw e;
                 }
-                throw e;
             }
         };
         this.client = client;
@@ -730,6 +742,9 @@ class Signaling {
     disconnect() {
         const reason = CloseCode.ClosingNormal;
         this.setState('closing');
+        if (this.state === 'task') {
+            this.sendClose(reason);
+        }
         if (this.ws !== null) {
             console.debug(this.logTag, 'Disconnecting WebSocket');
             this.ws.close(reason);
@@ -798,7 +813,7 @@ class Signaling {
             this.onSignalingServerMessage(box);
         }
         else {
-            let decrypted = this.decryptFromPeer(box);
+            let decrypted = this.sessionKey.decrypt(box, this.getPeerSessionKey());
             this.onSignalingPeerMessage(decrypted);
         }
     }
@@ -816,10 +831,6 @@ class Signaling {
         if (msg.type === 'close') {
             console.debug('Received close');
             this.handleClose(msg);
-        }
-        else if (msg.type === 'restart') {
-            console.debug(this.logTag, 'Received restart');
-            this.handleRestart(msg);
         }
         else if (msg.type === 'application') {
             console.debug(this.logTag, 'Received application message');
@@ -848,9 +859,6 @@ class Signaling {
         console.debug(this.logTag, 'Sending client-auth');
         this.ws.send(packet);
         this.server.handshakeState = 'auth-sent';
-    }
-    handleRestart(msg) {
-        throw new ProtocolError('Restart messages not yet implemented');
     }
     handleSendError(msg) {
         const id = new DataView(msg.id);
@@ -1068,7 +1076,12 @@ class Signaling {
     resetConnection(reason) {
         if (this.ws !== null) {
             console.debug(this.logTag, 'Disconnecting WebSocket (close code ' + reason + ')');
-            this.ws.close(reason);
+            if (reason == CloseCode.GoingAway) {
+                this.ws.close();
+            }
+            else {
+                this.ws.close(reason);
+            }
         }
         this.ws = null;
         this.server = new Server();
@@ -1882,6 +1895,7 @@ class SaltyRTCBuilder {
         this.hasInitiatorInfo = false;
         this.hasTrustedPeerKey = false;
         this.hasTasks = false;
+        this.serverInfoFactory = null;
         this.pingInterval = 0;
     }
     validateHost(host) {
@@ -1916,6 +1930,11 @@ class SaltyRTCBuilder {
         this.validateHost(host);
         this.host = host;
         this.port = port;
+        this.hasConnectionInfo = true;
+        return this;
+    }
+    connectWith(serverInfoFactory) {
+        this.serverInfoFactory = serverInfoFactory;
         this.hasConnectionInfo = true;
         return this;
     }
@@ -1954,12 +1973,21 @@ class SaltyRTCBuilder {
         this.hasInitiatorInfo = true;
         return this;
     }
+    processServerInfo(factory, publicKey) {
+        const publicKeyHex = u8aToHex(publicKey);
+        const data = factory(publicKeyHex);
+        this.host = data.host;
+        this.port = data.port;
+    }
     asInitiator() {
         this.requireConnectionInfo();
         this.requireKeyStore();
         this.requireTasks();
         if (this.hasInitiatorInfo) {
             throw new Error('Cannot initialize as initiator if .initiatorInfo(...) has been used');
+        }
+        if (this.serverInfoFactory !== null) {
+            this.processServerInfo(this.serverInfoFactory, this.keyStore.publicKeyBytes);
         }
         if (this.hasTrustedPeerKey) {
             return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.peerTrustedKey)
@@ -1975,11 +2003,17 @@ class SaltyRTCBuilder {
         this.requireKeyStore();
         this.requireTasks();
         if (this.hasTrustedPeerKey) {
+            if (this.serverInfoFactory !== null) {
+                this.processServerInfo(this.serverInfoFactory, this.peerTrustedKey);
+            }
             return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.peerTrustedKey)
                 .asResponder();
         }
         else {
             this.requireInitiatorInfo();
+            if (this.serverInfoFactory !== null) {
+                this.processServerInfo(this.serverInfoFactory, this.initiatorPublicKey);
+            }
             return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval)
                 .asResponder(this.initiatorPublicKey, this.authToken);
         }
