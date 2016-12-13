@@ -44,10 +44,12 @@
     "karma-chrome-launcher": "^1.0.1",
     "karma-firefox-launcher": "^1.0.0",
     "karma-jasmine": "^1.0.2",
+    "msgpack-lite": "^0.1.x",
     "rollup": "^0.36.3",
     "rollup-plugin-babel": "^2.6.1",
     "rollup-plugin-typescript": "^0.8.1",
     "rollup-plugin-uglify": "^1.0.1",
+    "tweetnacl": "^0.14.x",
     "typescript": "^2.0.3"
   },
   "peerDependencies": {
