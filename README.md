@@ -22,7 +22,7 @@ Currently at least Firefox 45 and Chromium 49 are required.
 
 You can install this library via `npm`:
 
-    npm install saltyrtc-client
+    npm install --save saltyrtc-client msgpack-lite tweetnacl
 
 ### Manually
 
@@ -36,6 +36,7 @@ Alternatively, copy one of the following files to your project directly:
 Make sure to manually add the following external dependencies to your project:
 
  - [tweetnacl](https://github.com/dchest/tweetnacl-js)
+ - [msgpack-lite](https://github.com/kawanet/msgpack-lite)
 
 ## Usage
 

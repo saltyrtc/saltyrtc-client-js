@@ -50,8 +50,8 @@
     "rollup-plugin-uglify": "^1.0.1",
     "typescript": "^2.0.3"
   },
-  "dependencies": {
-    "msgpack-lite": "^0.1.26",
-    "tweetnacl": "^0.14.3"
+  "peerDependencies": {
+    "msgpack-lite": "^0.1.x",
+    "tweetnacl": "^0.14.x"
   }
 }
