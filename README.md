@@ -134,31 +134,6 @@ Please report security issues directly to one or both of the following contacts:
 [keybase-dbrgn]: https://keybase.io/dbrgn
 [keybase-lgrahl]: https://keybase.io/lgrahl
 
-## Releasing
-
-Set variables:
-
-    $ export VERSION=X.Y.Z
-    $ export GPG_KEY=E7ADD9914E260E8B35DFB50665FDE935573ACDA6
-
-Update version numbers:
-
-    $ vim -p package.json CHANGELOG.md
-
-Build dist files:
-
-    $ npm run dist
-
-Commit & tag:
-
-    $ git commit -m "Release v${VERSION}"
-    $ git tag -s -u ${GPG_KEY} v${VERSION} -m "Version ${VERSION}"
-
-Push & publish:
-
-    $ git push && git push --tags
-    $ npm publish
-
 ## Coding Guidelines
 
 - Write clean ES2015
