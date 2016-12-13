@@ -12,6 +12,10 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.5.1 (2016-12-13)
+
+- [changed] Make tweetnacl / msgpack-lite peer dependencies
+
 ### v0.5.0 (2016-12-12)
 
 - [added] Implement dynamic server endpoints (#70)
