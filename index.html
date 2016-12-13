@@ -77,7 +77,7 @@
 				<h2 id="installing">Installing</h2>
 				<h3 id="via-npm">Via npm</h3>
 				<p>You can install this library via <code>npm</code>:</p>
-				<pre><code>npm <span class="hljs-keyword">install</span> saltyrtc-<span class="hljs-keyword">client</span>
+				<pre><code>npm <span class="hljs-keyword">install</span> <span class="hljs-comment">--save saltyrtc-client msgpack-lite tweetnacl</span>
 </code></pre><h3 id="manually">Manually</h3>
 				<p>Alternatively, copy one of the following files to your project directly:</p>
 				<ul>
@@ -89,6 +89,7 @@
 				<p>Make sure to manually add the following external dependencies to your project:</p>
 				<ul>
 					<li><a href="https://github.com/dchest/tweetnacl-js">tweetnacl</a></li>
+					<li><a href="https://github.com/kawanet/msgpack-lite">msgpack-lite</a></li>
 				</ul>
 				<h2 id="usage">Usage</h2>
 				<p>First, create a keypair:</p>
@@ -156,21 +157,7 @@ responder.<span class="hljs-literal">on</span>(<span class="hljs-string">'state-
 						</ul>
 					</li>
 				</ul>
-				<h2 id="releasing">Releasing</h2>
-				<p>Set variables:</p>
-				<pre><code>$ <span class="hljs-keyword">export</span> <span class="hljs-literal">VERSION</span>=X.Y.Z
-$ <span class="hljs-keyword">export</span> GPG_KEY=E7ADD9914E260E8B35DFB50665FDE935573ACDA6
-</code></pre><p>Update version numbers:</p>
-				<pre><code>$ vim -<span class="hljs-selector-tag">p</span> package<span class="hljs-selector-class">.json</span> CHANGELOG.md
-</code></pre><p>Build dist files:</p>
-				<pre><code>$ npm <span class="hljs-keyword">run</span><span class="bash"> dist</span>
-</code></pre><p>Commit &amp; tag:</p>
-				<pre><code>$ git commit -m <span class="hljs-string">"Release v<span class="hljs-variable">${VERSION}</span>"</span>
-$ git tag <span class="hljs-_">-s</span> -u <span class="hljs-variable">${GPG_KEY}</span> v<span class="hljs-variable">${VERSION}</span> -m <span class="hljs-string">"Version <span class="hljs-variable">${VERSION}</span>"</span>
-</code></pre><p>Push &amp; publish:</p>
-				<pre><code>$ git <span class="hljs-keyword">push </span>&amp;&amp; git <span class="hljs-keyword">push </span>--tags
-$ npm publish
-</code></pre><h2 id="coding-guidelines">Coding Guidelines</h2>
+				<h2 id="coding-guidelines">Coding Guidelines</h2>
 				<ul>
 					<li>Write clean ES2015</li>
 					<li>Favor <code>const</code> over <code>let</code></li>
