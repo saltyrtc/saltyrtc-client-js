@@ -84,19 +84,19 @@ export class KeyStore implements saltyrtc.KeyStore {
     // The NaCl key pair
     private _keyPair: nacl.KeyPair;
 
-    constructor(publicKey?: Uint8Array | string, privateKey?: Uint8Array | string) {
+    constructor(privateKey?: Uint8Array | string) {
+        // Validate argument count (bug prevention)
+        if (arguments.length > 1) {
+            throw new Error('Too many arguments in KeyStore constructor');
+        }
+
         // Create new key pair if necessary
-        if (publicKey === undefined && privateKey === undefined) {
+        if (privateKey === undefined) {
             this._keyPair = nacl.box.keyPair();
             console.debug('KeyStore: New public key:', u8aToHex(this._keyPair.publicKey));
-        } else if (publicKey !== undefined && privateKey !== undefined) {
-            this._keyPair = {
-                publicKey: validateKey(publicKey, "Public key"),
-                secretKey: validateKey(privateKey, "Private key"),
-            };
-            console.debug('KeyStore: Restored public key:', u8aToHex(this._keyPair.publicKey));
         } else {
-            throw new Error('Either both keys or no keys may be passed in');
+            this._keyPair = nacl.box.keyPair.fromSecretKey(validateKey(privateKey, "Private key"));
+            console.debug('KeyStore: Restored public key:', u8aToHex(this._keyPair.publicKey));
         }
     }
 
