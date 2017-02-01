@@ -12,6 +12,11 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.6.x (UNRELEASED)
+
+- [changed] The `KeyStore` class constructor now only requires the private key,
+  not both the public and private key (#73)
+
 ### v0.5.1 (2016-12-13)
 
 - [changed] Make tweetnacl / msgpack-lite peer dependencies

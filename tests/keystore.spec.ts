@@ -102,36 +102,29 @@ export default () => { describe('keystore', function() {
         });
 
         it('can be created from an Uint8Array or hex string', () => {
-            const pkBytes = nacl.randomBytes(32);
             const skBytes = nacl.randomBytes(32);
-            const pkHex = u8aToHex(pkBytes);
             const skHex = u8aToHex(skBytes);
 
-            let ksBytes = new KeyStore(pkBytes, skBytes);
-            let ksHex = new KeyStore(pkHex, skHex);
-            let ksMixed1 = new KeyStore(pkBytes, skHex);
-            let ksMixed2 = new KeyStore(pkHex, skBytes);
+            let ksBytes = new KeyStore(skBytes);
+            let ksHex = new KeyStore(skHex);
 
-            for (let ks of [ksBytes, ksHex, ksMixed1, ksMixed2]) {
-                expect(ks.publicKeyBytes).toEqual(pkBytes);
+            for (let ks of [ksBytes, ksHex]) {
+                expect(ks.publicKeyBytes).not.toBeNull();
                 expect(ks.secretKeyBytes).toEqual(skBytes);
-                expect(ks.publicKeyHex).toEqual(pkHex);
+                expect(ks.publicKeyHex).not.toBeNull();
                 expect(ks.secretKeyHex).toEqual(skHex);
             }
         });
 
         it('shows a nice error message if key is invalid', () => {
-            const create1 = () => new KeyStore(undefined, nacl.randomBytes(32));
-            expect(create1).toThrowError('Either both keys or no keys may be passed in');
+            const create1 = () => new KeyStore(Uint8Array.of(1, 2, 3));
+            expect(create1).toThrowError('Private key must be 32 bytes long');
 
-            const create2 = () => new KeyStore(Uint8Array.of(1, 2, 3), nacl.randomBytes(32));
-            expect(create2).toThrowError('Public key must be 32 bytes long');
+            const create2 = () => new KeyStore(42 as any);
+            expect(create2).toThrowError('Private key must be an Uint8Array or a hex string');
 
-            const create3 = () => new KeyStore(nacl.randomBytes(32), 42 as any);
-            expect(create3).toThrowError('Private key must be an Uint8Array or a hex string');
-
-            const create4 = () => new KeyStore("ffgghh", nacl.randomBytes(32));
-            expect(create4).toThrowError('Public key must be 32 bytes long');
+            const create3 = () => new KeyStore("ffgghh");
+            expect(create3).toThrowError('Private key must be 32 bytes long');
         });
 
     });
