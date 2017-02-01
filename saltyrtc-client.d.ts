@@ -455,6 +455,7 @@ declare namespace saltyrtc.static {
         DroppedByInitiator: number;
         InitiatorCouldNotDecrypt: number;
         NoSharedTask: number;
+        InvalidKey: number;
     }
 }
 
