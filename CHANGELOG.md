@@ -16,6 +16,8 @@ Possible log types:
 
 - [changed] The `KeyStore` class constructor now only requires the private key,
   not both the public and private key (#73)
+- [added] Add new close code: 3007 Invalid Key (#58)
+- [added] Add support for multiple server permanent keys (#58)
 
 ### v0.5.1 (2016-12-13)
 
