@@ -16,6 +16,7 @@ export const enum CloseCode {
     DroppedByInitiator,
     InitiatorCouldNotDecrypt,
     NoSharedTask,
+    InvalidKey,
 }
 
 export function explainCloseCode(code: CloseCode): string {
@@ -40,6 +41,8 @@ export function explainCloseCode(code: CloseCode): string {
             return 'Initiator could not decrypt a message';
         case CloseCode.NoSharedTask:
             return 'No shared task was found';
+        case CloseCode.InvalidKey:
+            return 'Invalid key';
         default:
             return 'Unknown';
     }

@@ -305,6 +305,7 @@ declare namespace saltyrtc.messages {
     interface ClientAuth extends SignalingMessage {
         type: 'client-auth';
         your_cookie: ArrayBuffer;
+        your_key?: ArrayBuffer | null;
         subprotocols: string[];
         ping_interval: number;
     }
@@ -455,6 +456,7 @@ declare namespace saltyrtc.static {
         DroppedByInitiator: number;
         InitiatorCouldNotDecrypt: number;
         NoSharedTask: number;
+        InvalidKey: number;
     }
 }
 

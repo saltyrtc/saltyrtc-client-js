@@ -472,12 +472,17 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Send a client-auth message to the server.
      */
     protected sendClientAuth(): void {
-        const message: saltyrtc.messages.ClientAuth = {
+        let message: saltyrtc.messages.ClientAuth = {
             type: 'client-auth',
             your_cookie: this.server.cookiePair.theirs.asArrayBuffer(),
             subprotocols: [Signaling.SALTYRTC_SUBPROTOCOL],
             ping_interval: this.pingInterval,
         };
+        if (this.serverPublicKey !== null) {
+            const start = this.serverPublicKey.byteOffset;
+            const end = start + this.serverPublicKey.byteLength;
+            message.your_key = this.serverPublicKey.buffer.slice(start, end);
+        }
         const packet: Uint8Array = this.buildPacket(message, this.server);
         console.debug(this.logTag, 'Sending client-auth');
         this.ws.send(packet);
