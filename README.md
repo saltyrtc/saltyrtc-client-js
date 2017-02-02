@@ -10,9 +10,10 @@
 This is a [SaltyRTC](https://github.com/saltyrtc/saltyrtc-meta) v1
 implementation for JavaScript (ES5) written in TypeScript 2.0+.
 
-The development is still ongoing, the library is not yet production ready.
+**Warning: This is beta software. Use at your own risk. Testing and review is
+welcome!**
 
-Currently at least Firefox 45 and Chromium 49 are required.
+The library has been tested with Firefox 45+ and Chromium 49+.
 
 [API Docs](https://saltyrtc.github.io/saltyrtc-client-js/)
 
