@@ -25,7 +25,7 @@ import { Server, Peer, Responder, Initiator } from "../peers";
  * Signaling base class.
  */
 export abstract class Signaling implements saltyrtc.Signaling {
-    static SALTYRTC_SUBPROTOCOL = 'v0.saltyrtc.org';
+    static SALTYRTC_SUBPROTOCOL = 'v1.saltyrtc.org';
     static SALTYRTC_ADDR_UNKNOWN = 0x00;
     static SALTYRTC_ADDR_SERVER = 0x00;
     static SALTYRTC_ADDR_INITIATOR = 0x01;

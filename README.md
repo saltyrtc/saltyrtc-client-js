@@ -7,8 +7,8 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/saltyrtc/saltyrtc-client-js)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/536/badge)](https://bestpractices.coreinfrastructure.org/projects/536)
 
-This is a [SaltyRTC](https://github.com/saltyrtc/saltyrtc-meta) implementation
-for JavaScript (ES5) written in TypeScript 2.0+.
+This is a [SaltyRTC](https://github.com/saltyrtc/saltyrtc-meta) v1
+implementation for JavaScript (ES5) written in TypeScript 2.0+.
 
 The development is still ongoing, the library is not yet production ready.
 
