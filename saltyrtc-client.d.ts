@@ -305,7 +305,7 @@ declare namespace saltyrtc.messages {
     interface ClientAuth extends SignalingMessage {
         type: 'client-auth';
         your_cookie: ArrayBuffer;
-        key?: ArrayBuffer | null;
+        your_key?: ArrayBuffer | null;
         subprotocols: string[];
         ping_interval: number;
     }

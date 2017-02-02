@@ -481,7 +481,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         if (this.serverPublicKey !== null) {
             const start = this.serverPublicKey.byteOffset;
             const end = start + this.serverPublicKey.byteLength;
-            message.key = this.serverPublicKey.buffer.slice(start, end);
+            message.your_key = this.serverPublicKey.buffer.slice(start, end);
         }
         const packet: Uint8Array = this.buildPacket(message, this.server);
         console.debug(this.logTag, 'Sending client-auth');
