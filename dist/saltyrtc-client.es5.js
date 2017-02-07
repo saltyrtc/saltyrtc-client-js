@@ -1,9 +1,9 @@
 /**
- * saltyrtc-client-js v0.5.1
+ * saltyrtc-client-js v0.9.0
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
- * Copyright (C) 2016 Threema GmbH
+ * Copyright (C) 2016-2017 Threema GmbH
  *
  * This software may be modified and distributed under the terms
  * of the MIT license:
@@ -42,6 +42,7 @@
     CloseCode[CloseCode["DroppedByInitiator"] = 3004] = "DroppedByInitiator";
     CloseCode[CloseCode["InitiatorCouldNotDecrypt"] = 3005] = "InitiatorCouldNotDecrypt";
     CloseCode[CloseCode["NoSharedTask"] = 3006] = "NoSharedTask";
+    CloseCode[CloseCode["InvalidKey"] = 3007] = "InvalidKey";
 })(exports.CloseCode || (exports.CloseCode = {}));
 function explainCloseCode(code) {
     switch (code) {
@@ -65,6 +66,8 @@ function explainCloseCode(code) {
             return 'Initiator could not decrypt a message';
         case exports.CloseCode.NoSharedTask:
             return 'No shared task was found';
+        case exports.CloseCode.InvalidKey:
+            return 'Invalid key';
         default:
             return 'Unknown';
     }
@@ -581,20 +584,18 @@ var Box = function () {
 }();
 
 var KeyStore = function () {
-    function KeyStore(publicKey, privateKey) {
+    function KeyStore(privateKey) {
         classCallCheck(this, KeyStore);
 
-        if (publicKey === undefined && privateKey === undefined) {
+        if (arguments.length > 1) {
+            throw new Error('Too many arguments in KeyStore constructor');
+        }
+        if (privateKey === undefined) {
             this._keyPair = nacl.box.keyPair();
             console.debug('KeyStore: New public key:', u8aToHex(this._keyPair.publicKey));
-        } else if (publicKey !== undefined && privateKey !== undefined) {
-            this._keyPair = {
-                publicKey: validateKey(publicKey, "Public key"),
-                secretKey: validateKey(privateKey, "Private key")
-            };
-            console.debug('KeyStore: Restored public key:', u8aToHex(this._keyPair.publicKey));
         } else {
-            throw new Error('Either both keys or no keys may be passed in');
+            this._keyPair = nacl.box.keyPair.fromSecretKey(validateKey(privateKey, "Private key"));
+            console.debug('KeyStore: Restored public key:', u8aToHex(this._keyPair.publicKey));
         }
     }
 
@@ -1142,6 +1143,9 @@ var Signaling = function () {
                     case exports.CloseCode.DroppedByInitiator:
                         log('Dropped by initiator');
                         break;
+                    case exports.CloseCode.InvalidKey:
+                        log('Invalid server key');
+                        break;
                 }
             }
         };
@@ -1180,7 +1184,11 @@ var Signaling = function () {
                 }
             } catch (e) {
                 if (e.name === 'SignalingError' || e.name === 'ProtocolError') {
-                    console.error(_this.logTag, 'Signaling error: ' + explainCloseCode(e.closeCode));
+                    var errmsg = 'Signaling error: ' + explainCloseCode(e.closeCode);
+                    if (e.message) {
+                        errmsg += ' (' + e.message + ')';
+                    }
+                    console.error(_this.logTag, errmsg);
                     switch (_this.state) {
                         case 'new':
                         case 'ws-connecting':
@@ -1382,6 +1390,11 @@ var Signaling = function () {
                 subprotocols: [Signaling.SALTYRTC_SUBPROTOCOL],
                 ping_interval: this.pingInterval
             };
+            if (this.serverPublicKey !== null) {
+                var start = this.serverPublicKey.byteOffset;
+                var end = start + this.serverPublicKey.byteLength;
+                message.your_key = this.serverPublicKey.buffer.slice(start, end);
+            }
             var packet = this.buildPacket(message, this.server);
             console.debug(this.logTag, 'Sending client-auth');
             this.ws.send(packet);
@@ -1750,7 +1763,7 @@ var Signaling = function () {
     return Signaling;
 }();
 
-Signaling.SALTYRTC_SUBPROTOCOL = 'v0.saltyrtc.org';
+Signaling.SALTYRTC_SUBPROTOCOL = 'v1.saltyrtc.org';
 Signaling.SALTYRTC_ADDR_UNKNOWN = 0x00;
 Signaling.SALTYRTC_ADDR_SERVER = 0x00;
 Signaling.SALTYRTC_ADDR_INITIATOR = 0x01;

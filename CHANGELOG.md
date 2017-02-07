@@ -12,13 +12,15 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
-### v0.6.x (UNRELEASED)
+### v0.9.0 (2017-02-07)
 
+This release can be considered a release candidate for 1.0.0.
+
+- [changed] Change subprotocol to `v1.saltyrtc.org` (#59)
 - [changed] The `KeyStore` class constructor now only requires the private key,
   not both the public and private key (#73)
 - [added] Add new close code: 3007 Invalid Key (#58)
 - [added] Add support for multiple server permanent keys (#58)
-- [changed] Change subprotocol to `v1.saltyrtc.org` (#59)
 - [changed] Better error logs in the case of signaling errors (#78)
 
 ### v0.5.1 (2016-12-13)
