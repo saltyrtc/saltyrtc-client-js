@@ -266,6 +266,9 @@ export abstract class Signaling implements saltyrtc.Signaling {
                 case CloseCode.DroppedByInitiator:
                     log('Dropped by initiator');
                     break;
+                case CloseCode.InvalidKey:
+                    log('Invalid server key');
+                    break;
             }
         }
     };
