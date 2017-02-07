@@ -266,6 +266,9 @@ export abstract class Signaling implements saltyrtc.Signaling {
                 case CloseCode.DroppedByInitiator:
                     log('Dropped by initiator');
                     break;
+                case CloseCode.InvalidKey:
+                    log('Invalid server key');
+                    break;
             }
         }
     };
@@ -313,7 +316,11 @@ export abstract class Signaling implements saltyrtc.Signaling {
             }
         } catch(e) {
             if (e.name === 'SignalingError' || e.name === 'ProtocolError') {
-                console.error(this.logTag, 'Signaling error: ' + explainCloseCode(e.closeCode));
+                let errmsg = 'Signaling error: ' + explainCloseCode(e.closeCode);
+                if (e.message) {
+                    errmsg += ' (' + e.message + ')';
+                }
+                console.error(this.logTag, errmsg);
                 switch (this.state) {
                     //'new' | 'ws-connecting' | 'server-handshake' | 'peer-handshake' | 'task' | 'closing' | 'closed';
                     case 'new':
