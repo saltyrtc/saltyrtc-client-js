@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.9.0
+ * saltyrtc-client-js v0.9.1
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -80,7 +80,7 @@ function InternalError(message) {
         Error.captureStackTrace(this, InternalError);
     }
     else {
-        this.stack = (new Error()).stack;
+        this.stack = new Error().stack;
     }
 }
 InternalError.prototype = Object.create(Error.prototype);
@@ -154,18 +154,7 @@ function concat(...arrays) {
     }
     return result;
 }
-function waitFor(test, delay_ms, retries, success, error) {
-    if (test() === false) {
-        if (retries === 1) {
-            error();
-        }
-        else {
-            setTimeout(() => waitFor(test, delay_ms, retries - 1, success, error), delay_ms);
-        }
-        return;
-    }
-    success();
-}
+
 function isString(value) {
     return typeof value === 'string' || value instanceof String;
 }
@@ -232,16 +221,17 @@ class Box {
 }
 class KeyStore {
     constructor(privateKey) {
+        this.logTag = '[SaltyRTC.KeyStore]';
         if (arguments.length > 1) {
             throw new Error('Too many arguments in KeyStore constructor');
         }
         if (privateKey === undefined) {
             this._keyPair = nacl.box.keyPair();
-            console.debug('KeyStore: New public key:', u8aToHex(this._keyPair.publicKey));
+            console.debug(this.logTag, 'New public key:', u8aToHex(this._keyPair.publicKey));
         }
         else {
             this._keyPair = nacl.box.keyPair.fromSecretKey(validateKey(privateKey, "Private key"));
-            console.debug('KeyStore: Restored public key:', u8aToHex(this._keyPair.publicKey));
+            console.debug(this.logTag, 'Restored public key:', u8aToHex(this._keyPair.publicKey));
         }
     }
     get publicKeyHex() { return u8aToHex(this._keyPair.publicKey); }
@@ -266,17 +256,18 @@ class KeyStore {
 class AuthToken {
     constructor(bytes) {
         this._authToken = null;
+        this.logTag = '[SaltyRTC.AuthToken]';
         if (typeof bytes === 'undefined') {
             this._authToken = nacl.randomBytes(nacl.secretbox.keyLength);
-            console.debug('AuthToken: Generated auth token');
+            console.debug(this.logTag, 'Generated auth token');
         }
         else {
             if (bytes.byteLength != nacl.secretbox.keyLength) {
-                console.error('Auth token must be', nacl.secretbox.keyLength, 'bytes long.');
+                console.error(this.logTag, 'Auth token must be', nacl.secretbox.keyLength, 'bytes long.');
                 throw 'bad-token-length';
             }
             this._authToken = bytes;
-            console.debug('AuthToken: Initialized auth token');
+            console.debug(this.logTag, 'Initialized auth token');
         }
     }
     get keyBytes() { return this._authToken; }
@@ -462,6 +453,7 @@ class HandoverState {
 
 class CombinedSequence {
     constructor() {
+        this.logTag = '[SaltyRTC.CSN]';
         this.sequenceNumber = randomUint32();
         this.overflow = 0;
     }
@@ -470,7 +462,7 @@ class CombinedSequence {
             this.sequenceNumber = 0;
             this.overflow += 1;
             if (this.overflow >= CombinedSequence.OVERFLOW_MAX) {
-                console.error('Overflow number just overflowed!');
+                console.error(this.logTag, 'Overflow number just overflowed!');
                 throw new Error('overflow-overflow');
             }
         }
@@ -525,7 +517,6 @@ class Peer {
     get cookiePair() {
         return this._cookiePair;
     }
-    get name() { }
 }
 class Initiator extends Peer {
     constructor(permanentKey) {
@@ -568,7 +559,10 @@ class Signaling {
     constructor(client, host, port, serverKey, tasks, pingInterval, permanentKey, peerTrustedKey) {
         this.protocol = 'wss';
         this.ws = null;
-        this.msgpackOptions = {
+        this.msgpackEncodeOptions = {
+            codec: createCodec({ binarraybuffer: true }),
+        };
+        this.msgpackDecodeOptions = {
             codec: createCodec({ binarraybuffer: true }),
         };
         this.state = 'new';
@@ -580,7 +574,7 @@ class Signaling {
         this.authToken = null;
         this.serverPublicKey = null;
         this.role = null;
-        this.logTag = 'Signaling:';
+        this.logTag = '[SaltyRTC.Signaling]';
         this.address = Signaling.SALTYRTC_ADDR_UNKNOWN;
         this.onOpen = (ev) => {
             console.info(this.logTag, 'Opened connection');
@@ -692,7 +686,7 @@ class Signaling {
                 }
                 else {
                     if (e.hasOwnProperty('stack')) {
-                        console.error("An unknown error occurred:");
+                        console.error(this.logTag, 'An unknown error occurred:');
                         console.error(e.stack);
                     }
                     throw e;
@@ -737,10 +731,10 @@ class Signaling {
         return this.getPeerPermanentKey();
     }
     msgpackEncode(data) {
-        return encode(data, this.msgpackOptions);
+        return encode(data, this.msgpackEncodeOptions);
     }
     msgpackDecode(data) {
-        return decode(data, this.msgpackOptions);
+        return decode(data, this.msgpackDecodeOptions);
     }
     connect() {
         this.resetConnection();
@@ -815,7 +809,7 @@ class Signaling {
         }
     }
     onSignalingMessage(box, nonce) {
-        console.debug('Message received');
+        console.debug(this.logTag, 'Message received');
         if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
             this.onSignalingServerMessage(box);
         }
@@ -836,7 +830,7 @@ class Signaling {
     onSignalingPeerMessage(decrypted) {
         let msg = this.decodeMessage(decrypted);
         if (msg.type === 'close') {
-            console.debug('Received close');
+            console.debug(this.logTag, 'Received close');
             this.handleClose(msg);
         }
         else if (msg.type === 'application') {
@@ -1158,11 +1152,12 @@ class Signaling {
         if (receiver === null) {
             throw new SignalingError(CloseCode.InternalError, 'No peer address could be found');
         }
-        console.debug('Sending', name, 'message');
         if (this.handoverState.local === true) {
+            console.debug(this.logTag, 'Sending', name, 'message through dc');
             this.task.sendSignalingMessage(this.msgpackEncode(msg));
         }
         else {
+            console.debug(this.logTag, 'Sending', name, 'message through ws');
             const packet = this.buildPacket(msg, receiver);
             this.ws.send(packet);
         }
@@ -1196,7 +1191,7 @@ Signaling.SALTYRTC_ADDR_INITIATOR = 0x01;
 class InitiatorSignaling extends Signaling {
     constructor(client, host, port, serverKey, tasks, pingInterval, permanentKey, responderTrustedKey) {
         super(client, host, port, serverKey, tasks, pingInterval, permanentKey, responderTrustedKey);
-        this.logTag = 'Initiator:';
+        this.logTag = '[SaltyRTC.Initiator]';
         this.responderCounter = 0;
         this.responders = null;
         this.responder = null;
@@ -1557,7 +1552,7 @@ class InitiatorSignaling extends Signaling {
 class ResponderSignaling extends Signaling {
     constructor(client, host, port, serverKey, tasks, pingInterval, permanentKey, initiatorPubKey, authToken) {
         super(client, host, port, serverKey, tasks, pingInterval, permanentKey, authToken === undefined ? initiatorPubKey : undefined);
-        this.logTag = 'Responder:';
+        this.logTag = '[SaltyRTC.Responder]';
         this.initiator = null;
         this.role = 'responder';
         this.initiator = new Initiator(initiatorPubKey);
@@ -1703,7 +1698,7 @@ class ResponderSignaling extends Signaling {
         }
         this.address = nonce.destination;
         console.debug(this.logTag, 'Server assigned address', byteToHex(this.address));
-        this.logTag = 'Responder[' + byteToHex(this.address) + ']:';
+        this.logTag = '[SaltyRTC.Responder.' + byteToHex(this.address) + ']';
         this.validateRepeatedCookie(this.server, msg.your_cookie);
         if (this.serverPublicKey != null) {
             try {
@@ -2035,6 +2030,7 @@ class SaltyRTC {
     constructor(permanentKey, host, port, serverKey, tasks, pingInterval, peerTrustedKey) {
         this.peerTrustedKey = null;
         this._signaling = null;
+        this.logTag = '[SaltyRTC.Client]';
         if (permanentKey === undefined) {
             throw new Error('SaltyRTC must be initialized with a permanent key');
         }
@@ -2135,14 +2131,14 @@ class SaltyRTC {
         this.eventRegistry.unregister(event, handler);
     }
     emit(event) {
-        console.debug('SaltyRTC: New event:', event.type);
+        console.debug(this.logTag, 'New event:', event.type);
         const handlers = this.eventRegistry.get(event.type);
         for (let handler of handlers) {
             try {
                 this.callHandler(handler, event);
             }
             catch (e) {
-                console.error('SaltyRTC: Unhandled exception in', event.type, 'handler:', e);
+                console.error(this.logTag, 'Unhandled exception in', event.type, 'handler:', e);
             }
         }
     }

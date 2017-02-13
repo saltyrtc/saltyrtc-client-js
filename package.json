@@ -1,6 +1,6 @@
 {
   "name": "saltyrtc-client",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "description": "SaltyRTC JavaScript implementation",
   "main": "dist/saltyrtc-client.es5.min.js",
   "module": "dist/saltyrtc-client.es2015.js",
