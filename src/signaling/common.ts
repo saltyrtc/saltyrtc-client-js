@@ -989,10 +989,11 @@ export abstract class Signaling implements saltyrtc.Signaling {
             throw new SignalingError(CloseCode.InternalError, 'No peer address could be found');
         }
 
-        console.debug('Sending', name, 'message');
         if (this.handoverState.local === true) {
+            console.debug('Sending', name, 'message through dc');
             this.task.sendSignalingMessage(this.msgpackEncode(msg));
         } else {
+            console.debug('Sending', name, 'message through ws');
             const packet = this.buildPacket(msg, receiver);
             this.ws.send(packet);
         }
