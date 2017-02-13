@@ -11,6 +11,8 @@ export class CombinedSequence implements saltyrtc.CombinedSequence {
     private static SEQUENCE_NUMBER_MAX = 0x100000000; // 1<<32
     private static OVERFLOW_MAX = 0x100000; // 1<<16
 
+    private logTag: string = '[SaltyRTC.CSN]';
+
     private sequenceNumber: number;
     private overflow: number;
 
@@ -32,7 +34,7 @@ export class CombinedSequence implements saltyrtc.CombinedSequence {
             this.overflow += 1;
             if (this.overflow  >= CombinedSequence.OVERFLOW_MAX) {
                 // Overflow overflow
-                console.error('Overflow number just overflowed!');
+                console.error(this.logTag, 'Overflow number just overflowed!');
                 throw new Error('overflow-overflow');
             }
         } else {

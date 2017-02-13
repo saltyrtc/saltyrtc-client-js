@@ -257,6 +257,8 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     private pingInterval: number;
     private serverPublicKey: Uint8Array;
 
+    private logTag: string = '[SaltyRTC.Client]';
+
     /**
      * Create a new SaltyRTC instance.
      */
@@ -464,13 +466,13 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
      * Emit an event.
      */
     public emit(event: saltyrtc.SaltyRTCEvent) {
-        console.debug('SaltyRTC: New event:', event.type);
+        console.debug(this.logTag, 'New event:', event.type);
         const handlers = this.eventRegistry.get(event.type);
         for (let handler of handlers) {
             try {
                 this.callHandler(handler, event);
             } catch (e) {
-                console.error('SaltyRTC: Unhandled exception in', event.type, 'handler:', e);
+                console.error(this.logTag, 'Unhandled exception in', event.type, 'handler:', e);
             }
         }
     }

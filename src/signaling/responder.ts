@@ -18,7 +18,7 @@ import { decryptKeystore, isResponderId } from "./helpers";
 
 export class ResponderSignaling extends Signaling {
 
-    protected logTag: string = 'Responder:';
+    protected logTag: string = '[SaltyRTC.Responder]';
 
     protected initiator: Initiator = null;
 
@@ -223,7 +223,7 @@ export class ResponderSignaling extends Signaling {
         }
         this.address = nonce.destination;
         console.debug(this.logTag, 'Server assigned address', byteToHex(this.address));
-        this.logTag = 'Responder[' + byteToHex(this.address) + ']:';
+        this.logTag = '[SaltyRTC.Responder.' + byteToHex(this.address) + ']';
 
         // Validate repeated cookie
         this.validateRepeatedCookie(this.server, msg.your_cookie);

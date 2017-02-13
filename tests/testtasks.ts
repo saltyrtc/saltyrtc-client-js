@@ -70,22 +70,22 @@ export class PingPongTask extends DummyTask {
     }
 
     sendPing(): void {
-        console.log('Sending ping');
+        console.log('[PingPongTask] Sending ping');
         this.signaling.sendTaskMessage({'type': 'ping'});
     }
 
     sendPong(): void {
-        console.log('Sending pong');
+        console.log('[PingPongTask] Sending pong');
         this.signaling.sendTaskMessage({'type': 'pong'});
         this.sentPong = true;
     }
 
     onTaskMessage(message: saltyrtc.messages.TaskMessage): void {
         if (message.type === 'ping') {
-            console.log('Received ping');
+            console.log('[PingPongTask] Received ping');
             this.sendPong();
         } else if (message.type === 'pong') {
-            console.log('Received pong');
+            console.log('[PingPongTask] Received pong');
             this.receivedPong = true;
         }
     }

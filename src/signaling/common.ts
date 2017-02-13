@@ -69,7 +69,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
     // Signaling
     public role: saltyrtc.SignalingRole = null;
-    protected logTag: string = 'Signaling:';
+    protected logTag: string = '[SaltyRTC.Signaling]';
     protected address: number = Signaling.SALTYRTC_ADDR_UNKNOWN;
 
     /**
@@ -345,7 +345,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
                 this.resetConnection(CloseCode.InternalError);
             } else {
                 if (e.hasOwnProperty('stack')) {
-                    console.error("An unknown error occurred:");
+                    console.error(this.logTag, 'An unknown error occurred:');
                     console.error(e.stack);
                 }
                 throw e;
@@ -419,7 +419,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Handle messages received from peer *after* the handshake is done.
      */
     protected onSignalingMessage(box: saltyrtc.Box, nonce: Nonce): void {
-        console.debug('Message received');
+        console.debug(this.logTag, 'Message received');
         if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
             this.onSignalingServerMessage(box);
         } else {
@@ -448,7 +448,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         let msg: saltyrtc.Message = this.decodeMessage(decrypted);
 
         if (msg.type === 'close') {
-            console.debug('Received close');
+            console.debug(this.logTag, 'Received close');
             this.handleClose(msg as saltyrtc.messages.Close);
         } else if (msg.type === 'application') {
             console.debug(this.logTag, 'Received application message');
@@ -990,10 +990,10 @@ export abstract class Signaling implements saltyrtc.Signaling {
         }
 
         if (this.handoverState.local === true) {
-            console.debug('Sending', name, 'message through dc');
+            console.debug(this.logTag, 'Sending', name, 'message through dc');
             this.task.sendSignalingMessage(this.msgpackEncode(msg));
         } else {
-            console.debug('Sending', name, 'message through ws');
+            console.debug(this.logTag, 'Sending', name, 'message through ws');
             const packet = this.buildPacket(msg, receiver);
             this.ws.send(packet);
         }

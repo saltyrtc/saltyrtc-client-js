@@ -18,7 +18,7 @@ import { byteToHex } from "../utils";
 
 export class InitiatorSignaling extends Signaling {
 
-    protected logTag: string = 'Initiator:';
+    protected logTag: string = '[SaltyRTC.Initiator]';
 
     // Keep track of responders connected to the server
     protected responderCounter = 0;

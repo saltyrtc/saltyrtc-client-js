@@ -84,6 +84,8 @@ export class KeyStore implements saltyrtc.KeyStore {
     // The NaCl key pair
     private _keyPair: nacl.KeyPair;
 
+    private logTag: string = '[SaltyRTC.KeyStore]';
+
     constructor(privateKey?: Uint8Array | string) {
         // Validate argument count (bug prevention)
         if (arguments.length > 1) {
@@ -93,10 +95,10 @@ export class KeyStore implements saltyrtc.KeyStore {
         // Create new key pair if necessary
         if (privateKey === undefined) {
             this._keyPair = nacl.box.keyPair();
-            console.debug('KeyStore: New public key:', u8aToHex(this._keyPair.publicKey));
+            console.debug(this.logTag, 'New public key:', u8aToHex(this._keyPair.publicKey));
         } else {
             this._keyPair = nacl.box.keyPair.fromSecretKey(validateKey(privateKey, "Private key"));
-            console.debug('KeyStore: Restored public key:', u8aToHex(this._keyPair.publicKey));
+            console.debug(this.logTag, 'Restored public key:', u8aToHex(this._keyPair.publicKey));
         }
     }
 
@@ -153,17 +155,19 @@ export class AuthToken implements saltyrtc.AuthToken {
 
     private _authToken: Uint8Array = null;
 
+    private logTag: string = '[SaltyRTC.AuthToken]';
+
     constructor(bytes?: Uint8Array) {
         if (typeof bytes === 'undefined') {
             this._authToken = nacl.randomBytes(nacl.secretbox.keyLength);
-            console.debug('AuthToken: Generated auth token');
+            console.debug(this.logTag, 'Generated auth token');
         } else {
             if (bytes.byteLength != nacl.secretbox.keyLength) {
-                console.error('Auth token must be', nacl.secretbox.keyLength, 'bytes long.');
+                console.error(this.logTag, 'Auth token must be', nacl.secretbox.keyLength, 'bytes long.');
                 throw 'bad-token-length';
             }
             this._authToken = bytes;
-            console.debug('AuthToken: Initialized auth token');
+            console.debug(this.logTag, 'Initialized auth token');
         }
     }
 
