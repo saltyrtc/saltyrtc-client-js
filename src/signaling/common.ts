@@ -38,7 +38,10 @@ export abstract class Signaling implements saltyrtc.Signaling {
     protected pingInterval: number;
 
     // Msgpack
-    protected msgpackOptions: msgpack.BufferOptions = {
+    protected msgpackEncodeOptions: msgpack.EncoderOptions = {
+        codec: msgpack.createCodec({binarraybuffer: true}),
+    };
+    protected msgpackDecodeOptions: msgpack.DecoderOptions = {
         codec: msgpack.createCodec({binarraybuffer: true}),
     };
 
@@ -142,14 +145,14 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Encode msgpack data.
      */
     protected msgpackEncode(data: Object) {
-        return msgpack.encode(data, this.msgpackOptions);
+        return msgpack.encode(data, this.msgpackEncodeOptions);
     }
 
     /**
      * Decode msgpack data.
      */
     protected msgpackDecode(data: Uint8Array) {
-        return msgpack.decode(data, this.msgpackOptions);
+        return msgpack.decode(data, this.msgpackDecodeOptions);
     }
 
     /**
