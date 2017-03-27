@@ -2,8 +2,8 @@
 # https://github.com/phosphorjs/phosphor/wiki/TypeDoc-Publishing
 set -e
 
-if [[ $TRAVIS_PULL_REQUEST == false && $TRAVIS_BRANCH == "master" ]]
-then
+#if [[ $TRAVIS_PULL_REQUEST == false && $TRAVIS_BRANCH == "master" ]]
+#then
     echo "-- will build apidocs --"
 
     git config --global user.email "travis@travis-ci.com"
@@ -34,7 +34,7 @@ then
 
     # Add docs
     rm -rf ./*
-    cp -r ../apidocs/* ./.
+    cp -r ../apidocs .
     git add -A
 
     # Make sure to turn off Github Jekyll rendering
@@ -44,6 +44,6 @@ then
     # Commit docs
     git commit -m "autocommit apidocs"
     git push origin gh-pages
-else
-    echo "-- will only build apidocs from master --"
-fi
+#else
+#    echo "-- will only build apidocs from master --"
+#fi
