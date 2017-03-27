@@ -15,7 +15,8 @@ welcome!**
 
 The library has been tested with Firefox 45+ and Chromium 49+.
 
-[API Docs](https://saltyrtc.github.io/saltyrtc-client-js/)
+- [Docs](https://saltyrtc.github.io/saltyrtc-client-js/docs/)
+- [API Docs](https://saltyrtc.github.io/saltyrtc-client-js/apidocs/)
 
 ## Installing
 
@@ -29,15 +30,15 @@ You can install this library via `npm`:
 
 Alternatively, copy one of the following files to your project directly:
 
- - ES2015: `dist/saltyrtc-client.es2015.js`
- - ES5: `dist/saltyrtc-client.es5.js`
- - ES5 minified: `dist/saltyrtc-client.es5.min.js`
- - ES5 minified polyfilled: `dist/saltyrtc-client.es5.min.polyfill.js`
+- ES2015: `dist/saltyrtc-client.es2015.js`
+- ES5: `dist/saltyrtc-client.es5.js`
+- ES5 minified: `dist/saltyrtc-client.es5.min.js`
+- ES5 minified polyfilled: `dist/saltyrtc-client.es5.min.polyfill.js`
 
 Make sure to manually add the following external dependencies to your project:
 
- - [tweetnacl](https://github.com/dchest/tweetnacl-js)
- - [msgpack-lite](https://github.com/kawanet/msgpack-lite)
+- [tweetnacl](https://github.com/dchest/tweetnacl-js)
+- [msgpack-lite](https://github.com/kawanet/msgpack-lite)
 
 ## Usage
 
