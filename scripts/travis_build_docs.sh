@@ -2,8 +2,19 @@
 # https://github.com/phosphorjs/phosphor/wiki/TypeDoc-Publishing
 set -e
 
-#if [[ $TRAVIS_PULL_REQUEST == false && $TRAVIS_BRANCH == "master" ]]
-#then
+if [[ $TRAVIS_PULL_REQUEST == false && $TRAVIS_BRANCH == "master" ]]
+then
+    echo "-- will build docs --"
+
+    cd docs
+
+    python3 -m venv VENV
+    VENV/bin/pip install -r requirements.txt
+    
+    VENV/bin/mkdocs build -v --clean
+
+    cd ..
+
     echo "-- will build apidocs --"
 
     git config --global user.email "travis@travis-ci.com"
@@ -23,6 +34,8 @@ set -e
         --out apidocs \
         src/
 
+    echo "-- deploy docs to gh pages --"
+
     # Clone gh-pages repo
     git clone https://github.com/saltyrtc/saltyrtc-client-js.git travis_docs_build
     cd travis_docs_build
@@ -34,7 +47,8 @@ set -e
 
     # Add docs
     rm -rf ./*
-    cp -r ../apidocs .
+    cp -r ../docs/site docs
+    cp -r ../apidocs apidocs
     git add -A
 
     # Make sure to turn off Github Jekyll rendering
@@ -42,8 +56,8 @@ set -e
     git add .nojekyll
 
     # Commit docs
-    git commit -m "autocommit apidocs"
+    git commit -m "autocommit docs and apidocs"
     git push origin gh-pages
-#else
-#    echo "-- will only build apidocs from master --"
-#fi
+else
+    echo "-- will only build apidocs from master --"
+fi
