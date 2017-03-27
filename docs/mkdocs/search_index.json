@@ -12,7 +12,7 @@
         },
         {
             "location": "/installing/",
-            "text": "Installing\n\n\nVia NPM\n\n\nYou can install this library via \nnpm\n:\n\n\nnpm install @saltyrtc/client\n\n\n\nManually\n\n\nAlternatively, copy one of the following files to your project directly:\n\n\n\n\nES2015: \ndist/saltyrtc-client.es2015.js\n\n\nES5: \ndist/saltyrtc-client.es5.js\n\n\nES5 minified: \ndist/saltyrtc-client.es5.min.js\n\n\nES5 minified polyfilled: \ndist/saltyrtc-client.es5.min.polyfill.js\n\n\n\n\nMake sure to manually add the following external dependencies to your project:\n\n\n\n\ntweetnacl",
+            "text": "Installing\n\n\nVia NPM\n\n\nYou can install this library and its peer dependencies via \nnpm\n:\n\n\nnpm install @saltyrtc/client msgpack-lite tweetnacl\n\n\n\nManually\n\n\nAlternatively, copy one of the following files to your project directly:\n\n\n\n\nES2015: \ndist/saltyrtc-client.es2015.js\n\n\nES5: \ndist/saltyrtc-client.es5.js\n\n\nES5 minified: \ndist/saltyrtc-client.es5.min.js\n\n\nES5 minified polyfilled: \ndist/saltyrtc-client.es5.min.polyfill.js\n\n\n\n\nMake sure to manually add the following external dependencies to your project:\n\n\n\n\ntweetnacl\n\n\nmsgpack-lite",
             "title": "Installing"
         },
         {
@@ -22,12 +22,12 @@
         },
         {
             "location": "/installing/#via-npm",
-            "text": "You can install this library via  npm :  npm install @saltyrtc/client",
+            "text": "You can install this library and its peer dependencies via  npm :  npm install @saltyrtc/client msgpack-lite tweetnacl",
             "title": "Via NPM"
         },
         {
             "location": "/installing/#manually",
-            "text": "Alternatively, copy one of the following files to your project directly:   ES2015:  dist/saltyrtc-client.es2015.js  ES5:  dist/saltyrtc-client.es5.js  ES5 minified:  dist/saltyrtc-client.es5.min.js  ES5 minified polyfilled:  dist/saltyrtc-client.es5.min.polyfill.js   Make sure to manually add the following external dependencies to your project:   tweetnacl",
+            "text": "Alternatively, copy one of the following files to your project directly:   ES2015:  dist/saltyrtc-client.es2015.js  ES5:  dist/saltyrtc-client.es5.js  ES5 minified:  dist/saltyrtc-client.es5.min.js  ES5 minified polyfilled:  dist/saltyrtc-client.es5.min.polyfill.js   Make sure to manually add the following external dependencies to your project:   tweetnacl  msgpack-lite",
             "title": "Manually"
         },
         {
