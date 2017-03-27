@@ -1,0 +1,54 @@
+{
+    "docs": [
+        {
+            "location": "/",
+            "text": "SaltyRTC Client for JavaScript\n\n\nThis is a SaltyRTC implementation for JavaScript (ES5) written in TypeScript 2\n/ ES2015.\n\n\nContents\n\n\n\n\nInstalling\n\n\nUsage\n\n\nAbout",
+            "title": "Home"
+        },
+        {
+            "location": "/#saltyrtc-client-for-javascript",
+            "text": "This is a SaltyRTC implementation for JavaScript (ES5) written in TypeScript 2\n/ ES2015.  Contents   Installing  Usage  About",
+            "title": "SaltyRTC Client for JavaScript"
+        },
+        {
+            "location": "/installing/",
+            "text": "Installing\n\n\nVia NPM\n\n\nYou can install this library via \nnpm\n:\n\n\nnpm install @saltyrtc/client\n\n\n\nManually\n\n\nAlternatively, copy one of the following files to your project directly:\n\n\n\n\nES2015: \ndist/saltyrtc-client.es2015.js\n\n\nES5: \ndist/saltyrtc-client.es5.js\n\n\nES5 minified: \ndist/saltyrtc-client.es5.min.js\n\n\nES5 minified polyfilled: \ndist/saltyrtc-client.es5.min.polyfill.js\n\n\n\n\nMake sure to manually add the following external dependencies to your project:\n\n\n\n\ntweetnacl",
+            "title": "Installing"
+        },
+        {
+            "location": "/installing/#installing",
+            "text": "",
+            "title": "Installing"
+        },
+        {
+            "location": "/installing/#via-npm",
+            "text": "You can install this library via  npm :  npm install @saltyrtc/client",
+            "title": "Via NPM"
+        },
+        {
+            "location": "/installing/#manually",
+            "text": "Alternatively, copy one of the following files to your project directly:   ES2015:  dist/saltyrtc-client.es2015.js  ES5:  dist/saltyrtc-client.es5.js  ES5 minified:  dist/saltyrtc-client.es5.min.js  ES5 minified polyfilled:  dist/saltyrtc-client.es5.min.polyfill.js   Make sure to manually add the following external dependencies to your project:   tweetnacl",
+            "title": "Manually"
+        },
+        {
+            "location": "/usage/",
+            "text": "Usage\n\n\nTODO",
+            "title": "Usage"
+        },
+        {
+            "location": "/usage/#usage",
+            "text": "TODO",
+            "title": "Usage"
+        },
+        {
+            "location": "/about/",
+            "text": "About SaltyRTC\n\n\nFor more information about the project, please visit\n\nsaltyrtc.org\n.",
+            "title": "About"
+        },
+        {
+            "location": "/about/#about-saltyrtc",
+            "text": "For more information about the project, please visit saltyrtc.org .",
+            "title": "About SaltyRTC"
+        }
+    ]
+}
