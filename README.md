@@ -2,8 +2,8 @@
 
 [![Travis branch](https://img.shields.io/travis/saltyrtc/saltyrtc-client-js/master.svg)](https://travis-ci.org/saltyrtc/saltyrtc-client-js)
 [![Supported ES Standard](https://img.shields.io/badge/javascript-ES5%20%2F%20ES2015-yellow.svg)](https://github.com/saltyrtc/saltyrtc-client-js)
-[![npm Version](https://img.shields.io/npm/v/saltyrtc-client.svg?maxAge=2592000)](https://www.npmjs.com/package/saltyrtc-client)
-[![npm Downloads](https://img.shields.io/npm/dt/saltyrtc-client.svg?maxAge=3600)](https://www.npmjs.com/package/saltyrtc-client)
+[![npm Version](https://img.shields.io/npm/v/@saltyrtc/client.svg?maxAge=2592000)](https://www.npmjs.com/package/@saltyrtc/client)
+[![npm Downloads](https://img.shields.io/npm/dt/@saltyrtc/client.svg?maxAge=3600)](https://www.npmjs.com/package/@saltyrtc/client)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/saltyrtc/saltyrtc-client-js)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/536/badge)](https://bestpractices.coreinfrastructure.org/projects/536)
 
@@ -23,7 +23,7 @@ The library has been tested with Firefox 45+ and Chromium 49+.
 
 You can install this library via `npm`:
 
-    npm install --save saltyrtc-client msgpack-lite tweetnacl
+    npm install --save @saltyrtc/client msgpack-lite tweetnacl
 
 ### Manually
 
