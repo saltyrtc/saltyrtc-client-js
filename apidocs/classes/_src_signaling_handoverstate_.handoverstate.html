@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>AuthToken | @saltyrtc/client</title>
+	<title>HandoverState | @saltyrtc/client</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -54,13 +54,13 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/_src_keystore_.html">&quot;src/keystore&quot;</a>
+					<a href="../modules/_src_signaling_handoverstate_.html">&quot;src/signaling/handoverstate&quot;</a>
 				</li>
 				<li>
-					<a href="_src_keystore_.authtoken.html">AuthToken</a>
+					<a href="_src_signaling_handoverstate_.handoverstate.html">HandoverState</a>
 				</li>
 			</ul>
-			<h1>Class AuthToken</h1>
+			<h1>Class HandoverState</h1>
 		</div>
 	</div>
 </header>
@@ -71,14 +71,8 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<span class="target">AuthToken</span>
+						<span class="target">HandoverState</span>
 					</li>
-				</ul>
-			</section>
-			<section class="tsd-panel">
-				<h3>Implements</h3>
-				<ul class="tsd-hierarchy">
-					<li><span class="tsd-signature-type">AuthToken</span></li>
 				</ul>
 			</section>
 			<section class="tsd-panel-group tsd-index-group">
@@ -88,21 +82,28 @@
 						<section class="tsd-index-section ">
 							<h3>Constructors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="_src_keystore_.authtoken.html#constructor" class="tsd-kind-icon">constructor</a></li>
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="_src_signaling_handoverstate_.handoverstate.html#constructor" class="tsd-kind-icon">constructor</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Properties</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_src_signaling_handoverstate_.handoverstate.html#onboth" class="tsd-kind-icon">on<wbr>Both</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Accessors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="_src_keystore_.authtoken.html#keybytes" class="tsd-kind-icon">key<wbr>Bytes</a></li>
-								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="_src_keystore_.authtoken.html#keyhex" class="tsd-kind-icon">key<wbr>Hex</a></li>
+								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="_src_signaling_handoverstate_.handoverstate.html#any" class="tsd-kind-icon">any</a></li>
+								<li class="tsd-kind-get-signature tsd-parent-kind-class"><a href="_src_signaling_handoverstate_.handoverstate.html#both" class="tsd-kind-icon">both</a></li>
+								<li class="tsd-kind-accessor tsd-parent-kind-class"><a href="_src_signaling_handoverstate_.handoverstate.html#local" class="tsd-kind-icon">local</a></li>
+								<li class="tsd-kind-accessor tsd-parent-kind-class"><a href="_src_signaling_handoverstate_.handoverstate.html#peer" class="tsd-kind-icon">peer</a></li>
 							</ul>
 						</section>
 						<section class="tsd-index-section ">
 							<h3>Methods</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_src_keystore_.authtoken.html#decrypt" class="tsd-kind-icon">decrypt</a></li>
-								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_src_keystore_.authtoken.html#encrypt" class="tsd-kind-icon">encrypt</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="_src_signaling_handoverstate_.handoverstate.html#reset" class="tsd-kind-icon">reset</a></li>
 							</ul>
 						</section>
 					</div>
@@ -114,69 +115,161 @@
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
 					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Auth<wbr>Token<span class="tsd-signature-symbol">(</span>bytes<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_src_keystore_.authtoken.html" class="tsd-signature-type">AuthToken</a></li>
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Handover<wbr>State<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_src_signaling_handoverstate_.handoverstate.html" class="tsd-signature-type">HandoverState</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/6aa32a4/src/keystore.ts#L158">src/keystore.ts:158</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a1733a7/src/signaling/handoverstate.ts#L4">src/signaling/handoverstate.ts:4</a></li>
 								</ul>
 							</aside>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5><span class="tsd-flag ts-flagOptional">Optional</span> bytes: <span class="tsd-signature-type">Uint8Array</span></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_src_keystore_.authtoken.html" class="tsd-signature-type">AuthToken</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="_src_signaling_handoverstate_.handoverstate.html" class="tsd-signature-type">HandoverState</a></h4>
 						</li>
 					</ul>
 				</section>
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Properties</h2>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="onboth" class="tsd-anchor"></a>
+					<h3>on<wbr>Both</h3>
+					<div class="tsd-signature tsd-kind-icon">on<wbr>Both<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">function</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a1733a7/src/signaling/handoverstate.ts#L60">src/signaling/handoverstate.ts:60</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Callback that is called when both local and peer have done the
+							handover.</p>
+						</div>
+					</div>
+					<div class="tsd-type-declaration">
+						<h4>Type declaration</h4>
+						<ul class="tsd-parameters">
+							<li class="tsd-parameter-siganture">
+								<ul class="tsd-signatures tsd-kind-type-literal tsd-parent-kind-property tsd-is-not-exported">
+									<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+								</ul>
+								<ul class="tsd-descriptions">
+									<li class="tsd-description">
+										<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+									</li>
+								</ul>
+							</li>
+						</ul>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Accessors</h2>
 				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class">
-					<a name="keybytes" class="tsd-anchor"></a>
-					<h3>key<wbr>Bytes</h3>
+					<a name="any" class="tsd-anchor"></a>
+					<h3>any</h3>
 					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> keyBytes<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Uint8Array</span></li>
+						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> any<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/6aa32a4/src/keystore.ts#L177">src/keystore.ts:177</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a1733a7/src/signaling/handoverstate.ts#L44">src/signaling/handoverstate.ts:44</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Return the secret key as Uint8Array.</p>
+									<p>Return true if any peer has finished the handover.</p>
 								</div>
 							</div>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Uint8Array</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
 						</li>
 					</ul>
 				</section>
 				<section class="tsd-panel tsd-member tsd-kind-get-signature tsd-parent-kind-class">
-					<a name="keyhex" class="tsd-anchor"></a>
-					<h3>key<wbr>Hex</h3>
+					<a name="both" class="tsd-anchor"></a>
+					<h3>both</h3>
 					<ul class="tsd-signatures tsd-kind-get-signature tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> keyHex<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span></li>
+						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> both<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/6aa32a4/src/keystore.ts#L182">src/keystore.ts:182</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a1733a7/src/signaling/handoverstate.ts#L37">src/signaling/handoverstate.ts:37</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Return the secret key as hex string.</p>
+									<p>Return true if both peers have finished the handover.</p>
 								</div>
 							</div>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">string</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-accessor tsd-parent-kind-class">
+					<a name="local" class="tsd-anchor"></a>
+					<h3>local</h3>
+					<ul class="tsd-signatures tsd-kind-accessor tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> local<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">set</span> local<span class="tsd-signature-symbol">(</span>state<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a1733a7/src/signaling/handoverstate.ts#L10">src/signaling/handoverstate.ts:10</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+						</li>
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a1733a7/src/signaling/handoverstate.ts#L18">src/signaling/handoverstate.ts:18</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>state: <span class="tsd-signature-type">boolean</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-accessor tsd-parent-kind-class">
+					<a name="peer" class="tsd-anchor"></a>
+					<h3>peer</h3>
+					<ul class="tsd-signatures tsd-kind-accessor tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">get</span> peer<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span></li>
+						<li class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">set</span> peer<span class="tsd-signature-symbol">(</span>state<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">boolean</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a1733a7/src/signaling/handoverstate.ts#L14">src/signaling/handoverstate.ts:14</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">boolean</span></h4>
+						</li>
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a1733a7/src/signaling/handoverstate.ts#L26">src/signaling/handoverstate.ts:26</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>state: <span class="tsd-signature-type">boolean</span></h5>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -184,61 +277,24 @@
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Methods</h2>
 				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="decrypt" class="tsd-anchor"></a>
-					<h3>decrypt</h3>
+					<a name="reset" class="tsd-anchor"></a>
+					<h3>reset</h3>
 					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">decrypt<span class="tsd-signature-symbol">(</span>box<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Box</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Uint8Array</span></li>
+						<li class="tsd-signature tsd-kind-icon">reset<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/6aa32a4/src/keystore.ts#L195">src/keystore.ts:195</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a1733a7/src/signaling/handoverstate.ts#L51">src/signaling/handoverstate.ts:51</a></li>
 								</ul>
 							</aside>
 							<div class="tsd-comment tsd-typography">
 								<div class="lead">
-									<p>Decrypt data using the shared auth token.</p>
+									<p>Reset handover state.</p>
 								</div>
 							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>box: <span class="tsd-signature-type">Box</span></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Uint8Array</span></h4>
-						</li>
-					</ul>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
-					<a name="encrypt" class="tsd-anchor"></a>
-					<h3>encrypt</h3>
-					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
-						<li class="tsd-signature tsd-kind-icon">encrypt<span class="tsd-signature-symbol">(</span>bytes<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Uint8Array</span>, nonce<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Uint8Array</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Box</span></li>
-					</ul>
-					<ul class="tsd-descriptions">
-						<li class="tsd-description">
-							<aside class="tsd-sources">
-								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/6aa32a4/src/keystore.ts#L187">src/keystore.ts:187</a></li>
-								</ul>
-							</aside>
-							<div class="tsd-comment tsd-typography">
-								<div class="lead">
-									<p>Encrypt data using the shared auth token.</p>
-								</div>
-							</div>
-							<h4 class="tsd-parameters-title">Parameters</h4>
-							<ul class="tsd-parameters">
-								<li>
-									<h5>bytes: <span class="tsd-signature-type">Uint8Array</span></h5>
-								</li>
-								<li>
-									<h5>nonce: <span class="tsd-signature-type">Uint8Array</span></h5>
-								</li>
-							</ul>
-							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">Box</span></h4>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
 						</li>
 					</ul>
 				</section>
@@ -251,7 +307,7 @@
 						<a href="../globals.html"><em>Globals</em></a>
 					</li>
 					<li class="current tsd-kind-external-module">
-						<a href="../modules/_src_keystore_.html">"src/keystore"</a>
+						<a href="../modules/_src_signaling_handoverstate_.html">"src/signaling/handoverstate"</a>
 					</li>
 				</ul>
 			</nav>
@@ -260,33 +316,33 @@
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_src_keystore_.authtoken.html" class="tsd-kind-icon">Auth<wbr>Token</a>
+						<a href="_src_signaling_handoverstate_.handoverstate.html" class="tsd-kind-icon">Handover<wbr>State</a>
 						<ul>
 							<li class=" tsd-kind-constructor tsd-parent-kind-class">
-								<a href="_src_keystore_.authtoken.html#constructor" class="tsd-kind-icon">constructor</a>
+								<a href="_src_signaling_handoverstate_.handoverstate.html#constructor" class="tsd-kind-icon">constructor</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="_src_signaling_handoverstate_.handoverstate.html#onboth" class="tsd-kind-icon">on<wbr>Both</a>
 							</li>
 							<li class=" tsd-kind-get-signature tsd-parent-kind-class">
-								<a href="_src_keystore_.authtoken.html#keybytes" class="tsd-kind-icon">key<wbr>Bytes</a>
+								<a href="_src_signaling_handoverstate_.handoverstate.html#any" class="tsd-kind-icon">any</a>
 							</li>
 							<li class=" tsd-kind-get-signature tsd-parent-kind-class">
-								<a href="_src_keystore_.authtoken.html#keyhex" class="tsd-kind-icon">key<wbr>Hex</a>
+								<a href="_src_signaling_handoverstate_.handoverstate.html#both" class="tsd-kind-icon">both</a>
+							</li>
+							<li class=" tsd-kind-accessor tsd-parent-kind-class">
+								<a href="_src_signaling_handoverstate_.handoverstate.html#local" class="tsd-kind-icon">local</a>
+							</li>
+							<li class=" tsd-kind-accessor tsd-parent-kind-class">
+								<a href="_src_signaling_handoverstate_.handoverstate.html#peer" class="tsd-kind-icon">peer</a>
 							</li>
 							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_src_keystore_.authtoken.html#decrypt" class="tsd-kind-icon">decrypt</a>
-							</li>
-							<li class=" tsd-kind-method tsd-parent-kind-class">
-								<a href="_src_keystore_.authtoken.html#encrypt" class="tsd-kind-icon">encrypt</a>
+								<a href="_src_signaling_handoverstate_.handoverstate.html#reset" class="tsd-kind-icon">reset</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
-					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_src_keystore_.box.html" class="tsd-kind-icon">Box</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_src_keystore_.keystore.html" class="tsd-kind-icon">Key<wbr>Store</a>
-					</li>
 				</ul>
 			</nav>
 		</div>

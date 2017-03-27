@@ -3,7 +3,7 @@
 <head>
 	<meta charset="utf-8">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
-	<title>ProtocolError | @saltyrtc/client</title>
+	<title>CombinedSequencePair | @saltyrtc/client</title>
 	<meta name="description" content="">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="stylesheet" href="../assets/css/main.css">
@@ -54,13 +54,13 @@
 					<a href="../globals.html">Globals</a>
 				</li>
 				<li>
-					<a href="../modules/_src_exceptions_.html">&quot;src/exceptions&quot;</a>
+					<a href="../modules/_src_csn_.html">&quot;src/csn&quot;</a>
 				</li>
 				<li>
-					<a href="_src_exceptions_.protocolerror.html">ProtocolError</a>
+					<a href="_src_csn_.combinedsequencepair.html">CombinedSequencePair</a>
 				</li>
 			</ul>
-			<h1>Class ProtocolError</h1>
+			<h1>Class CombinedSequencePair</h1>
 		</div>
 	</div>
 </header>
@@ -70,7 +70,7 @@
 			<section class="tsd-panel tsd-comment">
 				<div class="tsd-comment tsd-typography">
 					<div class="lead">
-						<p>A signaling error with the close code hardcoded to ProtocolError.</p>
+						<p>A combined sequence pair.</p>
 					</div>
 				</div>
 			</section>
@@ -78,13 +78,14 @@
 				<h3>Hierarchy</h3>
 				<ul class="tsd-hierarchy">
 					<li>
-						<a href="_src_exceptions_.signalingerror.html" class="tsd-signature-type">SignalingError</a>
-						<ul class="tsd-hierarchy">
-							<li>
-								<span class="target">ProtocolError</span>
-							</li>
-						</ul>
+						<span class="target">CombinedSequencePair</span>
 					</li>
+				</ul>
+			</section>
+			<section class="tsd-panel">
+				<h3>Implements</h3>
+				<ul class="tsd-hierarchy">
+					<li><span class="tsd-signature-type">CombinedSequencePair</span></li>
 				</ul>
 			</section>
 			<section class="tsd-panel-group tsd-index-group">
@@ -94,16 +95,14 @@
 						<section class="tsd-index-section ">
 							<h3>Constructors</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-overwrite"><a href="_src_exceptions_.protocolerror.html#constructor" class="tsd-kind-icon">constructor</a></li>
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="_src_csn_.combinedsequencepair.html#constructor" class="tsd-kind-icon">constructor</a></li>
 							</ul>
 						</section>
-						<section class="tsd-index-section tsd-is-inherited">
+						<section class="tsd-index-section ">
 							<h3>Properties</h3>
 							<ul class="tsd-index-list">
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="_src_exceptions_.protocolerror.html#closecode" class="tsd-kind-icon">close<wbr>Code</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static"><a href="_src_exceptions_.protocolerror.html#message" class="tsd-kind-icon">message</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static"><a href="_src_exceptions_.protocolerror.html#name" class="tsd-kind-icon">name</a></li>
-								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-overwrite tsd-is-inherited tsd-is-static"><a href="_src_exceptions_.protocolerror.html#stack" class="tsd-kind-icon">stack</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_src_csn_.combinedsequencepair.html#ours" class="tsd-kind-icon">ours</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="_src_csn_.combinedsequencepair.html#theirs" class="tsd-kind-icon">theirs</a></li>
 							</ul>
 						</section>
 					</div>
@@ -111,75 +110,52 @@
 			</section>
 			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Constructors</h2>
-				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class tsd-is-overwrite">
+				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class">
 					<a name="constructor" class="tsd-anchor"></a>
 					<h3>constructor</h3>
-					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class tsd-is-overwrite">
-						<li class="tsd-signature tsd-kind-icon">new <wbr>Protocol<wbr>Error<span class="tsd-signature-symbol">(</span>message<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_src_exceptions_.protocolerror.html" class="tsd-signature-type">ProtocolError</a></li>
+					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Combined<wbr>Sequence<wbr>Pair<span class="tsd-signature-symbol">(</span>ours<span class="tsd-signature-symbol">?: </span><a href="_src_csn_.combinedsequence.html" class="tsd-signature-type">CombinedSequence</a>, theirs<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="_src_csn_.combinedsequencepair.html" class="tsd-signature-type">CombinedSequencePair</a></li>
 					</ul>
 					<ul class="tsd-descriptions">
 						<li class="tsd-description">
 							<aside class="tsd-sources">
-								<p>Overrides <a href="_src_exceptions_.signalingerror.html">SignalingError</a>.<a href="_src_exceptions_.signalingerror.html#constructor">constructor</a></p>
 								<ul>
-									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/6aa32a4/src/exceptions.ts#L47">src/exceptions.ts:47</a></li>
+									<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a1733a7/src/csn.ts#L56">src/csn.ts:56</a></li>
 								</ul>
 							</aside>
 							<h4 class="tsd-parameters-title">Parameters</h4>
 							<ul class="tsd-parameters">
 								<li>
-									<h5>message: <span class="tsd-signature-type">string</span></h5>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> ours: <a href="_src_csn_.combinedsequence.html" class="tsd-signature-type">CombinedSequence</a></h5>
+								</li>
+								<li>
+									<h5><span class="tsd-flag ts-flagOptional">Optional</span> theirs: <span class="tsd-signature-type">number</span></h5>
 								</li>
 							</ul>
-							<h4 class="tsd-returns-title">Returns <a href="_src_exceptions_.protocolerror.html" class="tsd-signature-type">ProtocolError</a></h4>
+							<h4 class="tsd-returns-title">Returns <a href="_src_csn_.combinedsequencepair.html" class="tsd-signature-type">CombinedSequencePair</a></h4>
 						</li>
 					</ul>
 				</section>
 			</section>
-			<section class="tsd-panel-group tsd-member-group tsd-is-inherited">
+			<section class="tsd-panel-group tsd-member-group ">
 				<h2>Properties</h2>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
-					<a name="closecode" class="tsd-anchor"></a>
-					<h3>close<wbr>Code</h3>
-					<div class="tsd-signature tsd-kind-icon">close<wbr>Code<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span></div>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="ours" class="tsd-anchor"></a>
+					<h3>ours</h3>
+					<div class="tsd-signature tsd-kind-icon">ours<span class="tsd-signature-symbol">:</span> <a href="_src_csn_.combinedsequence.html" class="tsd-signature-type">CombinedSequence</a><span class="tsd-signature-symbol"> =&nbsp;null</span></div>
 					<aside class="tsd-sources">
-						<p>Inherited from <a href="_src_exceptions_.signalingerror.html">SignalingError</a>.<a href="_src_exceptions_.signalingerror.html#closecode">closeCode</a></p>
 						<ul>
-							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/6aa32a4/src/exceptions.ts#L34">src/exceptions.ts:34</a></li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a1733a7/src/csn.ts#L55">src/csn.ts:55</a></li>
 						</ul>
 					</aside>
 				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
-					<a name="message" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagStatic">Static</span> message</h3>
-					<div class="tsd-signature tsd-kind-icon">message<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="theirs" class="tsd-anchor"></a>
+					<h3>theirs</h3>
+					<div class="tsd-signature tsd-kind-icon">theirs<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;null</span></div>
 					<aside class="tsd-sources">
-						<p>Inherited from Error.message</p>
 						<ul>
-							<li>Defined in node_modules/typescript/lib/lib.es6.d.ts:907</li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
-					<a name="name" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagStatic">Static</span> name</h3>
-					<div class="tsd-signature tsd-kind-icon">name<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
-					<aside class="tsd-sources">
-						<p>Inherited from Error.name</p>
-						<ul>
-							<li>Defined in node_modules/typescript/lib/lib.es6.d.ts:906</li>
-						</ul>
-					</aside>
-				</section>
-				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-overwrite tsd-is-inherited tsd-is-static">
-					<a name="stack" class="tsd-anchor"></a>
-					<h3><span class="tsd-flag ts-flagStatic">Static</span> <span class="tsd-flag ts-flagOptional">Optional</span> stack</h3>
-					<div class="tsd-signature tsd-kind-icon">stack<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
-					<aside class="tsd-sources">
-						<p>Inherited from Error.stack</p>
-						<p>Overrides Error.stack</p>
-						<ul>
-							<li>Defined in node_modules/typescript/lib/lib.es6.d.ts:908</li>
+							<li>Defined in <a href="https://github.com/saltyrtc/saltyrtc-client-js/blob/a1733a7/src/csn.ts#L56">src/csn.ts:56</a></li>
 						</ul>
 					</aside>
 				</section>
@@ -192,48 +168,33 @@
 						<a href="../globals.html"><em>Globals</em></a>
 					</li>
 					<li class="current tsd-kind-external-module">
-						<a href="../modules/_src_exceptions_.html">"src/exceptions"</a>
+						<a href="../modules/_src_csn_.html">"src/csn"</a>
 					</li>
 				</ul>
 			</nav>
 			<nav class="tsd-navigation secondary menu-sticky">
 				<ul class="before-current">
 					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_src_exceptions_.connectionerror.html" class="tsd-kind-icon">Connection<wbr>Error</a>
+						<a href="_src_csn_.combinedsequence.html" class="tsd-kind-icon">Combined<wbr>Sequence</a>
 					</li>
 				</ul>
 				<ul class="current">
 					<li class="current tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_src_exceptions_.protocolerror.html" class="tsd-kind-icon">Protocol<wbr>Error</a>
+						<a href="_src_csn_.combinedsequencepair.html" class="tsd-kind-icon">Combined<wbr>Sequence<wbr>Pair</a>
 						<ul>
-							<li class=" tsd-kind-constructor tsd-parent-kind-class tsd-is-overwrite">
-								<a href="_src_exceptions_.protocolerror.html#constructor" class="tsd-kind-icon">constructor</a>
+							<li class=" tsd-kind-constructor tsd-parent-kind-class">
+								<a href="_src_csn_.combinedsequencepair.html#constructor" class="tsd-kind-icon">constructor</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
-								<a href="_src_exceptions_.protocolerror.html#closecode" class="tsd-kind-icon">close<wbr>Code</a>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="_src_csn_.combinedsequencepair.html#ours" class="tsd-kind-icon">ours</a>
 							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
-								<a href="_src_exceptions_.protocolerror.html#message" class="tsd-kind-icon">message</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited tsd-is-static">
-								<a href="_src_exceptions_.protocolerror.html#name" class="tsd-kind-icon">name</a>
-							</li>
-							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-overwrite tsd-is-inherited tsd-is-static">
-								<a href="_src_exceptions_.protocolerror.html#stack" class="tsd-kind-icon">stack</a>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="_src_csn_.combinedsequencepair.html#theirs" class="tsd-kind-icon">theirs</a>
 							</li>
 						</ul>
 					</li>
 				</ul>
 				<ul class="after-current">
-					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_src_exceptions_.signalingerror.html" class="tsd-kind-icon">Signaling<wbr>Error</a>
-					</li>
-					<li class=" tsd-kind-class tsd-parent-kind-external-module">
-						<a href="_src_exceptions_.validationerror.html" class="tsd-kind-icon">Validation<wbr>Error</a>
-					</li>
-					<li class=" tsd-kind-function tsd-parent-kind-external-module">
-						<a href="../modules/_src_exceptions_.html#internalerror" class="tsd-kind-icon">Internal<wbr>Error</a>
-					</li>
 				</ul>
 			</nav>
 		</div>
