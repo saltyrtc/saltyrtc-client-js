@@ -32,13 +32,68 @@
         },
         {
             "location": "/usage/",
-            "text": "Usage\n\n\nTODO",
+            "text": "Usage\n\n\nThis chapter gives a short introduction on how to use the SaltyRTC JavaScript\nclient.\n\n\nTo see a more practical example, you may also want to take a look at our \ndemo\napplication\n.\n\n\nThe SaltyRTCBuilder\n\n\nTo initialize a SaltyRTC client instance, you can use the \nSaltyRTCBuilder\n.\n\n\nlet builder = new saltyrtcClient.SaltyRTCBuilder();\n\n\n\n\nConnection info\n\n\nThen you need to provide connection info:\n\n\nconst host = 'server.saltyrtc.org';\nconst port = 9287;\nbuilder.connectTo(host, port);\n\n\n\n\nKey store\n\n\nThe client needs to have its own public/private keypair. Create a new keypair\nwith the \nKeyStore\n class:\n\n\nconst keyStore = new saltyrtcClient.KeyStore();\nbuilder.withKeyStore(keyStore);\n\n\n\n\nServer key pinning\n\n\nIf you want to use server key pinning, specify the server public permanent key:\n\n\nconst serverPublicPermanentKey = '424280166304526b4a2874a2270d091071fcc5c98959f7d4718715626df26204';\nbuilder.withServerKey(serverPublicPermanentKey);\n\n\n\n\nThe public key can either be passed in as \nUint8Array\n or as hex-encoded string.\n\n\nWebsocket ping interval\n\n\nOptionally, you can specify a Websocket ping interval in seconds:\n\n\nbuilder.withPingInterval(30);\n\n\n\n\nTask configuration\n\n\nYou must initialize SaltyRTC with a task (TODO: Link to tasks documentation)\nthat takes over after the handshake is done.\n\n\nFor example, when using the \nWebRTC\ntask\n:\n\n\nconst doHandover = true;\nconst maxPacketSize = 16384;\nconst webrtcTask = new saltyrtcTaskWebrtc.WebRTCTask(doHandover, maxPacketSize);\nbuilder.usingTasks([webrtcTask]);\n\n\n\n\nConnecting as Initiator\n\n\nIf you want to connect to the server as initiator, you can use the\n\n.asInitiator()\n method:\n\n\nconst client = builder.asInitiator();\n\n\n\n\nConnecting as Responder\n\n\nIf you want to connect as responder, you need to provide the initiator\ninformation first that you have obtained from the initiator.\n\n\nbuilder.initiatorInfo(initiatorPublicPermanentKey, initiatorAuthToken);\nconst client = builder.asResponder();\n\n\n\n\nBoth the initiator public permanent key as well as the initiator auth token can\nbe either \nUint8Array\n instances or hex-encoded strings.\n\n\nFull example\n\n\nAll methods on the \nSaltyRTCBuilder\n support chaining. Here\u2019s a full example of\nan initiator configuration:\n\n\nconst config = {\n    SALTYRTC_HOST: 'server.saltyrtc.org',\n    SALTYRTC_PORT: 9287,\n    SALTYRTC_SERVER_PUBLIC_KEY: '424280166304526b4a2874a2270d091071fcc5c98959f7d4718715626df26204',\n};\nconst client = new saltyrtcClient.SaltyRTCBuilder()\n    .connectTo(config.SALTYRTC_HOST, config.SALTYRTC_PORT)\n    .withServerKey(config.SALTYRTC_SERVER_PUBLIC_KEY)\n    .withKeyStore(new saltyrtcClient.KeyStore())\n    .usingTasks([new saltyrtcTaskWebrtc.WebRTCTask(true, 16384)])\n    .withPingInterval(30)\n    .asInitiator();\n\n\n\n\nTo see a more practical example, you may also want to take a look at our \ndemo\napplication\n.\n\n\nTrusted keys\n\n\nIn order to reconnect to a session using a trusted key, you first need to\nrestore your \nKeyStore\n with the private permanent key originally used to\nestablish the trusted session:\n\n\nconst keyStore = new saltyrtcClient.KeyStore(ourPrivatePermanentKey);\n\n\n\n\nThe private key can be passed in either as \nUint8Array\n or as hex-encoded string.\n\n\nThen, on the \nSaltyRTCBuilder\n instance, set the trusted peer key:\n\n\nbuilder.withTrustedPeerKey(peerPublicPermanentKey);\n\n\n\n\nThe public key can be passed in either as \nUint8Array\n or as hex-encoded string.\n\n\nDynamically determine server connection info\n\n\nInstead of specifying the SaltyRTC server host and port directly, you can\ninstead provide an implementation of a \nServerInfoFactory\n that can dynamically\ndetermine the connection info based on the public key of the initiator.\n\n\nThe signature of the function must look like this:\n\n\n(initiatorPublicKey: string) => {host: string, port: number}\n\n\n\n\nExample:\n\n\n```javascript\nbuilder.connectWith((initiatorPublicKey) => {\n    let host;\n    if (initiatorPublicKey.startsWith(\u2018a\u2019)) {\n        host = \u2018a.example.org\u2019;\n    } else {\n        host = \u2018other.example.org\u2019;\n    }\n    return {\n        host: host,\n        port: 8765,\n    }\n});",
             "title": "Usage"
         },
         {
             "location": "/usage/#usage",
-            "text": "TODO",
+            "text": "This chapter gives a short introduction on how to use the SaltyRTC JavaScript\nclient.  To see a more practical example, you may also want to take a look at our  demo\napplication .",
             "title": "Usage"
+        },
+        {
+            "location": "/usage/#the-saltyrtcbuilder",
+            "text": "To initialize a SaltyRTC client instance, you can use the  SaltyRTCBuilder .  let builder = new saltyrtcClient.SaltyRTCBuilder();",
+            "title": "The SaltyRTCBuilder"
+        },
+        {
+            "location": "/usage/#connection-info",
+            "text": "Then you need to provide connection info:  const host = 'server.saltyrtc.org';\nconst port = 9287;\nbuilder.connectTo(host, port);",
+            "title": "Connection info"
+        },
+        {
+            "location": "/usage/#key-store",
+            "text": "The client needs to have its own public/private keypair. Create a new keypair\nwith the  KeyStore  class:  const keyStore = new saltyrtcClient.KeyStore();\nbuilder.withKeyStore(keyStore);",
+            "title": "Key store"
+        },
+        {
+            "location": "/usage/#server-key-pinning",
+            "text": "If you want to use server key pinning, specify the server public permanent key:  const serverPublicPermanentKey = '424280166304526b4a2874a2270d091071fcc5c98959f7d4718715626df26204';\nbuilder.withServerKey(serverPublicPermanentKey);  The public key can either be passed in as  Uint8Array  or as hex-encoded string.",
+            "title": "Server key pinning"
+        },
+        {
+            "location": "/usage/#websocket-ping-interval",
+            "text": "Optionally, you can specify a Websocket ping interval in seconds:  builder.withPingInterval(30);",
+            "title": "Websocket ping interval"
+        },
+        {
+            "location": "/usage/#task-configuration",
+            "text": "You must initialize SaltyRTC with a task (TODO: Link to tasks documentation)\nthat takes over after the handshake is done.  For example, when using the  WebRTC\ntask :  const doHandover = true;\nconst maxPacketSize = 16384;\nconst webrtcTask = new saltyrtcTaskWebrtc.WebRTCTask(doHandover, maxPacketSize);\nbuilder.usingTasks([webrtcTask]);",
+            "title": "Task configuration"
+        },
+        {
+            "location": "/usage/#connecting-as-initiator",
+            "text": "If you want to connect to the server as initiator, you can use the .asInitiator()  method:  const client = builder.asInitiator();",
+            "title": "Connecting as Initiator"
+        },
+        {
+            "location": "/usage/#connecting-as-responder",
+            "text": "If you want to connect as responder, you need to provide the initiator\ninformation first that you have obtained from the initiator.  builder.initiatorInfo(initiatorPublicPermanentKey, initiatorAuthToken);\nconst client = builder.asResponder();  Both the initiator public permanent key as well as the initiator auth token can\nbe either  Uint8Array  instances or hex-encoded strings.",
+            "title": "Connecting as Responder"
+        },
+        {
+            "location": "/usage/#full-example",
+            "text": "All methods on the  SaltyRTCBuilder  support chaining. Here\u2019s a full example of\nan initiator configuration:  const config = {\n    SALTYRTC_HOST: 'server.saltyrtc.org',\n    SALTYRTC_PORT: 9287,\n    SALTYRTC_SERVER_PUBLIC_KEY: '424280166304526b4a2874a2270d091071fcc5c98959f7d4718715626df26204',\n};\nconst client = new saltyrtcClient.SaltyRTCBuilder()\n    .connectTo(config.SALTYRTC_HOST, config.SALTYRTC_PORT)\n    .withServerKey(config.SALTYRTC_SERVER_PUBLIC_KEY)\n    .withKeyStore(new saltyrtcClient.KeyStore())\n    .usingTasks([new saltyrtcTaskWebrtc.WebRTCTask(true, 16384)])\n    .withPingInterval(30)\n    .asInitiator();  To see a more practical example, you may also want to take a look at our  demo\napplication .",
+            "title": "Full example"
+        },
+        {
+            "location": "/usage/#trusted-keys",
+            "text": "In order to reconnect to a session using a trusted key, you first need to\nrestore your  KeyStore  with the private permanent key originally used to\nestablish the trusted session:  const keyStore = new saltyrtcClient.KeyStore(ourPrivatePermanentKey);  The private key can be passed in either as  Uint8Array  or as hex-encoded string.  Then, on the  SaltyRTCBuilder  instance, set the trusted peer key:  builder.withTrustedPeerKey(peerPublicPermanentKey);  The public key can be passed in either as  Uint8Array  or as hex-encoded string.",
+            "title": "Trusted keys"
+        },
+        {
+            "location": "/usage/#dynamically-determine-server-connection-info",
+            "text": "Instead of specifying the SaltyRTC server host and port directly, you can\ninstead provide an implementation of a  ServerInfoFactory  that can dynamically\ndetermine the connection info based on the public key of the initiator.  The signature of the function must look like this:  (initiatorPublicKey: string) => {host: string, port: number}  Example:  ```javascript\nbuilder.connectWith((initiatorPublicKey) => {\n    let host;\n    if (initiatorPublicKey.startsWith(\u2018a\u2019)) {\n        host = \u2018a.example.org\u2019;\n    } else {\n        host = \u2018other.example.org\u2019;\n    }\n    return {\n        host: host,\n        port: 8765,\n    }\n});",
+            "title": "Dynamically determine server connection info"
         },
         {
             "location": "/about/",

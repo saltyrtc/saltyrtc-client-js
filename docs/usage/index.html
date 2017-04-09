@@ -73,6 +73,14 @@
             
                 <li class="toctree-l3"><a href="#usage">Usage</a></li>
                 
+                    <li><a class="toctree-l4" href="#the-saltyrtcbuilder">The SaltyRTCBuilder</a></li>
+                
+                    <li><a class="toctree-l4" href="#full-example">Full example</a></li>
+                
+                    <li><a class="toctree-l4" href="#trusted-keys">Trusted keys</a></li>
+                
+                    <li><a class="toctree-l4" href="#dynamically-determine-server-connection-info">Dynamically determine server connection info</a></li>
+                
             
             </ul>
         
@@ -129,7 +137,121 @@
             <div class="section">
               
                 <h1 id="usage">Usage</h1>
-<p>TODO</p>
+<p>This chapter gives a short introduction on how to use the SaltyRTC JavaScript
+client.</p>
+<p>To see a more practical example, you may also want to take a look at our <a href="https://github.com/saltyrtc/saltyrtc-demo">demo
+application</a>.</p>
+<h2 id="the-saltyrtcbuilder">The SaltyRTCBuilder</h2>
+<p>To initialize a SaltyRTC client instance, you can use the <code>SaltyRTCBuilder</code>.</p>
+<pre><code class="javascript">let builder = new saltyrtcClient.SaltyRTCBuilder();
+</code></pre>
+
+<h3 id="connection-info">Connection info</h3>
+<p>Then you need to provide connection info:</p>
+<pre><code class="javascript">const host = 'server.saltyrtc.org';
+const port = 9287;
+builder.connectTo(host, port);
+</code></pre>
+
+<h3 id="key-store">Key store</h3>
+<p>The client needs to have its own public/private keypair. Create a new keypair
+with the <code>KeyStore</code> class:</p>
+<pre><code class="javascript">const keyStore = new saltyrtcClient.KeyStore();
+builder.withKeyStore(keyStore);
+</code></pre>
+
+<h3 id="server-key-pinning">Server key pinning</h3>
+<p>If you want to use server key pinning, specify the server public permanent key:</p>
+<pre><code class="javascript">const serverPublicPermanentKey = '424280166304526b4a2874a2270d091071fcc5c98959f7d4718715626df26204';
+builder.withServerKey(serverPublicPermanentKey);
+</code></pre>
+
+<p>The public key can either be passed in as <code>Uint8Array</code> or as hex-encoded string.</p>
+<h3 id="websocket-ping-interval">Websocket ping interval</h3>
+<p>Optionally, you can specify a Websocket ping interval in seconds:</p>
+<pre><code class="javascript">builder.withPingInterval(30);
+</code></pre>
+
+<h3 id="task-configuration">Task configuration</h3>
+<p>You must initialize SaltyRTC with a task (TODO: Link to tasks documentation)
+that takes over after the handshake is done.</p>
+<p>For example, when using the <a href="https://github.com/saltyrtc/saltyrtc-task-webrtc-js">WebRTC
+task</a>:</p>
+<pre><code class="javascript">const doHandover = true;
+const maxPacketSize = 16384;
+const webrtcTask = new saltyrtcTaskWebrtc.WebRTCTask(doHandover, maxPacketSize);
+builder.usingTasks([webrtcTask]);
+</code></pre>
+
+<h3 id="connecting-as-initiator">Connecting as Initiator</h3>
+<p>If you want to connect to the server as initiator, you can use the
+<code>.asInitiator()</code> method:</p>
+<pre><code class="javascript">const client = builder.asInitiator();
+</code></pre>
+
+<h3 id="connecting-as-responder">Connecting as Responder</h3>
+<p>If you want to connect as responder, you need to provide the initiator
+information first that you have obtained from the initiator.</p>
+<pre><code class="javascript">builder.initiatorInfo(initiatorPublicPermanentKey, initiatorAuthToken);
+const client = builder.asResponder();
+</code></pre>
+
+<p>Both the initiator public permanent key as well as the initiator auth token can
+be either <code>Uint8Array</code> instances or hex-encoded strings.</p>
+<h2 id="full-example">Full example</h2>
+<p>All methods on the <code>SaltyRTCBuilder</code> support chaining. Here&rsquo;s a full example of
+an initiator configuration:</p>
+<pre><code class="javascript">const config = {
+    SALTYRTC_HOST: 'server.saltyrtc.org',
+    SALTYRTC_PORT: 9287,
+    SALTYRTC_SERVER_PUBLIC_KEY: '424280166304526b4a2874a2270d091071fcc5c98959f7d4718715626df26204',
+};
+const client = new saltyrtcClient.SaltyRTCBuilder()
+    .connectTo(config.SALTYRTC_HOST, config.SALTYRTC_PORT)
+    .withServerKey(config.SALTYRTC_SERVER_PUBLIC_KEY)
+    .withKeyStore(new saltyrtcClient.KeyStore())
+    .usingTasks([new saltyrtcTaskWebrtc.WebRTCTask(true, 16384)])
+    .withPingInterval(30)
+    .asInitiator();
+</code></pre>
+
+<p>To see a more practical example, you may also want to take a look at our <a href="https://github.com/saltyrtc/saltyrtc-demo">demo
+application</a>.</p>
+<h2 id="trusted-keys">Trusted keys</h2>
+<p>In order to reconnect to a session using a trusted key, you first need to
+restore your <code>KeyStore</code> with the private permanent key originally used to
+establish the trusted session:</p>
+<pre><code class="javascript">const keyStore = new saltyrtcClient.KeyStore(ourPrivatePermanentKey);
+</code></pre>
+
+<p>The private key can be passed in either as <code>Uint8Array</code> or as hex-encoded string.</p>
+<p>Then, on the <code>SaltyRTCBuilder</code> instance, set the trusted peer key:</p>
+<pre><code class="javascript">builder.withTrustedPeerKey(peerPublicPermanentKey);
+</code></pre>
+
+<p>The public key can be passed in either as <code>Uint8Array</code> or as hex-encoded string.</p>
+<h2 id="dynamically-determine-server-connection-info">Dynamically determine server connection info</h2>
+<p>Instead of specifying the SaltyRTC server host and port directly, you can
+instead provide an implementation of a <code>ServerInfoFactory</code> that can dynamically
+determine the connection info based on the public key of the initiator.</p>
+<p>The signature of the function must look like this:</p>
+<pre><code class="typescript">(initiatorPublicKey: string) =&gt; {host: string, port: number}
+</code></pre>
+
+<p>Example:</p>
+<p>```javascript
+builder.connectWith((initiatorPublicKey) =&gt; {
+    let host;
+    if (initiatorPublicKey.startsWith(&lsquo;a&rsquo;)) {
+        host = &lsquo;a.example.org&rsquo;;
+    } else {
+        host = &lsquo;other.example.org&rsquo;;
+    }
+    return {
+        host: host,
+        port: 8765,
+    }
+});</p>
               
             </div>
           </div>
