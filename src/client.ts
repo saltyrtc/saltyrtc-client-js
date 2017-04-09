@@ -11,7 +11,6 @@ import { AuthToken } from "./keystore";
 import { Signaling, InitiatorSignaling, ResponderSignaling } from "./signaling";
 import { EventRegistry } from "./eventregistry";
 import { u8aToHex, validateKey } from "./utils";
-import ServerInfoFactory = saltyrtc.ServerInfoFactory;
 
 
 export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
@@ -183,7 +182,7 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
     /**
      * If a ServerInfoFactory is provided, dynamically determine host and port.
      */
-    private processServerInfo(factory: ServerInfoFactory, publicKey: Uint8Array): void {
+    private processServerInfo(factory: saltyrtc.ServerInfoFactory, publicKey: Uint8Array): void {
         const publicKeyHex = u8aToHex(publicKey);
         const data = factory(publicKeyHex);
         this.host = data.host;
@@ -311,8 +310,11 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
 
     /**
      * Initialize SaltyRTC instance as responder.
+     *
+     * The authToken can be left unspecified when reconnecting to a trusted
+     * session.
      */
-    public asResponder(initiatorPubKey?: Uint8Array, authToken?: Uint8Array): SaltyRTC {
+    public asResponder(initiatorPubKey: Uint8Array, authToken?: Uint8Array): SaltyRTC {
         if (this.peerTrustedKey !== null) {
             // Initialize signaling class
             this._signaling = new ResponderSignaling(this, this.host, this.port, this.serverPublicKey,
