@@ -4,7 +4,7 @@ language: node_js
 node_js:
   - "6"
 addons:
-  firefox: "45.0"
+  firefox: "35.0"
 before_script:
   # Chrome
   - export CHROME_BIN=/usr/bin/google-chrome
