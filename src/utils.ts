@@ -56,7 +56,7 @@ export function byteToHex(value: number) {
 
 
 /**
- * Generate a random string.
+ * Generate a NON CRYPTOGRAPHICALLY SECURE random string.
  *
  * Based on http://stackoverflow.com/a/1349426/284318.
  */
