@@ -24,6 +24,8 @@ const port = 9287;
 builder.connectTo(host, port);
 ```
 
+For testing, you can use [our test server](https://saltyrtc.org/pages/getting-started.html).
+
 ### Key store
 
 The client needs to have its own public/private keypair. Create a new keypair
