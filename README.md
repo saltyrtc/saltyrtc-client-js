@@ -108,6 +108,46 @@ those, simply issue `npm run validate` in your main directory.
 
 ## Testing
 
+### 1. Preparing the Server
+
+First, clone the `saltyrtc-server-python` repository.
+
+    git clone https://github.com/saltyrtc/saltyrtc-server-python
+    cd saltyrtc-server.python
+
+Then create a test certificate for localhost, valid for 5 years.
+
+    openssl req -new -newkey rsa:1024 -nodes -sha256 \
+        -out saltyrtc.csr -keyout saltyrtc.key \
+        -subj '/C=CH/O=SaltyRTC/CN=localhost/'
+    openssl x509 -req -days 1825 \
+        -in saltyrtc.csr \
+        -signkey saltyrtc.key -out saltyrtc.crt
+
+Create a PKCS12 file containing this certificate.
+
+    openssl pkcs12 -export \
+        -out saltyrtc.pfx \
+        -inkey saltyrtc.key \
+        -in saltyrtc.crt
+
+You can import this file into your browser certificate store.
+
+Create a Python virtualenv with dependencies:
+
+    python3 -m virtualenv venv
+    venv/bin/pip install .[logging]
+
+Finally, start the server with the following test permanent key:
+
+    export SALTYRTC_SERVER_PERMANENT_KEY=0919b266ce1855419e4066fc076b39855e728768e3afa773105edd2e37037c20 # Public: 09a59a5fa6b45cb07638a3a6e347ce563a948b756fd22f9527465f7c79c2a864
+    venv/bin/saltyrtc-server -v 5 serve -p 8765 \
+        -sc saltyrtc.crt -sk saltyrtc.key \
+        -k $SALTYRTC_SERVER_PERMANENT_KEY
+
+
+### 2. Running Tests
+
 To compile the test sources, run:
 
     $ npm run rollup_tests
