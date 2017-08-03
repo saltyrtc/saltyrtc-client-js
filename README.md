@@ -124,13 +124,6 @@ Then create a test certificate for localhost, valid for 5 years.
         -in saltyrtc.csr \
         -signkey saltyrtc.key -out saltyrtc.crt
 
-Create a PKCS12 file containing this certificate.
-
-    openssl pkcs12 -export \
-        -out saltyrtc.pfx \
-        -inkey saltyrtc.key \
-        -in saltyrtc.crt
-
 You can import this file into your browser certificate store.
 
 Create a Python virtualenv with dependencies:
