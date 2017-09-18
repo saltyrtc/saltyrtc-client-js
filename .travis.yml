@@ -4,7 +4,7 @@ language: node_js
 node_js:
   - "6"
 addons:
-  firefox: "45.0"
+  firefox: "50.0"
 before_script:
   # Chrome
   - export CHROME_BIN=/usr/bin/google-chrome
@@ -22,7 +22,7 @@ before_script:
   - sudo apt-get update && sudo apt-get install -y libsodium-dev
   # Create test certificate for localhost
   - openssl req -new -newkey rsa:1024 -nodes -sha256 -out saltyrtc.csr -keyout saltyrtc.key -subj '/C=CH/O=SaltyRTC/CN=localhost/'
-  - openssl x509 -req -days 365 -in saltyrtc.csr -signkey saltyrtc.key -out saltyrtc.crt
+  - openssl x509 -req -days 365 -in saltyrtc.csr -signkey saltyrtc.key -sha256 -extfile saltyrtc.ext -out saltyrtc.crt
   # Add certificate to firefox and chrome
   - kill $CHROME_PID
   - sudo apt-get install -y libnss3-tools
