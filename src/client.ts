@@ -311,10 +311,10 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     /**
      * Initialize SaltyRTC instance as responder.
      *
-     * The authToken can be left unspecified when reconnecting to a trusted
-     * session.
+     * The initiatorPubKey and the authToken can be left unspecified when
+     * reconnecting to a trusted session.
      */
-    public asResponder(initiatorPubKey: Uint8Array, authToken?: Uint8Array): SaltyRTC {
+    public asResponder(initiatorPubKey?: Uint8Array, authToken?: Uint8Array): SaltyRTC {
         if (this.peerTrustedKey !== null) {
             // Initialize signaling class
             this._signaling = new ResponderSignaling(this, this.host, this.port, this.serverPublicKey,
