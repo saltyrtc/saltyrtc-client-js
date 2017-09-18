@@ -1,0 +1,31 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: quay.io/saltyrtc/circleci-image-js:latest
+        environment:
+          FIREFOX_BIN: xvfb-firefox
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "package.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      # Install dependencies
+      - run: npm install
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+
+      # Start SaltyRTC server
+      - run: saltyrtc-server-launcher > /saltyrtc/server.pid && sleep 2
+
+      # Run tests
+      - run: npm run rollup_tests && npm test
+      - run: node_modules/.bin/tsc --noEmit
+
+      # Stop SaltyRTC server
+      - run: kill -INT $(cat /saltyrtc/server.pid)
