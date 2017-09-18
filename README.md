@@ -1,6 +1,6 @@
 # SaltyRTC JavaScript Client
 
-[![CircleCI](https://circleci.com/gh/saltyrtc/saltyrtc-client-js/tree/master.svg?style=shield)][https://circleci.com/gh/saltyrtc/saltyrtc-client-js/tree/master]
+[![CircleCI](https://circleci.com/gh/saltyrtc/saltyrtc-client-js/tree/master.svg?style=shield)](https://circleci.com/gh/saltyrtc/saltyrtc-client-js/tree/master)
 [![Supported ES Standard](https://img.shields.io/badge/javascript-ES5%20%2F%20ES2015-yellow.svg)](https://github.com/saltyrtc/saltyrtc-client-js)
 [![npm Version](https://img.shields.io/npm/v/@saltyrtc/client.svg?maxAge=2592000)](https://www.npmjs.com/package/@saltyrtc/client)
 [![npm Downloads](https://img.shields.io/npm/dt/@saltyrtc/client.svg?maxAge=3600)](https://www.npmjs.com/package/@saltyrtc/client)
