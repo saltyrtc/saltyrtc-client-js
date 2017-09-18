@@ -1,6 +1,6 @@
 # SaltyRTC JavaScript Client
 
-[![Travis branch](https://img.shields.io/travis/saltyrtc/saltyrtc-client-js/master.svg)](https://travis-ci.org/saltyrtc/saltyrtc-client-js)
+[![CircleCI](https://circleci.com/gh/saltyrtc/saltyrtc-client-js/tree/master.svg?style=shield)][https://circleci.com/gh/saltyrtc/saltyrtc-client-js/tree/master]
 [![Supported ES Standard](https://img.shields.io/badge/javascript-ES5%20%2F%20ES2015-yellow.svg)](https://github.com/saltyrtc/saltyrtc-client-js)
 [![npm Version](https://img.shields.io/npm/v/@saltyrtc/client.svg?maxAge=2592000)](https://www.npmjs.com/package/@saltyrtc/client)
 [![npm Downloads](https://img.shields.io/npm/dt/@saltyrtc/client.svg?maxAge=3600)](https://www.npmjs.com/package/@saltyrtc/client)
@@ -117,23 +117,24 @@ First, clone the `saltyrtc-server-python` repository.
 
 Then create a test certificate for localhost, valid for 5 years.
 
-    echo "authorityKeyIdentifier=keyid,issuer" >> saltyrtc.ext
-    echo "basicConstraints=CA:FALSE" >> saltyrtc.ext
-    echo "keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment" >> saltyrtc.ext
-    echo "subjectAltName = @alt_names" >> saltyrtc.ext
-    echo "" >> saltyrtc.ext
-    echo "[alt_names]" >> saltyrtc.ext
-    echo "DNS.1 = localhost" >> saltyrtc.ext
+    openssl req \
+       -newkey rsa:1024 \
+       -x509 \
+       -nodes \
+       -keyout saltyrtc.key \
+       -new \
+       -out saltyrtc.crt \
+       -subj /CN=localhost \
+       -reqexts SAN \
+       -extensions SAN \
+       -config <(cat /etc/ssl/openssl.cnf \
+         <(printf '[SAN]\nsubjectAltName=DNS:localhost')) \
+       -sha256 \
+       -days 1825
 
-    openssl req -new -newkey rsa:1024 -nodes -sha256 \
-        -out saltyrtc.csr -keyout saltyrtc.key \
-        -subj '/C=CH/O=SaltyRTC/CN=localhost/'
-    openssl x509 -req -days 1825 \
-        -in saltyrtc.csr \
-        -sha256 -extfile saltyrtc.ext \
-        -signkey saltyrtc.key -out saltyrtc.crt
+You can import this file into your browser certificate store. For Chrome/Chromium, use this command:
 
-You can import this file into your browser certificate store.
+    certutil -d sql:$HOME/.pki/nssdb -A -t "P,," -n saltyrtc-test-ca -i saltyrtc.crt
 
 Create a Python virtualenv with dependencies:
 

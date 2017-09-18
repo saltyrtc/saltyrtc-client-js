@@ -8,21 +8,17 @@ module.exports = function(config) {
       'tests/testsuite.js'
     ],
     customLaunchers: {
-      Chrome_travis_ci: {
-        base: 'Chrome',
-        flags: ['--no-sandbox']
-      },
-      Firefox_travis_ci: {
+      Firefox_circle_ci: {
         base: 'Firefox',
-        profile: '/home/travis/.mozilla/firefox/saltyrtc',
+        profile: '/home/ci/.mozilla/firefox/saltyrtc',
       }
     }
   };
 
-  if (process.env.TRAVIS) {
-    configuration.browsers = ['Chrome_travis_ci', 'Firefox_travis_ci'];
+  if (process.env.CIRCLECI) {
+    configuration.browsers = ['ChromiumHeadless', 'Firefox_circle_ci'];
   } else {
-    configuration.browsers = ['Chrome', 'Firefox'];
+    configuration.browsers = ['Chromium', 'Firefox'];
   }
 
   config.set(configuration);
