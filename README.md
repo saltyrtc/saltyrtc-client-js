@@ -113,15 +113,24 @@ those, simply issue `npm run validate` in your main directory.
 First, clone the `saltyrtc-server-python` repository.
 
     git clone https://github.com/saltyrtc/saltyrtc-server-python
-    cd saltyrtc-server.python
+    cd saltyrtc-server-python
 
 Then create a test certificate for localhost, valid for 5 years.
+
+    echo "authorityKeyIdentifier=keyid,issuer" >> saltyrtc.ext
+    echo "basicConstraints=CA:FALSE" >> saltyrtc.ext
+    echo "keyUsage = digitalSignature, nonRepudiation, keyEncipherment, dataEncipherment" >> saltyrtc.ext
+    echo "subjectAltName = @alt_names" >> saltyrtc.ext
+    echo "" >> saltyrtc.ext
+    echo "[alt_names]" >> saltyrtc.ext
+    echo "DNS.1 = localhost" >> saltyrtc.ext
 
     openssl req -new -newkey rsa:1024 -nodes -sha256 \
         -out saltyrtc.csr -keyout saltyrtc.key \
         -subj '/C=CH/O=SaltyRTC/CN=localhost/'
     openssl x509 -req -days 1825 \
         -in saltyrtc.csr \
+        -sha256 -extfile saltyrtc.ext \
         -signkey saltyrtc.key -out saltyrtc.crt
 
 You can import this file into your browser certificate store.
