@@ -5,8 +5,7 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-/// <reference path='types/tweetnacl.d.ts' />
-
+import * as nacl from "tweetnacl";
 import {ProtocolError} from "./exceptions";
 
 export class Cookie implements saltyrtc.Cookie {

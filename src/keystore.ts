@@ -6,8 +6,8 @@
  */
 
 /// <reference path='../saltyrtc-client.d.ts' />
-/// <reference path='types/tweetnacl.d.ts' />
 
+import * as nacl from "tweetnacl";
 import {u8aToHex, validateKey} from "./utils";
 
 /**
@@ -82,7 +82,7 @@ export class Box implements saltyrtc.Box {
  */
 export class KeyStore implements saltyrtc.KeyStore {
     // The NaCl key pair
-    private _keyPair: nacl.KeyPair;
+    private _keyPair: nacl.BoxKeyPair;
 
     private logTag: string = '[SaltyRTC.KeyStore]';
 
@@ -125,7 +125,7 @@ export class KeyStore implements saltyrtc.KeyStore {
     /**
      * Return the full keypair.
      */
-    get keypair(): nacl.KeyPair {
+    get keypair(): nacl.BoxKeyPair {
         return this._keyPair;
     }
 
@@ -143,7 +143,7 @@ export class KeyStore implements saltyrtc.KeyStore {
     public decrypt(box: saltyrtc.Box, otherKey: Uint8Array): Uint8Array {
         // Decrypt data
         const data = nacl.box.open(box.data, box.nonce, otherKey, this._keyPair.secretKey);
-        if (data === false) {
+        if (!data) {
             throw 'decryption-failed'
         }
         return data as Uint8Array;
@@ -194,7 +194,7 @@ export class AuthToken implements saltyrtc.AuthToken {
      */
     public decrypt(box: saltyrtc.Box): Uint8Array {
         const data = nacl.secretbox.open(box.data, box.nonce, this._authToken);
-        if (data === false) {
+        if (!data) {
             throw 'decryption-failed'
         }
         return data as Uint8Array;
