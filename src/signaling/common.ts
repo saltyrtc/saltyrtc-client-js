@@ -6,10 +6,10 @@
  */
 
 /// <reference path='../../saltyrtc-client.d.ts' />
-/// <reference path='../types/tweetnacl.d.ts' />
 /// <reference types='msgpack-lite' />
 
 import * as msgpack from "msgpack-lite";
+import * as nacl from "tweetnacl";
 import { Box } from "../keystore";
 import { Cookie } from "../cookie";
 import { Nonce } from "../nonce";
