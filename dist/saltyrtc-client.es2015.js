@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.9.1
+ * saltyrtc-client-js v0.10.0
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -28,6 +28,8 @@
  */
 'use strict';
 
+import { box, randomBytes, secretbox } from 'tweetnacl';
+import * as nacl from 'tweetnacl';
 import { createCodec, decode, encode } from 'msgpack-lite';
 import * as msgpack from 'msgpack-lite';
 
@@ -213,10 +215,10 @@ class Box {
         return new Box(nonce, data, nonceLength);
     }
     toUint8Array() {
-        const box = new Uint8Array(this.length);
-        box.set(this._nonce);
-        box.set(this._data, this._nonceLength);
-        return box;
+        const box$$1 = new Uint8Array(this.length);
+        box$$1.set(this._nonce);
+        box$$1.set(this._data, this._nonceLength);
+        return box$$1;
     }
 }
 class KeyStore {
@@ -226,11 +228,11 @@ class KeyStore {
             throw new Error('Too many arguments in KeyStore constructor');
         }
         if (privateKey === undefined) {
-            this._keyPair = nacl.box.keyPair();
+            this._keyPair = box.keyPair();
             console.debug(this.logTag, 'New public key:', u8aToHex(this._keyPair.publicKey));
         }
         else {
-            this._keyPair = nacl.box.keyPair.fromSecretKey(validateKey(privateKey, "Private key"));
+            this._keyPair = box.keyPair.fromSecretKey(validateKey(privateKey, "Private key"));
             console.debug(this.logTag, 'Restored public key:', u8aToHex(this._keyPair.publicKey));
         }
     }
@@ -242,12 +244,12 @@ class KeyStore {
         return this._keyPair;
     }
     encrypt(bytes, nonce, otherKey) {
-        const encrypted = nacl.box(bytes, nonce, otherKey, this._keyPair.secretKey);
-        return new Box(nonce, encrypted, nacl.box.nonceLength);
+        const encrypted = box(bytes, nonce, otherKey, this._keyPair.secretKey);
+        return new Box(nonce, encrypted, box.nonceLength);
     }
-    decrypt(box, otherKey) {
-        const data = nacl.box.open(box.data, box.nonce, otherKey, this._keyPair.secretKey);
-        if (data === false) {
+    decrypt(box$$1, otherKey) {
+        const data = box.open(box$$1.data, box$$1.nonce, otherKey, this._keyPair.secretKey);
+        if (!data) {
             throw 'decryption-failed';
         }
         return data;
@@ -258,12 +260,12 @@ class AuthToken {
         this._authToken = null;
         this.logTag = '[SaltyRTC.AuthToken]';
         if (typeof bytes === 'undefined') {
-            this._authToken = nacl.randomBytes(nacl.secretbox.keyLength);
+            this._authToken = randomBytes(secretbox.keyLength);
             console.debug(this.logTag, 'Generated auth token');
         }
         else {
-            if (bytes.byteLength != nacl.secretbox.keyLength) {
-                console.error(this.logTag, 'Auth token must be', nacl.secretbox.keyLength, 'bytes long.');
+            if (bytes.byteLength != secretbox.keyLength) {
+                console.error(this.logTag, 'Auth token must be', secretbox.keyLength, 'bytes long.');
                 throw 'bad-token-length';
             }
             this._authToken = bytes;
@@ -273,12 +275,12 @@ class AuthToken {
     get keyBytes() { return this._authToken; }
     get keyHex() { return u8aToHex(this._authToken); }
     encrypt(bytes, nonce) {
-        const encrypted = nacl.secretbox(bytes, nonce, this._authToken);
-        return new Box(nonce, encrypted, nacl.secretbox.nonceLength);
+        const encrypted = secretbox(bytes, nonce, this._authToken);
+        return new Box(nonce, encrypted, secretbox.nonceLength);
     }
-    decrypt(box) {
-        const data = nacl.secretbox.open(box.data, box.nonce, this._authToken);
-        if (data === false) {
+    decrypt(box$$1) {
+        const data = secretbox.open(box$$1.data, box$$1.nonce, this._authToken);
+        if (!data) {
             throw 'decryption-failed';
         }
         return data;
@@ -294,7 +296,7 @@ class Cookie {
             this.bytes = bytes;
         }
         else {
-            this.bytes = nacl.randomBytes(Cookie.COOKIE_LENGTH);
+            this.bytes = randomBytes(Cookie.COOKIE_LENGTH);
         }
     }
     static fromArrayBuffer(buffer) {
@@ -397,9 +399,9 @@ class Nonce {
 }
 Nonce.TOTAL_LENGTH = 24;
 
-function decryptKeystore(box, keyStore, otherKey, msgType) {
+function decryptKeystore(box$$1, keyStore, otherKey, msgType) {
     try {
-        return keyStore.decrypt(box, otherKey);
+        return keyStore.decrypt(box$$1, otherKey);
     }
     catch (e) {
         if (e === 'decryption-failed') {
@@ -628,8 +630,8 @@ class Signaling {
             }
             let nonce;
             try {
-                const box = Box.fromUint8Array(new Uint8Array(ev.data), Nonce.TOTAL_LENGTH);
-                nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
+                const box$$1 = Box.fromUint8Array(new Uint8Array(ev.data), Nonce.TOTAL_LENGTH);
+                nonce = Nonce.fromArrayBuffer(box$$1.nonce.buffer);
                 try {
                     this.validateNonce(nonce);
                 }
@@ -643,13 +645,13 @@ class Signaling {
                 }
                 switch (this.getState()) {
                     case 'server-handshake':
-                        this.onServerHandshakeMessage(box, nonce);
+                        this.onServerHandshakeMessage(box$$1, nonce);
                         break;
                     case 'peer-handshake':
-                        this.onPeerHandshakeMessage(box, nonce);
+                        this.onPeerHandshakeMessage(box$$1, nonce);
                         break;
                     case 'task':
-                        this.onSignalingMessage(box, nonce);
+                        this.onSignalingMessage(box$$1, nonce);
                         break;
                     default:
                         console.warn(this.logTag, 'Received message in', this.getState(), 'signaling state. Ignoring.');
@@ -769,13 +771,13 @@ class Signaling {
         this.setState('ws-connecting');
         console.debug(this.logTag, 'Opening WebSocket connection to', url + path);
     }
-    onServerHandshakeMessage(box, nonce) {
+    onServerHandshakeMessage(box$$1, nonce) {
         let payload;
         if (this.server.handshakeState === 'new') {
-            payload = box.data;
+            payload = box$$1.data;
         }
         else {
-            payload = this.permanentKey.decrypt(box, this.server.sessionKey);
+            payload = this.permanentKey.decrypt(box$$1, this.server.sessionKey);
         }
         const msg = this.decodeMessage(payload, 'server handshake');
         switch (this.server.handshakeState) {
@@ -808,18 +810,18 @@ class Signaling {
             this.initPeerHandshake();
         }
     }
-    onSignalingMessage(box, nonce) {
+    onSignalingMessage(box$$1, nonce) {
         console.debug(this.logTag, 'Message received');
         if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
-            this.onSignalingServerMessage(box);
+            this.onSignalingServerMessage(box$$1);
         }
         else {
-            let decrypted = this.sessionKey.decrypt(box, this.getPeerSessionKey());
+            let decrypted = this.sessionKey.decrypt(box$$1, this.getPeerSessionKey());
             this.onSignalingPeerMessage(decrypted);
         }
     }
-    onSignalingServerMessage(box) {
-        const msg = this.decryptServerMessage(box);
+    onSignalingServerMessage(box$$1) {
+        const msg = this.decryptServerMessage(box$$1);
         if (msg.type === 'send-error') {
             this.handleSendError(msg);
         }
@@ -1016,12 +1018,12 @@ class Signaling {
         if (signed_keys === null || signed_keys === undefined) {
             throw new ValidationError("Server did not send signed_keys in server-auth message");
         }
-        const box = new Box(new Uint8Array(nonce.toArrayBuffer()), new Uint8Array(signed_keys), nacl.box.nonceLength);
+        const box$$1 = new Box(new Uint8Array(nonce.toArrayBuffer()), new Uint8Array(signed_keys), box.nonceLength);
         console.debug(this.logTag, "Expected server public permanent key is", u8aToHex(serverPublicKey));
         console.debug(this.logTag, "Server public session key is", u8aToHex(this.server.sessionKey));
         let decrypted;
         try {
-            decrypted = this.permanentKey.decrypt(box, serverPublicKey);
+            decrypted = this.permanentKey.decrypt(box$$1, serverPublicKey);
         }
         catch (e) {
             if (e === 'decryption-failed') {
@@ -1058,23 +1060,23 @@ class Signaling {
         if (encrypt === false) {
             return concat(nonceBytes, data);
         }
-        let box;
+        let box$$1;
         if (receiver.id === Signaling.SALTYRTC_ADDR_SERVER) {
-            box = this.encryptHandshakeDataForServer(data, nonceBytes);
+            box$$1 = this.encryptHandshakeDataForServer(data, nonceBytes);
         }
         else if (receiver.id === Signaling.SALTYRTC_ADDR_INITIATOR || isResponderId(receiver.id)) {
-            box = this.encryptHandshakeDataForPeer(receiver.id, message.type, data, nonceBytes);
+            box$$1 = this.encryptHandshakeDataForPeer(receiver.id, message.type, data, nonceBytes);
         }
         else {
             throw new ProtocolError('Bad receiver byte: ' + receiver);
         }
-        return box.toUint8Array();
+        return box$$1.toUint8Array();
     }
     encryptHandshakeDataForServer(payload, nonceBytes) {
         return this.permanentKey.encrypt(payload, nonceBytes, this.server.sessionKey);
     }
-    decryptData(box) {
-        const decryptedBytes = this.sessionKey.decrypt(box, this.getPeerSessionKey());
+    decryptData(box$$1) {
+        const decryptedBytes = this.sessionKey.decrypt(box$$1, this.getPeerSessionKey());
         const start = decryptedBytes.byteOffset;
         const end = start + decryptedBytes.byteLength;
         return decryptedBytes.buffer.slice(start, end);
@@ -1109,14 +1111,14 @@ class Signaling {
         }
         this.task = task;
     }
-    decryptPeerMessage(box, convertErrors = true) {
+    decryptPeerMessage(box$$1, convertErrors = true) {
         try {
-            const decrypted = this.sessionKey.decrypt(box, this.getPeerSessionKey());
+            const decrypted = this.sessionKey.decrypt(box$$1, this.getPeerSessionKey());
             return this.decodeMessage(decrypted, 'peer');
         }
         catch (e) {
             if (convertErrors === true && e === 'decryption-failed') {
-                const nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
+                const nonce = Nonce.fromArrayBuffer(box$$1.nonce.buffer);
                 throw new ProtocolError('Could not decrypt peer message from ' + byteToHex(nonce.source));
             }
             else {
@@ -1124,9 +1126,9 @@ class Signaling {
             }
         }
     }
-    decryptServerMessage(box) {
+    decryptServerMessage(box$$1) {
         try {
-            const decrypted = this.permanentKey.decrypt(box, this.server.sessionKey);
+            const decrypted = this.permanentKey.decrypt(box$$1, this.server.sessionKey);
             return this.decodeMessage(decrypted, 'server');
         }
         catch (e) {
@@ -1165,9 +1167,9 @@ class Signaling {
     encryptForPeer(data, nonce) {
         return this.sessionKey.encrypt(data, nonce, this.getPeerSessionKey());
     }
-    decryptFromPeer(box) {
+    decryptFromPeer(box$$1) {
         try {
-            return this.sessionKey.decrypt(box, this.getPeerSessionKey());
+            return this.sessionKey.decrypt(box$$1, this.getPeerSessionKey());
         }
         catch (e) {
             if (e === 'decryption-failed') {
@@ -1299,13 +1301,13 @@ class InitiatorSignaling extends Signaling {
             this.dropResponder(drop.id, CloseCode.DroppedByInitiator);
         }
     }
-    onPeerHandshakeMessage(box, nonce) {
+    onPeerHandshakeMessage(box$$1, nonce) {
         if (nonce.destination != this.address) {
             throw new ProtocolError('Message destination does not match our address');
         }
         let payload;
         if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
-            payload = decryptKeystore(box, this.permanentKey, this.server.sessionKey, 'server');
+            payload = decryptKeystore(box$$1, this.permanentKey, this.server.sessionKey, 'server');
             const msg = this.decodeMessage(payload, 'server');
             switch (msg.type) {
                 case 'new-responder':
@@ -1332,7 +1334,7 @@ class InitiatorSignaling extends Signaling {
                         throw new SignalingError(CloseCode.InternalError, 'Handshake state is "new" even though a trusted key is available');
                     }
                     try {
-                        payload = this.authToken.decrypt(box);
+                        payload = this.authToken.decrypt(box$$1);
                     }
                     catch (e) {
                         console.warn(this.logTag, 'Could not decrypt token message: ', e);
@@ -1346,7 +1348,7 @@ class InitiatorSignaling extends Signaling {
                 case 'token-received':
                     const peerPublicKey = this.peerTrustedKey || responder.permanentKey;
                     try {
-                        payload = this.permanentKey.decrypt(box, peerPublicKey);
+                        payload = this.permanentKey.decrypt(box$$1, peerPublicKey);
                     }
                     catch (e) {
                         if (this.peerTrustedKey !== null) {
@@ -1362,7 +1364,7 @@ class InitiatorSignaling extends Signaling {
                     this.sendKey(responder);
                     break;
                 case 'key-sent':
-                    payload = decryptKeystore(box, responder.keyStore, responder.sessionKey, 'auth');
+                    payload = decryptKeystore(box$$1, responder.keyStore, responder.sessionKey, 'auth');
                     msg = this.decodeMessage(payload, 'auth', true);
                     console.debug(this.logTag, 'Received auth');
                     this.handleAuth(msg, responder, nonce);
@@ -1618,13 +1620,13 @@ class ResponderSignaling extends Signaling {
     handlePeerHandshakeSignalingError(e, source) {
         this.resetConnection(e.closeCode);
     }
-    onPeerHandshakeMessage(box, nonce) {
+    onPeerHandshakeMessage(box$$1, nonce) {
         if (nonce.destination != this.address) {
             throw new ProtocolError('Message destination does not match our address');
         }
         let payload;
         if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
-            payload = decryptKeystore(box, this.permanentKey, this.server.sessionKey, 'server');
+            payload = decryptKeystore(box$$1, this.permanentKey, this.server.sessionKey, 'server');
             const msg = this.decodeMessage(payload, 'server');
             switch (msg.type) {
                 case 'new-initiator':
@@ -1640,7 +1642,7 @@ class ResponderSignaling extends Signaling {
             }
         }
         else if (nonce.source === Signaling.SALTYRTC_ADDR_INITIATOR) {
-            payload = this.decryptInitiatorMessage(box);
+            payload = this.decryptInitiatorMessage(box$$1);
             let msg;
             switch (this.initiator.handshakeState) {
                 case 'new':
@@ -1666,17 +1668,17 @@ class ResponderSignaling extends Signaling {
             throw new SignalingError(CloseCode.InternalError, 'Message source is neither the server nor the initiator');
         }
     }
-    decryptInitiatorMessage(box) {
+    decryptInitiatorMessage(box$$1) {
         switch (this.initiator.handshakeState) {
             case 'new':
             case 'token-sent':
             case 'key-received':
                 throw new ProtocolError('Received message in ' + this.initiator.handshakeState + ' state.');
             case 'key-sent':
-                return decryptKeystore(box, this.permanentKey, this.initiator.permanentKey, 'key');
+                return decryptKeystore(box$$1, this.permanentKey, this.initiator.permanentKey, 'key');
             case 'auth-sent':
             case 'auth-received':
-                return decryptKeystore(box, this.sessionKey, this.initiator.sessionKey, 'initiator session');
+                return decryptKeystore(box$$1, this.sessionKey, this.initiator.sessionKey, 'initiator session');
             default:
                 throw new ProtocolError('Invalid handshake state: ' + this.initiator.handshakeState);
         }

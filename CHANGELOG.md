@@ -12,6 +12,14 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.10.0 (2017-09-26)
+
+- [fixed] Fix type signature in SaltyRTC.asResponder
+- [changed] Upgrade tweetnacl to 1.0.0
+- [changed] Move npmjs.org package to organization (it's now called
+  `@saltyrtc/client`, not `saltyrtc-client`)
+- [changed] Update docs
+
 ### v0.9.1 (2017-02-13)
 
 - [changed] Updated logging format
