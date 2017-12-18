@@ -6,6 +6,7 @@
 [![npm Downloads](https://img.shields.io/npm/dt/@saltyrtc/client.svg?maxAge=3600)](https://www.npmjs.com/package/@saltyrtc/client)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/saltyrtc/saltyrtc-client-js)
 [![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/536/badge)](https://bestpractices.coreinfrastructure.org/projects/536)
+[![Chat on Gitter](https://badges.gitter.im/saltyrtc/Lobby.svg)](https://gitter.im/saltyrtc/Lobby)
 
 This is a [SaltyRTC](https://github.com/saltyrtc/saltyrtc-meta) v1
 implementation for JavaScript (ES5) written in TypeScript 2.0+.
