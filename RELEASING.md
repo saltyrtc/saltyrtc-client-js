@@ -15,7 +15,7 @@ Build dist files:
 
 Commit & tag:
 
-    $ git commit -m "Release v${VERSION}"
+    $ git commit -S${GPG_KEY} -m "Release v${VERSION}"
     $ git tag -s -u ${GPG_KEY} v${VERSION} -m "Version ${VERSION}"
 
 Push & publish:

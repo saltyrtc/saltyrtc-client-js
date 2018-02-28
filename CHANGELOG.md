@@ -12,6 +12,11 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.10.1 (2018-02-28)
+
+- [changed] Upgrade TypeScript to 2.7, make some types more specific
+- [removed] Remove deprecated `InternalError` function
+
 ### v0.10.0 (2017-09-26)
 
 - [fixed] Fix type signature in SaltyRTC.asResponder

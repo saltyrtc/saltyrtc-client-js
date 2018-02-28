@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.10.0
+ * saltyrtc-client-js v0.10.1
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -185,18 +185,6 @@ var set$1 = function set$1(object, property, value, receiver) {
 
   return value;
 };
-
-function InternalError(message) {
-    this.message = message;
-    if ('captureStackTrace' in Error) {
-        Error.captureStackTrace(this, InternalError);
-    } else {
-        this.stack = new Error().stack;
-    }
-}
-InternalError.prototype = Object.create(Error.prototype);
-InternalError.prototype.name = 'InternalError';
-InternalError.prototype.constructor = InternalError;
 
 var SignalingError = function (_Error) {
     inherits(SignalingError, _Error);
