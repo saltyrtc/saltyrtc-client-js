@@ -9,23 +9,6 @@ import { CloseCode } from "./closecode";
 
 
 /**
- * @deprecated Use SignalingError instead
- */
-export function InternalError(message: string) {
-    this.message = message;
-	// Use V8's native method if available, otherwise fallback
-    if ('captureStackTrace' in Error) {
-        (Error as any).captureStackTrace(this, InternalError);
-    } else {
-        this.stack = (new Error() as any).stack;
-	}
-}
-InternalError.prototype = Object.create(Error.prototype);
-InternalError.prototype.name = 'InternalError';
-InternalError.prototype.constructor = InternalError;
-
-
-/**
  * A SaltyRTC signaling error.
  *
  * It will result in the connection closing with the specified error code.
