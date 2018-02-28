@@ -19,7 +19,7 @@ export default {
             " * " + p.description + "\n" +
             " * " + p.homepage + "\n" +
             " *\n" +
-            " * Copyright (C) 2016-2017 " + p.author + "\n" +
+            " * Copyright (C) 2016-2018 " + p.author + "\n" +
             " *\n" +
             " * This software may be modified and distributed under the terms\n" +
             " * of the MIT license:\n" +

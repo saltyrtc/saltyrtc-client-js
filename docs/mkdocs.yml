@@ -1,7 +1,7 @@
 site_name: SaltyRTC Client for JavaScript
 site_description: Documentation for saltyrtc-client-js.
 site_author: Threema GmbH
-copyright: © 2016-2017 Threema GmbH
+copyright: © 2016-2018 Threema GmbH
 theme: readthedocs
 repo_url: https://github.com/saltyrtc/saltyrtc-client-js
 edit_uri: edit/master/docs/docs/
