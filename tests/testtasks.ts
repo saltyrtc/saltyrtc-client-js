@@ -3,7 +3,7 @@
 export class DummyTask implements saltyrtc.Task {
 
     public initialized = false;
-    public peerData: Object;
+    public peerData: object;
     protected signaling: saltyrtc.Signaling;
     protected name: string;
 
@@ -15,7 +15,7 @@ export class DummyTask implements saltyrtc.Task {
         }
     }
 
-    init(signaling: saltyrtc.Signaling, data: Object): void {
+    init(signaling: saltyrtc.Signaling, data: object): void {
         this.signaling = signaling;
         this.peerData = data;
         this.initialized = true;
@@ -40,7 +40,7 @@ export class DummyTask implements saltyrtc.Task {
         return ['dummy'];
     }
 
-    getData(): Object {
+    getData(): object {
         return {};
     }
 

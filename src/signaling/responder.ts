@@ -322,7 +322,7 @@ export class ResponderSignaling extends Signaling {
         }
 
         // Prepare task data
-        const taskData = {};
+        const taskData: saltyrtc.TaskData = {};
         for (let task of this.tasks) {
             taskData[task.getName()] = task.getData();
         }
@@ -386,7 +386,7 @@ export class ResponderSignaling extends Signaling {
      * @param data Task data
      * @throws ValidationError
      */
-    private static validateTaskInfo(name: string, data: Object): void {
+    private static validateTaskInfo(name: string, data: object): void {
         if (name.length == 0) {
             throw new ValidationError("Task name must not be empty");
         }

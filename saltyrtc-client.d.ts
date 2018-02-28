@@ -59,6 +59,8 @@ declare namespace saltyrtc {
     }
     type SaltyRTCEventHandler = (event: SaltyRTCEvent) => boolean | void;
 
+    type TaskData = { [index:string] : any };
+
     interface Signaling {
         handoverState: HandoverState;
         role: SignalingRole;
@@ -132,7 +134,7 @@ declare namespace saltyrtc {
          * @param data The data sent by the peer in the 'auth' message.
          * @throws ValidationError if task data is invalid.
          */
-        init(signaling: Signaling, data: Object): void;
+        init(signaling: Signaling, data: TaskData): void;
 
         /**
          * Used by the signaling class to notify task that the peer handshake is over.
@@ -157,7 +159,7 @@ declare namespace saltyrtc {
          * @param payload The *unencrypted* message bytes. Message will be encrypted by the task.
          * @throws SignalingError if something goes wrong.
          */
-        sendSignalingMessage(payload: Uint8Array);
+        sendSignalingMessage(payload: Uint8Array): void;
 
         /**
          * Return the task protocol name.
@@ -174,7 +176,7 @@ declare namespace saltyrtc {
         /**
          * Return the task data used for negotiation in the `auth` message.
          */
-        getData(): Object;
+        getData(): TaskData;
 
         /**
          * Close any task connections that may be open.
@@ -197,7 +199,7 @@ declare namespace saltyrtc {
         withServerKey(serverKey: Uint8Array | string): SaltyRTCBuilder;
         initiatorInfo(initiatorPublicKey: Uint8Array | string, authToken: Uint8Array | string): SaltyRTCBuilder;
         usingTasks(tasks: Task[]): SaltyRTCBuilder;
-        withPingInterval(interval: number);
+        withPingInterval(interval: number): SaltyRTCBuilder;
 
         asInitiator(): SaltyRTC;
         asResponder(): SaltyRTC;
@@ -359,7 +361,7 @@ declare namespace saltyrtc.messages {
     interface Auth extends SignalingMessage {
         type: 'auth';
         your_cookie: ArrayBuffer;
-        data: Object;
+        data: { [index:string] : any };
     }
     interface InitiatorAuth extends Auth {
         task: string;

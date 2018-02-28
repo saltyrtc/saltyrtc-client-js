@@ -3,7 +3,8 @@
         "target": "ES2015",
         "module": "es2015",
         "moduleResolution": "node",
-        "removeComments": true
+        "removeComments": true,
+        "noImplicitAny": true
     },
     "exclude": [
         "node_modules",

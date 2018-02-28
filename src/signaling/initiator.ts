@@ -389,7 +389,7 @@ export class InitiatorSignaling extends Signaling {
         }
 
         // Prepare task data
-        const taskData = {};
+        const taskData: saltyrtc.TaskData = {};
         taskData[this.task.getName()] = this.task.getData();
 
         // Send auth
@@ -452,7 +452,7 @@ export class InitiatorSignaling extends Signaling {
      * @param data Task data
      * @throws ValidationError
      */
-    private static validateTaskInfo(names: string[], data: Object): void {
+    private static validateTaskInfo(names: string[], data: object): void {
         if (names.length < 1) {
             throw new ValidationError("Task names must not be empty");
         }

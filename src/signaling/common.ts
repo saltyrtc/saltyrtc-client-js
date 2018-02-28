@@ -144,7 +144,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
     /**
      * Encode msgpack data.
      */
-    protected msgpackEncode(data: Object) {
+    protected msgpackEncode(data: object) {
         return msgpack.encode(data, this.msgpackEncodeOptions);
     }
 
@@ -249,7 +249,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
             console.info(this.logTag, 'Closed WebSocket connection');
             this.setState('closed');
             this.client.emit({type: 'connection-closed', data: ev.code});
-            const log = (reason) => console.error(this.logTag, 'Websocket close reason:', reason);
+            const log = (reason: string) => console.error(this.logTag, 'Websocket close reason:', reason);
             switch (ev.code) {
                 case CloseCode.GoingAway:
                     log('Server is being shut down');
@@ -915,7 +915,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * @param data The task data provided by the peer.
      * @throws SignalingError
      */
-    protected initTask(task: saltyrtc.Task, data: Object): void {
+    protected initTask(task: saltyrtc.Task, data: saltyrtc.TaskData): void {
         try {
             task.init(this, data);
         } catch (e) {
