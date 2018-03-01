@@ -9,7 +9,7 @@
 [![Chat on Gitter](https://badges.gitter.im/saltyrtc/Lobby.svg)](https://gitter.im/saltyrtc/Lobby)
 
 This is a [SaltyRTC](https://github.com/saltyrtc/saltyrtc-meta) v1
-implementation for JavaScript (ES5) written in TypeScript 2.0+.
+implementation for JavaScript (ES5+) written in TypeScript 2.
 
 **Warning: This is beta software. Use at your own risk. Testing and review is
 welcome!**
@@ -43,51 +43,7 @@ Make sure to manually add the following external dependencies to your project:
 
 ## Usage
 
-First, create a keypair:
-
-    let permanentKey = new saltyrtcClient.KeyStore();
-
-Then, create a SaltyRTCBuilder instance:
-
-    let builder = new saltyrtcClient.SaltyRTCBuilder()
-        .connectTo(saltyrtcHost, saltyrtcPort)
-        .withKeyStore(permanentKey);
-
-Depending on whether you're the initiator or the responder, initialize the SaltyRTC instance:
-
-    let initiator = builder.asInitiator();
-    let responder = builder.initiatorInfo(permanentKey.publicKeyBytes, initiator.authTokenBytes).asResponder();
-
-You can also use trusted keys to connect:
-
-    let trustingInitiator = builder.withTrustedPeerKey(responderKey).asInitiator();
-    let trustingResponder = builder.withTrustedPeerKey(initiatorKey).asResponder();
-
-Now you can connect both sides:
-
-    initiator.connect()
-    responder.connect()
-
-You can query the current signaling state:
-
-    >>> console.log(initiator.state)
-    server-handshake
-
-And you can register callbacks for certain events:
-
-    initiator.on('handover', () => console.log('Handover is done'));
-    responder.on('state-change', (newState) => console.log('New signaling state:', newState));
-
-The following events are available:
-
- - `state-change(saltyrtcClient.SignalingState)`: The signaling state changed.
- - `state-change:<new-state>(void)`: The signaling state change event, filtered by state.
- - `new-responder(responderId)`: A responder has connected. This event is only dispatched for the initiator.
- - `application(data)`: An application message has arrived.
- - `handover(void)`: The handover to the data channel is done.
- - `signaling-connection-lost(responderId)`: The signaling connection to the specified peer was lost.
- - `connection-closed(closeCode)`: The connection was closed.
- - `connection-error(ErrorEvent)`: A websocket connection error occured.
+See [Docs](https://saltyrtc.github.io/saltyrtc-client-js/docs/).
 
 ## Development
 
