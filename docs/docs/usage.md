@@ -115,6 +115,24 @@ const client = new saltyrtcClient.SaltyRTCBuilder()
 To see a more practical example, you may also want to take a look at our [demo
 application](https://github.com/saltyrtc/saltyrtc-demo).
 
+## Events
+
+You can register callbacks for certain events:
+
+    initiator.on('handover', () => console.log('Handover is done'));
+    responder.on('state-change', (newState) => console.log('New signaling state:', newState));
+
+The following events are available:
+
+ - `state-change(saltyrtcClient.SignalingState)`: The signaling state changed.
+ - `state-change:<new-state>(void)`: The signaling state change event, filtered by state.
+ - `new-responder(responderId)`: A responder has connected. This event is only dispatched for the initiator.
+ - `application(data)`: An application message has arrived.
+ - `handover(void)`: The handover to the data channel is done.
+ - `signaling-connection-lost(responderId)`: The signaling connection to the specified peer was lost.
+ - `connection-closed(closeCode)`: The connection was closed.
+ - `connection-error(ErrorEvent)`: A websocket connection error occured.
+
 ## Trusted keys
 
 In order to reconnect to a session using a trusted key, you first need to
