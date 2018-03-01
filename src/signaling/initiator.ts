@@ -534,13 +534,20 @@ export class InitiatorSignaling extends Signaling {
      * Send a drop-responder request to the server.
      */
     private dropResponder(responderId: number, reason: number) {
+        // Validate reason
+        if ([3001, 3002, 3004, 3005].indexOf(reason) === -1) {
+            console.warn(this.logTag, 'Invalid drop-responder reason:', reason);
+            reason = CloseCode.InternalError;
+        }
+
+        // Send message
         const message: saltyrtc.messages.DropResponder = {
             type: 'drop-responder',
             id: responderId,
             reason: reason,
         };
         const packet: Uint8Array = this.buildPacket(message, this.server);
-        console.debug(this.logTag, 'Sending drop-responder', byteToHex(responderId));
+        console.debug(this.logTag, 'Sending drop-responder', byteToHex(responderId), '(reason', reason + ')');
         this.ws.send(packet);
         this.responders.delete(responderId);
     }
