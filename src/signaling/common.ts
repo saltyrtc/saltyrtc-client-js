@@ -264,7 +264,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
                     log('Protocol error');
                     break;
                 case CloseCode.InternalError:
-                    log('Internal server error');
+                    log('Internal error');
                     break;
                 case CloseCode.DroppedByInitiator:
                     log('Dropped by initiator');
