@@ -55,5 +55,14 @@
   "peerDependencies": {
     "msgpack-lite": "^0.1.x",
     "tweetnacl": "^1.0.0"
-  }
+  },
+  "files": [
+    "dist",
+    "saltyrtc-client.d.ts",
+    "README.md",
+    "LICENSE.md",
+    "CHANGELOG.md",
+    "package.json",
+    "package-lock.json"
+  ]
 }
