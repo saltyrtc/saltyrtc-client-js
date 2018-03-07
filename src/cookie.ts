@@ -5,8 +5,8 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-import * as nacl from "tweetnacl";
-import {ProtocolError} from "./exceptions";
+import * as nacl from 'tweetnacl';
+import { ProtocolError, ValidationError } from './exceptions';
 
 export class Cookie implements saltyrtc.Cookie {
 
@@ -22,7 +22,7 @@ export class Cookie implements saltyrtc.Cookie {
     constructor(bytes?: Uint8Array) {
         if (typeof bytes !== 'undefined') {
             if (bytes.length !== 16) {
-                throw 'bad-cookie-length';
+                throw new ValidationError('Bad cookie length');
             }
             this.bytes = bytes;
         } else {
@@ -48,11 +48,19 @@ export class Cookie implements saltyrtc.Cookie {
      * Return whether or not the two cookies are equal.
      */
     public equals(otherCookie: Cookie) {
-        if (otherCookie.bytes === this.bytes) return true;
-        if (otherCookie.bytes == null || this.bytes == null) return false;
-        if (otherCookie.bytes.byteLength != this.bytes.byteLength) return false;
+        if (otherCookie.bytes === this.bytes) {
+            return true;
+        }
+        if (otherCookie.bytes == null || this.bytes == null) {
+            return false;
+        }
+        if (otherCookie.bytes.byteLength !== this.bytes.byteLength) {
+            return false;
+        }
         for (let i = 0; i < this.bytes.byteLength; i++) {
-            if (otherCookie.bytes[i] != this.bytes[i]) return false;
+            if (otherCookie.bytes[i] !== this.bytes[i]) {
+                return false;
+            }
         }
         return true;
     }
@@ -90,7 +98,7 @@ export class CookiePair implements saltyrtc.CookiePair {
     constructor(ours?: Cookie, theirs?: Cookie) {
         if (typeof ours !== 'undefined' && typeof theirs !== 'undefined') {
             if (theirs.equals(ours)) {
-                throw new ProtocolError("Their cookie matches our cookie");
+                throw new ProtocolError('Their cookie matches our cookie');
             }
             this._ours = ours;
             this._theirs = theirs;
@@ -122,7 +130,7 @@ export class CookiePair implements saltyrtc.CookiePair {
      */
     public set theirs(cookie: saltyrtc.Cookie) {
         if (cookie.equals(this._ours)) {
-            throw new ProtocolError("Their cookie matches our cookie");
+            throw new ProtocolError('Their cookie matches our cookie');
         }
         this._theirs = cookie;
     }

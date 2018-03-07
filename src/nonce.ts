@@ -5,8 +5,8 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-import { Cookie } from "./cookie";
-
+import { Cookie } from './cookie';
+import { ValidationError } from './exceptions';
 
 /**
  * A SaltyRTC signaling channel nonce.
@@ -46,18 +46,21 @@ export class Nonce {
     get cookie() { return this._cookie; }
     get overflow() { return this._overflow; }
     get sequenceNumber() { return this._sequenceNumber; }
-    get combinedSequenceNumber() { return (this._overflow << 32) + this._sequenceNumber; }
+    get combinedSequenceNumber() {
+        // tslint:disable-next-line:no-bitwise
+        return (this._overflow << 32) + this._sequenceNumber;
+    }
     get source() { return this._source; }
     get destination() { return this._destination; }
 
     /**
      * Create a signaling nonce from an ArrayBuffer.
      *
-     * If packet is not exactly 24 bytes long, throw an exception.
+     * If packet is not exactly 24 bytes long, throw a `ValidationError`.
      */
     public static fromArrayBuffer(packet: ArrayBuffer): Nonce {
-        if (packet.byteLength != this.TOTAL_LENGTH) {
-            throw 'bad-packet-length';
+        if (packet.byteLength !== this.TOTAL_LENGTH) {
+            throw new ValidationError('bad-packet-length');
         }
 
         // Get view to buffer

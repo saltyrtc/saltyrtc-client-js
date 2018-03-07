@@ -15,6 +15,7 @@
     "dist_es2015": "rollup -c rollup/es2015.js",
     "rollup_tests": "rollup -c rollup/testing.js",
     "validate": "tsc --noEmit",
+    "lint": "tslint -c tslint.json --project tsconfig.json",
     "clean": "rm -rf src/*.js tests/testsuite.js*"
   },
   "repository": {
@@ -49,6 +50,7 @@
     "rollup-plugin-babel": "^2.6.1",
     "rollup-plugin-typescript": "^0.8.1",
     "rollup-plugin-uglify": "^1.0.1",
+    "tslint": "^5.9.1",
     "tweetnacl": "^1.0.0",
     "typescript": "^2.7.2"
   },

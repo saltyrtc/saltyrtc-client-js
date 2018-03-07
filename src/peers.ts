@@ -5,10 +5,10 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-import {CombinedSequencePair} from "./csn";
-import {KeyStore} from "./keystore";
-import {byteToHex} from "./utils";
-import {CookiePair} from "./cookie";
+import { CookiePair } from './cookie';
+import { CombinedSequencePair } from './csn';
+import { KeyStore } from './keystore';
+import { byteToHex } from './utils';
 
 /**
  * Base class for peers (initiator or responder).
@@ -63,7 +63,7 @@ export class Initiator extends Peer {
     }
 
     public get name(): string {
-        return "Initiator";
+        return 'Initiator';
     }
 }
 
@@ -72,16 +72,18 @@ export class Initiator extends Peer {
  */
 export class Responder extends Peer {
     public keyStore = new KeyStore();
-    public handshakeState: 'new' | 'token-received' | 'key-received' | 'key-sent' | 'auth-received' | 'auth-sent' = 'new';
+    public handshakeState: 'new' | 'token-received' | 'key-received'
+                         | 'key-sent' | 'auth-received' | 'auth-sent'
+                         = 'new';
     private _counter: number;
 
     constructor(id: number, counter: number) {
         super(id);
-        this._counter = counter
+        this._counter = counter;
     }
 
     public get name(): string {
-        return "Responder " + this.id;
+        return 'Responder ' + this.id;
     }
 
     get counter(): number {
@@ -102,6 +104,6 @@ export class Server extends Peer {
     }
 
     public get name(): string {
-        return "Server";
+        return 'Server';
     }
 }

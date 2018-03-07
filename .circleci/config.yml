@@ -1,19 +1,23 @@
 version: 2
-jobs:
-  build:
-    docker:
+
+references:
+  docker-config: &docker-config
       - image: quay.io/saltyrtc/circleci-image-js:latest
         environment:
           FIREFOX_BIN: xvfb-firefox
+
+jobs:
+  test:
+    docker: *docker-config
     steps:
       - checkout
+
+      # Install dependencies
       - restore_cache:
           keys:
           - v1-dependencies-{{ checksum "package.json" }}
           # fallback to using the latest cache if no exact match is found
           - v1-dependencies-
-
-      # Install dependencies
       - run: npm install
       - save_cache:
           paths:
@@ -29,3 +33,29 @@ jobs:
 
       # Stop SaltyRTC server
       - run: kill -INT $(cat /saltyrtc/server.pid)
+  lint:
+    docker: *docker-config
+    steps:
+      - checkout
+
+      # Install dependencies
+      - restore_cache:
+          keys:
+          - v1-dependencies-{{ checksum "package.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+      - run: npm install
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+
+      # Run linter
+      - run: npm run lint
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - test
+      - lint

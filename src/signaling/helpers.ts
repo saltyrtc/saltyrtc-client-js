@@ -5,10 +5,8 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-/// <reference path='../../saltyrtc-client.d.ts' />
-
-import { SignalingError } from "../exceptions";
-import { CloseCode } from "../closecode";
+import { CloseCode } from '../closecode';
+import { SignalingError } from '../exceptions';
 
 /**
  * Decrypt a KeyStore. Convert errors during decryption to an appropriate SignalingError.
@@ -21,8 +19,10 @@ export function decryptKeystore(box: saltyrtc.Box, keyStore: saltyrtc.KeyStore, 
         return keyStore.decrypt(box, otherKey);
     } catch (e) {
         if (e === 'decryption-failed') {
-            throw new SignalingError(CloseCode.ProtocolError, 'Could not decrypt ' + msgType + ' message.')
-        } else { throw e; }
+            throw new SignalingError(CloseCode.ProtocolError, 'Could not decrypt ' + msgType + ' message.');
+        } else {
+            throw e;
+        }
     }
 }
 
@@ -36,11 +36,12 @@ export function decryptAuthtoken(box: saltyrtc.Box, authToken: saltyrtc.AuthToke
         return authToken.decrypt(box);
     } catch (e) {
         if (e === 'decryption-failed') {
-            throw new SignalingError(CloseCode.ProtocolError, 'Could not decrypt ' + msgType + ' message.')
-        } else { throw e; }
+            throw new SignalingError(CloseCode.ProtocolError, 'Could not decrypt ' + msgType + ' message.');
+        } else {
+            throw e;
+        }
     }
 }
-
 
 /**
  * Return `true` if byte is a valid responder id (in the range 0x02-0xff).

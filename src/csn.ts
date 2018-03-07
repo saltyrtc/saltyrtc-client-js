@@ -5,7 +5,7 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-import { randomUint32 } from "./utils";
+import { randomUint32 } from './utils';
 
 export class CombinedSequence implements saltyrtc.CombinedSequence {
     private static SEQUENCE_NUMBER_MAX = 0x100000000; // 1<<32
