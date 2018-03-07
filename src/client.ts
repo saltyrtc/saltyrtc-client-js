@@ -375,10 +375,13 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     }
 
     /**
-     * Return the auth token as hex string.
+     * Return the auth token as hex string, or null if no auth token was set.
      */
-    public get authTokenHex(): string {
-        return u8aToHex(this.signaling.authTokenBytes);
+    public get authTokenHex(): string | null {
+        if (this.signaling.authTokenBytes) {
+            return u8aToHex(this.signaling.authTokenBytes);
+        }
+        return null;
     }
 
     /**
