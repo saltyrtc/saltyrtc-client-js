@@ -121,9 +121,19 @@ export class InitiatorSignaling extends Signaling {
      * Handle signaling error during peer handshake.
      */
     protected handlePeerHandshakeSignalingError(e: SignalingError, source: number | null): void {
-        // Simply drop the responder.
-        if (source !== null) {
-            this.dropResponder(source, e.closeCode);
+        switch (e.closeCode) {
+            case CloseCode.NoSharedTask:
+                // In case no common task could be found, the initiator SHALL
+                // send a 'close' message to the responder containing the close
+                // code 3006 (No Shared Task Found) as reason.
+                this.sendClose(CloseCode.NoSharedTask);
+                this.resetConnection(CloseCode.GoingAway);
+                break;
+            default:
+                // Simply drop the responder.
+                if (source !== null) {
+                    this.dropResponder(source, e.closeCode);
+                }
         }
     }
 

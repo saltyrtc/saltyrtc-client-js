@@ -81,6 +81,33 @@ export default () => { describe('Integration Tests', function() {
             done();
         });
 
+        spec = it('connect (task mismatch)', async (done) => {
+            console.info('===> TEST NAME:', spec.getFullName());
+
+            // Create responder with PingPongTask
+            const dummy_responder = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withKeyStore(new KeyStore())
+                .initiatorInfo(this.initiator.permanentKeyBytes, this.initiator.authTokenBytes)
+                .usingTasks([new PingPongTask()])
+                .asResponder();
+
+            expect(this.initiator.state).toEqual('new');
+            expect(dummy_responder.state).toEqual('new');
+
+            await (new Promise((resolve) => {
+                // The responder will be dropped by the initiator on task mismatch
+                this.initiator.once('state-change:closed', resolve);
+                this.initiator.connect();
+                dummy_responder.connect();
+            }));
+
+            expect(this.initiator.state).toEqual('closed');
+            expect(dummy_responder.state).toEqual('closed');
+
+            done();
+        });
+
         spec = it('connect speed', async (done) => {
             console.info('===> TEST NAME:', spec.getFullName());
             expect(this.initiator.state).toEqual('new');
