@@ -740,7 +740,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
         }
         const box = new Box(new Uint8Array(nonce.toArrayBuffer()), new Uint8Array(signed_keys), nacl.box.nonceLength);
         console.debug(this.logTag, "Expected server public permanent key is", u8aToHex(serverPublicKey));
-        console.debug(this.logTag, "Server public session key is", u8aToHex(this.server.sessionKey));
         let decrypted: Uint8Array;
         try {
             decrypted = this.permanentKey.decrypt(box, serverPublicKey);
