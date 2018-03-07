@@ -5,13 +5,10 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-/// <reference path='../saltyrtc-client.d.ts' />
-
-import { AuthToken } from "./keystore";
-import { Signaling, InitiatorSignaling, ResponderSignaling } from "./signaling";
-import { EventRegistry } from "./eventregistry";
-import { u8aToHex, validateKey } from "./utils";
-
+import { EventRegistry } from './eventregistry';
+import { AuthToken } from './keystore';
+import { InitiatorSignaling, ResponderSignaling, Signaling } from './signaling';
+import { u8aToHex, validateKey } from './utils';
 
 export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
     private hasConnectionInfo = false;
@@ -48,7 +45,7 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
      */
     private requireKeyStore(): void {
         if (!this.hasKeyStore) {
-            throw new Error("Keys not set yet. Please call .withKeyStore method first.");
+            throw new Error('Keys not set yet. Please call .withKeyStore method first.');
         }
     }
 
@@ -57,7 +54,7 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
      */
     private requireConnectionInfo(): void {
         if (!this.hasConnectionInfo) {
-            throw new Error("Connection info not set yet. Please call .connectTo method first.");
+            throw new Error('Connection info not set yet. Please call .connectTo method first.');
         }
     }
 
@@ -66,7 +63,7 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
      */
     private requireTasks(): void {
         if (!this.hasTasks) {
-            throw new Error("Tasks not set yet. Please call .usingTasks method first.");
+            throw new Error('Tasks not set yet. Please call .usingTasks method first.');
         }
     }
 
@@ -75,7 +72,7 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
      */
     private requireInitiatorInfo(): void {
         if (!this.hasInitiatorInfo) {
-            throw new Error("Initiator info not set yet. Please call .initiatorInfo method first.");
+            throw new Error('Initiator info not set yet. Please call .initiatorInfo method first.');
         }
     }
 
@@ -121,7 +118,7 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
      * @param peerTrustedKey The trusted public permanent key of the peer as hex string or Uint8Array.
      */
     public withTrustedPeerKey(peerTrustedKey: Uint8Array | string): SaltyRTCBuilder {
-        this.peerTrustedKey = validateKey(peerTrustedKey, "Peer key");
+        this.peerTrustedKey = validateKey(peerTrustedKey, 'Peer key');
         this.hasTrustedPeerKey = true;
         return this;
     }
@@ -133,7 +130,7 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
      */
     public usingTasks(tasks: saltyrtc.Task[]): SaltyRTCBuilder {
         if (tasks.length < 1) {
-            throw new Error("You must specify at least 1 task");
+            throw new Error('You must specify at least 1 task');
         }
         this.tasks = tasks;
         this.hasTasks = true;
@@ -146,7 +143,7 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
      */
     public withPingInterval(interval: number): SaltyRTCBuilder {
         if (interval < 0) {
-            throw new Error("Ping interval may not be negative");
+            throw new Error('Ping interval may not be negative');
         }
         this.pingInterval = interval;
         return this;
@@ -162,7 +159,7 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
      * @param serverKey The public permanent key of the server.
      */
     public withServerKey(serverKey: Uint8Array | string): SaltyRTCBuilder {
-        this.serverPublicKey = validateKey(serverKey, "Server public key");
+        this.serverPublicKey = validateKey(serverKey, 'Server public key');
         return this;
     }
 
@@ -173,8 +170,8 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
      * @param authToken The secret auth token as hex string or Uint8Array.
      */
     public initiatorInfo(initiatorPublicKey: Uint8Array | string, authToken: Uint8Array | string): SaltyRTCBuilder {
-        this.initiatorPublicKey = validateKey(initiatorPublicKey, "Initiator public key");
-        this.authToken = validateKey(authToken, "Auth token");
+        this.initiatorPublicKey = validateKey(initiatorPublicKey, 'Initiator public key');
+        this.authToken = validateKey(authToken, 'Auth token');
         this.hasInitiatorInfo = true;
         return this;
     }
@@ -199,7 +196,7 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
         this.requireKeyStore();
         this.requireTasks();
         if (this.hasInitiatorInfo) {
-            throw new Error('Cannot initialize as initiator if .initiatorInfo(...) has been used')
+            throw new Error('Cannot initialize as initiator if .initiatorInfo(...) has been used');
         }
 
         if (this.serverInfoFactory !== null) {
@@ -207,11 +204,15 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
         }
 
         if (this.hasTrustedPeerKey) {
-            return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.peerTrustedKey)
-                .asInitiator();
+            return new SaltyRTC(
+                this.keyStore, this.host, this.port, this.serverPublicKey,
+                this.tasks, this.pingInterval, this.peerTrustedKey,
+            ).asInitiator();
         } else {
-            return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval)
-                .asInitiator();
+            return new SaltyRTC(
+                this.keyStore, this.host, this.port, this.serverPublicKey,
+                this.tasks, this.pingInterval,
+            ).asInitiator();
         }
     }
 
@@ -228,15 +229,19 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
             if (this.serverInfoFactory !== null) {
                 this.processServerInfo(this.serverInfoFactory, this.peerTrustedKey);
             }
-            return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.peerTrustedKey)
-                .asResponder();
+            return new SaltyRTC(
+                this.keyStore, this.host, this.port, this.serverPublicKey,
+                this.tasks, this.pingInterval, this.peerTrustedKey,
+            ).asResponder();
         } else {
             this.requireInitiatorInfo();
             if (this.serverInfoFactory !== null) {
                 this.processServerInfo(this.serverInfoFactory, this.initiatorPublicKey);
             }
-            return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval)
-                .asResponder(this.initiatorPublicKey, this.authToken);
+            return new SaltyRTC(
+                this.keyStore, this.host, this.port, this.serverPublicKey,
+                this.tasks, this.pingInterval,
+            ).asResponder(this.initiatorPublicKey, this.authToken);
         }
     }
 }
@@ -270,7 +275,7 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
         if (host === undefined) {
             throw new Error('SaltyRTC must be initialized with a target host');
         }
-        if (tasks === undefined || tasks.length == 0) {
+        if (tasks === undefined || tasks.length === 0) {
             throw new Error('SaltyRTC must be initialized with at least 1 task');
         }
 
@@ -473,7 +478,7 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     public emit(event: saltyrtc.SaltyRTCEvent) {
         console.debug(this.logTag, 'New event:', event.type);
         const handlers = this.eventRegistry.get(event.type);
-        for (let handler of handlers) {
+        for (const handler of handlers) {
             try {
                 this.callHandler(handler, event);
             } catch (e) {

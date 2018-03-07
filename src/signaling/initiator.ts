@@ -5,16 +5,14 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-/// <reference path='../../saltyrtc-client.d.ts' />
-
-import { AuthToken } from "../keystore";
-import { Nonce } from "../nonce";
-import { Responder, Server } from "../peers";
-import { ProtocolError, SignalingError, ValidationError } from "../exceptions";
-import { CloseCode } from "../closecode";
-import { Signaling } from "./common";
-import { decryptKeystore, isResponderId } from "./helpers";
-import { byteToHex } from "../utils";
+import { CloseCode } from '../closecode';
+import { ProtocolError, SignalingError, ValidationError } from '../exceptions';
+import { AuthToken } from '../keystore';
+import { Nonce } from '../nonce';
+import { Responder, Server } from '../peers';
+import { byteToHex } from '../utils';
+import { Signaling } from './common';
+import { decryptKeystore, isResponderId } from './helpers';
 
 export class InitiatorSignaling extends Signaling {
 
@@ -42,7 +40,7 @@ export class InitiatorSignaling extends Signaling {
 
     /**
      * The initiator needs to use its own public permanent key as connection path.
-     **/
+     */
     protected getWebsocketPath(): string {
         return this.permanentKey.publicKeyHex;
     }
@@ -113,7 +111,7 @@ export class InitiatorSignaling extends Signaling {
             }
             return null;
         } else {
-            throw new ProtocolError("Invalid peer id: " + id);
+            throw new ProtocolError('Invalid peer id: ' + id);
         }
     }
 
@@ -166,10 +164,10 @@ export class InitiatorSignaling extends Signaling {
      * Drop the oldest inactive responder.
      */
     private dropOldestInactiveResponder(): void {
-        console.warn(this.logTag, "Dropping oldest inactive responder");
+        console.warn(this.logTag, 'Dropping oldest inactive responder');
         let drop = null;
-        for (let r of this.responders.values()) {
-            if (r.handshakeState == 'new') {
+        for (const r of this.responders.values()) {
+            if (r.handshakeState === 'new') {
                 if (drop === null) {
                     drop = r;
                 } else if (r.counter < drop.counter) {
@@ -184,7 +182,7 @@ export class InitiatorSignaling extends Signaling {
 
     protected onPeerHandshakeMessage(box: saltyrtc.Box, nonce: Nonce): void {
         // Validate nonce destination
-        if (nonce.destination != this.address) {
+        if (nonce.destination !== this.address) {
             throw new ProtocolError('Message destination does not match our address');
         }
 
@@ -199,7 +197,8 @@ export class InitiatorSignaling extends Signaling {
             const msg: saltyrtc.Message = this.decodeMessage(payload, 'server');
             switch (msg.type) {
                 case 'new-responder':
-                    console.debug(this.logTag, 'Received new-responder', byteToHex((msg as saltyrtc.messages.NewResponder).id));
+                    console.debug(this.logTag, 'Received new-responder',
+                        byteToHex((msg as saltyrtc.messages.NewResponder).id));
                     this.handleNewResponder(msg as saltyrtc.messages.NewResponder);
                     break;
                 case 'send-error':
@@ -312,18 +311,19 @@ export class InitiatorSignaling extends Signaling {
                 this.validateSignedKeys(msg.signed_keys, nonce, this.serverPublicKey);
             } catch (e) {
                 if (e.name === 'ValidationError') {
-                    throw new ProtocolError("Verification of signed_keys failed: " + e.message);
-                } throw e;
+                    throw new ProtocolError('Verification of signed_keys failed: ' + e.message);
+                }
+                throw e;
             }
         } else if (msg.signed_keys !== null && msg.signed_keys !== undefined) {
-            console.warn(this.logTag, "Server sent signed keys, but we're not verifying them.")
+            console.warn(this.logTag, "Server sent signed keys, but we're not verifying them.");
         }
 
         // Store responders
         this.responders = new Map<number, Responder>();
-        for (let id of msg.responders) {
+        for (const id of msg.responders) {
             if (!isResponderId(id)) {
-                throw new ProtocolError("Responder id " + id + " must be in the range 0x02-0xff");
+                throw new ProtocolError('Responder id ' + id + ' must be in the range 0x02-0xff');
             }
             this.processNewResponder(id);
         }
@@ -342,7 +342,7 @@ export class InitiatorSignaling extends Signaling {
     private handleNewResponder(msg: saltyrtc.messages.NewResponder): void {
         // Validate responder id
         if (!isResponderId(msg.id)) {
-            throw new ProtocolError("Responder id " + msg.id + " must be in the range 0x02-0xff");
+            throw new ProtocolError('Responder id ' + msg.id + ' must be in the range 0x02-0xff');
         }
 
         // Process responder
@@ -421,17 +421,18 @@ export class InitiatorSignaling extends Signaling {
             InitiatorSignaling.validateTaskInfo(msg.tasks, msg.data);
         } catch (e) {
             if (e.name === 'ValidationError') {
-                throw new ProtocolError("Peer sent invalid task info: " + e.message);
-            } throw e;
+                throw new ProtocolError('Peer sent invalid task info: ' + e.message);
+            }
+            throw e;
         }
 
         // Select task
         const task: saltyrtc.Task = InitiatorSignaling.chooseCommonTask(this.tasks, msg.tasks);
         if (task === null) {
             console.debug(this.logTag, 'We requested:', this.tasks.map((t) => t.getName()), 'Peer offered:', msg.tasks);
-            throw new SignalingError(CloseCode.NoSharedTask, "No shared task could be found");
+            throw new SignalingError(CloseCode.NoSharedTask, 'No shared task could be found');
         } else {
-            console.log(this.logTag, "Task", task.getName(), "has been selected");
+            console.log(this.logTag, 'Task', task.getName(), 'has been selected');
         }
 
         // Initialize task
@@ -455,17 +456,17 @@ export class InitiatorSignaling extends Signaling {
      */
     private static validateTaskInfo(names: string[], data: object): void {
         if (names.length < 1) {
-            throw new ValidationError("Task names must not be empty");
+            throw new ValidationError('Task names must not be empty');
         }
         if (Object.keys(data).length < 1) {
-            throw new ValidationError("Task data must not be empty");
+            throw new ValidationError('Task data must not be empty');
         }
-        if (names.length != Object.keys(data).length) {
-            throw new ValidationError("Task data must contain an entry for every task");
+        if (names.length !== Object.keys(data).length) {
+            throw new ValidationError('Task data must contain an entry for every task');
         }
-        for (let task of names) {
+        for (const task of names) {
             if (!data.hasOwnProperty(task)) {
-                throw new ValidationError("Task data must contain an entry for every task");
+                throw new ValidationError('Task data must contain an entry for every task');
             }
         }
     }
@@ -477,7 +478,7 @@ export class InitiatorSignaling extends Signaling {
      * @returns The selected task, or null if no common task could be found.
      */
     private static chooseCommonTask(ourTasks: saltyrtc.Task[], theirTasks: string[]): saltyrtc.Task {
-        for (let task of ourTasks) {
+        for (const task of ourTasks) {
             if (theirTasks.indexOf(task.getName()) !== -1) {
                 return task;
             }
@@ -491,7 +492,7 @@ export class InitiatorSignaling extends Signaling {
     protected _handleSendError(receiver: number): void {
         // Validate receiver byte
         if (!isResponderId(receiver)) {
-            throw new ProtocolError("Outgoing c2c messages must have been sent to a responder");
+            throw new ProtocolError('Outgoing c2c messages must have been sent to a responder');
         }
 
         let notify = false;
@@ -499,7 +500,7 @@ export class InitiatorSignaling extends Signaling {
             // Get responder
             const responder: Responder = this.responders.get(receiver);
             if (responder === null || responder === undefined) {
-                console.warn(this.logTag, "Got send-error message for unknown responder", receiver);
+                console.warn(this.logTag, 'Got send-error message for unknown responder', receiver);
             } else {
                 notify = true;
                 // Drop information about responder
@@ -511,12 +512,12 @@ export class InitiatorSignaling extends Signaling {
                 this.resetConnection(CloseCode.ProtocolError);
                 // TODO: Maybe keep ws connection open and wait for reconnect (#63)
             } else {
-                console.warn(this.logTag, "Got send-error message for unknown responder", receiver);
+                console.warn(this.logTag, 'Got send-error message for unknown responder', receiver);
             }
         }
 
         if (notify === true) {
-            this.client.emit({type: "signaling-connection-lost", data: receiver});
+            this.client.emit({type: 'signaling-connection-lost', data: receiver});
         }
     }
 
@@ -525,7 +526,7 @@ export class InitiatorSignaling extends Signaling {
      */
     private dropResponders(reason: number): void {
         console.debug(this.logTag, 'Dropping', this.responders.size, 'other responders.');
-        for (let id of this.responders.keys()) {
+        for (const id of this.responders.keys()) {
             this.dropResponder(id, reason);
         }
     }

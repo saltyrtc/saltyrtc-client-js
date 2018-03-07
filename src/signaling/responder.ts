@@ -5,16 +5,14 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-/// <reference path='../../saltyrtc-client.d.ts' />
-
-import { KeyStore } from "../keystore";
-import { Nonce } from "../nonce";
-import { Initiator, Server } from "../peers";
-import { ProtocolError, SignalingError, ValidationError } from "../exceptions";
-import { CloseCode } from "../closecode";
-import { u8aToHex, byteToHex } from "../utils";
-import { Signaling } from "./common";
-import { decryptKeystore, isResponderId } from "./helpers";
+import { CloseCode } from '../closecode';
+import { ProtocolError, SignalingError, ValidationError } from '../exceptions';
+import { KeyStore } from '../keystore';
+import { Nonce } from '../nonce';
+import { Initiator, Server } from '../peers';
+import { byteToHex, u8aToHex } from '../utils';
+import { Signaling } from './common';
+import { decryptKeystore, isResponderId } from './helpers';
 
 export class ResponderSignaling extends Signaling {
 
@@ -28,7 +26,8 @@ export class ResponderSignaling extends Signaling {
     constructor(client: saltyrtc.SaltyRTC, host: string, port: number, serverKey: Uint8Array,
                 tasks: saltyrtc.Task[], pingInterval: number,
                 permanentKey: saltyrtc.KeyStore, initiatorPubKey: Uint8Array, authToken?: saltyrtc.AuthToken) {
-        super(client, host, port, serverKey, tasks, pingInterval, permanentKey, authToken === undefined ? initiatorPubKey : undefined);
+        super(client, host, port, serverKey, tasks, pingInterval,
+              permanentKey, authToken === undefined ? initiatorPubKey : undefined);
         this.role = 'responder';
         this.initiator = new Initiator(initiatorPubKey);
         if (authToken !== undefined) {
@@ -41,7 +40,7 @@ export class ResponderSignaling extends Signaling {
 
     /**
      * The responder needs to use the initiator public permanent key as connection path.
-     **/
+     */
     protected getWebsocketPath(): string {
         return u8aToHex(this.initiator.permanentKey);
     }
@@ -102,7 +101,7 @@ export class ResponderSignaling extends Signaling {
         } else if (id === Signaling.SALTYRTC_ADDR_INITIATOR) {
             return this.initiator;
         } else {
-            throw new ProtocolError("Invalid peer id: " + id);
+            throw new ProtocolError('Invalid peer id: ' + id);
         }
     }
 
@@ -116,7 +115,7 @@ export class ResponderSignaling extends Signaling {
 
     protected onPeerHandshakeMessage(box: saltyrtc.Box, nonce: Nonce): void {
         // Validate nonce destination
-        if (nonce.destination != this.address) {
+        if (nonce.destination !== this.address) {
             throw new ProtocolError('Message destination does not match our address');
         }
 
@@ -219,7 +218,7 @@ export class ResponderSignaling extends Signaling {
     protected handleServerAuth(msg: saltyrtc.messages.ServerAuth, nonce: Nonce): void {
         if (nonce.destination > 0xff || nonce.destination < 0x02) {
             console.error(this.logTag, 'Invalid nonce destination:', nonce.destination);
-            throw 'bad-nonce-destination';
+            throw new ValidationError('Invalid nonce destination: ' + nonce.destination);
         }
         this.address = nonce.destination;
         console.debug(this.logTag, 'Server assigned address', byteToHex(this.address));
@@ -234,11 +233,12 @@ export class ResponderSignaling extends Signaling {
                 this.validateSignedKeys(msg.signed_keys, nonce, this.serverPublicKey);
             } catch (e) {
                 if (e.name === 'ValidationError') {
-                    throw new ProtocolError("Verification of signed_keys failed: " + e.message);
-                } throw e;
+                    throw new ProtocolError('Verification of signed_keys failed: ' + e.message);
+                }
+                throw e;
             }
         } else if (msg.signed_keys !== null && msg.signed_keys !== undefined) {
-            console.warn(this.logTag, "Server sent signed keys, but we're not verifying them.")
+            console.warn(this.logTag, "Server sent signed keys, but we're not verifying them.");
         }
 
         this.initiator.connected = msg.initiator_connected;
@@ -323,7 +323,7 @@ export class ResponderSignaling extends Signaling {
 
         // Prepare task data
         const taskData: saltyrtc.TaskData = {};
-        for (let task of this.tasks) {
+        for (const task of this.tasks) {
             taskData[task.getName()] = task.getData();
         }
         const taskNames = this.tasks.map((task) => task.getName());
@@ -353,23 +353,24 @@ export class ResponderSignaling extends Signaling {
             ResponderSignaling.validateTaskInfo(msg.task, msg.data);
         } catch (e) {
             if (e.name === 'ValidationError') {
-                throw new ProtocolError("Peer sent invalid task info: " + e.message);
-            } throw e;
+                throw new ProtocolError('Peer sent invalid task info: ' + e.message);
+            }
+            throw e;
         }
 
         // Find selected task
         let selectedTask: saltyrtc.Task = null;
-        for (let task of this.tasks) {
+        for (const task of this.tasks) {
             if (task.getName() === msg.task) {
                 selectedTask = task;
-                console.info(this.logTag, "Task", msg.task, "has been selected");
+                console.info(this.logTag, 'Task', msg.task, 'has been selected');
                 break;
             }
         }
 
         // Initialize task
         if (selectedTask === null) {
-            throw new SignalingError(CloseCode.ProtocolError, "Initiator selected unknown task");
+            throw new SignalingError(CloseCode.ProtocolError, 'Initiator selected unknown task');
         } else {
             this.initTask(selectedTask, msg.data[selectedTask.getName()]);
         }
@@ -387,17 +388,17 @@ export class ResponderSignaling extends Signaling {
      * @throws ValidationError
      */
     private static validateTaskInfo(name: string, data: object): void {
-        if (name.length == 0) {
-            throw new ValidationError("Task name must not be empty");
+        if (name.length === 0) {
+            throw new ValidationError('Task name must not be empty');
         }
         if (Object.keys(data).length < 1) {
-            throw new ValidationError("Task data must not be empty");
+            throw new ValidationError('Task data must not be empty');
         }
         if (Object.keys(data).length > 1) {
-            throw new ValidationError("Task data must contain exactly 1 key");
+            throw new ValidationError('Task data must contain exactly 1 key');
         }
         if (!data.hasOwnProperty(name)) {
-            throw new ValidationError("Task data must contain an entry for the chosen task");
+            throw new ValidationError('Task data must contain an entry for the chosen task');
         }
     }
 
@@ -406,12 +407,12 @@ export class ResponderSignaling extends Signaling {
      */
     protected _handleSendError(receiver: number): void {
         // Validate receiver byte
-        if (receiver != Signaling.SALTYRTC_ADDR_INITIATOR) {
-            throw new ProtocolError("Outgoing c2c messages must have been sent to the initiator");
+        if (receiver !== Signaling.SALTYRTC_ADDR_INITIATOR) {
+            throw new ProtocolError('Outgoing c2c messages must have been sent to the initiator');
         }
 
         // Notify application
-        this.client.emit({type: "signaling-connection-lost", data: receiver});
+        this.client.emit({type: 'signaling-connection-lost', data: receiver});
 
         // Reset connection
         this.resetConnection(CloseCode.ProtocolError);

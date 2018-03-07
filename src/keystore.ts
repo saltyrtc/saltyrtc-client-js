@@ -5,10 +5,10 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-/// <reference path='../saltyrtc-client.d.ts' />
+// tslint:disable:no-string-throw
 
-import * as nacl from "tweetnacl";
-import {u8aToHex, validateKey} from "./utils";
+import * as nacl from 'tweetnacl';
+import { u8aToHex, validateKey } from './utils';
 
 /**
  * A `Box` contains a nonce and encrypted data.
@@ -75,7 +75,6 @@ export class Box implements saltyrtc.Box {
 
 }
 
-
 /**
  * A KeyStore holds public and private keys and can handle encryption and
  * decryption.
@@ -97,7 +96,7 @@ export class KeyStore implements saltyrtc.KeyStore {
             this._keyPair = nacl.box.keyPair();
             console.debug(this.logTag, 'New public key:', u8aToHex(this._keyPair.publicKey));
         } else {
-            this._keyPair = nacl.box.keyPair.fromSecretKey(validateKey(privateKey, "Private key"));
+            this._keyPair = nacl.box.keyPair.fromSecretKey(validateKey(privateKey, 'Private key'));
             console.debug(this.logTag, 'Restored public key:', u8aToHex(this._keyPair.publicKey));
         }
     }
@@ -144,12 +143,11 @@ export class KeyStore implements saltyrtc.KeyStore {
         // Decrypt data
         const data = nacl.box.open(box.data, box.nonce, otherKey, this._keyPair.secretKey);
         if (!data) {
-            throw 'decryption-failed'
+            throw 'decryption-failed';
         }
         return data as Uint8Array;
     }
 }
-
 
 export class AuthToken implements saltyrtc.AuthToken {
 
@@ -162,7 +160,7 @@ export class AuthToken implements saltyrtc.AuthToken {
             this._authToken = nacl.randomBytes(nacl.secretbox.keyLength);
             console.debug(this.logTag, 'Generated auth token');
         } else {
-            if (bytes.byteLength != nacl.secretbox.keyLength) {
+            if (bytes.byteLength !== nacl.secretbox.keyLength) {
                 console.error(this.logTag, 'Auth token must be', nacl.secretbox.keyLength, 'bytes long.');
                 throw 'bad-token-length';
             }
@@ -195,7 +193,7 @@ export class AuthToken implements saltyrtc.AuthToken {
     public decrypt(box: saltyrtc.Box): Uint8Array {
         const data = nacl.secretbox.open(box.data, box.nonce, this._authToken);
         if (!data) {
-            throw 'decryption-failed'
+            throw 'decryption-failed';
         }
         return data as Uint8Array;
     }

@@ -1,3 +1,10 @@
+/**
+ * Copyright (C) 2016-2018 Threema GmbH
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the `LICENSE.md` file for details.
+ */
+
 export class HandoverState {
 
     private _local: boolean;
@@ -11,16 +18,16 @@ export class HandoverState {
         return this._local;
     }
 
-    public get peer(): boolean {
-        return this._peer;
-    }
-
     public set local(state: boolean) {
         const wasBoth = this.both;
         this._local = state;
         if (!wasBoth && this.both && this.onBoth !== undefined) {
             this.onBoth();
         }
+    }
+
+    public get peer(): boolean {
+        return this._peer;
     }
 
     public set peer(state: boolean) {

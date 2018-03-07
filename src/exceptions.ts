@@ -5,8 +5,7 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-import { CloseCode } from "./closecode";
-
+import { CloseCode } from './closecode';
 
 /**
  * A SaltyRTC signaling error.
@@ -22,7 +21,6 @@ export class SignalingError extends Error {
         this.name = 'SignalingError';
     }
 }
-
 
 /**
  * A signaling error with the close code hardcoded to ProtocolError.
@@ -43,7 +41,6 @@ export class ConnectionError extends Error {
         this.name = 'ConnectionError';
     }
 }
-
 
 /**
  * Errors related to validation.
