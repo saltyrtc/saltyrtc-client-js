@@ -452,9 +452,16 @@ export abstract class Signaling implements saltyrtc.Signaling {
         } else if (msg.type === 'application') {
             console.debug(this.logTag, 'Received application message');
             this.handleApplication(msg as saltyrtc.messages.Application);
-        } else if (this.task !== null && this.task.getSupportedMessageTypes().indexOf(msg.type) !== -1) {
-            console.debug(this.logTag, 'Received', msg.type, '[' + this.task.getName() + ']');
-            this.task.onTaskMessage(msg as saltyrtc.messages.TaskMessage);
+        } else if (this.task !== null) {
+            let messageSupportedByTask = this.task.getSupportedMessageTypes().indexOf(msg.type) !== -1;
+            if (messageSupportedByTask) {
+                console.debug(this.logTag, 'Received', msg.type, '[' + this.task.getName() + ']');
+                this.task.onTaskMessage(msg as saltyrtc.messages.TaskMessage);
+            } else {
+                console.error(this.logTag, 'Received', msg.type, 'message which is not supported by the',
+                    this.task.getName(), 'task');
+                this.resetConnection(CloseCode.ProtocolError);
+            }
         } else {
             console.warn(this.logTag, 'Received message with invalid type from peer:', msg.type);
         }
