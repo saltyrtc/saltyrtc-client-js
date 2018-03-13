@@ -8,6 +8,7 @@ Set variables:
 Update version numbers:
 
     $ vim -p package.json CHANGELOG.md
+    $ npm install
 
 Build dist files:
 
