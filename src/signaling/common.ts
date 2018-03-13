@@ -453,7 +453,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
             console.debug(this.logTag, 'Received application message');
             this.handleApplication(msg as saltyrtc.messages.Application);
         } else if (this.task !== null) {
-            let messageSupportedByTask = this.task.getSupportedMessageTypes().indexOf(msg.type) !== -1;
+            const messageSupportedByTask = this.task.getSupportedMessageTypes().indexOf(msg.type) !== -1;
             if (messageSupportedByTask) {
                 console.debug(this.logTag, 'Received', msg.type, '[' + this.task.getName() + ']');
                 this.task.onTaskMessage(msg as saltyrtc.messages.TaskMessage);
