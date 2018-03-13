@@ -144,6 +144,14 @@ declare namespace saltyrtc {
         onPeerHandshakeDone(): void;
 
         /**
+         * This method is called by SaltyRTC when a 'disconnected' message
+         * arrives through the WebSocket.
+         *
+         * @param id The responder ID of the peer that disconnected.
+         */
+        onDisconnected(id: number): void;
+
+        /**
          * This method is called by SaltyRTC when a task related message
          * arrives through the WebSocket.
          *
@@ -289,7 +297,7 @@ declare namespace saltyrtc.messages {
     type MessageType = 'server-hello' | 'client-hello' | 'client-auth'
                      | 'server-auth' | 'new-initiator' | 'new-responder'
                      | 'drop-responder' | 'send-error' | 'token' | 'key'
-                     | 'auth' | 'restart' | 'close' | 'application';
+                     | 'auth' | 'restart' | 'close' | 'disconnected' | 'application';
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#server-hello
     interface ServerHello extends SignalingMessage {
@@ -379,6 +387,12 @@ declare namespace saltyrtc.messages {
     interface Close extends SignalingMessage {
         type: 'close';
         reason: number;
+    }
+
+    // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#disconnected-message
+    interface Disconnected extends SignalingMessage {
+        type: 'disconnected';
+        id: number;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#application-message
