@@ -12,6 +12,14 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.11.0 (2018-03-13)
+
+- [fixed] SaltyRTC.authTokenHex: Add null checks
+- [added] Support for 'disconnected' messages (#89)
+- [changed] `Task` interface: Add `onDisconnected` method (#90)
+- [changed] Only pass task messages to task if supported
+- [changed] Add tslint to the codebase (#88)
+
 ### v0.10.1 (2018-02-28)
 
 - [changed] Upgrade TypeScript to 2.7, make some types more specific

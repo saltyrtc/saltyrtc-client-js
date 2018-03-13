@@ -1,9 +1,9 @@
 /**
- * saltyrtc-client-js v0.10.1
+ * saltyrtc-client-js v0.11.0
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
- * Copyright (C) 2016-2017 Threema GmbH
+ * Copyright (C) 2016-2018 Threema GmbH
  *
  * This software may be modified and distributed under the terms
  * of the MIT license:
@@ -32,6 +32,73 @@ import { box, randomBytes, secretbox } from 'tweetnacl';
 import * as nacl from 'tweetnacl';
 import { createCodec, decode, encode } from 'msgpack-lite';
 import * as msgpack from 'msgpack-lite';
+
+class EventRegistry {
+    constructor() {
+        this.map = new Map();
+    }
+    register(eventType, handler) {
+        if (typeof eventType === 'string') {
+            this.set(eventType, handler);
+        }
+        else {
+            for (const et of eventType) {
+                this.set(et, handler);
+            }
+        }
+    }
+    unregister(eventType, handler) {
+        if (typeof eventType === 'string') {
+            if (!this.map.has(eventType)) {
+                return;
+            }
+            if (typeof handler === 'undefined') {
+                this.map.delete(eventType);
+            }
+            else {
+                const list = this.map.get(eventType);
+                const index = list.indexOf(handler);
+                if (index !== -1) {
+                    list.splice(index, 1);
+                }
+            }
+        }
+        else {
+            for (const et of eventType) {
+                this.unregister(et, handler);
+            }
+        }
+    }
+    set(key, value) {
+        if (this.map.has(key)) {
+            const list = this.map.get(key);
+            if (list.indexOf(value) === -1) {
+                list.push(value);
+            }
+        }
+        else {
+            this.map.set(key, [value]);
+        }
+    }
+    get(eventType) {
+        const handlers = [];
+        if (typeof eventType === 'string') {
+            if (this.map.has(eventType)) {
+                handlers.push.apply(handlers, this.map.get(eventType));
+            }
+        }
+        else {
+            for (const et of eventType) {
+                for (const handler of this.get(et)) {
+                    if (handlers.indexOf(handler) === -1) {
+                        handlers.push(handler);
+                    }
+                }
+            }
+        }
+        return handlers;
+    }
+}
 
 var CloseCode;
 (function (CloseCode) {
@@ -106,15 +173,18 @@ class ValidationError extends Error {
 
 function u8aToHex(array) {
     const results = [];
-    for (let arrayByte of array) {
+    for (const arrayByte of array) {
         results.push(arrayByte.toString(16).replace(/^([\da-f])$/, '0$1'));
     }
     return results.join('');
 }
 function hexToU8a(hexstring) {
-    let array, i, j, k, ref;
-    j = 0;
-    if (hexstring.length % 2 == 1) {
+    let array;
+    let i;
+    let j = 0;
+    let k;
+    let ref;
+    if (hexstring.length % 2 === 1) {
         hexstring = '0' + hexstring;
     }
     array = new Uint8Array(hexstring.length / 2);
@@ -133,12 +203,12 @@ function randomUint32() {
 }
 function concat(...arrays) {
     let totalLength = 0;
-    for (let arr of arrays) {
+    for (const arr of arrays) {
         totalLength += arr.length;
     }
     const result = new Uint8Array(totalLength);
     let offset = 0;
-    for (let arr of arrays) {
+    for (const arr of arrays) {
         result.set(arr, offset);
         offset += arr.length;
     }
@@ -148,7 +218,7 @@ function concat(...arrays) {
 function isString(value) {
     return typeof value === 'string' || value instanceof String;
 }
-function validateKey(key, name = "Key") {
+function validateKey(key, name = 'Key') {
     let out;
     if (isString(key)) {
         out = hexToU8a(key);
@@ -157,15 +227,15 @@ function validateKey(key, name = "Key") {
         out = key;
     }
     else {
-        throw new ValidationError(name + " must be an Uint8Array or a hex string");
+        throw new ValidationError(name + ' must be an Uint8Array or a hex string');
     }
-    if (out.byteLength != 32) {
-        throw new ValidationError(name + " must be 32 bytes long");
+    if (out.byteLength !== 32) {
+        throw new ValidationError(name + ' must be 32 bytes long');
     }
     return out;
 }
 function arraysAreEqual(a1, a2) {
-    if (a1.length != a2.length) {
+    if (a1.length !== a2.length) {
         return false;
     }
     for (let i = 0; i < a1.length; i++) {
@@ -220,7 +290,7 @@ class KeyStore {
             console.debug(this.logTag, 'New public key:', u8aToHex(this._keyPair.publicKey));
         }
         else {
-            this._keyPair = box.keyPair.fromSecretKey(validateKey(privateKey, "Private key"));
+            this._keyPair = box.keyPair.fromSecretKey(validateKey(privateKey, 'Private key'));
             console.debug(this.logTag, 'Restored public key:', u8aToHex(this._keyPair.publicKey));
         }
     }
@@ -252,7 +322,7 @@ class AuthToken {
             console.debug(this.logTag, 'Generated auth token');
         }
         else {
-            if (bytes.byteLength != secretbox.keyLength) {
+            if (bytes.byteLength !== secretbox.keyLength) {
                 console.error(this.logTag, 'Auth token must be', secretbox.keyLength, 'bytes long.');
                 throw 'bad-token-length';
             }
@@ -279,7 +349,7 @@ class Cookie {
     constructor(bytes) {
         if (typeof bytes !== 'undefined') {
             if (bytes.length !== 16) {
-                throw 'bad-cookie-length';
+                throw new ValidationError('Bad cookie length');
             }
             this.bytes = bytes;
         }
@@ -294,15 +364,19 @@ class Cookie {
         return this.bytes.buffer.slice(this.bytes.byteOffset, this.bytes.byteLength);
     }
     equals(otherCookie) {
-        if (otherCookie.bytes === this.bytes)
+        if (otherCookie.bytes === this.bytes) {
             return true;
-        if (otherCookie.bytes == null || this.bytes == null)
+        }
+        if (otherCookie.bytes == null || this.bytes == null) {
             return false;
-        if (otherCookie.bytes.byteLength != this.bytes.byteLength)
+        }
+        if (otherCookie.bytes.byteLength !== this.bytes.byteLength) {
             return false;
+        }
         for (let i = 0; i < this.bytes.byteLength; i++) {
-            if (otherCookie.bytes[i] != this.bytes[i])
+            if (otherCookie.bytes[i] !== this.bytes[i]) {
                 return false;
+            }
         }
         return true;
     }
@@ -314,7 +388,7 @@ class CookiePair {
         this._theirs = null;
         if (typeof ours !== 'undefined' && typeof theirs !== 'undefined') {
             if (theirs.equals(ours)) {
-                throw new ProtocolError("Their cookie matches our cookie");
+                throw new ProtocolError('Their cookie matches our cookie');
             }
             this._ours = ours;
             this._theirs = theirs;
@@ -341,7 +415,7 @@ class CookiePair {
     }
     set theirs(cookie) {
         if (cookie.equals(this._ours)) {
-            throw new ProtocolError("Their cookie matches our cookie");
+            throw new ProtocolError('Their cookie matches our cookie');
         }
         this._theirs = cookie;
     }
@@ -358,12 +432,14 @@ class Nonce {
     get cookie() { return this._cookie; }
     get overflow() { return this._overflow; }
     get sequenceNumber() { return this._sequenceNumber; }
-    get combinedSequenceNumber() { return (this._overflow << 32) + this._sequenceNumber; }
+    get combinedSequenceNumber() {
+        return (this._overflow << 32) + this._sequenceNumber;
+    }
     get source() { return this._source; }
     get destination() { return this._destination; }
     static fromArrayBuffer(packet) {
-        if (packet.byteLength != this.TOTAL_LENGTH) {
-            throw 'bad-packet-length';
+        if (packet.byteLength !== this.TOTAL_LENGTH) {
+            throw new ValidationError('bad-packet-length');
         }
         const view = new DataView(packet);
         const cookie = new Cookie(new Uint8Array(packet, 0, 16));
@@ -386,60 +462,6 @@ class Nonce {
     }
 }
 Nonce.TOTAL_LENGTH = 24;
-
-function decryptKeystore(box$$1, keyStore, otherKey, msgType) {
-    try {
-        return keyStore.decrypt(box$$1, otherKey);
-    }
-    catch (e) {
-        if (e === 'decryption-failed') {
-            throw new SignalingError(CloseCode.ProtocolError, 'Could not decrypt ' + msgType + ' message.');
-        }
-        else {
-            throw e;
-        }
-    }
-}
-
-function isResponderId(id) {
-    return id >= 0x02 && id <= 0xff;
-}
-
-class HandoverState {
-    constructor() {
-        this.reset();
-    }
-    get local() {
-        return this._local;
-    }
-    get peer() {
-        return this._peer;
-    }
-    set local(state) {
-        const wasBoth = this.both;
-        this._local = state;
-        if (!wasBoth && this.both && this.onBoth !== undefined) {
-            this.onBoth();
-        }
-    }
-    set peer(state) {
-        const wasBoth = this.both;
-        this._peer = state;
-        if (!wasBoth && this.both && this.onBoth !== undefined) {
-            this.onBoth();
-        }
-    }
-    get both() {
-        return this._local === true && this._peer === true;
-    }
-    get any() {
-        return this._local === true || this._peer === true;
-    }
-    reset() {
-        this._local = false;
-        this._peer = false;
-    }
-}
 
 class CombinedSequence {
     constructor() {
@@ -516,7 +538,7 @@ class Initiator extends Peer {
         this.permanentKey = permanentKey;
     }
     get name() {
-        return "Initiator";
+        return 'Initiator';
     }
 }
 Initiator.ID = 0x01;
@@ -528,7 +550,7 @@ class Responder extends Peer {
         this._counter = counter;
     }
     get name() {
-        return "Responder " + this.id;
+        return 'Responder ' + this.id;
     }
     get counter() {
         return this._counter;
@@ -540,10 +562,64 @@ class Server extends Peer {
         this.handshakeState = 'new';
     }
     get name() {
-        return "Server";
+        return 'Server';
     }
 }
 Server.ID = 0x00;
+
+class HandoverState {
+    constructor() {
+        this.reset();
+    }
+    get local() {
+        return this._local;
+    }
+    set local(state) {
+        const wasBoth = this.both;
+        this._local = state;
+        if (!wasBoth && this.both && this.onBoth !== undefined) {
+            this.onBoth();
+        }
+    }
+    get peer() {
+        return this._peer;
+    }
+    set peer(state) {
+        const wasBoth = this.both;
+        this._peer = state;
+        if (!wasBoth && this.both && this.onBoth !== undefined) {
+            this.onBoth();
+        }
+    }
+    get both() {
+        return this._local === true && this._peer === true;
+    }
+    get any() {
+        return this._local === true || this._peer === true;
+    }
+    reset() {
+        this._local = false;
+        this._peer = false;
+    }
+}
+
+function decryptKeystore(box$$1, keyStore, otherKey, msgType) {
+    try {
+        return keyStore.decrypt(box$$1, otherKey);
+    }
+    catch (e) {
+        if (e === 'decryption-failed') {
+            throw new SignalingError(CloseCode.ProtocolError, 'Could not decrypt ' + msgType + ' message.');
+        }
+        else {
+            throw e;
+        }
+    }
+}
+
+function isResponderId(id) {
+    return id >= 0x02 && id <= 0xff;
+}
 
 class Signaling {
     constructor(client, host, port, serverKey, tasks, pingInterval, permanentKey, peerTrustedKey) {
@@ -597,7 +673,7 @@ class Signaling {
                         log('Protocol error');
                         break;
                     case CloseCode.InternalError:
-                        log('Internal server error');
+                        log('Internal error');
                         break;
                     case CloseCode.DroppedByInitiator:
                         log('Dropped by initiator');
@@ -784,7 +860,7 @@ class Signaling {
                 if (msg.type !== 'server-auth') {
                     throw new ProtocolError('Expected server-auth message, but got ' + msg.type);
                 }
-                console.debug(this.logTag, "Received server-auth");
+                console.debug(this.logTag, 'Received server-auth');
                 this.handleServerAuth(msg, nonce);
                 break;
             case 'done':
@@ -804,7 +880,7 @@ class Signaling {
             this.onSignalingServerMessage(box$$1);
         }
         else {
-            let decrypted = this.sessionKey.decrypt(box$$1, this.getPeerSessionKey());
+            const decrypted = this.sessionKey.decrypt(box$$1, this.getPeerSessionKey());
             this.onSignalingPeerMessage(decrypted);
         }
     }
@@ -818,18 +894,29 @@ class Signaling {
         }
     }
     onSignalingPeerMessage(decrypted) {
-        let msg = this.decodeMessage(decrypted);
+        const msg = this.decodeMessage(decrypted);
         if (msg.type === 'close') {
             console.debug(this.logTag, 'Received close');
             this.handleClose(msg);
+        }
+        else if (msg.type === 'disconnected') {
+            console.debug(this.logTag, 'Received disconnected');
+            this.handleDisconnected(msg);
         }
         else if (msg.type === 'application') {
             console.debug(this.logTag, 'Received application message');
             this.handleApplication(msg);
         }
-        else if (this.task !== null && this.task.getSupportedMessageTypes().indexOf(msg.type) !== -1) {
-            console.debug(this.logTag, 'Received', msg.type, '[' + this.task.getName() + ']');
-            this.task.onTaskMessage(msg);
+        else if (this.task !== null) {
+            const messageSupportedByTask = this.task.getSupportedMessageTypes().indexOf(msg.type) !== -1;
+            if (messageSupportedByTask) {
+                console.debug(this.logTag, 'Received', msg.type, '[' + this.task.getName() + ']');
+                this.task.onTaskMessage(msg);
+            }
+            else {
+                console.error(this.logTag, 'Received', msg.type, 'message which is not supported by the', this.task.getName(), 'task');
+                this.resetConnection(CloseCode.ProtocolError);
+            }
         }
         else {
             console.warn(this.logTag, 'Received message with invalid type from peer:', msg.type);
@@ -840,7 +927,7 @@ class Signaling {
         this.server.cookiePair.theirs = nonce.cookie;
     }
     sendClientAuth() {
-        let message = {
+        const message = {
             type: 'client-auth',
             your_cookie: this.server.cookiePair.theirs.asArrayBuffer(),
             subprotocols: [Signaling.SALTYRTC_SUBPROTOCOL],
@@ -861,10 +948,10 @@ class Signaling {
         const idString = u8aToHex(new Uint8Array(msg.id));
         const source = id.getUint8(0);
         const destination = id.getUint8(1);
-        if (source != this.address) {
-            throw new ProtocolError("Received send-error message for a message not sent by us!");
+        if (source !== this.address) {
+            throw new ProtocolError('Received send-error message for a message not sent by us!');
         }
-        console.warn(this.logTag, "SendError: Could not send unknown message:", idString);
+        console.warn(this.logTag, 'SendError: Could not send unknown message:', idString);
         this._handleSendError(destination);
     }
     handleApplication(msg) {
@@ -889,6 +976,10 @@ class Signaling {
         this.task.close(msg.reason);
         this.resetConnection(CloseCode.GoingAway);
     }
+    handleDisconnected(msg) {
+        console.warn(this.logTag, 'Received disconnected message. Peer ID:', msg.id);
+        this.task.onDisconnected(msg.id);
+    }
     validateNonce(nonce) {
         this.validateNonceSource(nonce);
         this.validateNonceDestination(nonce);
@@ -899,27 +990,27 @@ class Signaling {
         switch (this.state) {
             case 'server-handshake':
                 if (nonce.source !== Signaling.SALTYRTC_ADDR_SERVER) {
-                    throw new ValidationError("Received message during server handshake " +
-                        "with invalid sender address (" + nonce.source + " != " + Signaling.SALTYRTC_ADDR_SERVER + ")");
+                    throw new ValidationError('Received message during server handshake ' +
+                        'with invalid sender address (' + nonce.source + ' != ' + Signaling.SALTYRTC_ADDR_SERVER + ')');
                 }
                 break;
             case 'peer-handshake':
                 if (nonce.source !== Signaling.SALTYRTC_ADDR_SERVER) {
                     if (this.role === 'initiator' && !isResponderId(nonce.source)) {
-                        throw new ValidationError("Initiator peer message does not come from " +
-                            "a valid responder address: " + nonce.source);
+                        throw new ValidationError('Initiator peer message does not come from ' +
+                            'a valid responder address: ' + nonce.source);
                     }
-                    else if (this.role === 'responder' && nonce.source != Signaling.SALTYRTC_ADDR_INITIATOR) {
-                        throw new ValidationError("Responder peer message does not come from " +
-                            "intitiator (" + Signaling.SALTYRTC_ADDR_INITIATOR + "), " +
-                            "but from " + nonce.source);
+                    else if (this.role === 'responder' && nonce.source !== Signaling.SALTYRTC_ADDR_INITIATOR) {
+                        throw new ValidationError('Responder peer message does not come from ' +
+                            'intitiator (' + Signaling.SALTYRTC_ADDR_INITIATOR + '), ' +
+                            'but from ' + nonce.source);
                     }
                 }
                 break;
             case 'task':
                 if (nonce.source !== this.getPeer().id) {
-                    throw new ValidationError("Received message after handshake with invalid sender address (" +
-                        nonce.source + " != " + this.getPeer().id + ")");
+                    throw new ValidationError('Received message after handshake with invalid sender address (' +
+                        nonce.source + ' != ' + this.getPeer().id + ')');
                 }
                 break;
             default:
@@ -940,8 +1031,8 @@ class Signaling {
                     }
                     else {
                         if (!isResponderId(nonce.destination)) {
-                            throw new ValidationError("Received message during server handshake with invalid " +
-                                "receiver address (" + nonce.destination + " is not a valid responder id)");
+                            throw new ValidationError('Received message during server handshake with invalid ' +
+                                'receiver address (' + nonce.destination + ' is not a valid responder id)');
                         }
                     }
                     break;
@@ -954,21 +1045,22 @@ class Signaling {
             expected = this.address;
         }
         else {
-            throw new ValidationError("Cannot validate message nonce in signaling state " + this.state);
+            throw new ValidationError('Cannot validate message nonce in signaling state ' + this.state);
         }
         if (expected !== null && nonce.destination !== expected) {
-            throw new ValidationError("Received message with invalid destination (" +
-                nonce.destination + " != " + expected + ")");
+            throw new ValidationError('Received message with invalid destination (' +
+                nonce.destination + ' != ' + expected + ')');
         }
     }
     validateNonceCsn(nonce) {
         const peer = this.getPeerWithId(nonce.source);
         if (peer === null) {
-            throw new ProtocolError("Could not find peer " + nonce.source);
+            throw new ProtocolError('Could not find peer ' + nonce.source);
         }
         if (peer.csnPair.theirs === null) {
             if (nonce.overflow !== 0) {
-                throw new ValidationError("First message from " + peer.name + " must have set the overflow number to 0");
+                throw new ValidationError('First message from ' + peer.name
+                    + ' must have set the overflow number to 0');
             }
             peer.csnPair.theirs = nonce.combinedSequenceNumber;
         }
@@ -976,7 +1068,7 @@ class Signaling {
             const previous = peer.csnPair.theirs;
             const current = nonce.combinedSequenceNumber;
             if (current < previous) {
-                throw new ValidationError(peer.name + " CSN is lower than last time");
+                throw new ValidationError(peer.name + ' CSN is lower than last time');
             }
             else if (current === previous) {
                 throw new ValidationError(peer.name + " CSN hasn't been incremented");
@@ -990,7 +1082,7 @@ class Signaling {
         const peer = this.getPeerWithId(nonce.source);
         if (peer !== null && peer.cookiePair.theirs !== null) {
             if (!nonce.cookie.equals(peer.cookiePair.theirs)) {
-                throw new ValidationError(peer.name + " cookie changed");
+                throw new ValidationError(peer.name + ' cookie changed');
             }
         }
     }
@@ -1002,26 +1094,25 @@ class Signaling {
             throw new ProtocolError('Peer repeated cookie does not match our cookie');
         }
     }
-    validateSignedKeys(signed_keys, nonce, serverPublicKey) {
-        if (signed_keys === null || signed_keys === undefined) {
-            throw new ValidationError("Server did not send signed_keys in server-auth message");
+    validateSignedKeys(signedKeys, nonce, serverPublicKey) {
+        if (signedKeys === null || signedKeys === undefined) {
+            throw new ValidationError('Server did not send signed_keys in server-auth message');
         }
-        const box$$1 = new Box(new Uint8Array(nonce.toArrayBuffer()), new Uint8Array(signed_keys), box.nonceLength);
-        console.debug(this.logTag, "Expected server public permanent key is", u8aToHex(serverPublicKey));
-        console.debug(this.logTag, "Server public session key is", u8aToHex(this.server.sessionKey));
+        const box$$1 = new Box(new Uint8Array(nonce.toArrayBuffer()), new Uint8Array(signedKeys), box.nonceLength);
+        console.debug(this.logTag, 'Expected server public permanent key is', u8aToHex(serverPublicKey));
         let decrypted;
         try {
             decrypted = this.permanentKey.decrypt(box$$1, serverPublicKey);
         }
         catch (e) {
             if (e === 'decryption-failed') {
-                throw new ValidationError("Could not decrypt signed_keys in server_auth message");
+                throw new ValidationError('Could not decrypt signed_keys in server_auth message');
             }
             throw e;
         }
         const expected = concat(this.server.sessionKey, this.permanentKey.publicKeyBytes);
         if (!arraysAreEqual(decrypted, expected)) {
-            throw new ValidationError("Decrypted signed_keys in server-auth message is invalid");
+            throw new ValidationError('Decrypted signed_keys in server-auth message is invalid');
         }
     }
     decodeMessage(data, expectedType, enforce = false) {
@@ -1040,7 +1131,7 @@ class Signaling {
             csn = receiver.csnPair.ours.next();
         }
         catch (e) {
-            throw new ProtocolError("CSN overflow: " + e.message);
+            throw new ProtocolError('CSN overflow: ' + e.message);
         }
         const nonce = new Nonce(receiver.cookiePair.ours, csn.overflow, csn.sequenceNumber, this.address, receiver.id);
         const nonceBytes = new Uint8Array(nonce.toArrayBuffer());
@@ -1072,7 +1163,7 @@ class Signaling {
     resetConnection(reason) {
         if (this.ws !== null) {
             console.debug(this.logTag, 'Disconnecting WebSocket (close code ' + reason + ')');
-            if (reason == CloseCode.GoingAway) {
+            if (reason === CloseCode.GoingAway) {
                 this.ws.close();
             }
             else {
@@ -1093,7 +1184,7 @@ class Signaling {
         }
         catch (e) {
             if (e.name === 'ValidationError') {
-                throw new ProtocolError("Peer sent invalid task data");
+                throw new ProtocolError('Peer sent invalid task data');
             }
             throw e;
         }
@@ -1165,7 +1256,7 @@ class Signaling {
                     this.sendClose(CloseCode.InternalError);
                 }
                 this.resetConnection(CloseCode.InternalError);
-                throw new SignalingError(CloseCode.InternalError, "Decryption of peer message failed. This should not happen.");
+                throw new SignalingError(CloseCode.InternalError, 'Decryption of peer message failed. This should not happen.');
             }
             else {
                 throw e;
@@ -1249,7 +1340,7 @@ class InitiatorSignaling extends Signaling {
             return null;
         }
         else {
-            throw new ProtocolError("Invalid peer id: " + id);
+            throw new ProtocolError('Invalid peer id: ' + id);
         }
     }
     handlePeerHandshakeSignalingError(e, source) {
@@ -1273,10 +1364,10 @@ class InitiatorSignaling extends Signaling {
         this.client.emit({ type: 'new-responder', data: responderId });
     }
     dropOldestInactiveResponder() {
-        console.warn(this.logTag, "Dropping oldest inactive responder");
+        console.warn(this.logTag, 'Dropping oldest inactive responder');
         let drop = null;
-        for (let r of this.responders.values()) {
-            if (r.handshakeState == 'new') {
+        for (const r of this.responders.values()) {
+            if (r.handshakeState === 'new') {
                 if (drop === null) {
                     drop = r;
                 }
@@ -1290,7 +1381,7 @@ class InitiatorSignaling extends Signaling {
         }
     }
     onPeerHandshakeMessage(box$$1, nonce) {
-        if (nonce.destination != this.address) {
+        if (nonce.destination !== this.address) {
             throw new ProtocolError('Message destination does not match our address');
         }
         let payload;
@@ -1384,7 +1475,7 @@ class InitiatorSignaling extends Signaling {
             }
             catch (e) {
                 if (e.name === 'ValidationError') {
-                    throw new ProtocolError("Verification of signed_keys failed: " + e.message);
+                    throw new ProtocolError('Verification of signed_keys failed: ' + e.message);
                 }
                 throw e;
             }
@@ -1393,9 +1484,9 @@ class InitiatorSignaling extends Signaling {
             console.warn(this.logTag, "Server sent signed keys, but we're not verifying them.");
         }
         this.responders = new Map();
-        for (let id of msg.responders) {
+        for (const id of msg.responders) {
             if (!isResponderId(id)) {
-                throw new ProtocolError("Responder id " + id + " must be in the range 0x02-0xff");
+                throw new ProtocolError('Responder id ' + id + ' must be in the range 0x02-0xff');
             }
             this.processNewResponder(id);
         }
@@ -1406,7 +1497,7 @@ class InitiatorSignaling extends Signaling {
     }
     handleNewResponder(msg) {
         if (!isResponderId(msg.id)) {
-            throw new ProtocolError("Responder id " + msg.id + " must be in the range 0x02-0xff");
+            throw new ProtocolError('Responder id ' + msg.id + ' must be in the range 0x02-0xff');
         }
         this.processNewResponder(msg.id);
     }
@@ -1452,16 +1543,17 @@ class InitiatorSignaling extends Signaling {
         }
         catch (e) {
             if (e.name === 'ValidationError') {
-                throw new ProtocolError("Peer sent invalid task info: " + e.message);
+                throw new ProtocolError('Peer sent invalid task info: ' + e.message);
             }
             throw e;
         }
         const task = InitiatorSignaling.chooseCommonTask(this.tasks, msg.tasks);
         if (task === null) {
-            throw new SignalingError(CloseCode.NoSharedTask, "No shared task could be found");
+            console.debug(this.logTag, 'We requested:', this.tasks.map((t) => t.getName()), 'Peer offered:', msg.tasks);
+            throw new SignalingError(CloseCode.NoSharedTask, 'No shared task could be found');
         }
         else {
-            console.log(this.logTag, "Task", task.getName(), "has been selected");
+            console.log(this.logTag, 'Task', task.getName(), 'has been selected');
         }
         this.initTask(task, msg.data[task.getName()]);
         console.debug(this.logTag, 'Responder', responder.hexId, 'authenticated');
@@ -1470,22 +1562,22 @@ class InitiatorSignaling extends Signaling {
     }
     static validateTaskInfo(names, data) {
         if (names.length < 1) {
-            throw new ValidationError("Task names must not be empty");
+            throw new ValidationError('Task names must not be empty');
         }
         if (Object.keys(data).length < 1) {
-            throw new ValidationError("Task data must not be empty");
+            throw new ValidationError('Task data must not be empty');
         }
-        if (names.length != Object.keys(data).length) {
-            throw new ValidationError("Task data must contain an entry for every task");
+        if (names.length !== Object.keys(data).length) {
+            throw new ValidationError('Task data must contain an entry for every task');
         }
-        for (let task of names) {
+        for (const task of names) {
             if (!data.hasOwnProperty(task)) {
-                throw new ValidationError("Task data must contain an entry for every task");
+                throw new ValidationError('Task data must contain an entry for every task');
             }
         }
     }
     static chooseCommonTask(ourTasks, theirTasks) {
-        for (let task of ourTasks) {
+        for (const task of ourTasks) {
             if (theirTasks.indexOf(task.getName()) !== -1) {
                 return task;
             }
@@ -1494,13 +1586,13 @@ class InitiatorSignaling extends Signaling {
     }
     _handleSendError(receiver) {
         if (!isResponderId(receiver)) {
-            throw new ProtocolError("Outgoing c2c messages must have been sent to a responder");
+            throw new ProtocolError('Outgoing c2c messages must have been sent to a responder');
         }
         let notify = false;
         if (this.responder === null) {
             const responder = this.responders.get(receiver);
             if (responder === null || responder === undefined) {
-                console.warn(this.logTag, "Got send-error message for unknown responder", receiver);
+                console.warn(this.logTag, 'Got send-error message for unknown responder', receiver);
             }
             else {
                 notify = true;
@@ -1513,16 +1605,16 @@ class InitiatorSignaling extends Signaling {
                 this.resetConnection(CloseCode.ProtocolError);
             }
             else {
-                console.warn(this.logTag, "Got send-error message for unknown responder", receiver);
+                console.warn(this.logTag, 'Got send-error message for unknown responder', receiver);
             }
         }
         if (notify === true) {
-            this.client.emit({ type: "signaling-connection-lost", data: receiver });
+            this.client.emit({ type: 'signaling-connection-lost', data: receiver });
         }
     }
     dropResponders(reason) {
         console.debug(this.logTag, 'Dropping', this.responders.size, 'other responders.');
-        for (let id of this.responders.keys()) {
+        for (const id of this.responders.keys()) {
             this.dropResponder(id, reason);
         }
     }
@@ -1602,14 +1694,14 @@ class ResponderSignaling extends Signaling {
             return this.initiator;
         }
         else {
-            throw new ProtocolError("Invalid peer id: " + id);
+            throw new ProtocolError('Invalid peer id: ' + id);
         }
     }
     handlePeerHandshakeSignalingError(e, source) {
         this.resetConnection(e.closeCode);
     }
     onPeerHandshakeMessage(box$$1, nonce) {
-        if (nonce.destination != this.address) {
+        if (nonce.destination !== this.address) {
             throw new ProtocolError('Message destination does not match our address');
         }
         let payload;
@@ -1684,7 +1776,7 @@ class ResponderSignaling extends Signaling {
     handleServerAuth(msg, nonce) {
         if (nonce.destination > 0xff || nonce.destination < 0x02) {
             console.error(this.logTag, 'Invalid nonce destination:', nonce.destination);
-            throw 'bad-nonce-destination';
+            throw new ValidationError('Invalid nonce destination: ' + nonce.destination);
         }
         this.address = nonce.destination;
         console.debug(this.logTag, 'Server assigned address', byteToHex(this.address));
@@ -1696,7 +1788,7 @@ class ResponderSignaling extends Signaling {
             }
             catch (e) {
                 if (e.name === 'ValidationError') {
-                    throw new ProtocolError("Verification of signed_keys failed: " + e.message);
+                    throw new ProtocolError('Verification of signed_keys failed: ' + e.message);
                 }
                 throw e;
             }
@@ -1751,7 +1843,7 @@ class ResponderSignaling extends Signaling {
             throw new ProtocolError('Their cookie and our cookie are the same.');
         }
         const taskData = {};
-        for (let task of this.tasks) {
+        for (const task of this.tasks) {
             taskData[task.getName()] = task.getData();
         }
         const taskNames = this.tasks.map((task) => task.getName());
@@ -1773,20 +1865,20 @@ class ResponderSignaling extends Signaling {
         }
         catch (e) {
             if (e.name === 'ValidationError') {
-                throw new ProtocolError("Peer sent invalid task info: " + e.message);
+                throw new ProtocolError('Peer sent invalid task info: ' + e.message);
             }
             throw e;
         }
         let selectedTask = null;
-        for (let task of this.tasks) {
+        for (const task of this.tasks) {
             if (task.getName() === msg.task) {
                 selectedTask = task;
-                console.info(this.logTag, "Task", msg.task, "has been selected");
+                console.info(this.logTag, 'Task', msg.task, 'has been selected');
                 break;
             }
         }
         if (selectedTask === null) {
-            throw new SignalingError(CloseCode.ProtocolError, "Initiator selected unknown task");
+            throw new SignalingError(CloseCode.ProtocolError, 'Initiator selected unknown task');
         }
         else {
             this.initTask(selectedTask, msg.data[selectedTask.getName()]);
@@ -1796,92 +1888,25 @@ class ResponderSignaling extends Signaling {
         this.initiator.handshakeState = 'auth-received';
     }
     static validateTaskInfo(name, data) {
-        if (name.length == 0) {
-            throw new ValidationError("Task name must not be empty");
+        if (name.length === 0) {
+            throw new ValidationError('Task name must not be empty');
         }
         if (Object.keys(data).length < 1) {
-            throw new ValidationError("Task data must not be empty");
+            throw new ValidationError('Task data must not be empty');
         }
         if (Object.keys(data).length > 1) {
-            throw new ValidationError("Task data must contain exactly 1 key");
+            throw new ValidationError('Task data must contain exactly 1 key');
         }
         if (!data.hasOwnProperty(name)) {
-            throw new ValidationError("Task data must contain an entry for the chosen task");
+            throw new ValidationError('Task data must contain an entry for the chosen task');
         }
     }
     _handleSendError(receiver) {
-        if (receiver != Signaling.SALTYRTC_ADDR_INITIATOR) {
-            throw new ProtocolError("Outgoing c2c messages must have been sent to the initiator");
+        if (receiver !== Signaling.SALTYRTC_ADDR_INITIATOR) {
+            throw new ProtocolError('Outgoing c2c messages must have been sent to the initiator');
         }
-        this.client.emit({ type: "signaling-connection-lost", data: receiver });
+        this.client.emit({ type: 'signaling-connection-lost', data: receiver });
         this.resetConnection(CloseCode.ProtocolError);
-    }
-}
-
-class EventRegistry {
-    constructor() {
-        this.map = new Map();
-    }
-    register(eventType, handler) {
-        if (typeof eventType === 'string') {
-            this.set(eventType, handler);
-        }
-        else {
-            for (let et of eventType) {
-                this.set(et, handler);
-            }
-        }
-    }
-    unregister(eventType, handler) {
-        if (typeof eventType === 'string') {
-            if (!this.map.has(eventType)) {
-                return;
-            }
-            if (typeof handler === 'undefined') {
-                this.map.delete(eventType);
-            }
-            else {
-                const list = this.map.get(eventType);
-                const index = list.indexOf(handler);
-                if (index !== -1) {
-                    list.splice(index, 1);
-                }
-            }
-        }
-        else {
-            for (let et of eventType) {
-                this.unregister(et, handler);
-            }
-        }
-    }
-    set(key, value) {
-        if (this.map.has(key)) {
-            const list = this.map.get(key);
-            if (list.indexOf(value) === -1) {
-                list.push(value);
-            }
-        }
-        else {
-            this.map.set(key, [value]);
-        }
-    }
-    get(eventType) {
-        const handlers = [];
-        if (typeof eventType === 'string') {
-            if (this.map.has(eventType)) {
-                handlers.push.apply(handlers, this.map.get(eventType));
-            }
-        }
-        else {
-            for (let et of eventType) {
-                for (let handler of this.get(et)) {
-                    if (handlers.indexOf(handler) === -1) {
-                        handlers.push(handler);
-                    }
-                }
-            }
-        }
-        return handlers;
     }
 }
 
@@ -1905,22 +1930,22 @@ class SaltyRTCBuilder {
     }
     requireKeyStore() {
         if (!this.hasKeyStore) {
-            throw new Error("Keys not set yet. Please call .withKeyStore method first.");
+            throw new Error('Keys not set yet. Please call .withKeyStore method first.');
         }
     }
     requireConnectionInfo() {
         if (!this.hasConnectionInfo) {
-            throw new Error("Connection info not set yet. Please call .connectTo method first.");
+            throw new Error('Connection info not set yet. Please call .connectTo method first.');
         }
     }
     requireTasks() {
         if (!this.hasTasks) {
-            throw new Error("Tasks not set yet. Please call .usingTasks method first.");
+            throw new Error('Tasks not set yet. Please call .usingTasks method first.');
         }
     }
     requireInitiatorInfo() {
         if (!this.hasInitiatorInfo) {
-            throw new Error("Initiator info not set yet. Please call .initiatorInfo method first.");
+            throw new Error('Initiator info not set yet. Please call .initiatorInfo method first.');
         }
     }
     connectTo(host, port = 8765) {
@@ -1941,13 +1966,13 @@ class SaltyRTCBuilder {
         return this;
     }
     withTrustedPeerKey(peerTrustedKey) {
-        this.peerTrustedKey = validateKey(peerTrustedKey, "Peer key");
+        this.peerTrustedKey = validateKey(peerTrustedKey, 'Peer key');
         this.hasTrustedPeerKey = true;
         return this;
     }
     usingTasks(tasks) {
         if (tasks.length < 1) {
-            throw new Error("You must specify at least 1 task");
+            throw new Error('You must specify at least 1 task');
         }
         this.tasks = tasks;
         this.hasTasks = true;
@@ -1955,18 +1980,18 @@ class SaltyRTCBuilder {
     }
     withPingInterval(interval) {
         if (interval < 0) {
-            throw new Error("Ping interval may not be negative");
+            throw new Error('Ping interval may not be negative');
         }
         this.pingInterval = interval;
         return this;
     }
     withServerKey(serverKey) {
-        this.serverPublicKey = validateKey(serverKey, "Server public key");
+        this.serverPublicKey = validateKey(serverKey, 'Server public key');
         return this;
     }
     initiatorInfo(initiatorPublicKey, authToken) {
-        this.initiatorPublicKey = validateKey(initiatorPublicKey, "Initiator public key");
-        this.authToken = validateKey(authToken, "Auth token");
+        this.initiatorPublicKey = validateKey(initiatorPublicKey, 'Initiator public key');
+        this.authToken = validateKey(authToken, 'Auth token');
         this.hasInitiatorInfo = true;
         return this;
     }
@@ -1987,12 +2012,10 @@ class SaltyRTCBuilder {
             this.processServerInfo(this.serverInfoFactory, this.keyStore.publicKeyBytes);
         }
         if (this.hasTrustedPeerKey) {
-            return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.peerTrustedKey)
-                .asInitiator();
+            return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.peerTrustedKey).asInitiator();
         }
         else {
-            return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval)
-                .asInitiator();
+            return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval).asInitiator();
         }
     }
     asResponder() {
@@ -2003,16 +2026,14 @@ class SaltyRTCBuilder {
             if (this.serverInfoFactory !== null) {
                 this.processServerInfo(this.serverInfoFactory, this.peerTrustedKey);
             }
-            return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.peerTrustedKey)
-                .asResponder();
+            return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.peerTrustedKey).asResponder();
         }
         else {
             this.requireInitiatorInfo();
             if (this.serverInfoFactory !== null) {
                 this.processServerInfo(this.serverInfoFactory, this.initiatorPublicKey);
             }
-            return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval)
-                .asResponder(this.initiatorPublicKey, this.authToken);
+            return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval).asResponder(this.initiatorPublicKey, this.authToken);
         }
     }
 }
@@ -2027,7 +2048,7 @@ class SaltyRTC {
         if (host === undefined) {
             throw new Error('SaltyRTC must be initialized with a target host');
         }
-        if (tasks === undefined || tasks.length == 0) {
+        if (tasks === undefined || tasks.length === 0) {
             throw new Error('SaltyRTC must be initialized with at least 1 task');
         }
         this.host = host;
@@ -2084,7 +2105,10 @@ class SaltyRTC {
         return this.signaling.authTokenBytes;
     }
     get authTokenHex() {
-        return u8aToHex(this.signaling.authTokenBytes);
+        if (this.signaling.authTokenBytes) {
+            return u8aToHex(this.signaling.authTokenBytes);
+        }
+        return null;
     }
     get peerPermanentKeyBytes() {
         return this.signaling.peerPermanentKeyBytes;
@@ -2123,7 +2147,7 @@ class SaltyRTC {
     emit(event) {
         console.debug(this.logTag, 'New event:', event.type);
         const handlers = this.eventRegistry.get(event.type);
-        for (let handler of handlers) {
+        for (const handler of handlers) {
             try {
                 this.callHandler(handler, event);
             }
