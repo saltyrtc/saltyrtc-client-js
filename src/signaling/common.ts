@@ -608,6 +608,15 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Validate the nonce source.
      */
     private validateNonceSource(nonce: Nonce): void {
+        // An initiator SHALL ONLY process messages from the server (0x00). As
+        // soon as the initiator has been assigned an identity, it MAY ALSO accept
+        // messages from other responders (0x02..0xff). Other messages SHALL be
+        // discarded and SHOULD trigger a warning.
+        //
+        // A responder SHALL ONLY process messages from the server (0x00). As soon
+        // as the responder has been assigned an identity, it MAY ALSO accept
+        // messages from the initiator (0x01). Other messages SHALL be discarded
+        // and SHOULD trigger a warning.
         switch (this.state) {
             case 'server-handshake':
                 // Messages during server handshake must come from the server.
@@ -617,7 +626,8 @@ export abstract class Signaling implements saltyrtc.Signaling {
                 }
                 break;
             case 'peer-handshake':
-                // Messages during peer handshake may come from server or peer.
+            case 'task':
+                // Messages after server handshake may come from server or peer.
                 if (nonce.source !== Signaling.SALTYRTC_ADDR_SERVER) {
                     if (this.role === 'initiator' && !isResponderId(nonce.source)) {
                         throw new ValidationError('Initiator peer message does not come from ' +
@@ -627,13 +637,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
                             'intitiator (' + Signaling.SALTYRTC_ADDR_INITIATOR + '), ' +
                             'but from ' + nonce.source);
                     }
-                }
-                break;
-            case 'task':
-                // Messages after the handshake must come from the peer.
-                if (nonce.source !== this.getPeer().id) {
-                    throw new ValidationError('Received message after handshake with invalid sender address (' +
-                        nonce.source + ' != ' + this.getPeer().id + ')');
                 }
                 break;
             default:
