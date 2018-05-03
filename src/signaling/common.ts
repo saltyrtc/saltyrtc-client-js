@@ -582,10 +582,10 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Handle an incoming disconnected message.
      */
     protected handleDisconnected(msg: saltyrtc.messages.Disconnected): void {
-        console.warn(this.logTag, 'Received disconnected message. Peer ID:', msg.id);
+        console.info(this.logTag, 'Received disconnected message. Peer ID:', msg.id);
 
         // Notify the task
-        this.task.onDisconnected(msg.id);
+        this.task.onPeerDisconnected(msg.id);
     }
 
     /**

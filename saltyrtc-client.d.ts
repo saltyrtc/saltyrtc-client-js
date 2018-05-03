@@ -149,7 +149,7 @@ declare namespace saltyrtc {
          *
          * @param id The responder ID of the peer that disconnected.
          */
-        onDisconnected(id: number): void;
+        onPeerDisconnected(id: number): void;
 
         /**
          * This method is called by SaltyRTC when a task related message

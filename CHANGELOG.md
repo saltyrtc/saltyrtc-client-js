@@ -12,6 +12,10 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.12.0 (unreleased)
+
+- [changed] Rename `onDisconnected` in task interface to `onPeerDisconnected`
+
 ### v0.11.0 (2018-03-13)
 
 - [fixed] SaltyRTC.authTokenHex: Add null checks
