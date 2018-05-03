@@ -14,8 +14,8 @@ Possible log types:
 
 ### v0.12.0 (unreleased)
 
-- [changed] Rename `onDisconnected` in task interface to `onPeerDisconnected`
-- [fixed] Only call `onPeerDisconnected` if defined by the task
+- [changed] Disconnected messages are now emitted as events to the user,
+  not as callback to the task (#92)
 - [fixed] Accept server messages during/after peer handshake
 - [fixed] If message nonce has an invalid source, discard it
 
