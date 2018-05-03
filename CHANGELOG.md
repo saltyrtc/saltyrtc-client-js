@@ -15,6 +15,7 @@ Possible log types:
 ### v0.12.0 (unreleased)
 
 - [changed] Rename `onDisconnected` in task interface to `onPeerDisconnected`
+- [fixed] Only call `onPeerDisconnected` if defined by the task
 
 ### v0.11.0 (2018-03-13)
 

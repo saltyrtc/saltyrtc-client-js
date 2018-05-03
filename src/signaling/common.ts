@@ -585,7 +585,11 @@ export abstract class Signaling implements saltyrtc.Signaling {
         console.info(this.logTag, 'Received disconnected message. Peer ID:', msg.id);
 
         // Notify the task
-        this.task.onPeerDisconnected(msg.id);
+        if (this.task.onPeerDisconnected !== undefined) {
+            this.task.onPeerDisconnected(msg.id);
+        } else {
+            console.warn(this.logTag, 'Task does not define an onPeerDisconnected method!');
+        }
     }
 
     /**
