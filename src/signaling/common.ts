@@ -435,10 +435,17 @@ export abstract class Signaling implements saltyrtc.Signaling {
     protected onSignalingServerMessage(box: saltyrtc.Box): void {
         const msg: saltyrtc.Message = this.decryptServerMessage(box);
 
-        if (msg.type === 'send-error') {
-            this.handleSendError(msg as saltyrtc.messages.SendError);
-        } else {
-            console.warn(this.logTag, 'Invalid server message type:', msg.type);
+        switch (msg.type) {
+            case 'send-error':
+                console.debug(this.logTag, 'Received send-error message');
+                this.handleSendError(msg as saltyrtc.messages.SendError);
+                break;
+            case 'disconnected':
+                console.debug(this.logTag, 'Received disconnected message');
+                this.handleDisconnected(msg as saltyrtc.messages.Disconnected);
+                break;
+            default:
+                console.warn(this.logTag, 'Invalid server message type:', msg.type);
         }
     }
 
@@ -454,9 +461,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
         if (msg.type === 'close') {
             console.debug(this.logTag, 'Received close');
             this.handleClose(msg as saltyrtc.messages.Close);
-        } else if (msg.type === 'disconnected') {
-            console.debug(this.logTag, 'Received disconnected message');
-            this.handleDisconnected(msg as saltyrtc.messages.Disconnected);
         } else if (msg.type === 'application') {
             console.debug(this.logTag, 'Received application message');
             this.handleApplication(msg as saltyrtc.messages.Application);

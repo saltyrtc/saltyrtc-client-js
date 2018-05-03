@@ -14,8 +14,9 @@ Possible log types:
 
 ### v0.12.0 (unreleased)
 
-- [changed] Disconnected messages are now emitted as events to the user,
+- [changed] 'disconnected' messages are now emitted as events to the user,
   not as callback to the task (#92)
+- [fixed] Fix processing of 'disconnected' messages
 - [fixed] Accept server messages during/after peer handshake
 - [fixed] If message nonce has an invalid source, discard it
 
