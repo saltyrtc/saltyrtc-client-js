@@ -294,7 +294,12 @@ export abstract class Signaling implements saltyrtc.Signaling {
                 this.validateNonce(nonce);
             } catch (e) {
                 if (e.name === 'ValidationError') {
-                    throw new ProtocolError('Invalid nonce: ' + e);
+                    if (e.critical === true) {
+                        throw new ProtocolError('Invalid nonce: ' + e);
+                    } else {
+                        console.warn(this.logTag, 'Dropping message with invalid nonce: ' + e);
+                        return;
+                    }
                 } else {
                     throw e;
                 }
@@ -596,6 +601,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Validate the nonce.
      *
      * Throw ValidationError if validation fails.
+     * Throw ProtocolError if something goes wrong.
      */
     protected validateNonce(nonce: Nonce): void {
         this.validateNonceSource(nonce);
@@ -622,7 +628,8 @@ export abstract class Signaling implements saltyrtc.Signaling {
                 // Messages during server handshake must come from the server.
                 if (nonce.source !== Signaling.SALTYRTC_ADDR_SERVER) {
                     throw new ValidationError('Received message during server handshake ' +
-                        'with invalid sender address (' + nonce.source + ' != ' + Signaling.SALTYRTC_ADDR_SERVER + ')');
+                        'with invalid sender address (' + nonce.source + ' != ' + Signaling.SALTYRTC_ADDR_SERVER + ')',
+                        false);
                 }
                 break;
             case 'peer-handshake':
@@ -631,11 +638,11 @@ export abstract class Signaling implements saltyrtc.Signaling {
                 if (nonce.source !== Signaling.SALTYRTC_ADDR_SERVER) {
                     if (this.role === 'initiator' && !isResponderId(nonce.source)) {
                         throw new ValidationError('Initiator peer message does not come from ' +
-                            'a valid responder address: ' + nonce.source);
+                            'a valid responder address: ' + nonce.source, false);
                     } else if (this.role === 'responder' && nonce.source !== Signaling.SALTYRTC_ADDR_INITIATOR) {
                         throw new ValidationError('Responder peer message does not come from ' +
                             'intitiator (' + Signaling.SALTYRTC_ADDR_INITIATOR + '), ' +
-                            'but from ' + nonce.source);
+                            'but from ' + nonce.source, false);
                     }
                 }
                 break;

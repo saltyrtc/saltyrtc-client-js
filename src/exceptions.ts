@@ -46,9 +46,14 @@ export class ConnectionError extends Error {
  * Errors related to validation.
  */
 export class ValidationError extends Error {
-    constructor(message: string) {
+    // If this flag is set, then the validation error
+    // will be converted to a protocol error.
+    public critical: boolean;
+
+    constructor(message: string, critical: boolean = true) {
         super(message);
         this.message = message;
         this.name = 'ValidationError';
+        this.critical = critical;
     }
 }

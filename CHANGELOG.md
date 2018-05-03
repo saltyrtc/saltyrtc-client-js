@@ -17,6 +17,7 @@ Possible log types:
 - [changed] Rename `onDisconnected` in task interface to `onPeerDisconnected`
 - [fixed] Only call `onPeerDisconnected` if defined by the task
 - [fixed] Accept server messages during/after peer handshake
+- [fixed] If message nonce has an invalid source, discard it
 
 ### v0.11.0 (2018-03-13)
 
