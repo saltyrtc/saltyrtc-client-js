@@ -12,7 +12,7 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
-### v0.12.0 (unreleased)
+### v0.11.1 (2018-05-03)
 
 - [changed] 'disconnected' messages are now emitted as events to the user,
   not as callback to the task (#92)

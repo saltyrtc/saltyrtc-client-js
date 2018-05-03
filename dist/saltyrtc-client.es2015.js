@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.11.0
+ * saltyrtc-client-js v0.11.1
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -164,10 +164,11 @@ class ConnectionError extends Error {
     }
 }
 class ValidationError extends Error {
-    constructor(message) {
+    constructor(message, critical = true) {
         super(message);
         this.message = message;
         this.name = 'ValidationError';
+        this.critical = critical;
     }
 }
 
@@ -701,7 +702,13 @@ class Signaling {
                 }
                 catch (e) {
                     if (e.name === 'ValidationError') {
-                        throw new ProtocolError('Invalid nonce: ' + e);
+                        if (e.critical === true) {
+                            throw new ProtocolError('Invalid nonce: ' + e);
+                        }
+                        else {
+                            console.warn(this.logTag, 'Dropping message with invalid nonce: ' + e);
+                            return;
+                        }
                     }
                     else {
                         throw e;
@@ -886,11 +893,17 @@ class Signaling {
     }
     onSignalingServerMessage(box$$1) {
         const msg = this.decryptServerMessage(box$$1);
-        if (msg.type === 'send-error') {
-            this.handleSendError(msg);
-        }
-        else {
-            console.warn(this.logTag, 'Invalid server message type:', msg.type);
+        switch (msg.type) {
+            case 'send-error':
+                console.debug(this.logTag, 'Received send-error message');
+                this.handleSendError(msg);
+                break;
+            case 'disconnected':
+                console.debug(this.logTag, 'Received disconnected message');
+                this.handleDisconnected(msg);
+                break;
+            default:
+                console.warn(this.logTag, 'Invalid server message type:', msg.type);
         }
     }
     onSignalingPeerMessage(decrypted) {
@@ -898,10 +911,6 @@ class Signaling {
         if (msg.type === 'close') {
             console.debug(this.logTag, 'Received close');
             this.handleClose(msg);
-        }
-        else if (msg.type === 'disconnected') {
-            console.debug(this.logTag, 'Received disconnected');
-            this.handleDisconnected(msg);
         }
         else if (msg.type === 'application') {
             console.debug(this.logTag, 'Received application message');
@@ -977,8 +986,7 @@ class Signaling {
         this.resetConnection(CloseCode.GoingAway);
     }
     handleDisconnected(msg) {
-        console.warn(this.logTag, 'Received disconnected message. Peer ID:', msg.id);
-        this.task.onDisconnected(msg.id);
+        this.client.emit({ type: 'peer-disconnected', data: msg.id });
     }
     validateNonce(nonce) {
         this.validateNonceSource(nonce);
@@ -991,26 +999,21 @@ class Signaling {
             case 'server-handshake':
                 if (nonce.source !== Signaling.SALTYRTC_ADDR_SERVER) {
                     throw new ValidationError('Received message during server handshake ' +
-                        'with invalid sender address (' + nonce.source + ' != ' + Signaling.SALTYRTC_ADDR_SERVER + ')');
+                        'with invalid sender address (' + nonce.source + ' != ' + Signaling.SALTYRTC_ADDR_SERVER + ')', false);
                 }
                 break;
             case 'peer-handshake':
+            case 'task':
                 if (nonce.source !== Signaling.SALTYRTC_ADDR_SERVER) {
                     if (this.role === 'initiator' && !isResponderId(nonce.source)) {
                         throw new ValidationError('Initiator peer message does not come from ' +
-                            'a valid responder address: ' + nonce.source);
+                            'a valid responder address: ' + nonce.source, false);
                     }
                     else if (this.role === 'responder' && nonce.source !== Signaling.SALTYRTC_ADDR_INITIATOR) {
                         throw new ValidationError('Responder peer message does not come from ' +
                             'intitiator (' + Signaling.SALTYRTC_ADDR_INITIATOR + '), ' +
-                            'but from ' + nonce.source);
+                            'but from ' + nonce.source, false);
                     }
-                }
-                break;
-            case 'task':
-                if (nonce.source !== this.getPeer().id) {
-                    throw new ValidationError('Received message after handshake with invalid sender address (' +
-                        nonce.source + ' != ' + this.getPeer().id + ')');
                 }
                 break;
             default:
