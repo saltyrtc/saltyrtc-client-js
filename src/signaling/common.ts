@@ -455,7 +455,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
             console.debug(this.logTag, 'Received close');
             this.handleClose(msg as saltyrtc.messages.Close);
         } else if (msg.type === 'disconnected') {
-            console.debug(this.logTag, 'Received disconnected');
+            console.debug(this.logTag, 'Received disconnected message');
             this.handleDisconnected(msg as saltyrtc.messages.Disconnected);
         } else if (msg.type === 'application') {
             console.debug(this.logTag, 'Received application message');
@@ -587,14 +587,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Handle an incoming disconnected message.
      */
     protected handleDisconnected(msg: saltyrtc.messages.Disconnected): void {
-        console.info(this.logTag, 'Received disconnected message. Peer ID:', msg.id);
-
-        // Notify the task
-        if (this.task.onPeerDisconnected !== undefined) {
-            this.task.onPeerDisconnected(msg.id);
-        } else {
-            console.warn(this.logTag, 'Task does not define an onPeerDisconnected method!');
-        }
+        this.client.emit({type: 'peer-disconnected', data: msg.id});
     }
 
     /**

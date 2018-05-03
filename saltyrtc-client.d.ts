@@ -144,14 +144,6 @@ declare namespace saltyrtc {
         onPeerHandshakeDone(): void;
 
         /**
-         * This method is called by SaltyRTC when a 'disconnected' message
-         * arrives through the WebSocket.
-         *
-         * @param id The responder ID of the peer that disconnected.
-         */
-        onPeerDisconnected(id: number): void;
-
-        /**
          * This method is called by SaltyRTC when a task related message
          * arrives through the WebSocket.
          *
