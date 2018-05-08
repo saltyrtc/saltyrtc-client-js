@@ -134,8 +134,12 @@ export class ResponderSignaling extends Signaling {
                     this.handleNewInitiator(msg as saltyrtc.messages.NewInitiator);
                     break;
                 case 'send-error':
-                    console.debug(this.logTag, 'Received send-error');
+                    console.debug(this.logTag, 'Received send-error message');
                     this.handleSendError(msg as saltyrtc.messages.SendError);
+                    break;
+                case 'disconnected':
+                    console.debug(this.logTag, 'Received disconnected message');
+                    this.handleDisconnected(msg as saltyrtc.messages.Disconnected);
                     break;
                 default:
                     throw new ProtocolError('Received unexpected server message: ' + msg.type);
