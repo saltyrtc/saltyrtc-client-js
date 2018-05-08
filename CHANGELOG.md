@@ -12,6 +12,10 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.11.2 (2018-05-08)
+
+- [fixed] Handle disconnected messages during peer handshake
+
 ### v0.11.1 (2018-05-03)
 
 - [changed] 'disconnected' messages are now emitted as events to the user,

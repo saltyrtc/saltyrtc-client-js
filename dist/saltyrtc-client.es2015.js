@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.11.1
+ * saltyrtc-client-js v0.11.2
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -1397,8 +1397,12 @@ class InitiatorSignaling extends Signaling {
                     this.handleNewResponder(msg);
                     break;
                 case 'send-error':
-                    console.debug(this.logTag, 'Received send-error');
+                    console.debug(this.logTag, 'Received send-error message');
                     this.handleSendError(msg);
+                    break;
+                case 'disconnected':
+                    console.debug(this.logTag, 'Received disconnected message');
+                    this.handleDisconnected(msg);
                     break;
                 default:
                     throw new ProtocolError('Received unexpected server message: ' + msg.type);
@@ -1717,8 +1721,12 @@ class ResponderSignaling extends Signaling {
                     this.handleNewInitiator(msg);
                     break;
                 case 'send-error':
-                    console.debug(this.logTag, 'Received send-error');
+                    console.debug(this.logTag, 'Received send-error message');
                     this.handleSendError(msg);
+                    break;
+                case 'disconnected':
+                    console.debug(this.logTag, 'Received disconnected message');
+                    this.handleDisconnected(msg);
                     break;
                 default:
                     throw new ProtocolError('Received unexpected server message: ' + msg.type);
