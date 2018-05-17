@@ -433,7 +433,10 @@ export class InitiatorSignaling extends Signaling {
         // Select task
         const task: saltyrtc.Task = InitiatorSignaling.chooseCommonTask(this.tasks, msg.tasks);
         if (task === null) {
-            console.debug(this.logTag, 'We requested:', this.tasks.map((t) => t.getName()), 'Peer offered:', msg.tasks);
+            const requested = this.tasks.map((t) => t.getName());
+            const offered = msg.tasks;
+            console.debug(this.logTag, 'We requested:', requested, 'Peer offered:', offered);
+            this.client.emit({type: 'no-shared-task', data: {requested: requested, offered: offered}});
             throw new SignalingError(CloseCode.NoSharedTask, 'No shared task could be found');
         } else {
             console.log(this.logTag, 'Task', task.getName(), 'has been selected');

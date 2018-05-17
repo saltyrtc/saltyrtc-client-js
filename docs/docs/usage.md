@@ -131,6 +131,7 @@ The following events are available:
  - `peer-disconnected(peerId)`: A previously authenticated peer has disconnected from the server.
  - `handover(void)`: The handover to the data channel is done.
  - `signaling-connection-lost(responderId)`: The signaling connection to the specified peer was lost.
+ - `no-shared-task(taskInfo)`: No shared task was found. This event is emitted by the initiator.
  - `connection-closed(closeCode)`: The connection was closed.
  - `connection-error(ErrorEvent)`: A websocket connection error occured.
 
