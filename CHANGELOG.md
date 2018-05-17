@@ -12,6 +12,10 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.11.3 (2018-05-17)
+
+- [added] Emit 'no-shared-task' event when no shared task could be found (#93)
+
 ### v0.11.2 (2018-05-08)
 
 - [fixed] Handle disconnected messages during peer handshake

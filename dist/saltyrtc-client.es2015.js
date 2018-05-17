@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.11.2
+ * saltyrtc-client-js v0.11.3
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -1556,7 +1556,10 @@ class InitiatorSignaling extends Signaling {
         }
         const task = InitiatorSignaling.chooseCommonTask(this.tasks, msg.tasks);
         if (task === null) {
-            console.debug(this.logTag, 'We requested:', this.tasks.map((t) => t.getName()), 'Peer offered:', msg.tasks);
+            const requested = this.tasks.map((t) => t.getName());
+            const offered = msg.tasks;
+            console.debug(this.logTag, 'We requested:', requested, 'Peer offered:', offered);
+            this.client.emit({ type: 'no-shared-task', data: { requested: requested, offered: offered } });
             throw new SignalingError(CloseCode.NoSharedTask, 'No shared task could be found');
         }
         else {
