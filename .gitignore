@@ -2,6 +2,7 @@
 node_modules/
 npm-debug.log
 tests/testsuite.js*
+tests/performance.js*
 apidocs/
 saltyrtc.crt
 saltyrtc.csr
