@@ -38,7 +38,7 @@ export class Box implements saltyrtc.Box {
     }
 
     /**
-     * Parse an Uint8Array, create a Box wrapping the data.
+     * Parse a Uint8Array, create a Box wrapping the data.
      *
      * May throw the following exceptions:
      *
@@ -55,10 +55,9 @@ export class Box implements saltyrtc.Box {
             throw 'bad-message-length';
         }
 
-        // Unpack nonce
+        // Unpack nonce & data
+        // Note: We are copying here since there is no way to claim ownership of the array
         const nonce = array.slice(0, nonceLength);
-
-        // Unpack data
         const data = array.slice(nonceLength);
 
         // Return box
