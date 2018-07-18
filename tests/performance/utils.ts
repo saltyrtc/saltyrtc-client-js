@@ -8,6 +8,6 @@
  */
 
 export const testData = {
-    plain: new Uint8Array(2 ** 16).fill(0xee),
+    bytes: new Uint8Array(2 ** 16).fill(0xee),
     nonce: new Uint8Array(24).fill(0xdd),
 };

@@ -128,27 +128,44 @@ export class KeyStore implements saltyrtc.KeyStore {
     }
 
     /**
-     * Encrypt data for the peer.
+     * Encrypt plain data for the peer and return encrypted data as bytes.
+     */
+    public encryptRaw(bytes: Uint8Array, nonce: Uint8Array, otherKey: Uint8Array): Uint8Array {
+        return nacl.box(bytes, nonce, otherKey, this._keyPair.secretKey);
+    }
+
+    /**
+     * Encrypt plain data for the peer and return encrypted data in a box.
      */
     public encrypt(bytes: Uint8Array, nonce: Uint8Array, otherKey: Uint8Array): saltyrtc.Box {
-        const encrypted = nacl.box(bytes, nonce, otherKey, this._keyPair.secretKey);
+        const encrypted = this.encryptRaw(bytes, nonce, otherKey);
         return new Box(nonce, encrypted, nacl.box.nonceLength);
     }
 
     /**
-     * Decrypt data from the peer.
+     * Decrypt encrypted bytes from the peer and return plain data as bytes.
+     *
+     * May throw CryptoError instances with the following codes:
+     *
+     * - decryption-failed: Data could not be decrypted
+     */
+    public decryptRaw(bytes: Uint8Array, nonce: Uint8Array, otherKey: Uint8Array): Uint8Array {
+        const data = nacl.box.open(bytes, nonce, otherKey, this._keyPair.secretKey);
+        if (!data) {
+            throw new CryptoError('decryption-failed', 'Data could not be decrypted');
+        }
+        return data as Uint8Array;
+    }
+
+    /**
+     * Decrypt encrypted boxed data from the peer and return plain data as bytes.
      *
      * May throw CryptoError instances with the following codes:
      *
      * - decryption-failed: Data could not be decrypted
      */
     public decrypt(box: saltyrtc.Box, otherKey: Uint8Array): Uint8Array {
-        // Decrypt data
-        const data = nacl.box.open(box.data, box.nonce, otherKey, this._keyPair.secretKey);
-        if (!data) {
-            throw new CryptoError('decryption-failed', 'Data could not be decrypted');
-        }
-        return data as Uint8Array;
+        return this.decryptRaw(box.data, box.nonce, otherKey);
     }
 }
 

@@ -6,5 +6,5 @@ export class Config {
     public static RUN_LOAD_TESTS = false;
 
     // Performance test configuration
-    public static CRYPTO_ITERATIONS = 10240;
+    public static CRYPTO_ITERATIONS = 2048;
 }
