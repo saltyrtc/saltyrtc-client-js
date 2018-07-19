@@ -43,7 +43,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
     };
 
     // Connection state
-    protected state: saltyrtc.SignalingState = 'new';
+    protected state: saltyrtc.SignalingState = saltyrtc.SignalingState.New;
     public handoverState = new HandoverState();
 
     // Main class
@@ -167,7 +167,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         const reason = CloseCode.ClosingNormal;
 
         // Update state
-        this.setState('closing');
+        this.setState(saltyrtc.SignalingState.Closing);
 
         // Send close message if necessary
         if (this.state === 'task') {
@@ -188,7 +188,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         }
 
         // Update state
-        this.setState('closed');
+        this.setState(saltyrtc.SignalingState.Closed);
     }
 
     /**
@@ -214,7 +214,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         this.ws.addEventListener('message', this.onMessage);
 
         // Store connection on instance
-        this.setState('ws-connecting');
+        this.setState(saltyrtc.SignalingState.WsConnecting);
         console.debug(this.logTag, 'Opening WebSocket connection to', url + path);
     }
 
@@ -223,7 +223,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      */
     protected onOpen = (ev: Event) => {
         console.info(this.logTag, 'Opened connection');
-        this.setState('server-handshake');
+        this.setState(saltyrtc.SignalingState.ServerHandshake);
     }
 
     /**
@@ -244,7 +244,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
             console.info(this.logTag, 'Closed WebSocket connection due to handover');
         } else {
             console.info(this.logTag, 'Closed WebSocket connection');
-            this.setState('closed');
+            this.setState(saltyrtc.SignalingState.Closed);
             this.client.emit({type: 'connection-closed', data: ev.code});
             const log = (reason: string) => console.error(this.logTag, 'Websocket close reason:', reason);
             switch (ev.code) {
@@ -408,7 +408,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
         // Check if we're done yet
         if (this.server.handshakeState as string === 'done') {
-            this.setState('peer-handshake');
+            this.setState(saltyrtc.SignalingState.PeerHandshake);
             console.debug(this.logTag, 'Server handshake done');
             this.initPeerHandshake();
         }
@@ -498,7 +498,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      */
     protected sendClientAuth(): void {
         const message: saltyrtc.messages.ClientAuth = {
-            type: 'client-auth',
+            type: saltyrtc.messages.MessageType.ClientAuth,
             your_cookie: this.server.cookiePair.theirs.asArrayBuffer(),
             subprotocols: [Signaling.SALTYRTC_SUBPROTOCOL],
             ping_interval: this.pingInterval,
@@ -561,7 +561,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      */
     public sendClose(reason: number): void {
         const message: saltyrtc.messages.Close = {
-            type: 'close',
+            type: saltyrtc.messages.MessageType.Close,
             reason: reason,
         };
         console.debug(this.logTag, 'Sending close');
@@ -944,7 +944,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         // Reset
         this.server = new Server();
         this.handoverState.reset();
-        this.setState('new');
+        this.setState(saltyrtc.SignalingState.New);
         if (reason !== undefined) {
             console.debug(this.logTag, 'Connection reset');
         }

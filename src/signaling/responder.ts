@@ -28,7 +28,7 @@ export class ResponderSignaling extends Signaling {
                 permanentKey: saltyrtc.KeyStore, initiatorPubKey: Uint8Array, authToken?: saltyrtc.AuthToken) {
         super(client, host, port, serverKey, tasks, pingInterval,
               permanentKey, authToken === undefined ? initiatorPubKey : undefined);
-        this.role = 'responder';
+        this.role = saltyrtc.SignalingRole.Responder;
         this.initiator = new Initiator(initiatorPubKey);
         if (authToken !== undefined) {
             this.authToken = authToken;
@@ -168,7 +168,7 @@ export class ResponderSignaling extends Signaling {
                     this.handleAuth(msg as saltyrtc.messages.InitiatorAuth, nonce);
 
                     // We're connected!
-                    this.setState('task');
+                    this.setState(saltyrtc.SignalingState.Task);
                     console.info(this.logTag, 'Peer handshake done');
 
                     break;
@@ -210,7 +210,7 @@ export class ResponderSignaling extends Signaling {
 
     protected sendClientHello(): void {
         const message: saltyrtc.messages.ClientHello = {
-            type: 'client-hello',
+            type: saltyrtc.messages.MessageType.ClientHello,
             key: this.permanentKey.publicKeyBytes.buffer,
         };
         const packet: Uint8Array = this.buildPacket(message, this.server, false);
@@ -281,7 +281,7 @@ export class ResponderSignaling extends Signaling {
      */
     protected sendToken(): void {
         const message: saltyrtc.messages.Token = {
-            type: 'token',
+            type: saltyrtc.messages.MessageType.Token,
             key: this.permanentKey.publicKeyBytes.buffer,
         };
         const packet: Uint8Array = this.buildPacket(message, this.initiator);
@@ -299,7 +299,7 @@ export class ResponderSignaling extends Signaling {
 
         // Send public key to initiator
         const replyMessage: saltyrtc.messages.Key = {
-            type: 'key',
+            type: saltyrtc.messages.MessageType.Key,
             key: this.sessionKey.publicKeyBytes.buffer,
         };
         const packet: Uint8Array = this.buildPacket(replyMessage, this.initiator);
@@ -334,7 +334,7 @@ export class ResponderSignaling extends Signaling {
 
         // Send auth
         const message: saltyrtc.messages.ResponderAuth = {
-            type: 'auth',
+            type: saltyrtc.messages.MessageType.Auth,
             your_cookie: nonce.cookie.asArrayBuffer(),
             tasks: taskNames,
             data: taskData,
