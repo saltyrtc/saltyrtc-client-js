@@ -891,6 +891,21 @@ export abstract class Signaling implements saltyrtc.Signaling {
     protected abstract getPeerPermanentKey(): Uint8Array;
 
     /**
+     * If the peer handshake is complete, this will return the incoming and
+     * outgoing CSN for the authenticated peer. Otherwise, null will be returned.
+     */
+    public getCurrentPeerCsn(): {incoming: number, outgoing: number} {
+        if (this.getState() !== 'task') {
+            return null;
+        }
+
+        return {
+            incoming: this.getPeer().csnPair.theirs,
+            outgoing: this.getPeer().csnPair.ours.asNumber(),
+        };
+    }
+
+    /**
      * Decrypt data from the peer using the session keys.
      */
     public decryptData(box: saltyrtc.Box): ArrayBuffer {

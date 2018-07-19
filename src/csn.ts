@@ -46,6 +46,17 @@ export class CombinedSequence implements saltyrtc.CombinedSequence {
         };
     }
 
+    /**
+     * Return a snapshot of the current CSN as an integer, without changing the
+     * internal state.
+     *
+     * Warning: Do not use this for the SaltyRTC protocol itself!
+     */
+    public asNumber(): number {
+        // tslint:disable-next-line:no-bitwise
+        return (this.overflow << 32) | this.sequenceNumber;
+    }
+
 }
 
 /**

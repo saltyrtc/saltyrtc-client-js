@@ -514,4 +514,11 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
         }
     }
 
+    /**
+     * If the peer handshake is complete, this will return the incoming and
+     * outgoing CSN for the authenticated peer. Otherwise, null will be returned.
+     */
+    public getCurrentPeerCsn(): {incoming: number, outgoing: number} {
+        return this.signaling.getCurrentPeerCsn();
+    }
 }
