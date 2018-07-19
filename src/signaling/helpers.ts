@@ -18,7 +18,7 @@ export function decryptKeystore(box: saltyrtc.Box, keyStore: saltyrtc.KeyStore, 
     try {
         return keyStore.decrypt(box, otherKey);
     } catch (e) {
-        if (e === 'decryption-failed') {
+        if (e.name === 'CryptoError' && e.code === 'decryption-failed') {
             throw new SignalingError(CloseCode.ProtocolError, 'Could not decrypt ' + msgType + ' message.');
         } else {
             throw e;
@@ -35,7 +35,7 @@ export function decryptAuthtoken(box: saltyrtc.Box, authToken: saltyrtc.AuthToke
     try {
         return authToken.decrypt(box);
     } catch (e) {
-        if (e === 'decryption-failed') {
+        if (e.name === 'CryptoError' && e.code === 'decryption-failed') {
             throw new SignalingError(CloseCode.ProtocolError, 'Could not decrypt ' + msgType + ' message.');
         } else {
             throw e;

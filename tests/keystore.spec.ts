@@ -1,7 +1,8 @@
 /// <reference path="jasmine.d.ts" />
 
-import { Box, KeyStore, AuthToken } from "../src/keystore";
-import { u8aToHex } from "../src/utils";
+import { CryptoError } from '../src/exceptions';
+import { Box, KeyStore, AuthToken } from '../src/keystore';
+import { u8aToHex } from '../src/utils';
 
 declare var nacl: any; // TODO
 
@@ -42,8 +43,8 @@ export default () => { describe('keystore', function() {
             let nonceLength = nacl.box.nonceLength;
             let boxSameLength = () => Box.fromUint8Array(nacl.randomBytes(nonceLength), nonceLength);
             let boxLessLength = () => Box.fromUint8Array(nacl.randomBytes(nonceLength - 2), nonceLength);
-            expect(boxSameLength).toThrow('bad-message-length');
-            expect(boxLessLength).toThrow('bad-message-length');
+            expect(boxSameLength).toThrow(new CryptoError('bad-message-length', 'Message is shorter than nonce'));
+            expect(boxLessLength).toThrow(new CryptoError('bad-message-length', 'Message is shorter than nonce'));
         });
 
         it('can be converted into a byte array', () => {
@@ -93,7 +94,7 @@ export default () => { describe('keystore', function() {
             let expected = nacl.randomBytes(24);
             let encrypted = ks.encrypt(expected, nonce, ks2.publicKeyBytes);
             let decrypt = () => ks.decrypt(encrypted, ks3.publicKeyBytes);
-            expect(decrypt).toThrow('decryption-failed');
+            expect(decrypt).toThrow(new CryptoError('decryption-failed', 'Data could not be decrypted'));
         });
 
         it('cannot encrypt without a proper nonce', () => {
