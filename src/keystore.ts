@@ -5,9 +5,8 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-// tslint:disable:no-string-throw
-
 import * as nacl from 'tweetnacl';
+import { CryptoError } from './exceptions';
 import { u8aToHex, validateKey } from './utils';
 
 /**
@@ -40,9 +39,9 @@ export class Box implements saltyrtc.Box {
     /**
      * Parse an Uint8Array, create a Box wrapping the data.
      *
-     * May throw the following exceptions:
+     * May throw CryptoError instances with the following codes:
      *
-     * - bad-message-length: Message is too short
+     * - bad-message-length: Message is shorter than the nonce
      */
     public static fromUint8Array(array: Uint8Array, nonceLength: number) {
         // Validate nonceLength parameter
@@ -52,7 +51,7 @@ export class Box implements saltyrtc.Box {
 
         // Validate message length
         if (array.byteLength <= nonceLength) {
-            throw 'bad-message-length';
+            throw new CryptoError('bad-message-length', 'Message is shorter than nonce');
         }
 
         // Unpack nonce
@@ -138,12 +137,16 @@ export class KeyStore implements saltyrtc.KeyStore {
 
     /**
      * Decrypt data from the peer.
+     *
+     * May throw CryptoError instances with the following codes:
+     *
+     * - decryption-failed: Data could not be decrypted
      */
     public decrypt(box: saltyrtc.Box, otherKey: Uint8Array): Uint8Array {
         // Decrypt data
         const data = nacl.box.open(box.data, box.nonce, otherKey, this._keyPair.secretKey);
         if (!data) {
-            throw 'decryption-failed';
+            throw new CryptoError('decryption-failed', 'Data could not be decrypted');
         }
         return data as Uint8Array;
     }
@@ -155,14 +158,20 @@ export class AuthToken implements saltyrtc.AuthToken {
 
     private logTag: string = '[SaltyRTC.AuthToken]';
 
+    /*
+     * May throw CryptoError instances with the following codes:
+     *
+     * - bad-token-length
+     */
     constructor(bytes?: Uint8Array) {
         if (typeof bytes === 'undefined') {
             this._authToken = nacl.randomBytes(nacl.secretbox.keyLength);
             console.debug(this.logTag, 'Generated auth token');
         } else {
             if (bytes.byteLength !== nacl.secretbox.keyLength) {
-                console.error(this.logTag, 'Auth token must be', nacl.secretbox.keyLength, 'bytes long.');
-                throw 'bad-token-length';
+                const msg = 'Auth token must be ' + nacl.secretbox.keyLength + ' bytes long.';
+                console.error(this.logTag, msg);
+                throw new CryptoError('bad-token-length', msg);
             }
             this._authToken = bytes;
             console.debug(this.logTag, 'Initialized auth token');
@@ -189,11 +198,15 @@ export class AuthToken implements saltyrtc.AuthToken {
 
     /**
      * Decrypt data using the shared auth token.
+     *
+     * May throw CryptoError instances with the following codes:
+     *
+     * - decryption-failed: Data could not be decrypted
      */
     public decrypt(box: saltyrtc.Box): Uint8Array {
         const data = nacl.secretbox.open(box.data, box.nonce, this._authToken);
         if (!data) {
-            throw 'decryption-failed';
+            throw new CryptoError('decryption-failed', 'Data could not be decrypted');
         }
         return data as Uint8Array;
     }

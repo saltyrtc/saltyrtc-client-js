@@ -57,3 +57,23 @@ export class ValidationError extends Error {
         this.critical = critical;
     }
 }
+
+/**
+ * Crypto related errors.
+ */
+export class CryptoError extends Error {
+    // A short string used to identify the exception
+    // independently from the error message.
+    private _code: string;
+
+    constructor(code: string, message: string) {
+        super(message);
+        this.name = 'CryptoError';
+        this.message = message;
+        this._code = code;
+    }
+
+    public get code(): string {
+        return this._code;
+    }
+}

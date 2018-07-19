@@ -772,7 +772,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         try {
             decrypted = this.permanentKey.decrypt(box, serverPublicKey);
         } catch (e) {
-            if (e === 'decryption-failed') {
+            if (e.name === 'CryptoError' && e.code === 'decryption-failed') {
                 throw new ValidationError('Could not decrypt signed_keys in server_auth message');
             }
             throw e;
@@ -983,7 +983,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
             const decrypted = this.sessionKey.decrypt(box, this.getPeerSessionKey());
             return this.decodeMessage(decrypted, 'peer');
         } catch (e) {
-            if (convertErrors === true && e === 'decryption-failed') {
+            if (convertErrors === true && e.name === 'CryptoError' && e.code === 'decryption-failed') {
                 const nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
                 throw new ProtocolError('Could not decrypt peer message from ' + byteToHex(nonce.source));
             } else {
@@ -1000,7 +1000,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
             const decrypted = this.permanentKey.decrypt(box, this.server.sessionKey);
             return this.decodeMessage(decrypted, 'server');
         } catch (e) {
-            if (e === 'decryption-failed') {
+            if (e.name === 'CryptoError' && e.code === 'decryption-failed') {
                 throw new ProtocolError('Could not decrypt server message');
             } else {
                 throw e;
@@ -1073,7 +1073,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         try {
             return this.sessionKey.decrypt(box, this.getPeerSessionKey());
         } catch (e) {
-            if (e === 'decryption-failed') {
+            if (e.name === 'CryptoError' && e.code === 'decryption-failed') {
                 // This could only happen if the session keys are somehow broken.
                 // If that happens, something went massively wrong.
                 if (this.state === 'task') {
