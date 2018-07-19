@@ -19,8 +19,22 @@ declare namespace saltyrtc {
         publicKeyBytes: Uint8Array;
         secretKeyHex: string;
         secretKeyBytes: Uint8Array;
+        getSharedKeyStore(publicKey: Uint8Array | string): SharedKeyStore;
+        encryptRaw(bytes: Uint8Array, nonce: Uint8Array, otherKey: Uint8Array): Uint8Array;
         encrypt(bytes: Uint8Array, nonce: Uint8Array, otherKey: Uint8Array): Box;
+        decryptRaw(bytes: Uint8Array, nonce: Uint8Array, otherKey: Uint8Array): Uint8Array;
         decrypt(box: Box, otherKey: Uint8Array): Uint8Array;
+    }
+
+    interface SharedKeyStore {
+        localSecretKeyHex: string;
+        localSecretKeyBytes: Uint8Array
+        remotePublicKeyHex: string;
+        remotePublicKeyBytes: Uint8Array
+        encryptRaw(bytes: Uint8Array, nonce: Uint8Array): Uint8Array;
+        encrypt(bytes: Uint8Array, nonce: Uint8Array): Box;
+        decryptRaw(bytes: Uint8Array, nonce: Uint8Array): Uint8Array;
+        decrypt(box: Box): Uint8Array;
     }
 
     interface AuthToken {
