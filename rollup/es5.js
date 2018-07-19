@@ -1,10 +1,14 @@
 import config from './es2015.js';
 import babel from 'rollup-plugin-babel';
 
-config.dest = 'dist/saltyrtc-client.es5.js';
-config.format = 'iife';
-config.moduleName = 'saltyrtcClient';
-config.useStrict = true;
+config.output.file = 'dist/saltyrtc-client.es5.js';
+config.output.name = 'saltyrtcClient';
+config.output.format = 'iife';
+config.output.globals = {
+    'msgpack-lite': 'msgpack',
+    'tweetnacl': 'nacl'
+};
+config.output.strict = true;
 config.plugins.push(
     babel({
         babelrc: false,
@@ -16,9 +20,5 @@ config.plugins.push(
         plugins: ['external-helpers']
     })
 );
-config.globals = {
-    'msgpack-lite': 'msgpack',
-    'tweetnacl': 'nacl'
-};
 
 export default config;
