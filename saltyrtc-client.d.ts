@@ -38,15 +38,7 @@ declare namespace saltyrtc {
         type: messages.MessageType;
     }
 
-    const enum SignalingState {
-        New = 'new',
-        WsConnecting = 'ws-connecting',
-        ServerHandshake = 'server-handshake',
-        PeerHandshake = 'peer-handshake',
-        Task = 'task',
-        Closing = 'closing',
-        Closed = 'closed',
-    }
+    type SignalingState = 'new' | 'ws-connecting' | 'server-handshake' | 'peer-handshake' | 'task' | 'closing' | 'closed';
 
     interface HandoverState {
         local: boolean;
@@ -57,10 +49,9 @@ declare namespace saltyrtc {
         reset(): void;
     }
 
-    const enum SignalingRole {
-        Initiator = 'initiator',
-        Responder = 'responder',
-    }
+    type SignalingChannel = 'websocket' | 'datachannel';
+
+    type SignalingRole = 'initiator' | 'responder';
 
     interface SaltyRTCEvent {
         type: string;
@@ -68,9 +59,7 @@ declare namespace saltyrtc {
     }
     type SaltyRTCEventHandler = (event: SaltyRTCEvent) => boolean | void;
 
-    interface TaskData {
-        [index: string]: any;
-    }
+    type TaskData = { [index:string] : any };
 
     interface Signaling {
         handoverState: HandoverState;
@@ -275,10 +264,7 @@ declare namespace saltyrtc {
         theirs: Cookie;
     }
 
-    interface NextCombinedSequence {
-        sequenceNumber: number;
-        overflow: number;
-    }
+    type NextCombinedSequence = { sequenceNumber: number, overflow: number };
 
     interface CombinedSequence {
         next(): NextCombinedSequence;
@@ -293,7 +279,6 @@ declare namespace saltyrtc {
         closeCode: number;
     }
 
-    // tslint:disable-next-line:no-empty-interface
     interface ConnectionError extends Error {
     }
 
@@ -301,39 +286,26 @@ declare namespace saltyrtc {
 
 declare namespace saltyrtc.messages {
 
-    const enum MessageType {
-        ServerHello = 'server-hello',
-        ClientHello = 'client-hello',
-        ClientAuth = 'client-auth',
-        ServerAuth = 'server-auth',
-        NewInitiator = 'new-initiator',
-        NewResponder = 'new-responder',
-        DropResponder = 'drop-responder',
-        SendError = 'send-error',
-        Token = 'token',
-        Key = 'key',
-        Auth = 'auth',
-        Restart = 'restart',
-        Close = 'close',
-        Disconnected = 'disconnected',
-        Applicatiion = 'application',
-    }
+    type MessageType = 'server-hello' | 'client-hello' | 'client-auth'
+                     | 'server-auth' | 'new-initiator' | 'new-responder'
+                     | 'drop-responder' | 'send-error' | 'token' | 'key'
+                     | 'auth' | 'restart' | 'close' | 'disconnected' | 'application';
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#server-hello
     interface ServerHello extends SignalingMessage {
-        type: MessageType.ServerHello;
+        type: 'server-hello';
         key: ArrayBuffer;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#client-hello
     interface ClientHello extends SignalingMessage {
-        type: MessageType.ClientHello;
+        type: 'client-hello';
         key: ArrayBuffer;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#client-auth
     interface ClientAuth extends SignalingMessage {
-        type: MessageType.ClientAuth;
+        type: 'client-auth';
         your_cookie: ArrayBuffer;
         your_key?: ArrayBuffer | null;
         subprotocols: string[];
@@ -342,7 +314,7 @@ declare namespace saltyrtc.messages {
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#server-auth
     interface ServerAuth extends SignalingMessage {
-        type: MessageType.ServerAuth;
+        type: 'server-auth';
         your_cookie: ArrayBuffer;
         signed_keys?: ArrayBuffer;
         initiator_connected?: boolean;
@@ -351,43 +323,43 @@ declare namespace saltyrtc.messages {
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#new-initiator
     interface NewInitiator extends SignalingMessage {
-        type: MessageType.NewInitiator;
+        type: 'new-initiator';
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#new-responder
     interface NewResponder extends SignalingMessage {
-        type: MessageType.NewResponder;
+        type: 'new-responder';
         id: number;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#drop-responder
     interface DropResponder extends SignalingMessage {
-        type: MessageType.DropResponder;
+        type: 'drop-responder';
         id: number;
         reason?: number;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#send-error
     interface SendError extends SignalingMessage {
-        type: MessageType.SendError;
+        type: 'send-error';
         id: ArrayBuffer;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#token-message
     interface Token extends SignalingMessage {
-        type: MessageType.Token;
+        type: 'token';
         key: ArrayBuffer;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#key-message
     interface Key extends SignalingMessage {
-        type: MessageType.Key;
+        type: 'key';
         key: ArrayBuffer;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#auth-message
     interface Auth extends SignalingMessage {
-        type: MessageType.Auth;
+        type: 'auth';
         your_cookie: ArrayBuffer;
         data: { [index:string] : any };
     }
@@ -400,18 +372,18 @@ declare namespace saltyrtc.messages {
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#restart
     interface Restart extends SignalingMessage {
-        type: MessageType.Restart;
+        type: 'restart';
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#close-message
     interface Close extends SignalingMessage {
-        type: MessageType.Close;
+        type: 'close';
         reason: number;
     }
 
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#disconnected-message
     interface Disconnected extends SignalingMessage {
-        type: MessageType.Disconnected;
+        type: 'disconnected';
         id: number;
     }
 

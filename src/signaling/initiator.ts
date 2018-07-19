@@ -32,7 +32,7 @@ export class InitiatorSignaling extends Signaling {
                 tasks: saltyrtc.Task[], pingInterval: number,
                 permanentKey: saltyrtc.KeyStore, responderTrustedKey?: Uint8Array) {
         super(client, host, port, serverKey, tasks, pingInterval, permanentKey, responderTrustedKey);
-        this.role = saltyrtc.SignalingRole.Initiator;
+        this.role = 'initiator';
         if (responderTrustedKey === undefined) {
             this.authToken = new AuthToken();
         }
@@ -284,7 +284,7 @@ export class InitiatorSignaling extends Signaling {
                     this.dropResponders(CloseCode.DroppedByInitiator);
 
                     // Peer handshake done
-                    this.setState(saltyrtc.SignalingState.Task);
+                    this.setState('task');
                     console.info(this.logTag, 'Peer handshake done');
                     this.task.onPeerHandshakeDone();
 
@@ -374,7 +374,7 @@ export class InitiatorSignaling extends Signaling {
      */
     private sendKey(responder: Responder): void {
         const message: saltyrtc.messages.Key = {
-            type: saltyrtc.messages.MessageType.Key,
+            type: 'key',
             key: responder.keyStore.publicKeyBytes.buffer,
         };
         const packet: Uint8Array = this.buildPacket(message, responder);
@@ -398,7 +398,7 @@ export class InitiatorSignaling extends Signaling {
 
         // Send auth
         const message: saltyrtc.messages.InitiatorAuth = {
-            type: saltyrtc.messages.MessageType.Auth,
+            type: 'auth',
             your_cookie: nonce.cookie.asArrayBuffer(),
             task: this.task.getName(),
             data: taskData,
@@ -543,7 +543,7 @@ export class InitiatorSignaling extends Signaling {
      */
     private dropResponder(responderId: number, reason: number) {
         const message: saltyrtc.messages.DropResponder = {
-            type: saltyrtc.messages.MessageType.DropResponder,
+            type: 'drop-responder',
             id: responderId,
             reason: reason,
         };
