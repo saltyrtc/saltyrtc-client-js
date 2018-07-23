@@ -56,9 +56,8 @@ export abstract class Signaling implements saltyrtc.Signaling {
     // Server information
     protected server = new Server();
 
-    // Our keys
+    // Our permanent key
     protected permanentKey: saltyrtc.KeyStore;
-    protected sessionKey: saltyrtc.KeyStore = null;
 
     // Peer trusted key or auth token
     protected peerTrustedKey: Uint8Array = null;
@@ -135,7 +134,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Return the peer permanent key as Uint8Array.
      */
     public get peerPermanentKeyBytes(): Uint8Array {
-        return this.getPeerPermanentKey();
+        return this.getPeer().permanentSharedKey.remotePublicKeyBytes;
     }
 
     /**
@@ -372,7 +371,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
             payload = box.data;
         } else {
             // Later, they're encrypted with our permanent key and the server key
-            payload = this.permanentKey.decrypt(box, this.server.sessionKey);
+            payload = this.server.sessionSharedKey.decrypt(box);
         }
 
         // Handle message
@@ -427,7 +426,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
             this.onSignalingServerMessage(box);
         } else {
-            const decrypted: Uint8Array = this.sessionKey.decrypt(box, this.getPeerSessionKey());
+            const decrypted: Uint8Array = this.getPeer().sessionSharedKey.decrypt(box);
             this.onSignalingPeerMessage(decrypted);
         }
     }
@@ -483,8 +482,8 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Handle an incoming server-hello message.
      */
     protected handleServerHello(msg: saltyrtc.messages.ServerHello, nonce: Nonce): void {
-        // Update server instance
-        this.server.sessionKey = new Uint8Array(msg.key);
+        // Update server instance with the established session key and cookie
+        this.server.setSharedSessionKey(new Uint8Array(msg.key), this.permanentKey);
         this.server.cookiePair.theirs = nonce.cookie;
     }
 
@@ -770,6 +769,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         console.debug(this.logTag, 'Expected server public permanent key is', u8aToHex(serverPublicKey));
         let decrypted: Uint8Array;
         try {
+            // Note: We will not create a SharedKeyStore here since this will be done only once
             decrypted = this.permanentKey.decrypt(box, serverPublicKey);
         } catch (e) {
             if (e.name === 'CryptoError' && e.code === 'decryption-failed') {
@@ -777,7 +777,10 @@ export abstract class Signaling implements saltyrtc.Signaling {
             }
             throw e;
         }
-        const expected = concat(this.server.sessionKey, this.permanentKey.publicKeyBytes);
+        const expected = concat(
+            this.server.sessionSharedKey.remotePublicKeyBytes,
+            this.permanentKey.publicKeyBytes,
+        );
         if (!arraysAreEqual(decrypted, expected)) {
             throw new ValidationError('Decrypted signed_keys in server-auth message is invalid');
         }
@@ -860,7 +863,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Encrypt data for the server.
      */
     protected encryptHandshakeDataForServer(payload: Uint8Array, nonceBytes: Uint8Array): saltyrtc.Box {
-        return this.permanentKey.encrypt(payload, nonceBytes, this.server.sessionKey);
+        return this.server.sessionSharedKey.encrypt(payload, nonceBytes);
     }
 
     /**
@@ -875,20 +878,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * May return null if peer is not yet set.
      */
     protected abstract getPeer(): Initiator | Responder;
-
-    /**
-     * Get the session key of the peer.
-     *
-     * May return null if peer is not yet set.
-     */
-    protected abstract getPeerSessionKey(): Uint8Array;
-
-    /**
-     * Get the permanent key of the peer.
-     *
-     * May return null if peer is not yet set.
-     */
-    protected abstract getPeerPermanentKey(): Uint8Array;
 
     /**
      * If the peer handshake is complete, this will return the incoming and
@@ -909,12 +898,10 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Decrypt data from the peer using the session keys.
      */
     public decryptData(box: saltyrtc.Box): ArrayBuffer {
-        const decryptedBytes = this.sessionKey.decrypt(box, this.getPeerSessionKey());
+        const decryptedBytes = this.getPeer().sessionSharedKey.decrypt(box);
 
-        // We need to return an ArrayBuffer, but we can't directly return
-        // `decryptedBytes.buffer` because the `Uint8Array` could be a view
-        // into the underlying buffer. Therefore we return a view into the
-        // ArrayBuffer instead.
+        // We need to copy the underlying buffer at the specific offset and
+        // length of the view to be able to return an ArrayBuffer directly.
         const start = decryptedBytes.byteOffset;
         const end = start + decryptedBytes.byteLength;
         return decryptedBytes.buffer.slice(start, end);
@@ -980,7 +967,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      */
     public decryptPeerMessage(box: saltyrtc.Box, convertErrors = true): saltyrtc.Message {
         try {
-            const decrypted = this.sessionKey.decrypt(box, this.getPeerSessionKey());
+            const decrypted = this.getPeer().sessionSharedKey.decrypt(box);
             return this.decodeMessage(decrypted, 'peer');
         } catch (e) {
             if (convertErrors === true && e.name === 'CryptoError' && e.code === 'decryption-failed') {
@@ -997,7 +984,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      */
     public decryptServerMessage(box: saltyrtc.Box): saltyrtc.Message {
         try {
-            const decrypted = this.permanentKey.decrypt(box, this.server.sessionKey);
+            const decrypted = this.server.sessionSharedKey.decrypt(box);
             return this.decodeMessage(decrypted, 'server');
         } catch (e) {
             if (e.name === 'CryptoError' && e.code === 'decryption-failed') {
@@ -1061,7 +1048,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * This method should primarily be used by tasks.
      */
     public encryptForPeer(data: Uint8Array, nonce: Uint8Array): saltyrtc.Box {
-        return this.sessionKey.encrypt(data, nonce, this.getPeerSessionKey());
+        return this.getPeer().sessionSharedKey.encrypt(data, nonce);
     }
 
     /**
@@ -1071,7 +1058,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      */
     public decryptFromPeer(box: saltyrtc.Box): Uint8Array {
         try {
-            return this.sessionKey.decrypt(box, this.getPeerSessionKey());
+            return this.getPeer().sessionSharedKey.decrypt(box);
         } catch (e) {
             if (e.name === 'CryptoError' && e.code === 'decryption-failed') {
                 // This could only happen if the session keys are somehow broken.

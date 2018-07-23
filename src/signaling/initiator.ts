@@ -7,12 +7,12 @@
 
 import { CloseCode } from '../closecode';
 import { ProtocolError, SignalingError, ValidationError } from '../exceptions';
-import { AuthToken } from '../keystore';
+import { AuthToken, KeyStore } from '../keystore';
 import { Nonce } from '../nonce';
 import { Responder, Server } from '../peers';
 import { byteToHex } from '../utils';
 import { Signaling } from './common';
-import { decryptKeystore, isResponderId } from './helpers';
+import { isResponderId } from './helpers';
 
 export class InitiatorSignaling extends Signaling {
 
@@ -70,29 +70,15 @@ export class InitiatorSignaling extends Signaling {
         // Encrypt
         switch (messageType) {
             case 'key':
-                return this.permanentKey.encrypt(payload, nonceBytes, responder.permanentKey);
+                return responder.permanentSharedKey.encrypt(payload, nonceBytes);
             default:
-                return responder.keyStore.encrypt(payload, nonceBytes, responder.sessionKey);
+                return responder.sessionSharedKey.encrypt(payload, nonceBytes);
         }
     }
 
     protected getPeer(): Responder | null {
         if (this.responder !== null) {
             return this.responder;
-        }
-        return null;
-    }
-
-    protected getPeerSessionKey(): Uint8Array | null {
-        if (this.responder !== null) {
-            return this.responder.sessionKey;
-        }
-        return null;
-    }
-
-    protected getPeerPermanentKey(): Uint8Array | null {
-        if (this.responder !== null) {
-            return this.responder.permanentKey;
         }
         return null;
     }
@@ -145,7 +131,7 @@ export class InitiatorSignaling extends Signaling {
             responder.handshakeState = 'token-received';
 
             // Set the public permanent key.
-            responder.permanentKey = this.peerTrustedKey;
+            responder.setSharedPermanentKey(this.peerTrustedKey, this.permanentKey);
         }
 
         // Store responder
@@ -192,7 +178,16 @@ export class InitiatorSignaling extends Signaling {
         if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
             // Nonce claims to come from server.
             // Try to decrypt data accordingly.
-            payload = decryptKeystore(box, this.permanentKey, this.server.sessionKey, 'server');
+            try {
+                payload = this.server.sessionSharedKey.decrypt(box);
+            } catch (e) {
+                if (e.name === 'CryptoError' && e.code === 'decryption-failed') {
+                    throw new SignalingError(
+                        CloseCode.ProtocolError, 'Could not decrypt server message.');
+                } else {
+                    throw e;
+                }
+            }
 
             const msg: saltyrtc.Message = this.decodeMessage(payload, 'server');
             switch (msg.type) {
@@ -245,18 +240,19 @@ export class InitiatorSignaling extends Signaling {
                     break;
                 case 'token-received':
                     // Expect key message, encrypted with our permanent key
-                    const peerPublicKey = this.peerTrustedKey || responder.permanentKey;
-                    try {
-                        payload = this.permanentKey.decrypt(box, peerPublicKey);
-                    } catch (e) {
-                        if (this.peerTrustedKey !== null) {
+                    if (this.peerTrustedKey !== null) {
+                        try {
+                            // Note: We don't use a SharedKeyStore here since this is done only once.
+                            payload = this.permanentKey.decrypt(box, this.peerTrustedKey);
+                        } catch (e) {
                             // Decryption failed.
                             // We trust a responder, but this particular responder used a different key.
                             console.warn(this.logTag, 'Could not decrypt key message');
                             this.dropResponder(responder.id, CloseCode.InitiatorCouldNotDecrypt);
                             return;
                         }
-                        throw e;
+                    } else {
+                        payload = responder.permanentSharedKey.decrypt(box);
                     }
                     msg = this.decodeMessage(payload, 'key', true);
                     console.debug(this.logTag, 'Received key');
@@ -265,9 +261,16 @@ export class InitiatorSignaling extends Signaling {
                     break;
                 case 'key-sent':
                     // Expect auth message, encrypted with our session key
-                    // Note: The session key related to the responder is
-                    // responder.keyStore, not this.sessionKey!
-                    payload = decryptKeystore(box, responder.keyStore, responder.sessionKey, 'auth');
+                    try {
+                        payload = responder.sessionSharedKey.decrypt(box);
+                    } catch (e) {
+                        if (e.name === 'CryptoError' && e.code === 'decryption-failed') {
+                            throw new SignalingError(
+                                CloseCode.ProtocolError, 'Could not decrypt auth message.');
+                        } else {
+                            throw e;
+                        }
+                    }
                     msg = this.decodeMessage(payload, 'auth', true);
                     console.debug(this.logTag, 'Received auth');
                     this.handleAuth(msg as saltyrtc.messages.ResponderAuth, responder, nonce);
@@ -275,7 +278,6 @@ export class InitiatorSignaling extends Signaling {
 
                     // We're connected!
                     this.responder = this.responders.get(responder.id);
-                    this.sessionKey = responder.keyStore;
 
                     // Remove responder from responders list
                     this.responders.delete(responder.id);
@@ -357,7 +359,7 @@ export class InitiatorSignaling extends Signaling {
      * A responder sends his public permanent key.
      */
     private handleToken(msg: saltyrtc.messages.Token, responder: Responder): void {
-        responder.permanentKey = new Uint8Array(msg.key);
+        responder.setSharedPermanentKey(new Uint8Array(msg.key), this.permanentKey);
         responder.handshakeState = 'token-received';
     }
 
@@ -365,7 +367,9 @@ export class InitiatorSignaling extends Signaling {
      * A responder sends his public session key.
      */
     private handleKey(msg: saltyrtc.messages.Key, responder: Responder): void {
-        responder.sessionKey = new Uint8Array(msg.key);
+        // Generate our own session key & generate the shared session key
+        responder.setLocalSessionKey(new KeyStore());
+        responder.setSharedSessionKey(new Uint8Array(msg.key));
         responder.handshakeState = 'key-received';
     }
 
@@ -375,7 +379,7 @@ export class InitiatorSignaling extends Signaling {
     private sendKey(responder: Responder): void {
         const message: saltyrtc.messages.Key = {
             type: 'key',
-            key: responder.keyStore.publicKeyBytes.buffer,
+            key: responder.localSessionKey.publicKeyBytes.buffer,
         };
         const packet: Uint8Array = this.buildPacket(message, responder);
         console.debug(this.logTag, 'Sending key');

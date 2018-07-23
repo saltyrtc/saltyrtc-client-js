@@ -7,7 +7,6 @@
 
 import { CookiePair } from './cookie';
 import { CombinedSequencePair } from './csn';
-import { KeyStore } from './keystore';
 import { byteToHex } from './utils';
 
 /**
@@ -15,10 +14,10 @@ import { byteToHex } from './utils';
  */
 export abstract class Peer {
     protected _id: number;
-    public permanentKey: Uint8Array | null;
-    public sessionKey: Uint8Array | null;
     protected _csnPair = new CombinedSequencePair();
     protected _cookiePair: saltyrtc.CookiePair;
+    protected _permanentSharedKey: saltyrtc.SharedKeyStore | null = null;
+    protected _sessionSharedKey: saltyrtc.SharedKeyStore | null = null;
 
     constructor(id: number, cookiePair?: saltyrtc.CookiePair) {
         this._id = id;
@@ -45,21 +44,63 @@ export abstract class Peer {
         return this._cookiePair;
     }
 
+    public get permanentSharedKey(): saltyrtc.SharedKeyStore | null {
+        return this._permanentSharedKey;
+    }
+
+    public get sessionSharedKey(): saltyrtc.SharedKeyStore | null {
+        return this._sessionSharedKey;
+    }
+
     public abstract get name(): string;
+
+    public setSharedPermanentKey(remotePermanentKey: Uint8Array, localPermanentKey: saltyrtc.KeyStore) {
+        this._permanentSharedKey = localPermanentKey.getSharedKeyStore(remotePermanentKey);
+    }
+
+    public setSharedSessionKey(remoteSessionKey: Uint8Array, localSessionKey: saltyrtc.KeyStore) {
+        this._sessionSharedKey = localSessionKey.getSharedKeyStore(remoteSessionKey);
+    }
+}
+
+/**
+ * Base class for initiator and responder.
+ */
+export abstract class Client extends Peer {
+    protected _localSessionKey: saltyrtc.KeyStore | null = null;
+
+    public get localSessionKey(): saltyrtc.KeyStore | null {
+        return this._localSessionKey;
+    }
+
+    public setLocalSessionKey(localSessionKey: saltyrtc.KeyStore) {
+        this._localSessionKey = localSessionKey;
+    }
+
+    public setSharedSessionKey(remoteSessionKey: Uint8Array, localSessionKey?: saltyrtc.KeyStore) {
+        if (!localSessionKey) {
+            localSessionKey = this._localSessionKey;
+        } else {
+            this._localSessionKey = localSessionKey;
+        }
+        super.setSharedSessionKey(remoteSessionKey, localSessionKey);
+    }
 }
 
 /**
  * Information about the initiator. Used by responder during handshake.
  */
-export class Initiator extends Peer {
+export class Initiator extends Client {
     public static ID = 0x01;
 
     public connected = false;
-    public handshakeState: 'new' | 'token-sent' | 'key-sent' | 'key-received' | 'auth-sent' | 'auth-received' = 'new';
+    public handshakeState: 'new' | 'token-sent' | 'key-sent' | 'key-received'
+                         | 'auth-sent' | 'auth-received'
+                         = 'new';
 
-    constructor(permanentKey: Uint8Array) {
+    constructor(remotePermanentKey: Uint8Array, localPermanentKey: saltyrtc.KeyStore) {
         super(Initiator.ID);
-        this.permanentKey = permanentKey;
+        this.setSharedPermanentKey(remotePermanentKey, localPermanentKey);
     }
 
     public get name(): string {
@@ -70,8 +111,7 @@ export class Initiator extends Peer {
 /**
  * Information about a responder. Used by initiator during handshake.
  */
-export class Responder extends Peer {
-    public keyStore = new KeyStore();
+export class Responder extends Client {
     public handshakeState: 'new' | 'token-received' | 'key-received'
                          | 'key-sent' | 'auth-received' | 'auth-sent'
                          = 'new';
