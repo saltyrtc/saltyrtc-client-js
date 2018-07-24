@@ -757,7 +757,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
     /**
      * Validate the signed keys sent by the server in the server-auth message.
      *
-     * @param signed_keys The `signed_keys` field from the server-auth message.
+     * @param signedKeys The `signed_keys` field from the server-auth message.
      * @param nonce The incoming message nonce.
      * @param serverPublicKey The expected server public permanent key.
      * @throws ValidationError if the signed keys are not valid.
