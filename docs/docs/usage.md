@@ -14,7 +14,7 @@ To initialize a SaltyRTC client instance, you can use the `SaltyRTCBuilder`.
 let builder = new saltyrtcClient.SaltyRTCBuilder();
 ```
 
-### Connection info
+### Connection Info
 
 Then you need to provide connection info:
 
@@ -26,7 +26,7 @@ builder.connectTo(host, port);
 
 For testing, you can use [our test server](https://saltyrtc.org/pages/getting-started.html).
 
-### Key store
+### Key Store
 
 The client needs to have its own public/private keypair. Create a new keypair
 with the `KeyStore` class:
@@ -36,7 +36,7 @@ const keyStore = new saltyrtcClient.KeyStore();
 builder.withKeyStore(keyStore);
 ```
 
-### Server key pinning
+### Server Key Pinning
 
 If you want to use server key pinning, specify the server public permanent key:
 
@@ -47,7 +47,7 @@ builder.withServerKey(serverPublicPermanentKey);
 
 The public key can either be passed in as `Uint8Array` or as hex-encoded string.
 
-### Websocket ping interval
+### Websocket Ping Interval
 
 Optionally, you can specify a Websocket ping interval in seconds:
 
@@ -55,7 +55,7 @@ Optionally, you can specify a Websocket ping interval in seconds:
 builder.withPingInterval(30);
 ```
 
-### Task configuration
+### Task Configuration
 
 You must initialize SaltyRTC with a task (TODO: Link to tasks documentation)
 that takes over after the handshake is done.
@@ -92,7 +92,7 @@ const client = builder.asResponder();
 Both the initiator public permanent key as well as the initiator auth token can
 be either `Uint8Array` instances or hex-encoded strings.
 
-## Full example
+## Full Example
 
 All methods on the `SaltyRTCBuilder` support chaining. Here's a full example of
 an initiator configuration:
@@ -135,7 +135,7 @@ The following events are available:
  - `connection-closed(closeCode)`: The connection was closed.
  - `connection-error(ErrorEvent)`: A websocket connection error occured.
 
-## Trusted keys
+## Trusted Keys
 
 In order to reconnect to a session using a trusted key, you first need to
 restore your `KeyStore` with the private permanent key originally used to
@@ -155,7 +155,7 @@ builder.withTrustedPeerKey(peerPublicPermanentKey);
 
 The public key can be passed in either as `Uint8Array` or as hex-encoded string.
 
-## Dynamically determine server connection info
+## Dynamically Determine Server Connection Info
 
 Instead of specifying the SaltyRTC server host and port directly, you can
 instead provide an implementation of a `ServerInfoFactory` that can dynamically
@@ -164,7 +164,7 @@ determine the connection info based on the public key of the initiator.
 The signature of the function must look like this:
 
 ```typescript
-(initiatorPublicKey: string) => {host: string, port: number}
+(initiatorPublicKey: string) => { host: string, port: number }
 ```
 
 Example:
