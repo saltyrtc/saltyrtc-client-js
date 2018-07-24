@@ -131,7 +131,7 @@ export class InitiatorSignaling extends Signaling {
             responder.handshakeState = 'token-received';
 
             // Set the public permanent key.
-            responder.setSharedPermanentKey(this.peerTrustedKey, this.permanentKey);
+            responder.setPermanentSharedKey(this.peerTrustedKey, this.permanentKey);
         }
 
         // Store responder
@@ -359,7 +359,7 @@ export class InitiatorSignaling extends Signaling {
      * A responder sends his public permanent key.
      */
     private handleToken(msg: saltyrtc.messages.Token, responder: Responder): void {
-        responder.setSharedPermanentKey(new Uint8Array(msg.key), this.permanentKey);
+        responder.setPermanentSharedKey(new Uint8Array(msg.key), this.permanentKey);
         responder.handshakeState = 'token-received';
     }
 
@@ -369,7 +369,7 @@ export class InitiatorSignaling extends Signaling {
     private handleKey(msg: saltyrtc.messages.Key, responder: Responder): void {
         // Generate our own session key & generate the shared session key
         responder.setLocalSessionKey(new KeyStore());
-        responder.setSharedSessionKey(new Uint8Array(msg.key));
+        responder.setSessionSharedKey(new Uint8Array(msg.key));
         responder.handshakeState = 'key-received';
     }
 

@@ -483,7 +483,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      */
     protected handleServerHello(msg: saltyrtc.messages.ServerHello, nonce: Nonce): void {
         // Update server instance with the established session key and cookie
-        this.server.setSharedSessionKey(new Uint8Array(msg.key), this.permanentKey);
+        this.server.setSessionSharedKey(new Uint8Array(msg.key), this.permanentKey);
         this.server.cookiePair.theirs = nonce.cookie;
     }
 

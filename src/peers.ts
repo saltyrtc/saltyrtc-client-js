@@ -54,11 +54,11 @@ export abstract class Peer {
 
     public abstract get name(): string;
 
-    public setSharedPermanentKey(remotePermanentKey: Uint8Array, localPermanentKey: saltyrtc.KeyStore) {
+    public setPermanentSharedKey(remotePermanentKey: Uint8Array, localPermanentKey: saltyrtc.KeyStore) {
         this._permanentSharedKey = localPermanentKey.getSharedKeyStore(remotePermanentKey);
     }
 
-    public setSharedSessionKey(remoteSessionKey: Uint8Array, localSessionKey: saltyrtc.KeyStore) {
+    public setSessionSharedKey(remoteSessionKey: Uint8Array, localSessionKey: saltyrtc.KeyStore) {
         this._sessionSharedKey = localSessionKey.getSharedKeyStore(remoteSessionKey);
     }
 }
@@ -77,13 +77,13 @@ export abstract class Client extends Peer {
         this._localSessionKey = localSessionKey;
     }
 
-    public setSharedSessionKey(remoteSessionKey: Uint8Array, localSessionKey?: saltyrtc.KeyStore) {
+    public setSessionSharedKey(remoteSessionKey: Uint8Array, localSessionKey?: saltyrtc.KeyStore) {
         if (!localSessionKey) {
             localSessionKey = this._localSessionKey;
         } else {
             this._localSessionKey = localSessionKey;
         }
-        super.setSharedSessionKey(remoteSessionKey, localSessionKey);
+        super.setSessionSharedKey(remoteSessionKey, localSessionKey);
     }
 }
 
@@ -100,7 +100,7 @@ export class Initiator extends Client {
 
     constructor(remotePermanentKey: Uint8Array, localPermanentKey: saltyrtc.KeyStore) {
         super(Initiator.ID);
-        this.setSharedPermanentKey(remotePermanentKey, localPermanentKey);
+        this.setPermanentSharedKey(remotePermanentKey, localPermanentKey);
     }
 
     public get name(): string {

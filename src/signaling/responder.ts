@@ -327,7 +327,7 @@ export class ResponderSignaling extends Signaling {
      */
     private handleKey(msg: saltyrtc.messages.Key): void {
         // Generate the shared session key
-        this.initiator.setSharedSessionKey(new Uint8Array(msg.key));
+        this.initiator.setSessionSharedKey(new Uint8Array(msg.key));
         this.initiator.handshakeState = 'key-received';
     }
 
