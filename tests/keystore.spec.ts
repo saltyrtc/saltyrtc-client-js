@@ -84,8 +84,20 @@ export default () => { describe('keystore', function() {
         it('can encrypt and decrypt properly (round trip)', () => {
             let ks2 = new KeyStore();
             let expected = nacl.randomBytes(24);
-            let encrypted = ks.encrypt(expected, nonce, ks2.publicKeyBytes);
-            expect(ks.decrypt(encrypted, ks2.publicKeyBytes)).toEqual(expected);
+            let encrypted, decrypted;
+
+            encrypted = ks.encrypt(expected, nonce, ks2.publicKeyBytes);
+            decrypted = ks.decrypt(encrypted, ks2.publicKeyBytes);
+            expect(decrypted).toEqual(expected);
+            decrypted = ks.decryptRaw(encrypted.data, encrypted.nonce, ks2.publicKeyBytes);
+            expect(decrypted).toEqual(expected);
+
+            encrypted = ks.encryptRaw(expected, nonce, ks2.publicKeyBytes);
+            let encryptedBox = new Box(nonce, encrypted, nacl.box.nonceLength);
+            decrypted = ks.decrypt(encryptedBox, ks2.publicKeyBytes);
+            expect(decrypted).toEqual(expected);
+            decrypted = ks.decryptRaw(encrypted, nonce, ks2.publicKeyBytes);
+            expect(decrypted).toEqual(expected);
         });
 
         it('can only encrypt and decrypt if pubkey matches', () => {
@@ -93,13 +105,27 @@ export default () => { describe('keystore', function() {
             let ks3 = new KeyStore();
             let expected = nacl.randomBytes(24);
             let encrypted = ks.encrypt(expected, nonce, ks2.publicKeyBytes);
-            let decrypt = () => ks.decrypt(encrypted, ks3.publicKeyBytes);
-            expect(decrypt).toThrow(new CryptoError('decryption-failed', 'Data could not be decrypted'));
+
+            let decrypts = [
+                () => ks.decrypt(encrypted, ks3.publicKeyBytes),
+                () => ks.decryptRaw(encrypted.data, encrypted.nonce, ks3.publicKeyBytes),
+            ];
+
+            for (let decrypt of decrypts) {
+                let error = new CryptoError('decryption-failed', 'Data could not be decrypted');
+                expect(decrypt).toThrow(error);
+            }
         });
 
         it('cannot encrypt without a proper nonce', () => {
-            let encrypt = () => ks.encrypt(data, nacl.randomBytes(3), nacl.randomBytes(32));
-            expect(encrypt).toThrow(new Error('bad nonce size'));
+            let encrypts = [
+                () => ks.encrypt(data, nacl.randomBytes(3), nacl.randomBytes(32)),
+                () => ks.encryptRaw(data, nacl.randomBytes(3), nacl.randomBytes(32)),
+            ];
+
+            for (let encrypt of encrypts) {
+                expect(encrypt).toThrow(new Error('bad nonce size'));
+            }
         });
 
         it('can be created from an Uint8Array or hex string', () => {
