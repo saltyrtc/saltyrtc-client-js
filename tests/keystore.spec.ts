@@ -228,6 +228,17 @@ export default () => { describe('keystore', function() {
             }
         });
 
+        it('can encrypt/decrypt data from KeyStore', () => {
+            const expected = new Uint8Array(24).fill(0xee);
+            let encrypted;
+
+            encrypted = ks.encrypt(expected, nonce, ks.publicKeyBytes);
+            expect(sks.decrypt(encrypted)).toEqual(expected);
+
+            encrypted = sks.encrypt(expected, nonce);
+            expect(ks.decrypt(encrypted, ks.publicKeyBytes)).toEqual(expected);
+        });
+
     });
 
     describe('AuthToken', function() {
