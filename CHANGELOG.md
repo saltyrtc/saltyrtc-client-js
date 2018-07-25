@@ -12,6 +12,13 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.12.0 (2018-07-25)
+
+- [added] Introduce method to extract current CSN
+- [changed] Replace thrown strings with exceptions (#97)
+- [changed] Crypto performance improvements (#99)
+- [changed] Upgrade npm dependencies (#100)
+
 ### v0.11.3 (2018-05-17)
 
 - [added] Emit 'no-shared-task' event when no shared task could be found (#93)
