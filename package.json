@@ -13,10 +13,10 @@
     "dist_es5_min": "rollup -c rollup/es5.min.js",
     "dist_es5_min_polyfill": "rollup -c rollup/es5.min.polyfill.js",
     "dist_es2015": "rollup -c rollup/es2015.js",
-    "rollup_tests": "rollup -c rollup/testing.js",
+    "rollup_tests": "rollup -c rollup/testing.js && rollup -c rollup/performance.js",
     "validate": "tsc --noEmit",
     "lint": "tslint -c tslint.json --project tsconfig.json",
-    "clean": "rm -rf src/*.js tests/testsuite.js*"
+    "clean": "rm -rf src/*.js tests/testsuite.js* tests/performance.js*"
   },
   "repository": {
     "type": "git",

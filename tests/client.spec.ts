@@ -49,7 +49,7 @@ export default () => { describe('client', function() {
                 .usingTasks(tasks)
                 .asResponder();
             expect(((salty as any).signaling as any).role).toEqual('responder');
-            expect(((salty as any).signaling as any).initiator.permanentKey).toEqual(pubKey);
+            expect(((salty as any).signaling as any).initiator.permanentSharedKey.remotePublicKeyBytes).toEqual(pubKey);
             expect(((salty as any).signaling as any).authToken.keyBytes).toEqual(authToken);
             expect(((salty as any).signaling as any).peerTrustedKey).toBeNull();
             expect(((salty as any).signaling as any).tasks).toEqual(tasks);
@@ -67,7 +67,7 @@ export default () => { describe('client', function() {
                 .asResponder();
             expect(((salty as any).signaling as any).role).toEqual('responder');
             expect(((salty as any).signaling as any).peerTrustedKey).toEqual(trustedKey);
-            expect(((salty as any).signaling as any).initiator.permanentKey).toEqual(trustedKey);
+            expect(((salty as any).signaling as any).initiator.permanentSharedKey.remotePublicKeyBytes).toEqual(trustedKey);
             expect(((salty as any).signaling as any).authToken).toBeNull();
             expect(((salty as any).signaling as any).tasks).toEqual(tasks);
             expect(((salty as any).signaling as any).pingInterval).toEqual(0);
@@ -82,7 +82,7 @@ export default () => { describe('client', function() {
                 .initiatorInfo(u8aToHex(pubKey), u8aToHex(authToken))
                 .usingTasks([new DummyTask()])
                 .asResponder();
-            expect(((salty as any).signaling as any).initiator.permanentKey).toEqual(pubKey);
+            expect(((salty as any).signaling as any).initiator.permanentSharedKey.remotePublicKeyBytes).toEqual(pubKey);
             expect(((salty as any).signaling as any).authToken.keyBytes).toEqual(authToken);
         });
 

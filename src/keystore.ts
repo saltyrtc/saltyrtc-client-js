@@ -84,41 +84,57 @@ export class KeyStore implements saltyrtc.KeyStore {
 
     private logTag: string = '[SaltyRTC.KeyStore]';
 
-    constructor(privateKey?: Uint8Array | string) {
+    constructor(secretKey?: Uint8Array | string) {
         // Validate argument count (bug prevention)
         if (arguments.length > 1) {
             throw new Error('Too many arguments in KeyStore constructor');
         }
 
         // Create new key pair if necessary
-        if (privateKey === undefined) {
+        if (secretKey === undefined) {
             this._keyPair = nacl.box.keyPair();
             console.debug(this.logTag, 'New public key:', u8aToHex(this._keyPair.publicKey));
         } else {
-            this._keyPair = nacl.box.keyPair.fromSecretKey(validateKey(privateKey, 'Private key'));
+            this._keyPair = nacl.box.keyPair.fromSecretKey(validateKey(secretKey, 'Private key'));
             console.debug(this.logTag, 'Restored public key:', u8aToHex(this._keyPair.publicKey));
         }
     }
 
     /**
+     * Create a SharedKeyStore from this instance and the public key of the
+     * remote peer.
+     */
+    public getSharedKeyStore(publicKey: Uint8Array | string): SharedKeyStore {
+        return new SharedKeyStore(this.secretKeyBytes, publicKey);
+    }
+
+    /**
      * Return the public key as hex string.
      */
-    get publicKeyHex(): string { return u8aToHex(this._keyPair.publicKey); }
+    get publicKeyHex(): string {
+        return u8aToHex(this._keyPair.publicKey);
+    }
 
     /**
      * Return the public key as Uint8Array.
      */
-    get publicKeyBytes(): Uint8Array { return this._keyPair.publicKey; }
+    get publicKeyBytes(): Uint8Array {
+        return this._keyPair.publicKey;
+    }
 
     /**
      * Return the secret key as hex string.
      */
-    get secretKeyHex(): string { return u8aToHex(this._keyPair.secretKey); }
+    get secretKeyHex(): string {
+        return u8aToHex(this._keyPair.secretKey);
+    }
 
     /**
      * Return the secret key as Uint8Array.
      */
-    get secretKeyBytes(): Uint8Array { return this._keyPair.secretKey; }
+    get secretKeyBytes(): Uint8Array {
+        return this._keyPair.secretKey;
+    }
 
     /**
      * Return the full keypair.
@@ -128,27 +144,157 @@ export class KeyStore implements saltyrtc.KeyStore {
     }
 
     /**
-     * Encrypt data for the peer.
+     * Encrypt plain data for the remote peer and return encrypted data as
+     * bytes.
+     *
+     * Note: Encrypting using a SharedKeyStore instance is more efficient when
+     *       encrypting with the same public key more than once.
+     */
+    public encryptRaw(bytes: Uint8Array, nonce: Uint8Array, otherKey: Uint8Array): Uint8Array {
+        return nacl.box(bytes, nonce, otherKey, this._keyPair.secretKey);
+    }
+
+    /**
+     * Encrypt plain data for the remote peer and return encrypted data in a
+     * box.
+     *
+     * Note: Encrypting using a SharedKeyStore instance is more efficient when
+     *       encrypting with the same public key more than once.
      */
     public encrypt(bytes: Uint8Array, nonce: Uint8Array, otherKey: Uint8Array): saltyrtc.Box {
-        const encrypted = nacl.box(bytes, nonce, otherKey, this._keyPair.secretKey);
+        const encrypted = this.encryptRaw(bytes, nonce, otherKey);
         return new Box(nonce, encrypted, nacl.box.nonceLength);
     }
 
     /**
-     * Decrypt data from the peer.
+     * Decrypt encrypted bytes from the remote peer and return plain data as
+     * bytes.
+     *
+     * Note: Decrypting using a SharedKeyStore instance is more efficient when
+     *       decrypting with the same public key more than once.
+     *
+     * May throw CryptoError instances with the following codes:
+     *
+     * - decryption-failed: Data could not be decrypted
+     */
+    public decryptRaw(bytes: Uint8Array, nonce: Uint8Array, otherKey: Uint8Array): Uint8Array {
+        const data: Uint8Array | null = nacl.box.open(bytes, nonce, otherKey, this._keyPair.secretKey);
+        if (!data) {
+            throw new CryptoError('decryption-failed', 'Data could not be decrypted');
+        }
+        return data;
+    }
+
+    /**
+     * Decrypt encrypted boxed data from the remote peer and return plain data
+     * as bytes.
+     *
+     * Note: Decrypting using a SharedKeyStore instance is more efficient when
+     *       decrypting with the same public key more than once.
      *
      * May throw CryptoError instances with the following codes:
      *
      * - decryption-failed: Data could not be decrypted
      */
     public decrypt(box: saltyrtc.Box, otherKey: Uint8Array): Uint8Array {
-        // Decrypt data
-        const data = nacl.box.open(box.data, box.nonce, otherKey, this._keyPair.secretKey);
+        return this.decryptRaw(box.data, box.nonce, otherKey);
+    }
+}
+
+/**
+ * A SharedKeyStore holds the resulting shared key of the local peer's secret
+ * key and the remote peer's public key.
+ *
+ * Note: Since the shared key is only calculated once, using the SharedKeyStore
+ *       should always be preferred over over using the KeyStore instance.
+ */
+export class SharedKeyStore implements saltyrtc.SharedKeyStore {
+    // The local NaCl key pair
+    private _localSecretKey: Uint8Array;
+    // The remote public key
+    private _remotePublicKey: Uint8Array;
+    // The calculated shared key
+    private _sharedKey: Uint8Array;
+
+    constructor(localSecretKey: Uint8Array | string, remotePublicKey: Uint8Array | string) {
+        this._localSecretKey = validateKey(localSecretKey, 'Local private key');
+        this._remotePublicKey = validateKey(remotePublicKey, 'Remote public key');
+
+        // Calculate the shared key
+        this._sharedKey = nacl.box.before(this._remotePublicKey, this._localSecretKey);
+    }
+
+    /**
+     * Return the local peer's secret key as hex string.
+     */
+    get localSecretKeyHex(): string {
+        return u8aToHex(this._localSecretKey);
+    }
+
+    /**
+     * Return the local peer's secret key as Uint8Array.
+     */
+    get localSecretKeyBytes(): Uint8Array {
+        return this._localSecretKey;
+    }
+
+    /**
+     * Return the remote peer's public key as a hex string.
+     */
+    get remotePublicKeyHex(): string {
+        return u8aToHex(this._remotePublicKey);
+    }
+
+    /**
+     * Return the remote peer's public key as Uint8Array.
+     */
+    get remotePublicKeyBytes(): Uint8Array {
+        return this._remotePublicKey;
+    }
+
+    /**
+     * Encrypt plain data for the remote peer and return encrypted data as
+     * bytes.
+     */
+    public encryptRaw(bytes: Uint8Array, nonce: Uint8Array): Uint8Array {
+        return nacl.box.after(bytes, nonce, this._sharedKey);
+    }
+
+    /**
+     * Encrypt plain data for the remote peer and return encrypted data in a
+     * box.
+     */
+    public encrypt(bytes: Uint8Array, nonce: Uint8Array): saltyrtc.Box {
+        const encrypted = this.encryptRaw(bytes, nonce);
+        return new Box(nonce, encrypted, nacl.box.nonceLength);
+    }
+
+    /**
+     * Decrypt encrypted bytes from the remote peer and return plain data as
+     * bytes.
+     *
+     * May throw CryptoError instances with the following codes:
+     *
+     * - decryption-failed: Data could not be decrypted
+     */
+    public decryptRaw(bytes: Uint8Array, nonce: Uint8Array): Uint8Array {
+        const data: Uint8Array | null = nacl.box.open.after(bytes, nonce, this._sharedKey);
         if (!data) {
             throw new CryptoError('decryption-failed', 'Data could not be decrypted');
         }
-        return data as Uint8Array;
+        return data;
+    }
+
+    /**
+     * Decrypt encrypted boxed data from the remote peer and return plain data
+     * as bytes.
+     *
+     * May throw CryptoError instances with the following codes:
+     *
+     * - decryption-failed: Data could not be decrypted
+     */
+    public decrypt(box: saltyrtc.Box): Uint8Array {
+        return this.decryptRaw(box.data, box.nonce);
     }
 }
 
@@ -158,7 +304,7 @@ export class AuthToken implements saltyrtc.AuthToken {
 
     private logTag: string = '[SaltyRTC.AuthToken]';
 
-    /*
+    /**
      * May throw CryptoError instances with the following codes:
      *
      * - bad-token-length
@@ -181,12 +327,16 @@ export class AuthToken implements saltyrtc.AuthToken {
     /**
      * Return the secret key as Uint8Array.
      */
-    get keyBytes() { return this._authToken; }
+    get keyBytes() {
+        return this._authToken;
+    }
 
     /**
      * Return the secret key as hex string.
      */
-    get keyHex() { return u8aToHex(this._authToken); }
+    get keyHex() {
+        return u8aToHex(this._authToken);
+    }
 
     /**
      * Encrypt data using the shared auth token.
@@ -204,11 +354,11 @@ export class AuthToken implements saltyrtc.AuthToken {
      * - decryption-failed: Data could not be decrypted
      */
     public decrypt(box: saltyrtc.Box): Uint8Array {
-        const data = nacl.secretbox.open(box.data, box.nonce, this._authToken);
+        const data: Uint8Array | null = nacl.secretbox.open(box.data, box.nonce, this._authToken);
         if (!data) {
             throw new CryptoError('decryption-failed', 'Data could not be decrypted');
         }
-        return data as Uint8Array;
+        return data;
     }
 
 }

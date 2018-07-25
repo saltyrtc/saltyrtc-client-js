@@ -132,7 +132,7 @@ export function isString(value: any): value is string {
 }
 
 /**
- * Validate a 32 byte key.
+ * Validate a 32 byte key. Return the validated key as a Uint8Array instance.
  *
  * @param key Either an Uint8Array or a hex string.
  * @throws ValidationError if key is invalid.

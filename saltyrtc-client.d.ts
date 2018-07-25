@@ -8,24 +8,38 @@
 declare namespace saltyrtc {
 
     interface Box {
-        length: number;
-        data: Uint8Array;
-        nonce: Uint8Array;
+        readonly length: number;
+        readonly data: Uint8Array;
+        readonly nonce: Uint8Array;
         toUint8Array(): Uint8Array;
     }
 
     interface KeyStore {
-        publicKeyHex: string;
-        publicKeyBytes: Uint8Array;
-        secretKeyHex: string;
-        secretKeyBytes: Uint8Array;
+        readonly publicKeyHex: string;
+        readonly publicKeyBytes: Uint8Array;
+        readonly secretKeyHex: string;
+        readonly secretKeyBytes: Uint8Array;
+        getSharedKeyStore(publicKey: Uint8Array | string): SharedKeyStore;
+        encryptRaw(bytes: Uint8Array, nonce: Uint8Array, otherKey: Uint8Array): Uint8Array;
         encrypt(bytes: Uint8Array, nonce: Uint8Array, otherKey: Uint8Array): Box;
+        decryptRaw(bytes: Uint8Array, nonce: Uint8Array, otherKey: Uint8Array): Uint8Array;
         decrypt(box: Box, otherKey: Uint8Array): Uint8Array;
     }
 
+    interface SharedKeyStore {
+        readonly localSecretKeyHex: string;
+        readonly localSecretKeyBytes: Uint8Array
+        readonly remotePublicKeyHex: string;
+        readonly remotePublicKeyBytes: Uint8Array
+        encryptRaw(bytes: Uint8Array, nonce: Uint8Array): Uint8Array;
+        encrypt(bytes: Uint8Array, nonce: Uint8Array): Box;
+        decryptRaw(bytes: Uint8Array, nonce: Uint8Array): Uint8Array;
+        decrypt(box: Box): Uint8Array;
+    }
+
     interface AuthToken {
-        keyBytes: Uint8Array;
-        keyHex: string;
+        readonly keyBytes: Uint8Array;
+        readonly keyHex: string;
         encrypt(bytes: Uint8Array, nonce: Uint8Array): Box;
         decrypt(box: Box): Uint8Array;
     }
