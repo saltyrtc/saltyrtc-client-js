@@ -1,7 +1,7 @@
 import config from './es5.js';
 
-config.entry = 'tests/performance.ts';
-config.dest = 'tests/performance.js';
-config.sourceMap = true;
+config.input = 'tests/performance.ts';
+config.output.file = 'tests/performance.js';
+config.output.sourceMap = true;
 
 export default config;
