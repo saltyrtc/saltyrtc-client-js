@@ -178,11 +178,11 @@ export class KeyStore implements saltyrtc.KeyStore {
      * - decryption-failed: Data could not be decrypted
      */
     public decryptRaw(bytes: Uint8Array, nonce: Uint8Array, otherKey: Uint8Array): Uint8Array {
-        const data = nacl.box.open(bytes, nonce, otherKey, this._keyPair.secretKey);
+        const data: Uint8Array | null = nacl.box.open(bytes, nonce, otherKey, this._keyPair.secretKey);
         if (!data) {
             throw new CryptoError('decryption-failed', 'Data could not be decrypted');
         }
-        return data as Uint8Array;
+        return data;
     }
 
     /**
@@ -278,11 +278,11 @@ export class SharedKeyStore implements saltyrtc.SharedKeyStore {
      * - decryption-failed: Data could not be decrypted
      */
     public decryptRaw(bytes: Uint8Array, nonce: Uint8Array): Uint8Array {
-        const data = nacl.box.open.after(bytes, nonce, this._sharedKey);
+        const data: Uint8Array | null = nacl.box.open.after(bytes, nonce, this._sharedKey);
         if (!data) {
             throw new CryptoError('decryption-failed', 'Data could not be decrypted');
         }
-        return data as Uint8Array;
+        return data;
     }
 
     /**
@@ -354,11 +354,11 @@ export class AuthToken implements saltyrtc.AuthToken {
      * - decryption-failed: Data could not be decrypted
      */
     public decrypt(box: saltyrtc.Box): Uint8Array {
-        const data = nacl.secretbox.open(box.data, box.nonce, this._authToken);
+        const data: Uint8Array | null = nacl.secretbox.open(box.data, box.nonce, this._authToken);
         if (!data) {
             throw new CryptoError('decryption-failed', 'Data could not be decrypted');
         }
-        return data as Uint8Array;
+        return data;
     }
 
 }
