@@ -93,6 +93,12 @@ You can import this file into your browser certificate store. For Chrome/Chromiu
 
     certutil -d sql:$HOME/.pki/nssdb -A -t "P,," -n saltyrtc-test-ca -i saltyrtc.crt
 
+In Firefox the easiest way to add your certificate to the browser is to start
+the SaltyRTC server (e.g. on `localhost` port 8765), then to visit the
+corresponding URL via https (e.g. `https://localhost:8765`). Then, in the
+certificate warning dialog that pops up, choose "Advanced" and add a permanent
+exception.
+
 Create a Python virtualenv with dependencies:
 
     python3 -m virtualenv venv
