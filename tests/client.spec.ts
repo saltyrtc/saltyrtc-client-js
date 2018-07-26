@@ -1,10 +1,14 @@
+// tslint:disable:file-header
+// tslint:disable:no-reference
 /// <reference path="jasmine.d.ts" />
 
-import { sleep } from "./utils";
-import { SaltyRTCBuilder } from "../src/client";
-import { KeyStore } from "../src/keystore";
-import { DummyTask } from "./testtasks";
-import {u8aToHex} from "../src/utils";
+import * as nacl from 'tweetnacl';
+
+import { SaltyRTCBuilder } from '../src/client';
+import { KeyStore } from '../src/keystore';
+import { u8aToHex } from '../src/utils';
+import { DummyTask } from './testtasks';
+import { sleep } from './utils';
 
 export default () => { describe('client', function() {
 

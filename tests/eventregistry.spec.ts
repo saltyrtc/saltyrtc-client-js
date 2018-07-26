@@ -1,6 +1,9 @@
-/// <reference path="jasmine.d.ts" />
+// tslint:disable:file-header
+// tslint:disable:no-reference
+/// <reference path='jasmine.d.ts' />
+/// <reference path='../saltyrtc-client.d.ts' />
 
-import { SaltyRTCEvent, EventHandler, EventRegistry } from "../src/eventregistry";
+import { EventRegistry } from '../src/eventregistry';
 
 export default () => { describe('eventregistry', function() {
 
@@ -8,14 +11,14 @@ export default () => { describe('eventregistry', function() {
 
         beforeEach(() => {
             this.registry = new EventRegistry();
-            this.handler1 = (ev: SaltyRTCEvent) => { console.log('Event 1 occurred'); };
-            this.handler2 = (ev: SaltyRTCEvent) => { console.log('Event 2 occurred'); };
+            this.handler1 = (ev: saltyrtc.SaltyRTCEvent) => { console.log('Event 1 occurred'); };
+            this.handler2 = (ev: saltyrtc.SaltyRTCEvent) => { console.log('Event 2 occurred'); };
         });
 
         it('can register a new event', () => {
             expect(this.registry.map.get('boo')).toBeUndefined();
             this.registry.register('boo', this.handler1);
-            let registered: EventHandler[] = this.registry.map.get('boo');
+            const registered: saltyrtc.SaltyRTCEventHandler[] = this.registry.map.get('boo');
             expect(registered.length).toEqual(1);
             expect(registered[0]).toBe(this.handler1);
         });
@@ -24,7 +27,7 @@ export default () => { describe('eventregistry', function() {
             expect(this.registry.map.get('boo')).toBeUndefined();
             this.registry.register('boo', this.handler1);
             this.registry.register('boo', this.handler2);
-            let registered: EventHandler[] = this.registry.map.get('boo');
+            const registered: saltyrtc.SaltyRTCEventHandler[] = this.registry.map.get('boo');
             expect(registered.length).toEqual(2);
             expect(registered).toContain(this.handler1);
             expect(registered).toContain(this.handler2);
@@ -55,7 +58,7 @@ export default () => { describe('eventregistry', function() {
             this.registry.map.set('far', [this.handler1, this.handler2]);
 
             // Unknown handler
-            this.registry.unregister('far', (ev: SaltyRTCEvent) => {});
+            this.registry.unregister('far', (ev: saltyrtc.SaltyRTCEvent) => { /* do nothing */ });
             expect(this.registry.get('far')).toEqual([this.handler1, this.handler2]);
 
             // Unknown event
@@ -84,4 +87,4 @@ export default () => { describe('eventregistry', function() {
 
     });
 
-}); }
+}); };

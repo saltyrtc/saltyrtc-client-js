@@ -1,10 +1,11 @@
-/// <reference path="jasmine.d.ts" />
+// tslint:disable:file-header
+// tslint:disable:no-reference
+/// <reference path='jasmine.d.ts' />
 
+import * as nacl from 'tweetnacl';
 import { CryptoError, ValidationError } from '../src/exceptions';
-import { Box, KeyStore, SharedKeyStore, AuthToken } from '../src/keystore';
+import { AuthToken, Box, KeyStore, SharedKeyStore } from '../src/keystore';
 import { hexToU8a, u8aToHex } from '../src/utils';
-
-declare const nacl: any; // TODO
 
 export default () => { describe('keystore', function() {
 
@@ -28,15 +29,15 @@ export default () => { describe('keystore', function() {
 
         it('can be created from a byte array', () => {
             const nonceLength = nacl.box.nonceLength;
-            const nonce = nacl.randomBytes(nonceLength);
-            const data = nacl.randomBytes(5);
-            const array = new Uint8Array(nonceLength + 5)
-            array.set(nonce);
-            array.set(data, nonceLength);
-            const box = Box.fromUint8Array(array, nonceLength);
-            expect(box.nonce).toEqual(nonce);
-            expect(box.data).toEqual(data);
-            expect(box.length).toEqual(nonceLength + 5);
+            const nonce2 = nacl.randomBytes(nonceLength);
+            const data2 = nacl.randomBytes(5);
+            const array = new Uint8Array(nonceLength + 5);
+            array.set(nonce2);
+            array.set(data2, nonceLength);
+            const box2 = Box.fromUint8Array(array, nonceLength);
+            expect(box2.nonce).toEqual(nonce2);
+            expect(box2.data).toEqual(data2);
+            expect(box2.length).toEqual(nonceLength + 5);
         });
 
         it('validates the byte array length', () => {
@@ -84,7 +85,8 @@ export default () => { describe('keystore', function() {
         it('can encrypt and decrypt properly (round trip)', () => {
             const ks2 = new KeyStore();
             const expected = nacl.randomBytes(24);
-            let encrypted, decrypted;
+            let encrypted;
+            let decrypted;
 
             encrypted = ks.encrypt(expected, nonce, ks2.publicKeyBytes);
             decrypted = ks.decrypt(encrypted, ks2.publicKeyBytes);
@@ -135,11 +137,11 @@ export default () => { describe('keystore', function() {
             const ksBytes = new KeyStore(skBytes);
             const ksHex = new KeyStore(skHex);
 
-            for (const ks of [ksBytes, ksHex]) {
-                expect(ks.publicKeyBytes).not.toBeNull();
-                expect(ks.secretKeyBytes).toEqual(skBytes);
-                expect(ks.publicKeyHex).not.toBeNull();
-                expect(ks.secretKeyHex).toEqual(skHex);
+            for (const keystore of [ksBytes, ksHex]) {
+                expect(keystore.publicKeyBytes).not.toBeNull();
+                expect(keystore.secretKeyBytes).toEqual(skBytes);
+                expect(keystore.publicKeyHex).not.toBeNull();
+                expect(keystore.secretKeyHex).toEqual(skHex);
             }
         });
 
@@ -150,7 +152,7 @@ export default () => { describe('keystore', function() {
             const create2 = () => new KeyStore(42 as any);
             expect(create2).toThrowError('Private key must be an Uint8Array or a hex string');
 
-            const create3 = () => new KeyStore("ffgghh");
+            const create3 = () => new KeyStore('ffgghh');
             expect(create3).toThrowError('Private key must be 32 bytes long');
         });
 
@@ -176,23 +178,24 @@ export default () => { describe('keystore', function() {
         });
 
         it('can be constructed from Uint8Array based keys', () => {
-            const sks = new SharedKeyStore(ks.secretKeyBytes, ks.publicKeyBytes);
-            expect(sks.localSecretKeyBytes).toEqual(ks.secretKeyBytes);
-            expect(sks.localSecretKeyHex).toEqual(ks.secretKeyHex);
-            expect(sks.remotePublicKeyBytes).toEqual(ks.publicKeyBytes);
-            expect(sks.remotePublicKeyHex).toEqual(ks.publicKeyHex);
+            const sks2 = new SharedKeyStore(ks.secretKeyBytes, ks.publicKeyBytes);
+            expect(sks2.localSecretKeyBytes).toEqual(ks.secretKeyBytes);
+            expect(sks2.localSecretKeyHex).toEqual(ks.secretKeyHex);
+            expect(sks2.remotePublicKeyBytes).toEqual(ks.publicKeyBytes);
+            expect(sks2.remotePublicKeyHex).toEqual(ks.publicKeyHex);
         });
 
         it('can be constructed from hex string based keys', () => {
-            const sks = new SharedKeyStore(ks.secretKeyHex, ks.publicKeyHex);
-            expect(sks.localSecretKeyBytes).toEqual(ks.secretKeyBytes);
-            expect(sks.localSecretKeyHex).toEqual(ks.secretKeyHex);
-            expect(sks.remotePublicKeyBytes).toEqual(ks.publicKeyBytes);
-            expect(sks.remotePublicKeyHex).toEqual(ks.publicKeyHex);
+            const sks2 = new SharedKeyStore(ks.secretKeyHex, ks.publicKeyHex);
+            expect(sks2.localSecretKeyBytes).toEqual(ks.secretKeyBytes);
+            expect(sks2.localSecretKeyHex).toEqual(ks.secretKeyHex);
+            expect(sks2.remotePublicKeyBytes).toEqual(ks.publicKeyBytes);
+            expect(sks2.remotePublicKeyHex).toEqual(ks.publicKeyHex);
         });
 
         it('rejects invalid keys', () => {
-            let create, error;
+            let create;
+            let error;
 
             create = () => new SharedKeyStore({ meow: true } as any, ks.publicKeyBytes);
             error = new ValidationError('Local private key must be an Uint8Array or a hex string');
@@ -264,4 +267,4 @@ export default () => { describe('keystore', function() {
 
     });
 
-}); }
+}); };
