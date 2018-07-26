@@ -1,16 +1,20 @@
+// tslint:disable:file-header
+// tslint:disable:no-reference
+
 // Integration tests
 //
 // Note that these tests require a running SaltyRTC server instance.
 // Configure the server in `tests/config.ts`.
 
-/// <reference path="jasmine.d.ts" />
-/// <reference path="../saltyrtc-client.d.ts" />
+/// <reference path='jasmine.d.ts' />
+/// <reference path='../saltyrtc-client.d.ts' />
 
-import {Config} from "./config";
-import {sleep} from "./utils";
-import {SaltyRTCBuilder, KeyStore} from "../src/main";
-import {DummyTask, PingPongTask} from "./testtasks";
-import {explainCloseCode} from "../src/closecode";
+import * as nacl from 'tweetnacl';
+import { explainCloseCode } from '../src/closecode';
+import { KeyStore, SaltyRTCBuilder } from '../src/main';
+import { Config } from './config';
+import { DummyTask, PingPongTask } from './testtasks';
+import { sleep } from './utils';
 
 let spec: any;
 
@@ -23,8 +27,8 @@ export default () => { describe('Integration Tests', function() {
             .usingTasks([new DummyTask()])
             .asInitiator() as saltyrtc.SaltyRTC;
 
-        let pubKey = this.initiator.permanentKeyBytes;
-        let authToken = this.initiator.authTokenBytes;
+        const pubKey = this.initiator.permanentKeyBytes;
+        const authToken = this.initiator.authTokenBytes;
         this.responder = new SaltyRTCBuilder()
             .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
             .withKeyStore(new KeyStore())
@@ -85,13 +89,14 @@ export default () => { describe('Integration Tests', function() {
             console.info('===> TEST NAME:', spec.getFullName());
             expect(this.initiator.state).toEqual('new');
             expect(this.responder.state).toEqual('new');
-            let t1, t2;
+            let t1;
+            let t2;
             let ready = 0;
-            let callback = () => {
+            const callback = () => {
                 ready += 1;
-                if (ready == 2) {
+                if (ready === 2) {
                     t2 = new Date();
-                    let diffMs = t2 - t1;
+                    const diffMs = t2 - t1;
                     console.info('Full handshake took', diffMs, 'milliseconds');
                     expect(diffMs).toBeLessThan(1000);
                     done();
@@ -141,13 +146,13 @@ export default () => { describe('Integration Tests', function() {
             // Create two responders
             const pubKey = this.initiator.permanentKeyBytes;
             const authToken = this.initiator.authTokenBytes;
-            let responder1 = new SaltyRTCBuilder()
+            const responder1 = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
                 .withKeyStore(new KeyStore())
                 .initiatorInfo(pubKey, authToken)
                 .usingTasks([new DummyTask()])
                 .asResponder();
-            let responder2 = new SaltyRTCBuilder()
+            const responder2 = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
                 .withKeyStore(new KeyStore())
                 .initiatorInfo(pubKey, authToken)
@@ -269,11 +274,11 @@ export default () => { describe('Integration Tests', function() {
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
                 .withKeyStore(new KeyStore())
                 .usingTasks([new DummyTask()])
-                .withServerKey("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+                .withServerKey('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
                 .asInitiator();
             initiator.connect();
             initiator.once('state-change:peer-handshake', () => {
-                done.fail("Invalid server public key was not detected");
+                done.fail('Invalid server public key was not detected');
             });
             initiator.once('state-change:closed', () => {
                 expect(initiator.state).toEqual('closed');
@@ -320,12 +325,12 @@ export default () => { describe('Integration Tests', function() {
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
                 .withKeyStore(new KeyStore())
                 .usingTasks([new DummyTask()])
-                .withServerKey("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa")
+                .withServerKey('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
                 .initiatorInfo(nacl.randomBytes(32), nacl.randomBytes(32))
                 .asResponder();
             responder.connect();
             responder.once('state-change:peer-handshake', () => {
-                done.fail("Invalid server public key was not detected");
+                done.fail('Invalid server public key was not detected');
             });
             responder.once('state-change:closed', () => {
                 expect(responder.state).toEqual('closed');
@@ -361,7 +366,7 @@ export default () => { describe('Integration Tests', function() {
             this.responder.sendApplicationMessage('bonan tagon.');
         });
 
-        let slowdescribe = Config.RUN_LOAD_TESTS ? describe : xdescribe;
+        const slowdescribe = Config.RUN_LOAD_TESTS ? describe : xdescribe;
         slowdescribe('slow load tests', () => {
             let originalTimeout;
             beforeEach(function() {
@@ -386,7 +391,7 @@ export default () => { describe('Integration Tests', function() {
                 // Create 254 responders to fill all available slots
                 let connected = 0;
                 await new Promise((resolve) => {
-                    let responders = [];
+                    const responders = [];
                     for (let i = 0x02; i <= 0xff; i++) {
                         const r = new SaltyRTCBuilder()
                             .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
@@ -486,4 +491,4 @@ export default () => { describe('Integration Tests', function() {
         })
     });
 
-}); }
+}); };

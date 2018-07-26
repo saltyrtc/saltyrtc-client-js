@@ -1,6 +1,8 @@
+// tslint:disable:file-header
+// tslint:disable:no-reference
 /// <reference path="jasmine.d.ts" />
 
-import { HandoverState } from "../src/signaling/handoverstate";
+import { HandoverState } from '../src/signaling/handoverstate';
 
 export default () => { describe('HandoverState', function() {
 
@@ -58,4 +60,4 @@ export default () => { describe('HandoverState', function() {
         this.state.peer = true;
         expect(onBothCalled).toBeTruthy();
     });
-}); }
+}); };
