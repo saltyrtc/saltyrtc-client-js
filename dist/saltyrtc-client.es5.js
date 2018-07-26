@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.12.0
+ * saltyrtc-client-js v0.12.1
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -904,7 +904,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }, {
             key: 'combinedSequenceNumber',
             get: function get$$1() {
-                return (this._overflow << 32) + this._sequenceNumber;
+                return this._overflow * Math.pow(2, 32) + this._sequenceNumber;
             }
         }, {
             key: 'source',
@@ -948,7 +948,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         createClass(CombinedSequence, [{
             key: 'next',
             value: function next() {
-                if (this.sequenceNumber + 1 >= CombinedSequence.SEQUENCE_NUMBER_MAX) {
+                if (this.sequenceNumber >= CombinedSequence.SEQUENCE_NUMBER_MAX) {
                     this.sequenceNumber = 0;
                     this.overflow += 1;
                     if (this.overflow >= CombinedSequence.OVERFLOW_MAX) {
@@ -966,14 +966,14 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }, {
             key: 'asNumber',
             value: function asNumber() {
-                return this.overflow << 32 | this.sequenceNumber;
+                return this.overflow * Math.pow(2, 32) + this.sequenceNumber;
             }
         }]);
         return CombinedSequence;
     }();
 
-    CombinedSequence.SEQUENCE_NUMBER_MAX = 0x100000000;
-    CombinedSequence.OVERFLOW_MAX = 0x100000;
+    CombinedSequence.SEQUENCE_NUMBER_MAX = 0xFFFFFFFF;
+    CombinedSequence.OVERFLOW_MAX = 0xFFFFF;
 
     var CombinedSequencePair = function CombinedSequencePair(ours, theirs) {
         classCallCheck(this, CombinedSequencePair);
@@ -3045,6 +3045,11 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                 return this.signaling.task;
             }
         }, {
+            key: 'getCurrentPeerCsn',
+            value: function getCurrentPeerCsn() {
+                return this.signaling.getCurrentPeerCsn();
+            }
+        }, {
             key: 'connect',
             value: function connect() {
                 this.signaling.connect();
@@ -3129,11 +3134,6 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                 if (response === false) {
                     this.eventRegistry.unregister(event.type, handler);
                 }
-            }
-        }, {
-            key: 'getCurrentPeerCsn',
-            value: function getCurrentPeerCsn() {
-                return this.signaling.getCurrentPeerCsn();
             }
         }, {
             key: 'signaling',

@@ -12,6 +12,25 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.12.1 (2018-07-26)
+
+- [security] Fix bug in CSN calculation (#103)
+- [fixed] Add `SaltyRTC.getCurrentPeerCsn` to type declarations
+
+**Security Fix**
+
+[#103](https://github.com/saltyrtc/saltyrtc-client-js/pull/103)
+
+Apparently JavaScript treats all operands in bitwise operations as 32 bit
+signed integers. This results in `(1 << 32)` being equal to `1`. This means
+that previously the calculation of the combined sequence number would be
+incorrect if the overflow number is larger than 0.
+
+In theory this is a security issue, however it may only be a problem in the
+real world if you send more than 4'294'967'295 messages with the same
+connection, which is quite unlikely. However, we definitely recommend upgrading
+to the latest version of `@saltyrtc/client`.
+
 ### v0.12.0 (2018-07-25)
 
 - [added] Introduce method to extract current CSN

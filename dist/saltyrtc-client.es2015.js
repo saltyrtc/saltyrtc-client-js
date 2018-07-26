@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.12.0
+ * saltyrtc-client-js v0.12.1
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -495,14 +495,24 @@ class Nonce {
         this._source = source;
         this._destination = destination;
     }
-    get cookie() { return this._cookie; }
-    get overflow() { return this._overflow; }
-    get sequenceNumber() { return this._sequenceNumber; }
-    get combinedSequenceNumber() {
-        return (this._overflow << 32) + this._sequenceNumber;
+    get cookie() {
+        return this._cookie;
     }
-    get source() { return this._source; }
-    get destination() { return this._destination; }
+    get overflow() {
+        return this._overflow;
+    }
+    get sequenceNumber() {
+        return this._sequenceNumber;
+    }
+    get combinedSequenceNumber() {
+        return (this._overflow * (Math.pow(2, 32))) + this._sequenceNumber;
+    }
+    get source() {
+        return this._source;
+    }
+    get destination() {
+        return this._destination;
+    }
     static fromArrayBuffer(packet) {
         if (packet.byteLength !== this.TOTAL_LENGTH) {
             throw new ValidationError('bad-packet-length');
@@ -536,7 +546,7 @@ class CombinedSequence {
         this.overflow = 0;
     }
     next() {
-        if (this.sequenceNumber + 1 >= CombinedSequence.SEQUENCE_NUMBER_MAX) {
+        if (this.sequenceNumber >= CombinedSequence.SEQUENCE_NUMBER_MAX) {
             this.sequenceNumber = 0;
             this.overflow += 1;
             if (this.overflow >= CombinedSequence.OVERFLOW_MAX) {
@@ -553,11 +563,11 @@ class CombinedSequence {
         };
     }
     asNumber() {
-        return (this.overflow << 32) | this.sequenceNumber;
+        return (this.overflow * (Math.pow(2, 32))) + this.sequenceNumber;
     }
 }
-CombinedSequence.SEQUENCE_NUMBER_MAX = 0x100000000;
-CombinedSequence.OVERFLOW_MAX = 0x100000;
+CombinedSequence.SEQUENCE_NUMBER_MAX = 0xFFFFFFFF;
+CombinedSequence.OVERFLOW_MAX = 0xFFFFF;
 class CombinedSequencePair {
     constructor(ours, theirs) {
         this.ours = null;
@@ -2256,6 +2266,9 @@ class SaltyRTC {
     getTask() {
         return this.signaling.task;
     }
+    getCurrentPeerCsn() {
+        return this.signaling.getCurrentPeerCsn();
+    }
     connect() {
         this.signaling.connect();
     }
@@ -2304,9 +2317,6 @@ class SaltyRTC {
         if (response === false) {
             this.eventRegistry.unregister(event.type, handler);
         }
-    }
-    getCurrentPeerCsn() {
-        return this.signaling.getCurrentPeerCsn();
     }
 }
 
