@@ -43,15 +43,24 @@ export class Nonce {
         this._destination = destination;
     }
 
-    get cookie() { return this._cookie; }
-    get overflow() { return this._overflow; }
-    get sequenceNumber() { return this._sequenceNumber; }
-    get combinedSequenceNumber() {
-        // tslint:disable-next-line:no-bitwise
-        return (this._overflow << 32) + this._sequenceNumber;
+    get cookie() {
+        return this._cookie;
     }
-    get source() { return this._source; }
-    get destination() { return this._destination; }
+    get overflow() {
+        return this._overflow;
+    }
+    get sequenceNumber() {
+        return this._sequenceNumber;
+    }
+    get combinedSequenceNumber() {
+        return (this._overflow * (2 ** 32)) + this._sequenceNumber;
+    }
+    get source() {
+        return this._source;
+    }
+    get destination() {
+        return this._destination;
+    }
 
     /**
      * Create a signaling nonce from an ArrayBuffer.
