@@ -231,6 +231,7 @@ declare namespace saltyrtc {
         peerPermanentKeyHex: string;
 
         getTask(): Task;
+        getCurrentPeerCsn(): {incoming: number, outgoing: number};
 
         connect(): void;
         disconnect(): void;
