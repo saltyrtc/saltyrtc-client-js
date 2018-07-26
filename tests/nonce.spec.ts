@@ -26,12 +26,11 @@ export default () => { describe('nonce', function() {
 
         it('parses correctly', () => {
             const nonce = Nonce.fromArrayBuffer(this.array.buffer);
-            expect(nonce.cookie.bytes).toEqual(
-                Uint8Array.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
+            expect(nonce.cookie.bytes).toEqual(Uint8Array.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
             expect(nonce.source).toEqual(17);
             expect(nonce.destination).toEqual(18);
-            expect(nonce.overflow).toEqual((1 << 8) + 2);
-            expect(nonce.sequenceNumber).toEqual((3 << 24) + (4 << 16) + (5 << 8) + 6);
+            expect(nonce.overflow).toEqual((1 * (2 ** 8)) + 2);
+            expect(nonce.sequenceNumber).toEqual((3 * (2 ** 24)) + (4 * (2 ** 16)) + (5 * (2 ** 8)) + 6);
         });
 
         it('serializes correctly', () => {
@@ -47,7 +46,7 @@ export default () => { describe('nonce', function() {
 
         it('returns the correct combined sequence number', () => {
             const nonce = Nonce.fromArrayBuffer(this.array.buffer);
-            expect(nonce.combinedSequenceNumber).toEqual((258 << 32) + 50595078);
+            expect(nonce.combinedSequenceNumber).toEqual((258 * (2 ** 32)) + 50595078);
         });
 
     });

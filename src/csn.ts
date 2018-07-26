@@ -53,8 +53,7 @@ export class CombinedSequence implements saltyrtc.CombinedSequence {
      * Warning: Do not use this for the SaltyRTC protocol itself!
      */
     public asNumber(): number {
-        // tslint:disable-next-line:no-bitwise
-        return (this.overflow << 32) | this.sequenceNumber;
+        return (this.overflow * (2 ** 32)) + this.sequenceNumber;
     }
 
 }
