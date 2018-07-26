@@ -49,8 +49,14 @@ export default () => { describe('csn', function() {
 
         it('next (overflow=0->1)', () => {
             const csn = new CombinedSequence();
-            (csn as any).sequenceNumber = (2 ** 32) - 1;
+            (csn as any).sequenceNumber = (2 ** 32) - 3;
             (csn as any).overflow = 0;
+            expect((csn as any).overflow).toEqual(0);
+            expect((csn as any).sequenceNumber).toEqual(4294967293);
+            csn.next();
+            expect((csn as any).overflow).toEqual(0);
+            expect((csn as any).sequenceNumber).toEqual(4294967294);
+            csn.next();
             expect((csn as any).overflow).toEqual(0);
             expect((csn as any).sequenceNumber).toEqual(4294967295);
             csn.next();

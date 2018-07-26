@@ -8,8 +8,8 @@
 import { randomUint32 } from './utils';
 
 export class CombinedSequence implements saltyrtc.CombinedSequence {
-    private static SEQUENCE_NUMBER_MAX = 0x100000000; // 1<<32
-    private static OVERFLOW_MAX = 0x100000; // 1<<16
+    private static SEQUENCE_NUMBER_MAX = 0xFFFFFFFF; // 1<<32 - 1
+    private static OVERFLOW_MAX = 0xFFFFF; // 1<<16 - 1
 
     private logTag: string = '[SaltyRTC.CSN]';
 
@@ -28,11 +28,11 @@ export class CombinedSequence implements saltyrtc.CombinedSequence {
      * unlikely and must be treated as a protocol error.
      */
     public next(): saltyrtc.NextCombinedSequence {
-        if (this.sequenceNumber + 1 >= CombinedSequence.SEQUENCE_NUMBER_MAX) {
+        if (this.sequenceNumber >= CombinedSequence.SEQUENCE_NUMBER_MAX) {
             // Sequence number overflow
             this.sequenceNumber = 0;
             this.overflow += 1;
-            if (this.overflow  >= CombinedSequence.OVERFLOW_MAX) {
+            if (this.overflow >= CombinedSequence.OVERFLOW_MAX) {
                 // Overflow overflow
                 console.error(this.logTag, 'Overflow number just overflowed!');
                 throw new Error('overflow-overflow');
