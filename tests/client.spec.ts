@@ -5,7 +5,7 @@
 import * as nacl from 'tweetnacl';
 
 import { SaltyRTCBuilder } from '../src/client';
-import { KeyStore } from '../src/keystore';
+import { Box, KeyStore } from '../src/keystore';
 import { u8aToHex } from '../src/utils';
 import { DummyTask } from './testtasks';
 import { sleep } from './utils';
@@ -13,6 +13,8 @@ import { sleep } from './utils';
 export default () => { describe('client', function() {
 
     describe('SaltyRTCBuilder', function() {
+        const dummyData = new Uint8Array(0);
+        const dummyBox = new Box(dummyData, dummyData, 0);
 
         it('can construct an untrusted initiator', () => {
             const tasks = [new DummyTask()];
@@ -114,6 +116,37 @@ export default () => { describe('client', function() {
         it('validates websocket ping interval', () => {
             const builder = new SaltyRTCBuilder();
             expect(() => builder.withPingInterval(-10)).toThrowError("Ping interval may not be negative");
+        });
+
+        it('cannot encrypt/decrypt before the remote peer is established', () => {
+            const salty = new SaltyRTCBuilder()
+                .connectTo('localhost')
+                .withKeyStore(new KeyStore())
+                .usingTasks([new DummyTask()])
+                .withPingInterval(10)
+                .asInitiator();
+
+            const encrypt = () => salty.encryptForPeer(dummyData, dummyData);
+            const decrypt = () => salty.decryptFromPeer(dummyBox);
+
+            expect(encrypt).toThrowError('Remote peer has not yet been established');
+            expect(decrypt).toThrowError('Remote peer has not yet been established');
+        });
+
+        it('cannot encrypt/decrypt before the session key is established', () => {
+            const trustedKey = nacl.randomBytes(32);
+            const salty = new SaltyRTCBuilder()
+                .connectTo('localhost')
+                .withKeyStore(new KeyStore())
+                .withTrustedPeerKey(trustedKey)
+                .usingTasks([new DummyTask()])
+                .asResponder();
+
+            const encrypt = () => salty.encryptForPeer(dummyData, dummyData);
+            const decrypt = () => salty.decryptFromPeer(dummyBox);
+
+            expect(encrypt).toThrowError('Session key not yet established');
+            expect(decrypt).toThrowError('Session key not yet established');
         });
 
     });

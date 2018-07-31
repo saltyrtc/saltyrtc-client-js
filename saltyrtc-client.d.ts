@@ -232,6 +232,8 @@ declare namespace saltyrtc {
 
         getTask(): Task;
         getCurrentPeerCsn(): {incoming: number, outgoing: number};
+        encryptForPeer(data: Uint8Array, nonce: Uint8Array): Box;
+        decryptFromPeer(box: Box): Uint8Array;
 
         connect(): void;
         disconnect(): void;
