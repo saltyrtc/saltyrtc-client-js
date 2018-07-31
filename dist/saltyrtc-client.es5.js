@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.12.1
+ * saltyrtc-client-js v0.12.2
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -1885,13 +1885,29 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }, {
             key: 'encryptForPeer',
             value: function encryptForPeer(data, nonce) {
-                return this.getPeer().sessionSharedKey.encrypt(data, nonce);
+                var peer = this.getPeer();
+                if (!peer) {
+                    throw new Error('Remote peer has not yet been established');
+                }
+                var sessionSharedKey = peer.sessionSharedKey;
+                if (!sessionSharedKey) {
+                    throw new Error('Session key not yet established');
+                }
+                return sessionSharedKey.encrypt(data, nonce);
             }
         }, {
             key: 'decryptFromPeer',
             value: function decryptFromPeer(box) {
+                var peer = this.getPeer();
+                if (!peer) {
+                    throw new Error('Remote peer has not yet been established');
+                }
+                var sessionSharedKey = peer.sessionSharedKey;
+                if (!sessionSharedKey) {
+                    throw new Error('Session key not yet established');
+                }
                 try {
-                    return this.getPeer().sessionSharedKey.decrypt(box);
+                    return sessionSharedKey.decrypt(box);
                 } catch (e) {
                     if (e.name === 'CryptoError' && e.code === 'decryption-failed') {
                         if (this.state === 'task') {
@@ -3048,6 +3064,16 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
             key: 'getCurrentPeerCsn',
             value: function getCurrentPeerCsn() {
                 return this.signaling.getCurrentPeerCsn();
+            }
+        }, {
+            key: 'encryptForPeer',
+            value: function encryptForPeer(data, nonce) {
+                return this.signaling.encryptForPeer(data, nonce);
+            }
+        }, {
+            key: 'decryptFromPeer',
+            value: function decryptFromPeer(box) {
+                return this.signaling.decryptFromPeer(box);
             }
         }, {
             key: 'connect',

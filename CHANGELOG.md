@@ -12,6 +12,10 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.12.2 (2018-07-31)
+
+- [added] Expose encrypt/decrypt methods on signaling instance (#105)
+
 ### v0.12.1 (2018-07-26)
 
 - [security] Fix bug in CSN calculation (#103)

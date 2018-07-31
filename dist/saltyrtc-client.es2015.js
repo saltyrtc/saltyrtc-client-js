@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.12.1
+ * saltyrtc-client-js v0.12.2
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -1353,11 +1353,27 @@ class Signaling {
         }
     }
     encryptForPeer(data, nonce) {
-        return this.getPeer().sessionSharedKey.encrypt(data, nonce);
+        const peer = this.getPeer();
+        if (!peer) {
+            throw new Error('Remote peer has not yet been established');
+        }
+        const sessionSharedKey = peer.sessionSharedKey;
+        if (!sessionSharedKey) {
+            throw new Error('Session key not yet established');
+        }
+        return sessionSharedKey.encrypt(data, nonce);
     }
     decryptFromPeer(box$$1) {
+        const peer = this.getPeer();
+        if (!peer) {
+            throw new Error('Remote peer has not yet been established');
+        }
+        const sessionSharedKey = peer.sessionSharedKey;
+        if (!sessionSharedKey) {
+            throw new Error('Session key not yet established');
+        }
         try {
-            return this.getPeer().sessionSharedKey.decrypt(box$$1);
+            return sessionSharedKey.decrypt(box$$1);
         }
         catch (e) {
             if (e.name === 'CryptoError' && e.code === 'decryption-failed') {
@@ -2268,6 +2284,12 @@ class SaltyRTC {
     }
     getCurrentPeerCsn() {
         return this.signaling.getCurrentPeerCsn();
+    }
+    encryptForPeer(data, nonce) {
+        return this.signaling.encryptForPeer(data, nonce);
+    }
+    decryptFromPeer(box$$1) {
+        return this.signaling.decryptFromPeer(box$$1);
     }
     connect() {
         this.signaling.connect();
