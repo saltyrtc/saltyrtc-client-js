@@ -419,6 +419,28 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
     }
 
     /**
+     * Encrypt plain data for the remote peer and return encrypted data in
+     * a box.
+     *
+     * Will throw Error in case the session keys have not yet been
+     * established.
+     */
+    public encryptForPeer(data: Uint8Array, nonce: Uint8Array): saltyrtc.Box {
+        return this.signaling.encryptForPeer(data, nonce);
+    }
+
+    /**
+     * Decrypt encrypted boxed data from the remote peer and return plain
+     * data as bytes.
+     *
+     * Will throw Error in case the session keys have not yet been
+     * established.
+     */
+    public decryptFromPeer(box: saltyrtc.Box): Uint8Array {
+        return this.signaling.decryptFromPeer(box);
+    }
+
+    /**
      * Connect to the SaltyRTC server.
      *
      * This method is asynchronous. To get notified when the peer connection is up

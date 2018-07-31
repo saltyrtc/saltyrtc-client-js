@@ -1046,19 +1046,41 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Encrypt data for the peer using the session key and the specified nonce.
      *
      * This method should primarily be used by tasks.
+     *
+     * Will throw Error in case the remote peer or the session key has not yet
+     * been established.
      */
     public encryptForPeer(data: Uint8Array, nonce: Uint8Array): saltyrtc.Box {
-        return this.getPeer().sessionSharedKey.encrypt(data, nonce);
+        const peer = this.getPeer();
+        if (!peer) {
+            throw new Error('Remote peer has not yet been established');
+        }
+        const sessionSharedKey = peer.sessionSharedKey;
+        if (!sessionSharedKey) {
+            throw new Error('Session key not yet established');
+        }
+        return sessionSharedKey.encrypt(data, nonce);
     }
 
     /**
      * Decrypt data from the peer using the session key.
      *
      * This method should primarily be used by tasks.
+     *
+     * Will throw Error in case the remote peer or the session key has not yet
+     * been established.
      */
     public decryptFromPeer(box: saltyrtc.Box): Uint8Array {
+        const peer = this.getPeer();
+        if (!peer) {
+            throw new Error('Remote peer has not yet been established');
+        }
+        const sessionSharedKey = peer.sessionSharedKey;
+        if (!sessionSharedKey) {
+            throw new Error('Session key not yet established');
+        }
         try {
-            return this.getPeer().sessionSharedKey.decrypt(box);
+            return sessionSharedKey.decrypt(box);
         } catch (e) {
             if (e.name === 'CryptoError' && e.code === 'decryption-failed') {
                 // This could only happen if the session keys are somehow broken.
