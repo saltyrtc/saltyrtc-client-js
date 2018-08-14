@@ -242,6 +242,33 @@ export default () => { describe('keystore', function() {
             expect(ks.decrypt(encrypted, ks.publicKeyBytes)).toEqual(expected);
         });
 
+        it('encrypted data matches expectation with a specific set of keys', () => {
+            const skLocal = Uint8Array.from([
+                4, 4, 4, 4, 4, 4, 4, 4,
+                3, 3, 3, 3, 3, 3, 3, 3,
+                2, 2, 2, 2, 2, 2, 2, 2,
+                1, 1, 1, 1, 1, 1, 1, 1,
+            ]);
+            const skRemote = Uint8Array.from([
+                1, 1, 1, 1, 1, 1, 1, 1,
+                2, 2, 2, 2, 2, 2, 2, 2,
+                3, 3, 3, 3, 3, 3, 3, 3,
+                4, 4, 4, 4, 4, 4, 4, 4,
+            ]);
+            const ks = new KeyStore(skLocal);
+            const plaintext = new Uint8Array(0);
+            const nonce = new TextEncoder().encode('connectionidconnectionid');
+            const expected = Uint8Array.from([
+                253, 142, 84, 143,
+                118, 139, 224, 253,
+                252, 98, 240, 45,
+                22, 73, 234, 94
+            ]);
+
+            const encrypted = ks.encryptRaw(plaintext, nonce, new KeyStore(skRemote).publicKeyBytes);
+            expect(encrypted).toEqual(expected);
+        });
+
     });
 
     describe('AuthToken', function() {
