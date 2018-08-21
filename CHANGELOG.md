@@ -18,7 +18,7 @@ Possible log types:
 
 ### v0.12.3 (2018-08-21)
 
-- [added] Allow clearing all event handlers at once (#106)106)106)106)106)106)106)106)106)106)
+- [added] Allow clearing all event handlers at once (#106)
 
 ### v0.12.2 (2018-07-31)
 
