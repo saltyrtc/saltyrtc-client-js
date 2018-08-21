@@ -85,6 +85,19 @@ export default () => { describe('eventregistry', function() {
             expect(this.registry.get('far')).toEqual([this.handler2]);
         });
 
+        it('can unregister all handlers', () => {
+            this.registry.map.set('boo', [this.handler1]);
+            this.registry.map.set('far', [this.handler1, this.handler2]);
+            expect(this.registry.get('boo')).toEqual([this.handler1]);
+            expect(this.registry.get('far')).toEqual([this.handler1, this.handler2]);
+
+            this.registry.unregisterAll();
+
+            expect(this.registry.get('boo')).toEqual([]);
+            expect(this.registry.get('far')).toEqual([]);
+
+        });
+
     });
 
 }); };
