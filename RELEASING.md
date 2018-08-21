@@ -1,5 +1,7 @@
 # Releasing
 
+First of all, have you updated the type declarations?
+
 Set variables:
 
     $ export VERSION=X.Y.Z
