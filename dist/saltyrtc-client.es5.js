@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.12.2
+ * saltyrtc-client-js v0.12.3
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -185,6 +185,11 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                         }
                     }
                 }
+            }
+        }, {
+            key: 'unregisterAll',
+            value: function unregisterAll() {
+                this.map.clear();
             }
         }, {
             key: 'set',
@@ -3109,7 +3114,11 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }, {
             key: 'off',
             value: function off(event, handler) {
-                this.eventRegistry.unregister(event, handler);
+                if (event === undefined) {
+                    this.eventRegistry.unregisterAll();
+                } else {
+                    this.eventRegistry.unregister(event, handler);
+                }
             }
         }, {
             key: 'emit',
