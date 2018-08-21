@@ -243,7 +243,7 @@ declare namespace saltyrtc {
         // Event handling
         on(event: string | string[], handler: SaltyRTCEventHandler): void;
         once(event: string | string[], handler: SaltyRTCEventHandler): void;
-        off(event: string | string[], handler?: SaltyRTCEventHandler): void;
+        off(event?: string | string[], handler?: SaltyRTCEventHandler): void;
         emit(event: SaltyRTCEvent): void;
     }
 
