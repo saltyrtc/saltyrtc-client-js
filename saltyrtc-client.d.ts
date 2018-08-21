@@ -260,6 +260,11 @@ declare namespace saltyrtc {
         unregister(eventType: string | string[], handler?: SaltyRTCEventHandler): void;
 
         /**
+         * Clear all event handlers.
+         */
+        unregisterAll(): void;
+
+        /**
          * Return all event handlers for the specified event(s).
          *
          * The return value is always an array. If the event does not exist, the

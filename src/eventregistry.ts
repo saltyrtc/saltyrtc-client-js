@@ -54,6 +54,13 @@ export class EventRegistry {
     }
 
     /**
+     * Clear all event handlers.
+     */
+    public unregisterAll(): void {
+        this.map.clear();
+    }
+
+    /**
      * Store a single event handler in the map.
      */
     private set(key: string, value: saltyrtc.SaltyRTCEventHandler) {
