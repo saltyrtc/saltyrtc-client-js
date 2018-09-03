@@ -242,31 +242,32 @@ export abstract class Signaling implements saltyrtc.Signaling {
         if (ev.code === CloseCode.Handover) {
             console.info(this.logTag, 'Closed WebSocket connection due to handover');
         } else {
-            console.info(this.logTag, 'Closed WebSocket connection');
+            console.info(this.logTag, 'Closed WebSocket connection with close code ' + ev.code +
+                                      ' (' + explainCloseCode(ev.code) + ')');
             this.setState('closed');
             this.client.emit({type: 'connection-closed', data: ev.code});
-            const log = (reason: string) => console.error(this.logTag, 'Websocket close reason:', reason);
+            const logError = (reason: string) => console.error(this.logTag, 'Websocket close reason:', reason);
             switch (ev.code) {
                 case CloseCode.GoingAway:
-                    log('Server is being shut down');
+                    logError('Server is being shut down');
                     break;
                 case CloseCode.NoSharedSubprotocol:
-                    log('No shared sub-protocol could be found');
+                    logError('No shared sub-protocol could be found');
                     break;
                 case CloseCode.PathFull:
-                    log('Path full (no free responder byte)');
+                    logError('Path full (no free responder byte)');
                     break;
                 case CloseCode.ProtocolError:
-                    log('Protocol error');
+                    logError('Protocol error');
                     break;
                 case CloseCode.InternalError:
-                    log('Internal error');
+                    logError('Internal error');
                     break;
                 case CloseCode.DroppedByInitiator:
-                    log('Dropped by initiator');
+                    logError('Dropped by initiator');
                     break;
                 case CloseCode.InvalidKey:
-                    log('Invalid server key');
+                    logError('Invalid server key');
                     break;
             }
         }
