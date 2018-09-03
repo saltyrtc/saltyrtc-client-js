@@ -7,16 +7,17 @@
 
 export const enum CloseCode {
     ClosingNormal = 1000,
-    GoingAway,
-    NoSharedSubprotocol,
+    GoingAway = 1001,
+    NoSharedSubprotocol = 1002,
     PathFull = 3000,
-    ProtocolError,
-    InternalError,
-    Handover,
-    DroppedByInitiator,
-    InitiatorCouldNotDecrypt,
-    NoSharedTask,
-    InvalidKey,
+    ProtocolError = 3001,
+    InternalError = 3002,
+    Handover = 3003,
+    DroppedByInitiator = 3004,
+    InitiatorCouldNotDecrypt = 3005,
+    NoSharedTask = 3006,
+    InvalidKey = 3007,
+    Timeout = 3008,
 }
 
 export function explainCloseCode(code: CloseCode): string {
@@ -43,6 +44,8 @@ export function explainCloseCode(code: CloseCode): string {
             return 'No shared task was found';
         case CloseCode.InvalidKey:
             return 'Invalid key';
+        case CloseCode.Timeout:
+            return 'Timeout';
         default:
             return 'Unknown';
     }
