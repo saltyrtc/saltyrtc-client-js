@@ -340,11 +340,19 @@ export default () => { describe('Integration Tests', function() {
 
         spec = it('send connection-closed event only once', async (done) => {
             console.info('===> TEST NAME:', spec.getFullName());
+            const initiator = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withKeyStore(new KeyStore())
+                .usingTasks([new DummyTask()])
+                .withServerKey(Config.SALTYRTC_SERVER_PUBLIC_KEY)
+                .asInitiator();
             let count = 0;
-            this.initiator.on('connection-closed', (ev) => count += 1);
-            this.initiator.connect();
+            initiator.on('connection-closed', (ev) => {
+                count += 1
+            });
+            initiator.connect();
             await sleep(100);
-            this.initiator.signaling.resetConnection(3001);
+            (initiator as any).signaling.closeWebsocket(3001);
             await sleep(100);
             expect(count).toEqual(1);
             done();
