@@ -91,7 +91,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         }
         this.handoverState.onBoth = () => {
             this.client.emit({type: 'handover'});
-            this.ws.close(CloseCode.Handover);
+            this.closeWebsocket(CloseCode.Handover);
         };
     }
 
@@ -161,8 +161,10 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
     /**
      * Disconnect from the signaling server.
+     *
+     * @param unbind Whether to unbind all WebSocket events.
      */
-    public disconnect(): void {
+    public disconnect(unbind = false): void {
         const reason = CloseCode.ClosingNormal;
 
         // Update state
@@ -173,12 +175,8 @@ export abstract class Signaling implements saltyrtc.Signaling {
             this.sendClose(reason);
         }
 
-        // Close WebSocket instance
-        if (this.ws !== null) {
-            console.debug(this.logTag, 'Disconnecting WebSocket');
-            this.ws.close(reason);
-        }
-        this.ws = null;
+        // Close WebSocket instance and unbind all events
+        this.closeWebsocket(reason, undefined, unbind);
 
         // Close task connections
         if (this.task !== null) {
@@ -191,7 +189,45 @@ export abstract class Signaling implements saltyrtc.Signaling {
     }
 
     /**
-     * Return connection path for websocket.
+     * Close the WebSocket connection.
+     *
+     * @param code The close code.
+     * @param reason The close reason.
+     * @param unbind Whether to unbind all events. This will move the Signaling
+     *   instance into the `closed` state.
+     */
+    private closeWebsocket(code?: number, reason?: string, unbind = false): void {
+        if (this.ws !== null) {
+            // Drop internal close codes
+            // see: https://github.com/saltyrtc/saltyrtc-meta/issues/110
+            if (code === undefined || code <= 3000) {
+                code = CloseCode.ClosingNormal;
+            }
+
+            // Disconnect
+            console.debug(this.logTag, `Disconnecting WebSocket, close code: ${code}`);
+            this.ws.close(code, reason);
+
+            // Unbind events?
+            if (unbind) {
+                this.ws.removeEventListener('open', this.onOpen);
+                this.ws.removeEventListener('error', this.onError);
+                this.ws.removeEventListener('close', this.onClose);
+                this.ws.removeEventListener('message', this.onMessage);
+            }
+
+            // Forget instance
+            this.ws = null;
+
+            // Move into closed state (if necessary)
+            if (unbind) {
+                this.setState('closed');
+            }
+        }
+    }
+
+    /**
+     * Return connection path for WebSocket.
      */
     protected abstract getWebsocketPath(): string;
 
@@ -246,30 +282,6 @@ export abstract class Signaling implements saltyrtc.Signaling {
                                       ' (' + explainCloseCode(ev.code) + ')');
             this.setState('closed');
             this.client.emit({type: 'connection-closed', data: ev.code});
-            const logError = (reason: string) => console.error(this.logTag, 'Websocket close reason:', reason);
-            switch (ev.code) {
-                case CloseCode.GoingAway:
-                    logError('Server is being shut down');
-                    break;
-                case CloseCode.NoSharedSubprotocol:
-                    logError('No shared sub-protocol could be found');
-                    break;
-                case CloseCode.PathFull:
-                    logError('Path full (no free responder byte)');
-                    break;
-                case CloseCode.ProtocolError:
-                    logError('Protocol error');
-                    break;
-                case CloseCode.InternalError:
-                    logError('Internal error');
-                    break;
-                case CloseCode.DroppedByInitiator:
-                    logError('Dropped by initiator');
-                    break;
-                case CloseCode.InvalidKey:
-                    logError('Invalid server key');
-                    break;
-            }
         }
     }
 
@@ -915,19 +927,11 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * - Set `this.ws` to `null`
      * - Set `this.status` to `new`
      * - Reset the server combined sequence
+     * - Unbind all events
      */
     public resetConnection(reason?: number): void {
         // Close WebSocket instance
-        if (this.ws !== null) {
-            console.debug(this.logTag, 'Disconnecting WebSocket (close code ' + reason + ')');
-            if (reason === CloseCode.GoingAway) {
-                // See https://github.com/saltyrtc/saltyrtc-meta/pull/111/
-                this.ws.close();
-            } else {
-                this.ws.close(reason);
-            }
-        }
-        this.ws = null;
+        this.closeWebsocket(reason, undefined, true);
 
         // Reset
         this.server = new Server();

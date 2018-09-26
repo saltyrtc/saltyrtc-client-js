@@ -456,10 +456,11 @@ class SaltyRTC implements saltyrtc.SaltyRTC {
      * Both the WebSocket as well as any open task connection will be closed.
      *
      * This method is asynchronous. To get notified when the connection is has
-     * been closed, subscribe to the `connection-closed` event.
+     * been closed, subscribe to the `connection-closed` event. To silence
+     * further events from the underlying connection, set `unbind` to `true`.
      */
-    public disconnect(): void {
-        this.signaling.disconnect();
+    public disconnect(unbind = false): void {
+        this.signaling.disconnect(unbind);
     }
 
     /**

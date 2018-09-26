@@ -236,7 +236,7 @@ declare namespace saltyrtc {
         decryptFromPeer(box: Box): Uint8Array;
 
         connect(): void;
-        disconnect(): void;
+        disconnect(unbind?: boolean): void;
 
         sendApplicationMessage(data: any): void;
 
