@@ -98,7 +98,13 @@ declare namespace saltyrtc {
         setState(state: SignalingState): void;
 
         /**
-         * Send a task message through the websocket or - if handover has
+         * Return the currently buffered amount of bytes on the WebSocket
+         * transport or `0` in case there is no WebSocket transport.
+         */
+        readonly bufferedAmount: number;
+
+        /**
+         * Send a task message through the WebSocket or - if handover has
          * already happened - through the task channel.
          *
          * @throws SignalingError if message could not be sent.

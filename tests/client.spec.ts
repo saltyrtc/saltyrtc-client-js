@@ -149,6 +149,17 @@ export default () => { describe('client', function() {
             expect(decrypt).toThrowError('Session key not yet established');
         });
 
+        it('initially has 0 amount of bytes buffered', () => {
+            const trustedKey = nacl.randomBytes(32);
+            const salty = new SaltyRTCBuilder()
+                .connectTo('localhost')
+                .withKeyStore(new KeyStore())
+                .withTrustedPeerKey(u8aToHex(trustedKey))
+                .usingTasks([new DummyTask()])
+                .asResponder();
+            expect(((salty as any).signaling as any).bufferedAmount).toEqual(0);
+        });
+
     });
 
     describe('SaltyRTC', function() {

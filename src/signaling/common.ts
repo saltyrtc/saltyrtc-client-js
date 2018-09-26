@@ -383,6 +383,14 @@ export abstract class Signaling implements saltyrtc.Signaling {
         }
     }
 
+    /**
+     * Return the currently buffered amount of bytes on the WebSocket
+     * transport or `0` in case there is no WebSocket transport.
+     */
+    public get bufferedAmount(): number {
+        return this.ws !== null ? this.ws.bufferedAmount : 0;
+    }
+
     protected abstract handlePeerHandshakeSignalingError(e: SignalingError, source: number | null): void;
 
     /**

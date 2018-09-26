@@ -374,6 +374,24 @@ export default () => { describe('Integration Tests', function() {
             this.responder.sendApplicationMessage('bonan tagon.');
         });
 
+        spec = it('can access the buffered amount of bytes', async (done) => {
+            console.info('===> TEST NAME:', spec.getFullName());
+            await this.connectBoth(this.initiator, this.responder);
+
+            expect(this.initiator.signaling.bufferedAmount).toEqual(0);
+            expect(this.responder.signaling.bufferedAmount).toEqual(0);
+
+            this.initiator.sendApplicationMessage('meow?');
+            console.log('Initiator buffered amount:', this.initiator.signaling.bufferedAmount);
+            expect(this.initiator.signaling.bufferedAmount).toBeGreaterThan(0);
+
+            this.responder.sendApplicationMessage('rawr!');
+            console.log('Responder buffered amount:', this.initiator.signaling.bufferedAmount);
+            expect(this.initiator.signaling.bufferedAmount).toBeGreaterThan(0);
+
+            done();
+        });
+
         const slowdescribe = Config.RUN_LOAD_TESTS ? describe : xdescribe;
         slowdescribe('slow load tests', () => {
             let originalTimeout: number;
