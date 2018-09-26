@@ -34,7 +34,7 @@ export class InitiatorSignaling extends Signaling {
         super(client, host, port, serverKey, tasks, pingInterval, permanentKey, responderTrustedKey);
         this.role = 'initiator';
         if (responderTrustedKey === undefined) {
-            this.authToken = new AuthToken();
+            this.authToken = new AuthToken(undefined, this.log);
         }
     }
 
@@ -150,7 +150,7 @@ export class InitiatorSignaling extends Signaling {
      * Drop the oldest inactive responder.
      */
     private dropOldestInactiveResponder(): void {
-        console.warn(this.logTag, 'Dropping oldest inactive responder');
+        this.log.warn(this.logTag, 'Dropping oldest inactive responder');
         let drop = null;
         for (const r of this.responders.values()) {
             if (r.handshakeState === 'new') {
@@ -192,16 +192,16 @@ export class InitiatorSignaling extends Signaling {
             const msg: saltyrtc.Message = this.decodeMessage(payload, 'server');
             switch (msg.type) {
                 case 'new-responder':
-                    console.debug(this.logTag, 'Received new-responder',
+                    this.log.debug(this.logTag, 'Received new-responder',
                         byteToHex((msg as saltyrtc.messages.NewResponder).id));
                     this.handleNewResponder(msg as saltyrtc.messages.NewResponder);
                     break;
                 case 'send-error':
-                    console.debug(this.logTag, 'Received send-error message');
+                    this.log.debug(this.logTag, 'Received send-error message');
                     this.handleSendError(msg as saltyrtc.messages.SendError);
                     break;
                 case 'disconnected':
-                    console.debug(this.logTag, 'Received disconnected message');
+                    this.log.debug(this.logTag, 'Received disconnected message');
                     this.handleDisconnected(msg as saltyrtc.messages.Disconnected);
                     break;
                 default:
@@ -229,13 +229,13 @@ export class InitiatorSignaling extends Signaling {
                     try {
                         payload = this.authToken.decrypt(box);
                     } catch (e) {
-                        console.warn(this.logTag, 'Could not decrypt token message: ', e);
+                        this.log.warn(this.logTag, 'Could not decrypt token message: ', e);
                         this.dropResponder(responder.id, CloseCode.InitiatorCouldNotDecrypt);
                         return;
                     }
 
                     msg = this.decodeMessage(payload, 'token', true);
-                    console.debug(this.logTag, 'Received token');
+                    this.log.debug(this.logTag, 'Received token');
                     this.handleToken(msg as saltyrtc.messages.Token, responder);
                     break;
                 case 'token-received':
@@ -247,7 +247,7 @@ export class InitiatorSignaling extends Signaling {
                         } catch (e) {
                             // Decryption failed.
                             // We trust a responder, but this particular responder used a different key.
-                            console.warn(this.logTag, 'Could not decrypt key message');
+                            this.log.warn(this.logTag, 'Could not decrypt key message');
                             this.dropResponder(responder.id, CloseCode.InitiatorCouldNotDecrypt);
                             return;
                         }
@@ -255,7 +255,7 @@ export class InitiatorSignaling extends Signaling {
                         payload = responder.permanentSharedKey.decrypt(box);
                     }
                     msg = this.decodeMessage(payload, 'key', true);
-                    console.debug(this.logTag, 'Received key');
+                    this.log.debug(this.logTag, 'Received key');
                     this.handleKey(msg as saltyrtc.messages.Key, responder);
                     this.sendKey(responder);
                     break;
@@ -272,7 +272,7 @@ export class InitiatorSignaling extends Signaling {
                         }
                     }
                     msg = this.decodeMessage(payload, 'auth', true);
-                    console.debug(this.logTag, 'Received auth');
+                    this.log.debug(this.logTag, 'Received auth');
                     this.handleAuth(msg as saltyrtc.messages.ResponderAuth, responder, nonce);
                     this.sendAuth(responder, nonce);
 
@@ -287,7 +287,7 @@ export class InitiatorSignaling extends Signaling {
 
                     // Peer handshake done
                     this.setState('task');
-                    console.info(this.logTag, 'Peer handshake done');
+                    this.log.info(this.logTag, 'Peer handshake done');
                     this.task.onPeerHandshakeDone();
 
                     break;
@@ -322,7 +322,7 @@ export class InitiatorSignaling extends Signaling {
                 throw e;
             }
         } else if (msg.signed_keys !== null && msg.signed_keys !== undefined) {
-            console.warn(this.logTag, "Server sent signed keys, but we're not verifying them.");
+            this.log.warn(this.logTag, "Server sent signed keys, but we're not verifying them.");
         }
 
         // Store responders
@@ -333,7 +333,7 @@ export class InitiatorSignaling extends Signaling {
             }
             this.processNewResponder(id);
         }
-        console.debug(this.logTag, this.responders.size, 'responders connected');
+        this.log.debug(this.logTag, this.responders.size, 'responders connected');
 
         this.server.handshakeState = 'done';
     }
@@ -368,7 +368,7 @@ export class InitiatorSignaling extends Signaling {
      */
     private handleKey(msg: saltyrtc.messages.Key, responder: Responder): void {
         // Generate our own session key & generate the shared session key
-        responder.setLocalSessionKey(new KeyStore());
+        responder.setLocalSessionKey(new KeyStore(undefined, this.log));
         responder.setSessionSharedKey(new Uint8Array(msg.key));
         responder.handshakeState = 'key-received';
     }
@@ -382,7 +382,7 @@ export class InitiatorSignaling extends Signaling {
             key: responder.localSessionKey.publicKeyBytes.buffer,
         };
         const packet: Uint8Array = this.buildPacket(message, responder);
-        console.debug(this.logTag, 'Sending key');
+        this.log.debug(this.logTag, 'Sending key');
         this.ws.send(packet);
         responder.handshakeState = 'key-sent';
     }
@@ -408,7 +408,7 @@ export class InitiatorSignaling extends Signaling {
             data: taskData,
         };
         const packet: Uint8Array = this.buildPacket(message, responder);
-        console.debug(this.logTag, 'Sending auth');
+        this.log.debug(this.logTag, 'Sending auth');
         this.ws.send(packet);
 
         // Update state
@@ -439,18 +439,18 @@ export class InitiatorSignaling extends Signaling {
         if (task === null) {
             const requested = this.tasks.map((t) => t.getName());
             const offered = msg.tasks;
-            console.debug(this.logTag, 'We requested:', requested, 'Peer offered:', offered);
+            this.log.debug(this.logTag, 'We requested:', requested, 'Peer offered:', offered);
             this.client.emit({type: 'no-shared-task', data: {requested: requested, offered: offered}});
             throw new SignalingError(CloseCode.NoSharedTask, 'No shared task could be found');
         } else {
-            console.log(this.logTag, 'Task', task.getName(), 'has been selected');
+            this.log.debug(this.logTag, 'Task', task.getName(), 'has been selected');
         }
 
         // Initialize task
         this.initTask(task, msg.data[task.getName()]);
 
         // Ok!
-        console.debug(this.logTag, 'Responder', responder.hexId, 'authenticated');
+        this.log.debug(this.logTag, 'Responder', responder.hexId, 'authenticated');
 
         // Store cookie
         responder.cookiePair.theirs = nonce.cookie;
@@ -511,7 +511,7 @@ export class InitiatorSignaling extends Signaling {
             // Get responder
             const responder: Responder = this.responders.get(receiver);
             if (responder === null || responder === undefined) {
-                console.warn(this.logTag, 'Got send-error message for unknown responder', receiver);
+                this.log.warn(this.logTag, 'Got send-error message for unknown responder', receiver);
             } else {
                 notify = true;
                 // Drop information about responder
@@ -523,7 +523,7 @@ export class InitiatorSignaling extends Signaling {
                 this.resetConnection(CloseCode.ProtocolError);
                 // TODO: Maybe keep ws connection open and wait for reconnect (#63)
             } else {
-                console.warn(this.logTag, 'Got send-error message for unknown responder', receiver);
+                this.log.warn(this.logTag, 'Got send-error message for unknown responder', receiver);
             }
         }
 
@@ -536,7 +536,7 @@ export class InitiatorSignaling extends Signaling {
      * Drop all responders.
      */
     private dropResponders(reason: number): void {
-        console.debug(this.logTag, 'Dropping', this.responders.size, 'other responders.');
+        this.log.debug(this.logTag, 'Dropping', this.responders.size, 'other responders.');
         for (const id of this.responders.keys()) {
             this.dropResponder(id, reason);
         }
@@ -552,7 +552,7 @@ export class InitiatorSignaling extends Signaling {
             reason: reason,
         };
         const packet: Uint8Array = this.buildPacket(message, this.server);
-        console.debug(this.logTag, 'Sending drop-responder', byteToHex(responderId));
+        this.log.debug(this.logTag, 'Sending drop-responder', byteToHex(responderId));
         this.ws.send(packet);
         this.responders.delete(responderId);
     }

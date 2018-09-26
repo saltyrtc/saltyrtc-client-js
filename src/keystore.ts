@@ -7,6 +7,7 @@
 
 import * as nacl from 'tweetnacl';
 import { CryptoError } from './exceptions';
+import { Log } from './log';
 import { u8aToHex, validateKey } from './utils';
 
 /**
@@ -84,19 +85,23 @@ export class KeyStore implements saltyrtc.KeyStore {
 
     private logTag: string = '[SaltyRTC.KeyStore]';
 
-    constructor(secretKey?: Uint8Array | string) {
+    constructor(secretKey?: Uint8Array | string, log?: saltyrtc.Log) {
+        if (log === undefined) {
+            log = new Log('none');
+        }
+
         // Validate argument count (bug prevention)
-        if (arguments.length > 1) {
+        if (arguments.length > 2) {
             throw new Error('Too many arguments in KeyStore constructor');
         }
 
         // Create new key pair if necessary
         if (secretKey === undefined) {
             this._keyPair = nacl.box.keyPair();
-            console.debug(this.logTag, 'New public key:', u8aToHex(this._keyPair.publicKey));
+            log.debug(this.logTag, 'New public key:', u8aToHex(this._keyPair.publicKey));
         } else {
             this._keyPair = nacl.box.keyPair.fromSecretKey(validateKey(secretKey, 'Private key'));
-            console.debug(this.logTag, 'Restored public key:', u8aToHex(this._keyPair.publicKey));
+            log.debug(this.logTag, 'Restored public key:', u8aToHex(this._keyPair.publicKey));
         }
     }
 
@@ -309,18 +314,22 @@ export class AuthToken implements saltyrtc.AuthToken {
      *
      * - bad-token-length
      */
-    constructor(bytes?: Uint8Array) {
+    constructor(bytes?: Uint8Array, log?: saltyrtc.Log) {
+        if (log === undefined) {
+            log = new Log('none');
+        }
+
         if (typeof bytes === 'undefined') {
             this._authToken = nacl.randomBytes(nacl.secretbox.keyLength);
-            console.debug(this.logTag, 'Generated auth token');
+            log.debug(this.logTag, 'Generated auth token');
         } else {
             if (bytes.byteLength !== nacl.secretbox.keyLength) {
                 const msg = 'Auth token must be ' + nacl.secretbox.keyLength + ' bytes long.';
-                console.error(this.logTag, msg);
+                log.error(this.logTag, msg);
                 throw new CryptoError('bad-token-length', msg);
             }
             this._authToken = bytes;
-            console.debug(this.logTag, 'Initialized auth token');
+            log.debug(this.logTag, 'Initialized auth token');
         }
     }
 

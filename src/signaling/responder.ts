@@ -125,15 +125,15 @@ export class ResponderSignaling extends Signaling {
             const msg: saltyrtc.Message = this.decodeMessage(payload, 'server');
             switch (msg.type) {
                 case 'new-initiator':
-                    console.debug(this.logTag, 'Received new-initiator');
+                    this.log.debug(this.logTag, 'Received new-initiator');
                     this.handleNewInitiator(msg as saltyrtc.messages.NewInitiator);
                     break;
                 case 'send-error':
-                    console.debug(this.logTag, 'Received send-error message');
+                    this.log.debug(this.logTag, 'Received send-error message');
                     this.handleSendError(msg as saltyrtc.messages.SendError);
                     break;
                 case 'disconnected':
-                    console.debug(this.logTag, 'Received disconnected message');
+                    this.log.debug(this.logTag, 'Received disconnected message');
                     this.handleDisconnected(msg as saltyrtc.messages.Disconnected);
                     break;
                 default:
@@ -152,19 +152,19 @@ export class ResponderSignaling extends Signaling {
                 case 'key-sent':
                     // Expect key message
                     msg = this.decodeMessage(payload, 'key', true);
-                    console.debug(this.logTag, 'Received key');
+                    this.log.debug(this.logTag, 'Received key');
                     this.handleKey(msg as saltyrtc.messages.Key);
                     this.sendAuth(nonce);
                     break;
                 case 'auth-sent':
                     // Expect auth message
                     msg = this.decodeMessage(payload, 'auth', true);
-                    console.debug(this.logTag, 'Received auth');
+                    this.log.debug(this.logTag, 'Received auth');
                     this.handleAuth(msg as saltyrtc.messages.InitiatorAuth, nonce);
 
                     // We're connected!
                     this.setState('task');
-                    console.info(this.logTag, 'Peer handshake done');
+                    this.log.info(this.logTag, 'Peer handshake done');
 
                     break;
                 default:
@@ -227,18 +227,18 @@ export class ResponderSignaling extends Signaling {
             key: this.permanentKey.publicKeyBytes.buffer,
         };
         const packet: Uint8Array = this.buildPacket(message, this.server, false);
-        console.debug(this.logTag, 'Sending client-hello');
+        this.log.debug(this.logTag, 'Sending client-hello');
         this.ws.send(packet);
         this.server.handshakeState = 'hello-sent';
     }
 
     protected handleServerAuth(msg: saltyrtc.messages.ServerAuth, nonce: Nonce): void {
         if (nonce.destination > 0xff || nonce.destination < 0x02) {
-            console.error(this.logTag, 'Invalid nonce destination:', nonce.destination);
+            this.log.error(this.logTag, 'Invalid nonce destination:', nonce.destination);
             throw new ValidationError('Invalid nonce destination: ' + nonce.destination);
         }
         this.address = nonce.destination;
-        console.debug(this.logTag, 'Server assigned address', byteToHex(this.address));
+        this.log.debug(this.logTag, 'Server assigned address', byteToHex(this.address));
         this.logTag = '[SaltyRTC.Responder.' + byteToHex(this.address) + ']';
 
         // Validate repeated cookie
@@ -255,11 +255,11 @@ export class ResponderSignaling extends Signaling {
                 throw e;
             }
         } else if (msg.signed_keys !== null && msg.signed_keys !== undefined) {
-            console.warn(this.logTag, "Server sent signed keys, but we're not verifying them.");
+            this.log.warn(this.logTag, "Server sent signed keys, but we're not verifying them.");
         }
 
         this.initiator.connected = msg.initiator_connected;
-        console.debug(this.logTag, 'Initiator', this.initiator.connected ? '' : 'not', 'connected');
+        this.log.debug(this.logTag, 'Initiator', this.initiator.connected ? '' : 'not', 'connected');
 
         this.server.handshakeState = 'done';
     }
@@ -299,7 +299,7 @@ export class ResponderSignaling extends Signaling {
             key: this.permanentKey.publicKeyBytes.buffer,
         };
         const packet: Uint8Array = this.buildPacket(message, this.initiator);
-        console.debug(this.logTag, 'Sending token');
+        this.log.debug(this.logTag, 'Sending token');
         this.ws.send(packet);
         this.initiator.handshakeState = 'token-sent';
     }
@@ -309,7 +309,7 @@ export class ResponderSignaling extends Signaling {
      */
     private sendKey(): void {
         // Generate our own session key
-        this.initiator.setLocalSessionKey(new KeyStore());
+        this.initiator.setLocalSessionKey(new KeyStore(undefined, this.log));
 
         // Send public key to initiator
         const replyMessage: saltyrtc.messages.Key = {
@@ -317,7 +317,7 @@ export class ResponderSignaling extends Signaling {
             key: this.initiator.localSessionKey.publicKeyBytes.buffer,
         };
         const packet: Uint8Array = this.buildPacket(replyMessage, this.initiator);
-        console.debug(this.logTag, 'Sending key');
+        this.log.debug(this.logTag, 'Sending key');
         this.ws.send(packet);
         this.initiator.handshakeState = 'key-sent';
     }
@@ -355,7 +355,7 @@ export class ResponderSignaling extends Signaling {
             data: taskData,
         };
         const packet: Uint8Array = this.buildPacket(message, this.initiator);
-        console.debug(this.logTag, 'Sending auth');
+        this.log.debug(this.logTag, 'Sending auth');
         this.ws.send(packet);
         this.initiator.handshakeState = 'auth-sent';
     }
@@ -382,7 +382,7 @@ export class ResponderSignaling extends Signaling {
         for (const task of this.tasks) {
             if (task.getName() === msg.task) {
                 selectedTask = task;
-                console.info(this.logTag, 'Task', msg.task, 'has been selected');
+                this.log.info(this.logTag, 'Task', msg.task, 'has been selected');
                 break;
             }
         }
@@ -395,7 +395,7 @@ export class ResponderSignaling extends Signaling {
         }
 
         // Ok!
-        console.debug(this.logTag, 'Initiator authenticated');
+        this.log.debug(this.logTag, 'Initiator authenticated');
         this.initiator.cookiePair.theirs = nonce.cookie;
         this.initiator.handshakeState = 'auth-received';
     }
