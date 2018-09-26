@@ -27,6 +27,9 @@ export abstract class Signaling implements saltyrtc.Signaling {
     protected static SALTYRTC_ADDR_SERVER = 0x00;
     protected static SALTYRTC_ADDR_INITIATOR = 0x01;
 
+    // Logging
+    protected log: saltyrtc.Log;
+
     // WebSocket
     protected host: string;
     protected port: number;
@@ -77,6 +80,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
     constructor(client: saltyrtc.SaltyRTC, host: string, port: number, serverKey: Uint8Array,
                 tasks: saltyrtc.Task[], pingInterval: number,
                 permanentKey: saltyrtc.KeyStore, peerTrustedKey?: Uint8Array) {
+        this.log = client.log;
         this.client = client;
         this.permanentKey = permanentKey;
         this.host = host;
@@ -180,7 +184,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
         // Close task connections
         if (this.task !== null) {
-            console.debug(this.logTag, 'Closing task connections');
+            this.log.debug(this.logTag, 'Closing task connections');
             this.task.close(reason);
         }
 
@@ -205,7 +209,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
             }
 
             // Disconnect
-            console.debug(this.logTag, `Disconnecting WebSocket, close code: ${code}`);
+            this.log.debug(this.logTag, `Disconnecting WebSocket, close code: ${code}`);
             this.ws.close(code, reason);
 
             // Unbind events?
@@ -250,14 +254,14 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
         // Store connection on instance
         this.setState('ws-connecting');
-        console.debug(this.logTag, 'Opening WebSocket connection to', url + path);
+        this.log.debug(this.logTag, 'Opening WebSocket connection to', url + path);
     }
 
     /**
      * WebSocket onopen handler.
      */
     protected onOpen = (ev: Event) => {
-        console.info(this.logTag, 'Opened connection');
+        this.log.info(this.logTag, 'Opened connection');
         this.setState('server-handshake');
     }
 
@@ -265,7 +269,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * WebSocket onerror handler.
      */
     protected onError = (ev: ErrorEvent) => {
-        console.error(this.logTag, 'General WebSocket error', ev);
+        this.log.error(this.logTag, 'General WebSocket error', ev);
         this.client.emit({type: 'connection-error'});
         // Note: We don't update the state here, because an error event will be followed
         // by a close event, which is already handled in `onClose`.
@@ -276,9 +280,9 @@ export abstract class Signaling implements saltyrtc.Signaling {
      */
     protected onClose = (ev: CloseEvent) => {
         if (ev.code === CloseCode.Handover) {
-            console.info(this.logTag, 'Closed WebSocket connection due to handover');
+            this.log.info(this.logTag, 'Closed WebSocket connection due to handover');
         } else {
-            console.info(this.logTag, 'Closed WebSocket connection with close code ' + ev.code +
+            this.log.info(this.logTag, 'Closed WebSocket connection with close code ' + ev.code +
                                       ' (' + explainCloseCode(ev.code) + ')');
             this.setState('closed');
             this.client.emit({type: 'connection-closed', data: ev.code});
@@ -286,10 +290,10 @@ export abstract class Signaling implements saltyrtc.Signaling {
     }
 
     protected onMessage = (ev: MessageEvent) => {
-        console.debug(this.logTag, 'New ws message (' + (ev.data as ArrayBuffer).byteLength + ' bytes)');
+        this.log.debug(this.logTag, 'New ws message (' + (ev.data as ArrayBuffer).byteLength + ' bytes)');
 
         if (this.handoverState.peer) {
-            console.error(this.logTag, 'Protocol error: Received WebSocket message from peer ' +
+            this.log.error(this.logTag, 'Protocol error: Received WebSocket message from peer ' +
                 'even though it has already handed over to task.');
             this.resetConnection(CloseCode.ProtocolError);
             return;
@@ -309,7 +313,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
                     if (e.critical === true) {
                         throw new ProtocolError('Invalid nonce: ' + e);
                     } else {
-                        console.warn(this.logTag, 'Dropping message with invalid nonce: ' + e);
+                        this.log.warn(this.logTag, 'Dropping message with invalid nonce: ' + e);
                         return;
                     }
                 } else {
@@ -329,7 +333,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
                     this.onSignalingMessage(box, nonce);
                     break;
                 default:
-                    console.warn(this.logTag, 'Received message in', this.getState(), 'signaling state. Ignoring.');
+                    this.log.warn(this.logTag, 'Received message in', this.getState(), 'signaling state. Ignoring.');
             }
         } catch (e) {
             if (e.name === 'SignalingError' || e.name === 'ProtocolError') {
@@ -337,7 +341,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
                 if (e.message) {
                     errmsg += ' (' + e.message + ')';
                 }
-                console.error(this.logTag, errmsg);
+                this.log.error(this.logTag, errmsg);
                 switch (this.state) {
                     case 'new':
                     case 'ws-connecting':
@@ -357,12 +361,12 @@ export abstract class Signaling implements saltyrtc.Signaling {
                         break;
                 }
             } else if (e.name === 'ConnectionError') {
-                console.warn(this.logTag, 'Connection error. Resetting connection.');
+                this.log.warn(this.logTag, 'Connection error. Resetting connection.');
                 this.resetConnection(CloseCode.InternalError);
             } else {
                 if (e.hasOwnProperty('stack')) {
-                    console.error(this.logTag, 'An unknown error occurred:');
-                    console.error(e.stack);
+                    this.log.error(this.logTag, 'An unknown error occurred:');
+                    this.log.error(e.stack);
                 }
                 throw e;
             }
@@ -395,7 +399,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
                 if (msg.type !== 'server-hello') {
                     throw new ProtocolError('Expected server-hello message, but got ' + msg.type);
                 }
-                console.debug(this.logTag, 'Received server-hello');
+                this.log.debug(this.logTag, 'Received server-hello');
                 this.handleServerHello(msg as saltyrtc.messages.ServerHello, nonce);
                 this.sendClientHello();
                 this.sendClientAuth();
@@ -407,7 +411,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
                 if (msg.type !== 'server-auth') {
                     throw new ProtocolError('Expected server-auth message, but got ' + msg.type);
                 }
-                console.debug(this.logTag, 'Received server-auth');
+                this.log.debug(this.logTag, 'Received server-auth');
                 this.handleServerAuth(msg as saltyrtc.messages.ServerAuth, nonce);
                 break;
             case 'done':
@@ -421,7 +425,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         // Check if we're done yet
         if (this.server.handshakeState as string === 'done') {
             this.setState('peer-handshake');
-            console.debug(this.logTag, 'Server handshake done');
+            this.log.debug(this.logTag, 'Server handshake done');
             this.initPeerHandshake();
         }
     }
@@ -435,7 +439,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Handle messages received from peer *after* the handshake is done.
      */
     protected onSignalingMessage(box: saltyrtc.Box, nonce: Nonce): void {
-        console.debug(this.logTag, 'Message received');
+        this.log.debug(this.logTag, 'Message received');
         if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
             this.onSignalingServerMessage(box);
         } else {
@@ -449,15 +453,15 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
         switch (msg.type) {
             case 'send-error':
-                console.debug(this.logTag, 'Received send-error message');
+                this.log.debug(this.logTag, 'Received send-error message');
                 this.handleSendError(msg as saltyrtc.messages.SendError);
                 break;
             case 'disconnected':
-                console.debug(this.logTag, 'Received disconnected message');
+                this.log.debug(this.logTag, 'Received disconnected message');
                 this.handleDisconnected(msg as saltyrtc.messages.Disconnected);
                 break;
             default:
-                console.warn(this.logTag, 'Invalid server message type:', msg.type);
+                this.log.warn(this.logTag, 'Invalid server message type:', msg.type);
         }
     }
 
@@ -471,23 +475,23 @@ export abstract class Signaling implements saltyrtc.Signaling {
         const msg: saltyrtc.Message = this.decodeMessage(decrypted);
 
         if (msg.type === 'close') {
-            console.debug(this.logTag, 'Received close');
+            this.log.debug(this.logTag, 'Received close');
             this.handleClose(msg as saltyrtc.messages.Close);
         } else if (msg.type === 'application') {
-            console.debug(this.logTag, 'Received application message');
+            this.log.debug(this.logTag, 'Received application message');
             this.handleApplication(msg as saltyrtc.messages.Application);
         } else if (this.task !== null) {
             const messageSupportedByTask = this.task.getSupportedMessageTypes().indexOf(msg.type) !== -1;
             if (messageSupportedByTask) {
-                console.debug(this.logTag, 'Received', msg.type, '[' + this.task.getName() + ']');
+                this.log.debug(this.logTag, 'Received', msg.type, '[' + this.task.getName() + ']');
                 this.task.onTaskMessage(msg as saltyrtc.messages.TaskMessage);
             } else {
-                console.error(this.logTag, 'Received', msg.type, 'message which is not supported by the',
+                this.log.error(this.logTag, 'Received', msg.type, 'message which is not supported by the',
                     this.task.getName(), 'task');
                 this.resetConnection(CloseCode.ProtocolError);
             }
         } else {
-            console.warn(this.logTag, 'Received message with invalid type from peer:', msg.type);
+            this.log.warn(this.logTag, 'Received message with invalid type from peer:', msg.type);
         }
     }
 
@@ -521,7 +525,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
             message.your_key = this.serverPublicKey.buffer.slice(start, end);
         }
         const packet: Uint8Array = this.buildPacket(message, this.server);
-        console.debug(this.logTag, 'Sending client-auth');
+        this.log.debug(this.logTag, 'Sending client-auth');
         this.ws.send(packet);
         this.server.handshakeState = 'auth-sent';
     }
@@ -554,7 +558,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         }
 
         // TODO: Log info about actual message (#62)
-        console.warn(this.logTag, 'SendError: Could not send unknown message:', idString);
+        this.log.warn(this.logTag, 'SendError: Could not send unknown message:', idString);
 
         this._handleSendError(destination);
     }
@@ -576,7 +580,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
             type: 'close',
             reason: reason,
         };
-        console.debug(this.logTag, 'Sending close');
+        this.log.debug(this.logTag, 'Sending close');
         if (this.handoverState.local === true) {
             this.task.sendSignalingMessage(this.msgpackEncode(message));
         } else {
@@ -589,7 +593,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Handle an incoming close message.
      */
     protected handleClose(msg: saltyrtc.messages.Close): void {
-        console.warn(this.logTag, 'Received close message. Reason:',
+        this.log.warn(this.logTag, 'Received close message. Reason:',
             msg.reason, '(' + explainCloseCode(msg.reason) + ')');
 
         // Notify the task
@@ -760,8 +764,8 @@ export abstract class Signaling implements saltyrtc.Signaling {
     protected validateRepeatedCookie(peer: Peer, repeatedCookieBytes: ArrayBuffer): void {
         const repeatedCookie = Cookie.fromArrayBuffer(repeatedCookieBytes);
         if (!repeatedCookie.equals(peer.cookiePair.ours)) {
-            console.debug(this.logTag, 'Their cookie:', repeatedCookie.bytes);
-            console.debug(this.logTag, 'Our cookie:', peer.cookiePair.ours.bytes);
+            this.log.debug(this.logTag, 'Their cookie:', repeatedCookie.bytes);
+            this.log.debug(this.logTag, 'Our cookie:', peer.cookiePair.ours.bytes);
             throw new ProtocolError('Peer repeated cookie does not match our cookie');
         }
     }
@@ -779,7 +783,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
             throw new ValidationError('Server did not send signed_keys in server-auth message');
         }
         const box = new Box(new Uint8Array(nonce.toArrayBuffer()), new Uint8Array(signedKeys), nacl.box.nonceLength);
-        console.debug(this.logTag, 'Expected server public permanent key is', u8aToHex(serverPublicKey));
+        this.log.debug(this.logTag, 'Expected server public permanent key is', u8aToHex(serverPublicKey));
         let decrypted: Uint8Array;
         try {
             // Note: We will not create a SharedKeyStore here since this will be done only once
@@ -938,7 +942,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         this.handoverState.reset();
         this.setState('new');
         if (reason !== undefined) {
-            console.debug(this.logTag, 'Connection reset');
+            this.log.debug(this.logTag, 'Connection reset');
         }
 
         // TODO: Close task? (#64)
@@ -1038,10 +1042,10 @@ export abstract class Signaling implements saltyrtc.Signaling {
         }
 
         if (this.handoverState.local === true) {
-            console.debug(this.logTag, 'Sending', name, 'message through dc');
+            this.log.debug(this.logTag, 'Sending', name, 'message through dc');
             this.task.sendSignalingMessage(this.msgpackEncode(msg));
         } else {
-            console.debug(this.logTag, 'Sending', name, 'message through ws');
+            this.log.debug(this.logTag, 'Sending', name, 'message through ws');
             const packet = this.buildPacket(msg, receiver);
             this.ws.send(packet);
         }

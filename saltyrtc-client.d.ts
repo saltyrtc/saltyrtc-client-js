@@ -211,6 +211,7 @@ declare namespace saltyrtc {
         withKeyStore(keyStore: KeyStore): SaltyRTCBuilder;
         withTrustedPeerKey(peerTrustedKey: Uint8Array | string): SaltyRTCBuilder;
         withServerKey(serverKey: Uint8Array | string): SaltyRTCBuilder;
+        withLoggingLevel(level: saltyrtc.LogLevel): SaltyRTCBuilder;
         initiatorInfo(initiatorPublicKey: Uint8Array | string, authToken: Uint8Array | string): SaltyRTCBuilder;
         usingTasks(tasks: Task[]): SaltyRTCBuilder;
         withPingInterval(interval: number): SaltyRTCBuilder;
@@ -220,6 +221,7 @@ declare namespace saltyrtc {
     }
 
     interface SaltyRTC {
+        readonly log: saltyrtc.Log;
         state: SignalingState;
 
         keyStore: KeyStore;
@@ -302,6 +304,17 @@ declare namespace saltyrtc {
     }
 
     interface ConnectionError extends Error {
+    }
+
+    type LogLevel = 'none' | 'debug' | 'info' | 'warn' | 'error';
+
+    interface Log {
+        debug(message?: any, ...optionalParams: any[]): void;
+        trace(message?: any, ...optionalParams: any[]): void;
+        info(message?: any, ...optionalParams: any[]): void;
+        warn(message?: any, ...optionalParams: any[]): void;
+        error(message?: any, ...optionalParams: any[]): void;
+        assert(condition?: boolean, message?: string, ...data: any[]): void;
     }
 
 }
@@ -472,6 +485,10 @@ declare namespace saltyrtc.static {
         new(message: string): saltyrtc.ConnectionError;
     }
 
+    interface Log {
+        new(level: saltyrtc.LogLevel): saltyrtc.Log;
+    }
+
     /**
      * Static list of close codes.
      */
@@ -503,4 +520,5 @@ declare var saltyrtcClient: {
     explainCloseCode: (code: number) => string;
     SignalingError: saltyrtc.static.SignalingError;
     ConnectionError: saltyrtc.static.ConnectionError;
+    Log: saltyrtc.static.Log;
 };
