@@ -12,6 +12,11 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.13.0 (2018-09-27)
+
+- [added] Add possibility to unbind all events when disconnecting
+- [added] Introduce log level to builder
+
 ### v0.12.4 (2018-08-21)
 
 - [fixed] Updated type declarations

@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.12.4
+ * saltyrtc-client-js v0.13.0
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -279,6 +279,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         CloseCode[CloseCode["InitiatorCouldNotDecrypt"] = 3005] = "InitiatorCouldNotDecrypt";
         CloseCode[CloseCode["NoSharedTask"] = 3006] = "NoSharedTask";
         CloseCode[CloseCode["InvalidKey"] = 3007] = "InvalidKey";
+        CloseCode[CloseCode["Timeout"] = 3008] = "Timeout";
     })(exports.CloseCode || (exports.CloseCode = {}));
     function explainCloseCode(code) {
         switch (code) {
@@ -304,6 +305,8 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                 return 'No shared task was found';
             case exports.CloseCode.InvalidKey:
                 return 'Invalid key';
+            case exports.CloseCode.Timeout:
+                return 'Timeout';
             default:
                 return 'Unknown';
         }
@@ -393,6 +396,48 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }]);
         return CryptoError;
     }(Error);
+
+    var Log = function () {
+        function Log(level) {
+            classCallCheck(this, Log);
+
+            this.level = level;
+        }
+
+        createClass(Log, [{
+            key: 'noop',
+            value: function noop() {}
+        }, {
+            key: 'level',
+            set: function set$$1(level) {
+                this._level = level;
+                this.debug = this.noop;
+                this.trace = this.noop;
+                this.info = this.noop;
+                this.warn = this.noop;
+                this.error = this.noop;
+                this.assert = this.noop;
+                switch (level) {
+                    case 'debug':
+                        this.debug = console.debug;
+                        this.trace = console.trace;
+                    case 'info':
+                        this.info = console.info;
+                    case 'warn':
+                        this.warn = console.warn;
+                    case 'error':
+                        this.error = console.error;
+                        this.assert = console.assert;
+                    default:
+                        break;
+                }
+            },
+            get: function get$$1() {
+                return this._level;
+            }
+        }]);
+        return Log;
+    }();
 
     function u8aToHex(array) {
         var results = [];
@@ -588,19 +633,22 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
     }();
 
     var KeyStore = function () {
-        function KeyStore(secretKey) {
+        function KeyStore(secretKey, log) {
             classCallCheck(this, KeyStore);
 
             this.logTag = '[SaltyRTC.KeyStore]';
-            if (arguments.length > 1) {
+            if (log === undefined) {
+                log = new Log('none');
+            }
+            if (arguments.length > 2) {
                 throw new Error('Too many arguments in KeyStore constructor');
             }
             if (secretKey === undefined) {
                 this._keyPair = nacl.box.keyPair();
-                console.debug(this.logTag, 'New public key:', u8aToHex(this._keyPair.publicKey));
+                log.debug(this.logTag, 'New public key:', u8aToHex(this._keyPair.publicKey));
             } else {
                 this._keyPair = nacl.box.keyPair.fromSecretKey(validateKey(secretKey, 'Private key'));
-                console.debug(this.logTag, 'Restored public key:', u8aToHex(this._keyPair.publicKey));
+                log.debug(this.logTag, 'Restored public key:', u8aToHex(this._keyPair.publicKey));
             }
         }
 
@@ -722,22 +770,25 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
     }();
 
     var AuthToken = function () {
-        function AuthToken(bytes) {
+        function AuthToken(bytes, log) {
             classCallCheck(this, AuthToken);
 
             this._authToken = null;
             this.logTag = '[SaltyRTC.AuthToken]';
+            if (log === undefined) {
+                log = new Log('none');
+            }
             if (typeof bytes === 'undefined') {
                 this._authToken = nacl.randomBytes(nacl.secretbox.keyLength);
-                console.debug(this.logTag, 'Generated auth token');
+                log.debug(this.logTag, 'Generated auth token');
             } else {
                 if (bytes.byteLength !== nacl.secretbox.keyLength) {
                     var msg = 'Auth token must be ' + nacl.secretbox.keyLength + ' bytes long.';
-                    console.error(this.logTag, msg);
+                    log.error(this.logTag, msg);
                     throw new CryptoError('bad-token-length', msg);
                 }
                 this._authToken = bytes;
-                console.debug(this.logTag, 'Initialized auth token');
+                log.debug(this.logTag, 'Initialized auth token');
             }
         }
 
@@ -945,7 +996,6 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         function CombinedSequence() {
             classCallCheck(this, CombinedSequence);
 
-            this.logTag = '[SaltyRTC.CSN]';
             this.sequenceNumber = randomUint32();
             this.overflow = 0;
         }
@@ -957,7 +1007,6 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     this.sequenceNumber = 0;
                     this.overflow += 1;
                     if (this.overflow >= CombinedSequence.OVERFLOW_MAX) {
-                        console.error(this.logTag, 'Overflow number just overflowed!');
                         throw new Error('overflow-overflow');
                     }
                 } else {
@@ -1245,52 +1294,26 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
             this.logTag = '[SaltyRTC.Signaling]';
             this.address = Signaling.SALTYRTC_ADDR_UNKNOWN;
             this.onOpen = function (ev) {
-                console.info(_this.logTag, 'Opened connection');
+                _this.log.info(_this.logTag, 'Opened connection');
                 _this.setState('server-handshake');
             };
             this.onError = function (ev) {
-                console.error(_this.logTag, 'General WebSocket error', ev);
+                _this.log.error(_this.logTag, 'General WebSocket error', ev);
                 _this.client.emit({ type: 'connection-error' });
             };
             this.onClose = function (ev) {
                 if (ev.code === exports.CloseCode.Handover) {
-                    console.info(_this.logTag, 'Closed WebSocket connection due to handover');
+                    _this.log.info(_this.logTag, 'Closed WebSocket connection due to handover');
                 } else {
-                    console.info(_this.logTag, 'Closed WebSocket connection');
+                    _this.log.info(_this.logTag, 'Closed WebSocket connection with close code ' + ev.code + ' (' + explainCloseCode(ev.code) + ')');
                     _this.setState('closed');
                     _this.client.emit({ type: 'connection-closed', data: ev.code });
-                    var log = function log(reason) {
-                        return console.error(_this.logTag, 'Websocket close reason:', reason);
-                    };
-                    switch (ev.code) {
-                        case exports.CloseCode.GoingAway:
-                            log('Server is being shut down');
-                            break;
-                        case exports.CloseCode.NoSharedSubprotocol:
-                            log('No shared sub-protocol could be found');
-                            break;
-                        case exports.CloseCode.PathFull:
-                            log('Path full (no free responder byte)');
-                            break;
-                        case exports.CloseCode.ProtocolError:
-                            log('Protocol error');
-                            break;
-                        case exports.CloseCode.InternalError:
-                            log('Internal error');
-                            break;
-                        case exports.CloseCode.DroppedByInitiator:
-                            log('Dropped by initiator');
-                            break;
-                        case exports.CloseCode.InvalidKey:
-                            log('Invalid server key');
-                            break;
-                    }
                 }
             };
             this.onMessage = function (ev) {
-                console.debug(_this.logTag, 'New ws message (' + ev.data.byteLength + ' bytes)');
+                _this.log.debug(_this.logTag, 'New ws message (' + ev.data.byteLength + ' bytes)');
                 if (_this.handoverState.peer) {
-                    console.error(_this.logTag, 'Protocol error: Received WebSocket message from peer ' + 'even though it has already handed over to task.');
+                    _this.log.error(_this.logTag, 'Protocol error: Received WebSocket message from peer ' + 'even though it has already handed over to task.');
                     _this.resetConnection(exports.CloseCode.ProtocolError);
                     return;
                 }
@@ -1305,7 +1328,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                             if (e.critical === true) {
                                 throw new ProtocolError('Invalid nonce: ' + e);
                             } else {
-                                console.warn(_this.logTag, 'Dropping message with invalid nonce: ' + e);
+                                _this.log.warn(_this.logTag, 'Dropping message with invalid nonce: ' + e);
                                 return;
                             }
                         } else {
@@ -1323,7 +1346,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                             _this.onSignalingMessage(box, nonce);
                             break;
                         default:
-                            console.warn(_this.logTag, 'Received message in', _this.getState(), 'signaling state. Ignoring.');
+                            _this.log.warn(_this.logTag, 'Received message in', _this.getState(), 'signaling state. Ignoring.');
                     }
                 } catch (e) {
                     if (e.name === 'SignalingError' || e.name === 'ProtocolError') {
@@ -1331,7 +1354,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                         if (e.message) {
                             errmsg += ' (' + e.message + ')';
                         }
-                        console.error(_this.logTag, errmsg);
+                        _this.log.error(_this.logTag, errmsg);
                         switch (_this.state) {
                             case 'new':
                             case 'ws-connecting':
@@ -1350,17 +1373,18 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                                 break;
                         }
                     } else if (e.name === 'ConnectionError') {
-                        console.warn(_this.logTag, 'Connection error. Resetting connection.');
+                        _this.log.warn(_this.logTag, 'Connection error. Resetting connection.');
                         _this.resetConnection(exports.CloseCode.InternalError);
                     } else {
                         if (e.hasOwnProperty('stack')) {
-                            console.error(_this.logTag, 'An unknown error occurred:');
-                            console.error(e.stack);
+                            _this.log.error(_this.logTag, 'An unknown error occurred:');
+                            _this.log.error(e.stack);
                         }
                         throw e;
                     }
                 }
             };
+            this.log = client.log;
             this.client = client;
             this.permanentKey = permanentKey;
             this.host = host;
@@ -1375,7 +1399,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
             }
             this.handoverState.onBoth = function () {
                 _this.client.emit({ type: 'handover' });
-                _this.ws.close(exports.CloseCode.Handover);
+                _this.closeWebsocket(exports.CloseCode.Handover);
             };
         }
 
@@ -1410,21 +1434,42 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }, {
             key: 'disconnect',
             value: function disconnect() {
+                var unbind = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
                 var reason = exports.CloseCode.ClosingNormal;
                 this.setState('closing');
                 if (this.state === 'task') {
                     this.sendClose(reason);
                 }
-                if (this.ws !== null) {
-                    console.debug(this.logTag, 'Disconnecting WebSocket');
-                    this.ws.close(reason);
-                }
-                this.ws = null;
+                this.closeWebsocket(reason, undefined, unbind);
                 if (this.task !== null) {
-                    console.debug(this.logTag, 'Closing task connections');
+                    this.log.debug(this.logTag, 'Closing task connections');
                     this.task.close(reason);
                 }
                 this.setState('closed');
+            }
+        }, {
+            key: 'closeWebsocket',
+            value: function closeWebsocket(code, reason) {
+                var unbind = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
+
+                if (this.ws !== null) {
+                    if (code === undefined || code <= 3000) {
+                        code = exports.CloseCode.ClosingNormal;
+                    }
+                    this.log.debug(this.logTag, 'Disconnecting WebSocket, close code: ' + code);
+                    this.ws.close(code, reason);
+                    if (unbind) {
+                        this.ws.removeEventListener('open', this.onOpen);
+                        this.ws.removeEventListener('error', this.onError);
+                        this.ws.removeEventListener('close', this.onClose);
+                        this.ws.removeEventListener('message', this.onMessage);
+                    }
+                    this.ws = null;
+                    if (unbind) {
+                        this.setState('closed');
+                    }
+                }
             }
         }, {
             key: 'initWebsocket',
@@ -1438,7 +1483,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                 this.ws.addEventListener('close', this.onClose);
                 this.ws.addEventListener('message', this.onMessage);
                 this.setState('ws-connecting');
-                console.debug(this.logTag, 'Opening WebSocket connection to', url + path);
+                this.log.debug(this.logTag, 'Opening WebSocket connection to', url + path);
             }
         }, {
             key: 'onServerHandshakeMessage',
@@ -1455,7 +1500,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                         if (msg.type !== 'server-hello') {
                             throw new ProtocolError('Expected server-hello message, but got ' + msg.type);
                         }
-                        console.debug(this.logTag, 'Received server-hello');
+                        this.log.debug(this.logTag, 'Received server-hello');
                         this.handleServerHello(msg, nonce);
                         this.sendClientHello();
                         this.sendClientAuth();
@@ -1466,7 +1511,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                         if (msg.type !== 'server-auth') {
                             throw new ProtocolError('Expected server-auth message, but got ' + msg.type);
                         }
-                        console.debug(this.logTag, 'Received server-auth');
+                        this.log.debug(this.logTag, 'Received server-auth');
                         this.handleServerAuth(msg, nonce);
                         break;
                     case 'done':
@@ -1476,14 +1521,14 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                 }
                 if (this.server.handshakeState === 'done') {
                     this.setState('peer-handshake');
-                    console.debug(this.logTag, 'Server handshake done');
+                    this.log.debug(this.logTag, 'Server handshake done');
                     this.initPeerHandshake();
                 }
             }
         }, {
             key: 'onSignalingMessage',
             value: function onSignalingMessage(box, nonce) {
-                console.debug(this.logTag, 'Message received');
+                this.log.debug(this.logTag, 'Message received');
                 if (nonce.source === Signaling.SALTYRTC_ADDR_SERVER) {
                     this.onSignalingServerMessage(box);
                 } else {
@@ -1497,15 +1542,15 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                 var msg = this.decryptServerMessage(box);
                 switch (msg.type) {
                     case 'send-error':
-                        console.debug(this.logTag, 'Received send-error message');
+                        this.log.debug(this.logTag, 'Received send-error message');
                         this.handleSendError(msg);
                         break;
                     case 'disconnected':
-                        console.debug(this.logTag, 'Received disconnected message');
+                        this.log.debug(this.logTag, 'Received disconnected message');
                         this.handleDisconnected(msg);
                         break;
                     default:
-                        console.warn(this.logTag, 'Invalid server message type:', msg.type);
+                        this.log.warn(this.logTag, 'Invalid server message type:', msg.type);
                 }
             }
         }, {
@@ -1513,22 +1558,22 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
             value: function onSignalingPeerMessage(decrypted) {
                 var msg = this.decodeMessage(decrypted);
                 if (msg.type === 'close') {
-                    console.debug(this.logTag, 'Received close');
+                    this.log.debug(this.logTag, 'Received close');
                     this.handleClose(msg);
                 } else if (msg.type === 'application') {
-                    console.debug(this.logTag, 'Received application message');
+                    this.log.debug(this.logTag, 'Received application message');
                     this.handleApplication(msg);
                 } else if (this.task !== null) {
                     var messageSupportedByTask = this.task.getSupportedMessageTypes().indexOf(msg.type) !== -1;
                     if (messageSupportedByTask) {
-                        console.debug(this.logTag, 'Received', msg.type, '[' + this.task.getName() + ']');
+                        this.log.debug(this.logTag, 'Received', msg.type, '[' + this.task.getName() + ']');
                         this.task.onTaskMessage(msg);
                     } else {
-                        console.error(this.logTag, 'Received', msg.type, 'message which is not supported by the', this.task.getName(), 'task');
+                        this.log.error(this.logTag, 'Received', msg.type, 'message which is not supported by the', this.task.getName(), 'task');
                         this.resetConnection(exports.CloseCode.ProtocolError);
                     }
                 } else {
-                    console.warn(this.logTag, 'Received message with invalid type from peer:', msg.type);
+                    this.log.warn(this.logTag, 'Received message with invalid type from peer:', msg.type);
                 }
             }
         }, {
@@ -1552,7 +1597,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     message.your_key = this.serverPublicKey.buffer.slice(start, end);
                 }
                 var packet = this.buildPacket(message, this.server);
-                console.debug(this.logTag, 'Sending client-auth');
+                this.log.debug(this.logTag, 'Sending client-auth');
                 this.ws.send(packet);
                 this.server.handshakeState = 'auth-sent';
             }
@@ -1566,7 +1611,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                 if (source !== this.address) {
                     throw new ProtocolError('Received send-error message for a message not sent by us!');
                 }
-                console.warn(this.logTag, 'SendError: Could not send unknown message:', idString);
+                this.log.warn(this.logTag, 'SendError: Could not send unknown message:', idString);
                 this._handleSendError(destination);
             }
         }, {
@@ -1581,7 +1626,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     type: 'close',
                     reason: reason
                 };
-                console.debug(this.logTag, 'Sending close');
+                this.log.debug(this.logTag, 'Sending close');
                 if (this.handoverState.local === true) {
                     this.task.sendSignalingMessage(this.msgpackEncode(message));
                 } else {
@@ -1592,7 +1637,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }, {
             key: 'handleClose',
             value: function handleClose(msg) {
-                console.warn(this.logTag, 'Received close message. Reason:', msg.reason, '(' + explainCloseCode(msg.reason) + ')');
+                this.log.warn(this.logTag, 'Received close message. Reason:', msg.reason, '(' + explainCloseCode(msg.reason) + ')');
                 this.task.close(msg.reason);
                 this.resetConnection(exports.CloseCode.GoingAway);
             }
@@ -1703,8 +1748,8 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
             value: function validateRepeatedCookie(peer, repeatedCookieBytes) {
                 var repeatedCookie = Cookie.fromArrayBuffer(repeatedCookieBytes);
                 if (!repeatedCookie.equals(peer.cookiePair.ours)) {
-                    console.debug(this.logTag, 'Their cookie:', repeatedCookie.bytes);
-                    console.debug(this.logTag, 'Our cookie:', peer.cookiePair.ours.bytes);
+                    this.log.debug(this.logTag, 'Their cookie:', repeatedCookie.bytes);
+                    this.log.debug(this.logTag, 'Our cookie:', peer.cookiePair.ours.bytes);
                     throw new ProtocolError('Peer repeated cookie does not match our cookie');
                 }
             }
@@ -1715,7 +1760,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     throw new ValidationError('Server did not send signed_keys in server-auth message');
                 }
                 var box = new Box(new Uint8Array(nonce.toArrayBuffer()), new Uint8Array(signedKeys), nacl.box.nonceLength);
-                console.debug(this.logTag, 'Expected server public permanent key is', u8aToHex(serverPublicKey));
+                this.log.debug(this.logTag, 'Expected server public permanent key is', u8aToHex(serverPublicKey));
                 var decrypted = void 0;
                 try {
                     decrypted = this.permanentKey.decrypt(box, serverPublicKey);
@@ -1798,20 +1843,12 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }, {
             key: 'resetConnection',
             value: function resetConnection(reason) {
-                if (this.ws !== null) {
-                    console.debug(this.logTag, 'Disconnecting WebSocket (close code ' + reason + ')');
-                    if (reason === exports.CloseCode.GoingAway) {
-                        this.ws.close();
-                    } else {
-                        this.ws.close(reason);
-                    }
-                }
-                this.ws = null;
+                this.closeWebsocket(reason, undefined, true);
                 this.server = new Server();
                 this.handoverState.reset();
                 this.setState('new');
                 if (reason !== undefined) {
-                    console.debug(this.logTag, 'Connection reset');
+                    this.log.debug(this.logTag, 'Connection reset');
                 }
             }
         }, {
@@ -1879,10 +1916,10 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     throw new SignalingError(exports.CloseCode.InternalError, 'No peer address could be found');
                 }
                 if (this.handoverState.local === true) {
-                    console.debug(this.logTag, 'Sending', name, 'message through dc');
+                    this.log.debug(this.logTag, 'Sending', name, 'message through dc');
                     this.task.sendSignalingMessage(this.msgpackEncode(msg));
                 } else {
-                    console.debug(this.logTag, 'Sending', name, 'message through ws');
+                    this.log.debug(this.logTag, 'Sending', name, 'message through ws');
                     var packet = this.buildPacket(msg, receiver);
                     this.ws.send(packet);
                 }
@@ -1966,7 +2003,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
             _this.responder = null;
             _this.role = 'initiator';
             if (responderTrustedKey === undefined) {
-                _this.authToken = new AuthToken();
+                _this.authToken = new AuthToken(undefined, _this.log);
             }
             return _this;
         }
@@ -2050,7 +2087,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }, {
             key: 'dropOldestInactiveResponder',
             value: function dropOldestInactiveResponder() {
-                console.warn(this.logTag, 'Dropping oldest inactive responder');
+                this.log.warn(this.logTag, 'Dropping oldest inactive responder');
                 var drop = null;
                 var _iteratorNormalCompletion = true;
                 var _didIteratorError = false;
@@ -2107,15 +2144,15 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     var msg = this.decodeMessage(payload, 'server');
                     switch (msg.type) {
                         case 'new-responder':
-                            console.debug(this.logTag, 'Received new-responder', byteToHex(msg.id));
+                            this.log.debug(this.logTag, 'Received new-responder', byteToHex(msg.id));
                             this.handleNewResponder(msg);
                             break;
                         case 'send-error':
-                            console.debug(this.logTag, 'Received send-error message');
+                            this.log.debug(this.logTag, 'Received send-error message');
                             this.handleSendError(msg);
                             break;
                         case 'disconnected':
-                            console.debug(this.logTag, 'Received disconnected message');
+                            this.log.debug(this.logTag, 'Received disconnected message');
                             this.handleDisconnected(msg);
                             break;
                         default:
@@ -2135,12 +2172,12 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                             try {
                                 payload = this.authToken.decrypt(box);
                             } catch (e) {
-                                console.warn(this.logTag, 'Could not decrypt token message: ', e);
+                                this.log.warn(this.logTag, 'Could not decrypt token message: ', e);
                                 this.dropResponder(responder.id, exports.CloseCode.InitiatorCouldNotDecrypt);
                                 return;
                             }
                             _msg = this.decodeMessage(payload, 'token', true);
-                            console.debug(this.logTag, 'Received token');
+                            this.log.debug(this.logTag, 'Received token');
                             this.handleToken(_msg, responder);
                             break;
                         case 'token-received':
@@ -2148,7 +2185,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                                 try {
                                     payload = this.permanentKey.decrypt(box, this.peerTrustedKey);
                                 } catch (e) {
-                                    console.warn(this.logTag, 'Could not decrypt key message');
+                                    this.log.warn(this.logTag, 'Could not decrypt key message');
                                     this.dropResponder(responder.id, exports.CloseCode.InitiatorCouldNotDecrypt);
                                     return;
                                 }
@@ -2156,7 +2193,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                                 payload = responder.permanentSharedKey.decrypt(box);
                             }
                             _msg = this.decodeMessage(payload, 'key', true);
-                            console.debug(this.logTag, 'Received key');
+                            this.log.debug(this.logTag, 'Received key');
                             this.handleKey(_msg, responder);
                             this.sendKey(responder);
                             break;
@@ -2171,14 +2208,14 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                                 }
                             }
                             _msg = this.decodeMessage(payload, 'auth', true);
-                            console.debug(this.logTag, 'Received auth');
+                            this.log.debug(this.logTag, 'Received auth');
                             this.handleAuth(_msg, responder, nonce);
                             this.sendAuth(responder, nonce);
                             this.responder = this.responders.get(responder.id);
                             this.responders.delete(responder.id);
                             this.dropResponders(exports.CloseCode.DroppedByInitiator);
                             this.setState('task');
-                            console.info(this.logTag, 'Peer handshake done');
+                            this.log.info(this.logTag, 'Peer handshake done');
                             this.task.onPeerHandshakeDone();
                             break;
                         default:
@@ -2206,7 +2243,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                         throw e;
                     }
                 } else if (msg.signed_keys !== null && msg.signed_keys !== undefined) {
-                    console.warn(this.logTag, "Server sent signed keys, but we're not verifying them.");
+                    this.log.warn(this.logTag, "Server sent signed keys, but we're not verifying them.");
                 }
                 this.responders = new Map();
                 var _iteratorNormalCompletion2 = true;
@@ -2237,7 +2274,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     }
                 }
 
-                console.debug(this.logTag, this.responders.size, 'responders connected');
+                this.log.debug(this.logTag, this.responders.size, 'responders connected');
                 this.server.handshakeState = 'done';
             }
         }, {
@@ -2260,7 +2297,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }, {
             key: 'handleKey',
             value: function handleKey(msg, responder) {
-                responder.setLocalSessionKey(new KeyStore());
+                responder.setLocalSessionKey(new KeyStore(undefined, this.log));
                 responder.setSessionSharedKey(new Uint8Array(msg.key));
                 responder.handshakeState = 'key-received';
             }
@@ -2272,7 +2309,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     key: responder.localSessionKey.publicKeyBytes.buffer
                 };
                 var packet = this.buildPacket(message, responder);
-                console.debug(this.logTag, 'Sending key');
+                this.log.debug(this.logTag, 'Sending key');
                 this.ws.send(packet);
                 responder.handshakeState = 'key-sent';
             }
@@ -2291,7 +2328,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     data: taskData
                 };
                 var packet = this.buildPacket(message, responder);
-                console.debug(this.logTag, 'Sending auth');
+                this.log.debug(this.logTag, 'Sending auth');
                 this.ws.send(packet);
                 responder.handshakeState = 'auth-sent';
             }
@@ -2313,14 +2350,14 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                         return t.getName();
                     });
                     var offered = msg.tasks;
-                    console.debug(this.logTag, 'We requested:', requested, 'Peer offered:', offered);
+                    this.log.debug(this.logTag, 'We requested:', requested, 'Peer offered:', offered);
                     this.client.emit({ type: 'no-shared-task', data: { requested: requested, offered: offered } });
                     throw new SignalingError(exports.CloseCode.NoSharedTask, 'No shared task could be found');
                 } else {
-                    console.log(this.logTag, 'Task', task.getName(), 'has been selected');
+                    this.log.debug(this.logTag, 'Task', task.getName(), 'has been selected');
                 }
                 this.initTask(task, msg.data[task.getName()]);
-                console.debug(this.logTag, 'Responder', responder.hexId, 'authenticated');
+                this.log.debug(this.logTag, 'Responder', responder.hexId, 'authenticated');
                 responder.cookiePair.theirs = nonce.cookie;
                 responder.handshakeState = 'auth-received';
             }
@@ -2334,7 +2371,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                 if (this.responder === null) {
                     var responder = this.responders.get(receiver);
                     if (responder === null || responder === undefined) {
-                        console.warn(this.logTag, 'Got send-error message for unknown responder', receiver);
+                        this.log.warn(this.logTag, 'Got send-error message for unknown responder', receiver);
                     } else {
                         notify = true;
                         this.responders.delete(receiver);
@@ -2344,7 +2381,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                         notify = true;
                         this.resetConnection(exports.CloseCode.ProtocolError);
                     } else {
-                        console.warn(this.logTag, 'Got send-error message for unknown responder', receiver);
+                        this.log.warn(this.logTag, 'Got send-error message for unknown responder', receiver);
                     }
                 }
                 if (notify === true) {
@@ -2354,7 +2391,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }, {
             key: 'dropResponders',
             value: function dropResponders(reason) {
-                console.debug(this.logTag, 'Dropping', this.responders.size, 'other responders.');
+                this.log.debug(this.logTag, 'Dropping', this.responders.size, 'other responders.');
                 var _iteratorNormalCompletion3 = true;
                 var _didIteratorError3 = false;
                 var _iteratorError3 = undefined;
@@ -2389,7 +2426,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     reason: reason
                 };
                 var packet = this.buildPacket(message, this.server);
-                console.debug(this.logTag, 'Sending drop-responder', byteToHex(responderId));
+                this.log.debug(this.logTag, 'Sending drop-responder', byteToHex(responderId));
                 this.ws.send(packet);
                 this.responders.delete(responderId);
             }
@@ -2558,15 +2595,15 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     var msg = this.decodeMessage(payload, 'server');
                     switch (msg.type) {
                         case 'new-initiator':
-                            console.debug(this.logTag, 'Received new-initiator');
+                            this.log.debug(this.logTag, 'Received new-initiator');
                             this.handleNewInitiator(msg);
                             break;
                         case 'send-error':
-                            console.debug(this.logTag, 'Received send-error message');
+                            this.log.debug(this.logTag, 'Received send-error message');
                             this.handleSendError(msg);
                             break;
                         case 'disconnected':
-                            console.debug(this.logTag, 'Received disconnected message');
+                            this.log.debug(this.logTag, 'Received disconnected message');
                             this.handleDisconnected(msg);
                             break;
                         default:
@@ -2580,16 +2617,16 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                             throw new ProtocolError('Unexpected peer handshake message');
                         case 'key-sent':
                             _msg = this.decodeMessage(payload, 'key', true);
-                            console.debug(this.logTag, 'Received key');
+                            this.log.debug(this.logTag, 'Received key');
                             this.handleKey(_msg);
                             this.sendAuth(nonce);
                             break;
                         case 'auth-sent':
                             _msg = this.decodeMessage(payload, 'auth', true);
-                            console.debug(this.logTag, 'Received auth');
+                            this.log.debug(this.logTag, 'Received auth');
                             this.handleAuth(_msg, nonce);
                             this.setState('task');
-                            console.info(this.logTag, 'Peer handshake done');
+                            this.log.info(this.logTag, 'Peer handshake done');
                             break;
                         default:
                             throw new SignalingError(exports.CloseCode.InternalError, 'Unknown initiator handshake state');
@@ -2639,7 +2676,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     key: this.permanentKey.publicKeyBytes.buffer
                 };
                 var packet = this.buildPacket(message, this.server, false);
-                console.debug(this.logTag, 'Sending client-hello');
+                this.log.debug(this.logTag, 'Sending client-hello');
                 this.ws.send(packet);
                 this.server.handshakeState = 'hello-sent';
             }
@@ -2647,11 +2684,11 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
             key: 'handleServerAuth',
             value: function handleServerAuth(msg, nonce) {
                 if (nonce.destination > 0xff || nonce.destination < 0x02) {
-                    console.error(this.logTag, 'Invalid nonce destination:', nonce.destination);
+                    this.log.error(this.logTag, 'Invalid nonce destination:', nonce.destination);
                     throw new ValidationError('Invalid nonce destination: ' + nonce.destination);
                 }
                 this.address = nonce.destination;
-                console.debug(this.logTag, 'Server assigned address', byteToHex(this.address));
+                this.log.debug(this.logTag, 'Server assigned address', byteToHex(this.address));
                 this.logTag = '[SaltyRTC.Responder.' + byteToHex(this.address) + ']';
                 this.validateRepeatedCookie(this.server, msg.your_cookie);
                 if (this.serverPublicKey != null) {
@@ -2664,10 +2701,10 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                         throw e;
                     }
                 } else if (msg.signed_keys !== null && msg.signed_keys !== undefined) {
-                    console.warn(this.logTag, "Server sent signed keys, but we're not verifying them.");
+                    this.log.warn(this.logTag, "Server sent signed keys, but we're not verifying them.");
                 }
                 this.initiator.connected = msg.initiator_connected;
-                console.debug(this.logTag, 'Initiator', this.initiator.connected ? '' : 'not', 'connected');
+                this.log.debug(this.logTag, 'Initiator', this.initiator.connected ? '' : 'not', 'connected');
                 this.server.handshakeState = 'done';
             }
         }, {
@@ -2695,20 +2732,20 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     key: this.permanentKey.publicKeyBytes.buffer
                 };
                 var packet = this.buildPacket(message, this.initiator);
-                console.debug(this.logTag, 'Sending token');
+                this.log.debug(this.logTag, 'Sending token');
                 this.ws.send(packet);
                 this.initiator.handshakeState = 'token-sent';
             }
         }, {
             key: 'sendKey',
             value: function sendKey() {
-                this.initiator.setLocalSessionKey(new KeyStore());
+                this.initiator.setLocalSessionKey(new KeyStore(undefined, this.log));
                 var replyMessage = {
                     type: 'key',
                     key: this.initiator.localSessionKey.publicKeyBytes.buffer
                 };
                 var packet = this.buildPacket(replyMessage, this.initiator);
-                console.debug(this.logTag, 'Sending key');
+                this.log.debug(this.logTag, 'Sending key');
                 this.ws.send(packet);
                 this.initiator.handshakeState = 'key-sent';
             }
@@ -2760,7 +2797,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     data: taskData
                 };
                 var packet = this.buildPacket(message, this.initiator);
-                console.debug(this.logTag, 'Sending auth');
+                this.log.debug(this.logTag, 'Sending auth');
                 this.ws.send(packet);
                 this.initiator.handshakeState = 'auth-sent';
             }
@@ -2787,7 +2824,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
 
                         if (task.getName() === msg.task) {
                             selectedTask = task;
-                            console.info(this.logTag, 'Task', msg.task, 'has been selected');
+                            this.log.info(this.logTag, 'Task', msg.task, 'has been selected');
                             break;
                         }
                     }
@@ -2811,7 +2848,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                 } else {
                     this.initTask(selectedTask, msg.data[selectedTask.getName()]);
                 }
-                console.debug(this.logTag, 'Initiator authenticated');
+                this.log.debug(this.logTag, 'Initiator authenticated');
                 this.initiator.cookiePair.theirs = nonce.cookie;
                 this.initiator.handshakeState = 'auth-received';
             }
@@ -2855,6 +2892,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
             this.hasTasks = false;
             this.serverInfoFactory = null;
             this.pingInterval = 0;
+            this.logLevel = 'none';
         }
 
         createClass(SaltyRTCBuilder, [{
@@ -2953,6 +2991,12 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                 return this;
             }
         }, {
+            key: 'withLoggingLevel',
+            value: function withLoggingLevel(level) {
+                this.logLevel = level;
+                return this;
+            }
+        }, {
             key: 'initiatorInfo',
             value: function initiatorInfo(initiatorPublicKey, authToken) {
                 this.initiatorPublicKey = validateKey(initiatorPublicKey, 'Initiator public key');
@@ -2981,9 +3025,9 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     this.processServerInfo(this.serverInfoFactory, this.keyStore.publicKeyBytes);
                 }
                 if (this.hasTrustedPeerKey) {
-                    return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.peerTrustedKey).asInitiator();
+                    return new SaltyRTC(new Log(this.logLevel), this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.peerTrustedKey).asInitiator();
                 } else {
-                    return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval).asInitiator();
+                    return new SaltyRTC(new Log(this.logLevel), this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval).asInitiator();
                 }
             }
         }, {
@@ -2996,13 +3040,13 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     if (this.serverInfoFactory !== null) {
                         this.processServerInfo(this.serverInfoFactory, this.peerTrustedKey);
                     }
-                    return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.peerTrustedKey).asResponder();
+                    return new SaltyRTC(new Log(this.logLevel), this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.peerTrustedKey).asResponder();
                 } else {
                     this.requireInitiatorInfo();
                     if (this.serverInfoFactory !== null) {
                         this.processServerInfo(this.serverInfoFactory, this.initiatorPublicKey);
                     }
-                    return new SaltyRTC(this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval).asResponder(this.initiatorPublicKey, this.authToken);
+                    return new SaltyRTC(new Log(this.logLevel), this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval).asResponder(this.initiatorPublicKey, this.authToken);
                 }
             }
         }]);
@@ -3010,7 +3054,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
     }();
 
     var SaltyRTC = function () {
-        function SaltyRTC(permanentKey, host, port, serverKey, tasks, pingInterval, peerTrustedKey) {
+        function SaltyRTC(log, permanentKey, host, port, serverKey, tasks, pingInterval, peerTrustedKey) {
             classCallCheck(this, SaltyRTC);
 
             this.peerTrustedKey = null;
@@ -3025,6 +3069,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
             if (tasks === undefined || tasks.length === 0) {
                 throw new Error('SaltyRTC must be initialized with at least 1 task');
             }
+            this.log = log;
             this.host = host;
             this.port = port;
             this.permanentKey = permanentKey;
@@ -3055,7 +3100,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                 if (this.peerTrustedKey !== null) {
                     this._signaling = new ResponderSignaling(this, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.permanentKey, this.peerTrustedKey);
                 } else {
-                    var token = new AuthToken(authToken);
+                    var token = new AuthToken(authToken, this.log);
                     this._signaling = new ResponderSignaling(this, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval, this.permanentKey, initiatorPubKey, token);
                 }
                 return this;
@@ -3088,7 +3133,9 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }, {
             key: 'disconnect',
             value: function disconnect() {
-                this.signaling.disconnect();
+                var unbind = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+
+                this.signaling.disconnect(unbind);
             }
         }, {
             key: 'on',
@@ -3123,7 +3170,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }, {
             key: 'emit',
             value: function emit(event) {
-                console.debug(this.logTag, 'New event:', event.type);
+                this.log.debug(this.logTag, 'New event:', event.type);
                 var handlers = this.eventRegistry.get(event.type);
                 var _iteratorNormalCompletion = true;
                 var _didIteratorError = false;
@@ -3136,7 +3183,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                         try {
                             this.callHandler(handler, event);
                         } catch (e) {
-                            console.error(this.logTag, 'Unhandled exception in', event.type, 'handler:', e);
+                            this.log.error(this.logTag, 'Unhandled exception in', event.type, 'handler:', e);
                         }
                     }
                 } catch (err) {
