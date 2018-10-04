@@ -18,3 +18,4 @@ export {CombinedSequence, CombinedSequencePair} from './csn';
 export {EventRegistry} from './eventregistry';
 export {CloseCode, explainCloseCode} from './closecode';
 export {SignalingError, ConnectionError} from './exceptions';
+export {Log} from './log';
