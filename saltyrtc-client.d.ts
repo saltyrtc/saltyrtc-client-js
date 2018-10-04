@@ -309,6 +309,7 @@ declare namespace saltyrtc {
     type LogLevel = 'none' | 'debug' | 'info' | 'warn' | 'error';
 
     interface Log {
+        level: saltyrtc.LogLevel;
         debug(message?: any, ...optionalParams: any[]): void;
         trace(message?: any, ...optionalParams: any[]): void;
         info(message?: any, ...optionalParams: any[]): void;
