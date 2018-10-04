@@ -12,6 +12,10 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.13.2 (2018-10-04)
+
+- [fixed] Exposed `Log.level` attribute
+
 ### v0.13.1 (2018-10-04)
 
 - [fixed] Exposed `Log` class
