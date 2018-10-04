@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.13.0
+ * saltyrtc-client-js v0.13.1
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -2381,4 +2381,4 @@ class SaltyRTC {
     }
 }
 
-export { SaltyRTCBuilder, KeyStore, Box, Cookie, CookiePair, CombinedSequence, CombinedSequencePair, EventRegistry, CloseCode, explainCloseCode, SignalingError, ConnectionError };
+export { SaltyRTCBuilder, KeyStore, Box, Cookie, CookiePair, CombinedSequence, CombinedSequencePair, EventRegistry, CloseCode, explainCloseCode, SignalingError, ConnectionError, Log };

@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.13.0
+ * saltyrtc-client-js v0.13.1
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -3283,6 +3283,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
     exports.explainCloseCode = explainCloseCode;
     exports.SignalingError = SignalingError;
     exports.ConnectionError = ConnectionError;
+    exports.Log = Log;
 
     return exports;
 
