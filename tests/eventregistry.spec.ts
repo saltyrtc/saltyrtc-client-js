@@ -11,8 +11,8 @@ export default () => { describe('eventregistry', function() {
 
         beforeEach(() => {
             this.registry = new EventRegistry();
-            this.handler1 = (ev: saltyrtc.SaltyRTCEvent) => { console.log('Event 1 occurred'); };
-            this.handler2 = (ev: saltyrtc.SaltyRTCEvent) => { console.log('Event 2 occurred'); };
+            this.handler1 = () => { console.log('Event 1 occurred'); };
+            this.handler2 = () => { console.log('Event 2 occurred'); };
         });
 
         it('can register a new event', () => {
@@ -58,7 +58,7 @@ export default () => { describe('eventregistry', function() {
             this.registry.map.set('far', [this.handler1, this.handler2]);
 
             // Unknown handler
-            this.registry.unregister('far', (ev: saltyrtc.SaltyRTCEvent) => { /* do nothing */ });
+            this.registry.unregister('far', () => { /* do nothing */ });
             expect(this.registry.get('far')).toEqual([this.handler1, this.handler2]);
 
             // Unknown event

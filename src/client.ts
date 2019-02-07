@@ -33,7 +33,7 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
     /**
      * Validate the SaltyRTC host. Throw an `Error` if it's invalid.
      */
-    private validateHost(host: string): void {
+    private static validateHost(host: string): void {
         if (host.endsWith('/')) {
             throw new Error('SaltyRTC host may not end with a slash');
         }
@@ -86,7 +86,7 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
      * @throws Error if the host string is invalid.
      */
     public connectTo(host: string, port: number = 8765): SaltyRTCBuilder {
-        this.validateHost(host);
+        SaltyRTCBuilder.validateHost(host);
         this.host = host;
         this.port = port;
         this.hasConnectionInfo = true;

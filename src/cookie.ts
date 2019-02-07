@@ -9,7 +9,6 @@ import * as nacl from 'tweetnacl';
 import { ProtocolError, ValidationError } from './exceptions';
 
 export class Cookie implements saltyrtc.Cookie {
-
     public static COOKIE_LENGTH = 16;
 
     public bytes: Uint8Array;
@@ -20,7 +19,7 @@ export class Cookie implements saltyrtc.Cookie {
      * If no bytes are provided, generate a random cookie.
      */
     constructor(bytes?: Uint8Array) {
-        if (typeof bytes !== 'undefined') {
+        if (bytes !== undefined) {
             if (bytes.length !== 16) {
                 throw new ValidationError('Bad cookie length');
             }
@@ -31,30 +30,13 @@ export class Cookie implements saltyrtc.Cookie {
     }
 
     /**
-     * Create a Cookie from an array.
-     */
-    public static fromArrayBuffer(buffer: ArrayBuffer): Cookie {
-        return new Cookie(new Uint8Array(buffer));
-    }
-
-    /**
-     * Return the underlying ArrayBuffer.
-     */
-    public asArrayBuffer(): ArrayBuffer {
-        return this.bytes.buffer.slice(this.bytes.byteOffset, this.bytes.byteLength);
-    }
-
-    /**
      * Return whether or not the two cookies are equal.
      */
     public equals(otherCookie: Cookie) {
         if (otherCookie.bytes === this.bytes) {
             return true;
         }
-        if (otherCookie.bytes == null || this.bytes == null) {
-            return false;
-        }
-        if (otherCookie.bytes.byteLength !== this.bytes.byteLength) {
+        if (otherCookie.bytes.byteLength !== Cookie.COOKIE_LENGTH) {
             return false;
         }
         for (let i = 0; i < this.bytes.byteLength; i++) {
@@ -64,7 +46,6 @@ export class Cookie implements saltyrtc.Cookie {
         }
         return true;
     }
-
 }
 
 /**

@@ -11,7 +11,7 @@ application](https://github.com/saltyrtc/saltyrtc-demo).
 To initialize a SaltyRTC client instance, you can use the `SaltyRTCBuilder`.
 
 ```javascript
-let builder = new saltyrtcClient.SaltyRTCBuilder();
+const builder = new saltyrtcClient.SaltyRTCBuilder();
 ```
 
 ### Connection Info

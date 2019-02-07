@@ -25,7 +25,6 @@ import { ValidationError } from './exceptions';
  * - Q: Sequence number (4 bytes)
  */
 export class Nonce {
-
     public static TOTAL_LENGTH = 24;
 
     private _cookie: Cookie;
@@ -63,44 +62,44 @@ export class Nonce {
     }
 
     /**
-     * Create a signaling nonce from an ArrayBuffer.
+     * Create a signaling nonce from a Uint8Array.
      *
      * If packet is not exactly 24 bytes long, throw a `ValidationError`.
      */
-    public static fromArrayBuffer(packet: ArrayBuffer): Nonce {
+    public static fromUint8Array(packet: Uint8Array): Nonce {
         if (packet.byteLength !== this.TOTAL_LENGTH) {
             throw new ValidationError('bad-packet-length');
         }
 
         // Get view to buffer
-        const view = new DataView(packet);
+        const view = new DataView(
+            packet.buffer, packet.byteOffset + Cookie.COOKIE_LENGTH, 8);
 
         // Parse and return nonce
-        const cookie = new Cookie(new Uint8Array(packet, 0, 16));
-        const source = view.getUint8(16);
-        const destination = view.getUint8(17);
-        const overflow = view.getUint16(18);
-        const sequenceNumber = view.getUint32(20);
+        const cookie = new Cookie(packet.slice(0, Cookie.COOKIE_LENGTH));
+        const source = view.getUint8(0);
+        const destination = view.getUint8(1);
+        const overflow = view.getUint16(2);
+        const sequenceNumber = view.getUint32(4);
 
         return new Nonce(cookie, overflow, sequenceNumber, source, destination);
     }
 
     /**
-     * Return an ArrayBuffer containing the signaling nonce data.
+     * Return a Uint8Array containing the signaling nonce data.
      */
-    public toArrayBuffer(): ArrayBuffer {
-        const buf = new ArrayBuffer(Nonce.TOTAL_LENGTH);
+    public toUint8Array(): Uint8Array {
+        const buffer = new ArrayBuffer(Nonce.TOTAL_LENGTH);
 
-        const uint8view = new Uint8Array(buf);
-        uint8view.set(this._cookie.bytes);
+        const array = new Uint8Array(buffer);
+        array.set(this._cookie.bytes);
 
-        const view = new DataView(buf);
-        view.setUint8(16, this._source);
-        view.setUint8(17, this._destination);
-        view.setUint16(18, this._overflow);
-        view.setUint32(20, this._sequenceNumber);
+        const view = new DataView(buffer, Cookie.COOKIE_LENGTH, 8);
+        view.setUint8(0, this._source);
+        view.setUint8(1, this._destination);
+        view.setUint16(2, this._overflow);
+        view.setUint32(4, this._sequenceNumber);
 
-        return buf;
+        return array;
     }
-
 }

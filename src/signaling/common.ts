@@ -13,7 +13,13 @@ import { ConnectionError, ProtocolError, SignalingError, ValidationError } from 
 import { Box } from '../keystore';
 import { Nonce } from '../nonce';
 import { Initiator, Peer, Responder, Server } from '../peers';
-import { arraysAreEqual, byteToHex, concat, u8aToHex } from '../utils';
+import {
+    arraysAreEqual,
+    arrayToBuffer,
+    byteToHex,
+    concat,
+    u8aToHex,
+} from '../utils';
 import { HandoverState } from './handoverstate';
 import { isResponderId } from './helpers';
 
@@ -77,9 +83,11 @@ export abstract class Signaling implements saltyrtc.Signaling {
     /**
      * Create a new signaling instance.
      */
-    constructor(client: saltyrtc.SaltyRTC, host: string, port: number, serverKey: Uint8Array,
-                tasks: saltyrtc.Task[], pingInterval: number,
-                permanentKey: saltyrtc.KeyStore, peerTrustedKey?: Uint8Array) {
+    protected constructor(
+        client: saltyrtc.SaltyRTC, host: string, port: number, serverKey: Uint8Array,
+        tasks: saltyrtc.Task[], pingInterval: number,
+        permanentKey: saltyrtc.KeyStore, peerTrustedKey?: Uint8Array,
+    ) {
         this.log = client.log;
         this.client = client;
         this.permanentKey = permanentKey;
@@ -214,10 +222,10 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
             // Unbind events?
             if (unbind) {
-                this.ws.removeEventListener('open', this.onOpen);
-                this.ws.removeEventListener('error', this.onError);
-                this.ws.removeEventListener('close', this.onClose);
-                this.ws.removeEventListener('message', this.onMessage);
+                this.ws.removeEventListener('open', this.onOpen.bind(this));
+                this.ws.removeEventListener('error', this.onError.bind(this));
+                this.ws.removeEventListener('close', this.onClose.bind(this));
+                this.ws.removeEventListener('message', this.onMessage.bind(this));
             }
 
             // Forget instance
@@ -247,10 +255,10 @@ export abstract class Signaling implements saltyrtc.Signaling {
         this.ws.binaryType = 'arraybuffer';
 
         // Set event handlers
-        this.ws.addEventListener('open', this.onOpen);
-        this.ws.addEventListener('error', this.onError);
-        this.ws.addEventListener('close', this.onClose);
-        this.ws.addEventListener('message', this.onMessage);
+        this.ws.addEventListener('open', this.onOpen.bind(this));
+        this.ws.addEventListener('error', this.onError.bind(this));
+        this.ws.addEventListener('close', this.onClose.bind(this));
+        this.ws.addEventListener('message', this.onMessage.bind(this));
 
         // Store connection on instance
         this.setState('ws-connecting');
@@ -260,7 +268,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
     /**
      * WebSocket onopen handler.
      */
-    protected onOpen = (ev: Event) => {
+    protected onOpen(): void {
         this.log.info(this.logTag, 'Opened connection');
         this.setState('server-handshake');
     }
@@ -268,7 +276,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
     /**
      * WebSocket onerror handler.
      */
-    protected onError = (ev: ErrorEvent) => {
+    protected onError(ev: ErrorEvent): void {
         this.log.error(this.logTag, 'General WebSocket error', ev);
         this.client.emit({type: 'connection-error'});
         // Note: We don't update the state here, because an error event will be followed
@@ -278,7 +286,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
     /**
      * WebSocket onclose handler.
      */
-    protected onClose = (ev: CloseEvent) => {
+    protected onClose(ev: CloseEvent): void {
         if (ev.code === CloseCode.Handover) {
             this.log.info(this.logTag, 'Closed WebSocket connection due to handover');
         } else {
@@ -289,7 +297,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         }
     }
 
-    protected onMessage = (ev: MessageEvent) => {
+    protected onMessage(ev: MessageEvent): void {
         this.log.debug(this.logTag, 'New ws message (' + (ev.data as ArrayBuffer).byteLength + ' bytes)');
 
         if (this.handoverState.peer) {
@@ -305,18 +313,20 @@ export abstract class Signaling implements saltyrtc.Signaling {
             const box: saltyrtc.Box = Box.fromUint8Array(new Uint8Array(ev.data), Nonce.TOTAL_LENGTH);
 
             // Parse and validate nonce
-            nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
+            nonce = Nonce.fromUint8Array(box.nonce);
             try {
                 this.validateNonce(nonce);
             } catch (e) {
                 if (e.name === 'ValidationError') {
                     if (e.critical === true) {
+                        // noinspection ExceptionCaughtLocallyJS
                         throw new ProtocolError('Invalid nonce: ' + e);
                     } else {
                         this.log.warn(this.logTag, 'Dropping message with invalid nonce: ' + e);
                         return;
                     }
                 } else {
+                    // noinspection ExceptionCaughtLocallyJS
                     throw e;
                 }
             }
@@ -515,14 +525,12 @@ export abstract class Signaling implements saltyrtc.Signaling {
     protected sendClientAuth(): void {
         const message: saltyrtc.messages.ClientAuth = {
             type: 'client-auth',
-            your_cookie: this.server.cookiePair.theirs.asArrayBuffer(),
+            your_cookie: arrayToBuffer(this.server.cookiePair.theirs.bytes),
             subprotocols: [Signaling.SALTYRTC_SUBPROTOCOL],
             ping_interval: this.pingInterval,
         };
         if (this.serverPublicKey !== null) {
-            const start = this.serverPublicKey.byteOffset;
-            const end = start + this.serverPublicKey.byteLength;
-            message.your_key = this.serverPublicKey.buffer.slice(start, end);
+            message.your_key = arrayToBuffer(this.serverPublicKey);
         }
         const packet: Uint8Array = this.buildPacket(message, this.server);
         this.log.debug(this.logTag, 'Sending client-auth');
@@ -761,8 +769,8 @@ export abstract class Signaling implements saltyrtc.Signaling {
      *
      * If it does not equal our own cookie, throw a ProtocolError.
      */
-    protected validateRepeatedCookie(peer: Peer, repeatedCookieBytes: ArrayBuffer): void {
-        const repeatedCookie = Cookie.fromArrayBuffer(repeatedCookieBytes);
+    protected validateRepeatedCookie(peer: Peer, repeatedCookieBytes: Uint8Array): void {
+        const repeatedCookie = new Cookie(repeatedCookieBytes);
         if (!repeatedCookie.equals(peer.cookiePair.ours)) {
             this.log.debug(this.logTag, 'Their cookie:', repeatedCookie.bytes);
             this.log.debug(this.logTag, 'Our cookie:', peer.cookiePair.ours.bytes);
@@ -778,11 +786,11 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * @param serverPublicKey The expected server public permanent key.
      * @throws ValidationError if the signed keys are not valid.
      */
-    protected validateSignedKeys(signedKeys: ArrayBuffer, nonce: Nonce, serverPublicKey: Uint8Array): void {
+    protected validateSignedKeys(signedKeys: Uint8Array, nonce: Nonce, serverPublicKey: Uint8Array): void {
         if (signedKeys === null || signedKeys === undefined) {
             throw new ValidationError('Server did not send signed_keys in server-auth message');
         }
-        const box = new Box(new Uint8Array(nonce.toArrayBuffer()), new Uint8Array(signedKeys), nacl.box.nonceLength);
+        const box = new Box(nonce.toUint8Array(), new Uint8Array(signedKeys), nacl.box.nonceLength);
         this.log.debug(this.logTag, 'Expected server public permanent key is', u8aToHex(serverPublicKey));
         let decrypted: Uint8Array;
         try {
@@ -853,7 +861,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         // Create nonce
         const nonce = new Nonce(receiver.cookiePair.ours,
             csn.overflow, csn.sequenceNumber, this.address, receiver.id);
-        const nonceBytes = new Uint8Array(nonce.toArrayBuffer());
+        const nonceBytes = nonce.toUint8Array();
 
         // Encode message
         const data: Uint8Array = this.msgpackEncode(message);
@@ -914,14 +922,8 @@ export abstract class Signaling implements saltyrtc.Signaling {
     /**
      * Decrypt data from the peer using the session keys.
      */
-    public decryptData(box: saltyrtc.Box): ArrayBuffer {
-        const decryptedBytes = this.getPeer().sessionSharedKey.decrypt(box);
-
-        // We need to copy the underlying buffer at the specific offset and
-        // length of the view to be able to return an ArrayBuffer directly.
-        const start = decryptedBytes.byteOffset;
-        const end = start + decryptedBytes.byteLength;
-        return decryptedBytes.buffer.slice(start, end);
+    public decryptData(box: saltyrtc.Box): Uint8Array {
+        return this.getPeer().sessionSharedKey.decrypt(box);
     }
 
     /**
@@ -980,7 +982,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
             return this.decodeMessage(decrypted, 'peer');
         } catch (e) {
             if (convertErrors === true && e.name === 'CryptoError' && e.code === 'decryption-failed') {
-                const nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
+                const nonce = Nonce.fromUint8Array(box.nonce);
                 throw new ProtocolError('Could not decrypt peer message from ' + byteToHex(nonce.source));
             } else {
                 throw e;

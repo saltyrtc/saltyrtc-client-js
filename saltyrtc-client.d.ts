@@ -6,7 +6,6 @@
  */
 
 declare namespace saltyrtc {
-
     interface Box {
         readonly length: number;
         readonly data: Uint8Array;
@@ -62,8 +61,6 @@ declare namespace saltyrtc {
         onBoth: () => void;
         reset(): void;
     }
-
-    type SignalingChannel = 'websocket' | 'datachannel';
 
     type SignalingRole = 'initiator' | 'responder';
 
@@ -279,7 +276,6 @@ declare namespace saltyrtc {
 
     interface Cookie {
         bytes: Uint8Array;
-        asArrayBuffer(): ArrayBuffer;
         equals(otherCookie: Cookie): boolean;
     }
 
@@ -317,11 +313,9 @@ declare namespace saltyrtc {
         error(message?: any, ...optionalParams: any[]): void;
         assert(condition?: boolean, message?: string, ...data: any[]): void;
     }
-
 }
 
 declare namespace saltyrtc.messages {
-
     type MessageType = 'server-hello' | 'client-hello' | 'client-auth'
                      | 'server-auth' | 'new-initiator' | 'new-responder'
                      | 'drop-responder' | 'send-error' | 'token' | 'key'
@@ -406,11 +400,6 @@ declare namespace saltyrtc.messages {
         tasks: string[];
     }
 
-    // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#restart
-    interface Restart extends SignalingMessage {
-        type: 'restart';
-    }
-
     // https://github.com/saltyrtc/saltyrtc-meta/blob/master/Protocol.md#close-message
     interface Close extends SignalingMessage {
         type: 'close';
@@ -436,7 +425,6 @@ declare namespace saltyrtc.messages {
         type: string;
         [others: string]: any; // Make this an open interface
     }
-
 }
 
 declare namespace saltyrtc.static {
@@ -457,7 +445,6 @@ declare namespace saltyrtc.static {
     interface Cookie {
         COOKIE_LENGTH: number;
         new(bytes?: Uint8Array): saltyrtc.Cookie;
-        fromArrayBuffer(buffer: ArrayBuffer): saltyrtc.Cookie;
     }
 
     interface CookiePair {

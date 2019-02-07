@@ -7,7 +7,7 @@ export class DummyTask implements saltyrtc.Task {
     protected signaling: saltyrtc.Signaling;
     protected name: string;
 
-    constructor(name?: string) {
+    public constructor(name?: string) {
         if (name === undefined) {
             this.name = 'dummy.tasks.saltyrtc.org';
         } else {
@@ -15,36 +15,38 @@ export class DummyTask implements saltyrtc.Task {
         }
     }
 
-    init(signaling: saltyrtc.Signaling, data: object): void {
+    public init(signaling: saltyrtc.Signaling, data: object): void {
         this.signaling = signaling;
         this.peerData = data;
         this.initialized = true;
     }
 
-    onPeerHandshakeDone(): void {
+    public onPeerHandshakeDone(): void {
     }
 
-    onTaskMessage(message: saltyrtc.messages.TaskMessage): void {
+    public onTaskMessage(message: saltyrtc.messages.TaskMessage): void {
         console.log("Got new task message");
     }
 
-    sendSignalingMessage(payload: Uint8Array) {
+    // noinspection JSMethodCanBeStatic
+    public sendSignalingMessage(payload: Uint8Array) {
         console.log("Sending signaling message (" + payload.byteLength + " bytes)");
     }
 
-    getName(): string {
+    public getName(): string {
         return this.name;
     }
 
-    getSupportedMessageTypes(): string[] {
+    public getSupportedMessageTypes(): string[] {
         return ['dummy'];
     }
 
-    getData(): object {
+    // noinspection JSMethodCanBeStatic
+    public getData(): object {
         return {};
     }
 
-    close(reason: number): void {
+    public close(): void {
         // Do nothing
     }
 
@@ -55,32 +57,32 @@ export class PingPongTask extends DummyTask {
     public sentPong = false;
     public receivedPong = false;
 
-    constructor() {
+    public constructor() {
         super('pingpong.tasks.saltyrtc.org');
     }
 
-    getSupportedMessageTypes(): string[] {
+    public getSupportedMessageTypes(): string[] {
         return ['ping', 'pong'];
     }
 
-    onPeerHandshakeDone(): void {
+    public onPeerHandshakeDone(): void {
         if (this.signaling.role == 'initiator') {
             this.sendPing();
         }
     }
 
-    sendPing(): void {
+    public sendPing(): void {
         console.log('[PingPongTask] Sending ping');
         this.signaling.sendTaskMessage({'type': 'ping'});
     }
 
-    sendPong(): void {
+    public sendPong(): void {
         console.log('[PingPongTask] Sending pong');
         this.signaling.sendTaskMessage({'type': 'pong'});
         this.sentPong = true;
     }
 
-    onTaskMessage(message: saltyrtc.messages.TaskMessage): void {
+    public onTaskMessage(message: saltyrtc.messages.TaskMessage): void {
         if (message.type === 'ping') {
             console.log('[PingPongTask] Received ping');
             this.sendPong();
