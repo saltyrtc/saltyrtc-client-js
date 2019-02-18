@@ -71,8 +71,7 @@ export default () => {
         [false, true].forEach((useSharedKeyStore) => {
             describe(`Web Worker (shared key store=${useSharedKeyStore}, transferables=false)`, () => {
                 it(`encrypt ${Config.CRYPTO_ITERATIONS} times`, (done: any) => {
-                    // @ts-ignore
-                    expect(window.Worker).toBeDefined();
+                    expect(Worker).toBeDefined();
                     const worker = new Worker('performance/crypto.worker.js');
                     let iterations = 0;
                     worker.onmessage = () => {
@@ -106,8 +105,7 @@ export default () => {
                 }, 30000);
 
                 it(`decrypt ${Config.CRYPTO_ITERATIONS} times`, (done: any) => {
-                    // @ts-ignore
-                    expect(window.Worker).toBeDefined();
+                    expect(Worker).toBeDefined();
                     const worker = new Worker('performance/crypto.worker.js');
                     let iterations = 0;
                     worker.onmessage = () => {
@@ -145,8 +143,7 @@ export default () => {
 
             describe(`Web Worker (shared key store=${useSharedKeyStore}, transferables=true)`, () => {
                 it(`encrypt ${Config.CRYPTO_ITERATIONS} times`, (done: any) => {
-                    // @ts-ignore
-                    expect(window.Worker).toBeDefined();
+                    expect(Worker).toBeDefined();
 
                     const worker = new Worker('performance/crypto.worker.js');
                     let iterations = 0;
@@ -188,8 +185,7 @@ export default () => {
                 }, 60000);
 
                 it(`decrypt ${Config.CRYPTO_ITERATIONS} times`, (done: any) => {
-                    // @ts-ignore
-                    expect(window.Worker).toBeDefined();
+                    expect(Worker).toBeDefined();
 
                     const worker = new Worker('performance/crypto.worker.js');
                     let iterations = 0;
