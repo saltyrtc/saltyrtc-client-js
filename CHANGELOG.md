@@ -12,6 +12,12 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.14.0 (2019-02-18)
+
+- [changed] Use `Uint8Array` instead of `ArrayBuffer` in the public API
+- [removed] Removed obsolete methods `Cookie.asArrayBuffer` and
+  `Cookie.fromArrayBuffer`
+
 ### v0.13.2 (2018-10-04)
 
 - [fixed] Exposed `Log.level` attribute

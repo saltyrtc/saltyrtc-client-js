@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.13.2
+ * saltyrtc-client-js v0.14.0
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -582,6 +582,12 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }
         return true;
     }
+    function arrayToBuffer(array) {
+        if (array.byteOffset === 0 && array.byteLength === array.buffer.byteLength) {
+            return array.buffer;
+        }
+        return array.buffer.slice(array.byteOffset, array.byteOffset + array.byteLength);
+    }
 
     var Box = function () {
         function Box(nonce, data, nonceLength) {
@@ -825,7 +831,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         function Cookie(bytes) {
             classCallCheck(this, Cookie);
 
-            if (typeof bytes !== 'undefined') {
+            if (bytes !== undefined) {
                 if (bytes.length !== 16) {
                     throw new ValidationError('Bad cookie length');
                 }
@@ -836,20 +842,12 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }
 
         createClass(Cookie, [{
-            key: 'asArrayBuffer',
-            value: function asArrayBuffer() {
-                return this.bytes.buffer.slice(this.bytes.byteOffset, this.bytes.byteLength);
-            }
-        }, {
             key: 'equals',
             value: function equals(otherCookie) {
                 if (otherCookie.bytes === this.bytes) {
                     return true;
                 }
-                if (otherCookie.bytes == null || this.bytes == null) {
-                    return false;
-                }
-                if (otherCookie.bytes.byteLength !== this.bytes.byteLength) {
+                if (otherCookie.bytes.byteLength !== Cookie.COOKIE_LENGTH) {
                     return false;
                 }
                 for (var i = 0; i < this.bytes.byteLength; i++) {
@@ -858,11 +856,6 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     }
                 }
                 return true;
-            }
-        }], [{
-            key: 'fromArrayBuffer',
-            value: function fromArrayBuffer(buffer) {
-                return new Cookie(new Uint8Array(buffer));
             }
         }]);
         return Cookie;
@@ -930,17 +923,17 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }
 
         createClass(Nonce, [{
-            key: 'toArrayBuffer',
-            value: function toArrayBuffer() {
-                var buf = new ArrayBuffer(Nonce.TOTAL_LENGTH);
-                var uint8view = new Uint8Array(buf);
-                uint8view.set(this._cookie.bytes);
-                var view = new DataView(buf);
-                view.setUint8(16, this._source);
-                view.setUint8(17, this._destination);
-                view.setUint16(18, this._overflow);
-                view.setUint32(20, this._sequenceNumber);
-                return buf;
+            key: 'toUint8Array',
+            value: function toUint8Array() {
+                var buffer = new ArrayBuffer(Nonce.TOTAL_LENGTH);
+                var array = new Uint8Array(buffer);
+                array.set(this._cookie.bytes);
+                var view = new DataView(buffer, Cookie.COOKIE_LENGTH, 8);
+                view.setUint8(0, this._source);
+                view.setUint8(1, this._destination);
+                view.setUint16(2, this._overflow);
+                view.setUint32(4, this._sequenceNumber);
+                return array;
             }
         }, {
             key: 'cookie',
@@ -973,17 +966,17 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                 return this._destination;
             }
         }], [{
-            key: 'fromArrayBuffer',
-            value: function fromArrayBuffer(packet) {
+            key: 'fromUint8Array',
+            value: function fromUint8Array(packet) {
                 if (packet.byteLength !== this.TOTAL_LENGTH) {
                     throw new ValidationError('bad-packet-length');
                 }
-                var view = new DataView(packet);
-                var cookie = new Cookie(new Uint8Array(packet, 0, 16));
-                var source = view.getUint8(16);
-                var destination = view.getUint8(17);
-                var overflow = view.getUint16(18);
-                var sequenceNumber = view.getUint32(20);
+                var view = new DataView(packet.buffer, packet.byteOffset + Cookie.COOKIE_LENGTH, 8);
+                var cookie = new Cookie(packet.slice(0, Cookie.COOKIE_LENGTH));
+                var source = view.getUint8(0);
+                var destination = view.getUint8(1);
+                var overflow = view.getUint16(2);
+                var sequenceNumber = view.getUint32(4);
                 return new Nonce(cookie, overflow, sequenceNumber, source, destination);
             }
         }]);
@@ -1293,97 +1286,6 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
             this.role = null;
             this.logTag = '[SaltyRTC.Signaling]';
             this.address = Signaling.SALTYRTC_ADDR_UNKNOWN;
-            this.onOpen = function (ev) {
-                _this.log.info(_this.logTag, 'Opened connection');
-                _this.setState('server-handshake');
-            };
-            this.onError = function (ev) {
-                _this.log.error(_this.logTag, 'General WebSocket error', ev);
-                _this.client.emit({ type: 'connection-error' });
-            };
-            this.onClose = function (ev) {
-                if (ev.code === exports.CloseCode.Handover) {
-                    _this.log.info(_this.logTag, 'Closed WebSocket connection due to handover');
-                } else {
-                    _this.log.info(_this.logTag, 'Closed WebSocket connection with close code ' + ev.code + ' (' + explainCloseCode(ev.code) + ')');
-                    _this.setState('closed');
-                    _this.client.emit({ type: 'connection-closed', data: ev.code });
-                }
-            };
-            this.onMessage = function (ev) {
-                _this.log.debug(_this.logTag, 'New ws message (' + ev.data.byteLength + ' bytes)');
-                if (_this.handoverState.peer) {
-                    _this.log.error(_this.logTag, 'Protocol error: Received WebSocket message from peer ' + 'even though it has already handed over to task.');
-                    _this.resetConnection(exports.CloseCode.ProtocolError);
-                    return;
-                }
-                var nonce = void 0;
-                try {
-                    var box = Box.fromUint8Array(new Uint8Array(ev.data), Nonce.TOTAL_LENGTH);
-                    nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
-                    try {
-                        _this.validateNonce(nonce);
-                    } catch (e) {
-                        if (e.name === 'ValidationError') {
-                            if (e.critical === true) {
-                                throw new ProtocolError('Invalid nonce: ' + e);
-                            } else {
-                                _this.log.warn(_this.logTag, 'Dropping message with invalid nonce: ' + e);
-                                return;
-                            }
-                        } else {
-                            throw e;
-                        }
-                    }
-                    switch (_this.getState()) {
-                        case 'server-handshake':
-                            _this.onServerHandshakeMessage(box, nonce);
-                            break;
-                        case 'peer-handshake':
-                            _this.onPeerHandshakeMessage(box, nonce);
-                            break;
-                        case 'task':
-                            _this.onSignalingMessage(box, nonce);
-                            break;
-                        default:
-                            _this.log.warn(_this.logTag, 'Received message in', _this.getState(), 'signaling state. Ignoring.');
-                    }
-                } catch (e) {
-                    if (e.name === 'SignalingError' || e.name === 'ProtocolError') {
-                        var errmsg = 'Signaling error: ' + explainCloseCode(e.closeCode);
-                        if (e.message) {
-                            errmsg += ' (' + e.message + ')';
-                        }
-                        _this.log.error(_this.logTag, errmsg);
-                        switch (_this.state) {
-                            case 'new':
-                            case 'ws-connecting':
-                            case 'server-handshake':
-                                _this.resetConnection(e.closeCode);
-                                break;
-                            case 'peer-handshake':
-                                _this.handlePeerHandshakeSignalingError(e, nonce === undefined ? null : nonce.source);
-                                break;
-                            case 'task':
-                                _this.sendClose(e.closeCode);
-                                _this.resetConnection(exports.CloseCode.ClosingNormal);
-                                break;
-                            case 'closing':
-                            case 'closed':
-                                break;
-                        }
-                    } else if (e.name === 'ConnectionError') {
-                        _this.log.warn(_this.logTag, 'Connection error. Resetting connection.');
-                        _this.resetConnection(exports.CloseCode.InternalError);
-                    } else {
-                        if (e.hasOwnProperty('stack')) {
-                            _this.log.error(_this.logTag, 'An unknown error occurred:');
-                            _this.log.error(e.stack);
-                        }
-                        throw e;
-                    }
-                }
-            };
             this.log = client.log;
             this.client = client;
             this.permanentKey = permanentKey;
@@ -1460,10 +1362,10 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     this.log.debug(this.logTag, 'Disconnecting WebSocket, close code: ' + code);
                     this.ws.close(code, reason);
                     if (unbind) {
-                        this.ws.removeEventListener('open', this.onOpen);
-                        this.ws.removeEventListener('error', this.onError);
-                        this.ws.removeEventListener('close', this.onClose);
-                        this.ws.removeEventListener('message', this.onMessage);
+                        this.ws.removeEventListener('open', this.onOpen.bind(this));
+                        this.ws.removeEventListener('error', this.onError.bind(this));
+                        this.ws.removeEventListener('close', this.onClose.bind(this));
+                        this.ws.removeEventListener('message', this.onMessage.bind(this));
                     }
                     this.ws = null;
                     if (unbind) {
@@ -1478,12 +1380,111 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                 var path = this.getWebsocketPath();
                 this.ws = new WebSocket(url + path, Signaling.SALTYRTC_SUBPROTOCOL);
                 this.ws.binaryType = 'arraybuffer';
-                this.ws.addEventListener('open', this.onOpen);
-                this.ws.addEventListener('error', this.onError);
-                this.ws.addEventListener('close', this.onClose);
-                this.ws.addEventListener('message', this.onMessage);
+                this.ws.addEventListener('open', this.onOpen.bind(this));
+                this.ws.addEventListener('error', this.onError.bind(this));
+                this.ws.addEventListener('close', this.onClose.bind(this));
+                this.ws.addEventListener('message', this.onMessage.bind(this));
                 this.setState('ws-connecting');
                 this.log.debug(this.logTag, 'Opening WebSocket connection to', url + path);
+            }
+        }, {
+            key: 'onOpen',
+            value: function onOpen() {
+                this.log.info(this.logTag, 'Opened connection');
+                this.setState('server-handshake');
+            }
+        }, {
+            key: 'onError',
+            value: function onError(ev) {
+                this.log.error(this.logTag, 'General WebSocket error', ev);
+                this.client.emit({ type: 'connection-error' });
+            }
+        }, {
+            key: 'onClose',
+            value: function onClose(ev) {
+                if (ev.code === exports.CloseCode.Handover) {
+                    this.log.info(this.logTag, 'Closed WebSocket connection due to handover');
+                } else {
+                    this.log.info(this.logTag, 'Closed WebSocket connection with close code ' + ev.code + ' (' + explainCloseCode(ev.code) + ')');
+                    this.setState('closed');
+                    this.client.emit({ type: 'connection-closed', data: ev.code });
+                }
+            }
+        }, {
+            key: 'onMessage',
+            value: function onMessage(ev) {
+                this.log.debug(this.logTag, 'New ws message (' + ev.data.byteLength + ' bytes)');
+                if (this.handoverState.peer) {
+                    this.log.error(this.logTag, 'Protocol error: Received WebSocket message from peer ' + 'even though it has already handed over to task.');
+                    this.resetConnection(exports.CloseCode.ProtocolError);
+                    return;
+                }
+                var nonce = void 0;
+                try {
+                    var box = Box.fromUint8Array(new Uint8Array(ev.data), Nonce.TOTAL_LENGTH);
+                    nonce = Nonce.fromUint8Array(box.nonce);
+                    try {
+                        this.validateNonce(nonce);
+                    } catch (e) {
+                        if (e.name === 'ValidationError') {
+                            if (e.critical === true) {
+                                throw new ProtocolError('Invalid nonce: ' + e);
+                            } else {
+                                this.log.warn(this.logTag, 'Dropping message with invalid nonce: ' + e);
+                                return;
+                            }
+                        } else {
+                            throw e;
+                        }
+                    }
+                    switch (this.getState()) {
+                        case 'server-handshake':
+                            this.onServerHandshakeMessage(box, nonce);
+                            break;
+                        case 'peer-handshake':
+                            this.onPeerHandshakeMessage(box, nonce);
+                            break;
+                        case 'task':
+                            this.onSignalingMessage(box, nonce);
+                            break;
+                        default:
+                            this.log.warn(this.logTag, 'Received message in', this.getState(), 'signaling state. Ignoring.');
+                    }
+                } catch (e) {
+                    if (e.name === 'SignalingError' || e.name === 'ProtocolError') {
+                        var errmsg = 'Signaling error: ' + explainCloseCode(e.closeCode);
+                        if (e.message) {
+                            errmsg += ' (' + e.message + ')';
+                        }
+                        this.log.error(this.logTag, errmsg);
+                        switch (this.state) {
+                            case 'new':
+                            case 'ws-connecting':
+                            case 'server-handshake':
+                                this.resetConnection(e.closeCode);
+                                break;
+                            case 'peer-handshake':
+                                this.handlePeerHandshakeSignalingError(e, nonce === undefined ? null : nonce.source);
+                                break;
+                            case 'task':
+                                this.sendClose(e.closeCode);
+                                this.resetConnection(exports.CloseCode.ClosingNormal);
+                                break;
+                            case 'closing':
+                            case 'closed':
+                                break;
+                        }
+                    } else if (e.name === 'ConnectionError') {
+                        this.log.warn(this.logTag, 'Connection error. Resetting connection.');
+                        this.resetConnection(exports.CloseCode.InternalError);
+                    } else {
+                        if (e.hasOwnProperty('stack')) {
+                            this.log.error(this.logTag, 'An unknown error occurred:');
+                            this.log.error(e.stack);
+                        }
+                        throw e;
+                    }
+                }
             }
         }, {
             key: 'onServerHandshakeMessage',
@@ -1587,14 +1588,12 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
             value: function sendClientAuth() {
                 var message = {
                     type: 'client-auth',
-                    your_cookie: this.server.cookiePair.theirs.asArrayBuffer(),
+                    your_cookie: arrayToBuffer(this.server.cookiePair.theirs.bytes),
                     subprotocols: [Signaling.SALTYRTC_SUBPROTOCOL],
                     ping_interval: this.pingInterval
                 };
                 if (this.serverPublicKey !== null) {
-                    var start = this.serverPublicKey.byteOffset;
-                    var end = start + this.serverPublicKey.byteLength;
-                    message.your_key = this.serverPublicKey.buffer.slice(start, end);
+                    message.your_key = arrayToBuffer(this.serverPublicKey);
                 }
                 var packet = this.buildPacket(message, this.server);
                 this.log.debug(this.logTag, 'Sending client-auth');
@@ -1746,7 +1745,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }, {
             key: 'validateRepeatedCookie',
             value: function validateRepeatedCookie(peer, repeatedCookieBytes) {
-                var repeatedCookie = Cookie.fromArrayBuffer(repeatedCookieBytes);
+                var repeatedCookie = new Cookie(repeatedCookieBytes);
                 if (!repeatedCookie.equals(peer.cookiePair.ours)) {
                     this.log.debug(this.logTag, 'Their cookie:', repeatedCookie.bytes);
                     this.log.debug(this.logTag, 'Our cookie:', peer.cookiePair.ours.bytes);
@@ -1759,7 +1758,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                 if (signedKeys === null || signedKeys === undefined) {
                     throw new ValidationError('Server did not send signed_keys in server-auth message');
                 }
-                var box = new Box(new Uint8Array(nonce.toArrayBuffer()), new Uint8Array(signedKeys), nacl.box.nonceLength);
+                var box = new Box(nonce.toUint8Array(), new Uint8Array(signedKeys), nacl.box.nonceLength);
                 this.log.debug(this.logTag, 'Expected server public permanent key is', u8aToHex(serverPublicKey));
                 var decrypted = void 0;
                 try {
@@ -1801,7 +1800,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     throw new ProtocolError('CSN overflow: ' + e.message);
                 }
                 var nonce = new Nonce(receiver.cookiePair.ours, csn.overflow, csn.sequenceNumber, this.address, receiver.id);
-                var nonceBytes = new Uint8Array(nonce.toArrayBuffer());
+                var nonceBytes = nonce.toUint8Array();
                 var data = this.msgpackEncode(message);
                 if (encrypt === false) {
                     return concat(nonceBytes, data);
@@ -1835,10 +1834,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }, {
             key: 'decryptData',
             value: function decryptData(box) {
-                var decryptedBytes = this.getPeer().sessionSharedKey.decrypt(box);
-                var start = decryptedBytes.byteOffset;
-                var end = start + decryptedBytes.byteLength;
-                return decryptedBytes.buffer.slice(start, end);
+                return this.getPeer().sessionSharedKey.decrypt(box);
             }
         }, {
             key: 'resetConnection',
@@ -1874,7 +1870,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     return this.decodeMessage(decrypted, 'peer');
                 } catch (e) {
                     if (convertErrors === true && e.name === 'CryptoError' && e.code === 'decryption-failed') {
-                        var nonce = Nonce.fromArrayBuffer(box.nonce.buffer);
+                        var nonce = Nonce.fromUint8Array(box.nonce);
                         throw new ProtocolError('Could not decrypt peer message from ' + byteToHex(nonce.source));
                     } else {
                         throw e;
@@ -2232,10 +2228,10 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
             key: 'handleServerAuth',
             value: function handleServerAuth(msg, nonce) {
                 this.address = Signaling.SALTYRTC_ADDR_INITIATOR;
-                this.validateRepeatedCookie(this.server, msg.your_cookie);
+                this.validateRepeatedCookie(this.server, new Uint8Array(msg.your_cookie));
                 if (this.serverPublicKey != null) {
                     try {
-                        this.validateSignedKeys(msg.signed_keys, nonce, this.serverPublicKey);
+                        this.validateSignedKeys(new Uint8Array(msg.signed_keys), nonce, this.serverPublicKey);
                     } catch (e) {
                         if (e.name === 'ValidationError') {
                             throw new ProtocolError('Verification of signed_keys failed: ' + e.message);
@@ -2306,7 +2302,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
             value: function sendKey(responder) {
                 var message = {
                     type: 'key',
-                    key: responder.localSessionKey.publicKeyBytes.buffer
+                    key: arrayToBuffer(responder.localSessionKey.publicKeyBytes)
                 };
                 var packet = this.buildPacket(message, responder);
                 this.log.debug(this.logTag, 'Sending key');
@@ -2323,7 +2319,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                 taskData[this.task.getName()] = this.task.getData();
                 var message = {
                     type: 'auth',
-                    your_cookie: nonce.cookie.asArrayBuffer(),
+                    your_cookie: arrayToBuffer(nonce.cookie.bytes),
                     task: this.task.getName(),
                     data: taskData
                 };
@@ -2335,7 +2331,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }, {
             key: 'handleAuth',
             value: function handleAuth(msg, responder, nonce) {
-                this.validateRepeatedCookie(responder, msg.your_cookie);
+                this.validateRepeatedCookie(responder, new Uint8Array(msg.your_cookie));
                 try {
                     InitiatorSignaling.validateTaskInfo(msg.tasks, msg.data);
                 } catch (e) {
@@ -2596,7 +2592,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     switch (msg.type) {
                         case 'new-initiator':
                             this.log.debug(this.logTag, 'Received new-initiator');
-                            this.handleNewInitiator(msg);
+                            this.handleNewInitiator();
                             break;
                         case 'send-error':
                             this.log.debug(this.logTag, 'Received send-error message');
@@ -2673,7 +2669,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
             value: function sendClientHello() {
                 var message = {
                     type: 'client-hello',
-                    key: this.permanentKey.publicKeyBytes.buffer
+                    key: arrayToBuffer(this.permanentKey.publicKeyBytes)
                 };
                 var packet = this.buildPacket(message, this.server, false);
                 this.log.debug(this.logTag, 'Sending client-hello');
@@ -2690,10 +2686,10 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                 this.address = nonce.destination;
                 this.log.debug(this.logTag, 'Server assigned address', byteToHex(this.address));
                 this.logTag = '[SaltyRTC.Responder.' + byteToHex(this.address) + ']';
-                this.validateRepeatedCookie(this.server, msg.your_cookie);
+                this.validateRepeatedCookie(this.server, new Uint8Array(msg.your_cookie));
                 if (this.serverPublicKey != null) {
                     try {
-                        this.validateSignedKeys(msg.signed_keys, nonce, this.serverPublicKey);
+                        this.validateSignedKeys(new Uint8Array(msg.signed_keys), nonce, this.serverPublicKey);
                     } catch (e) {
                         if (e.name === 'ValidationError') {
                             throw new ProtocolError('Verification of signed_keys failed: ' + e.message);
@@ -2709,7 +2705,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
             }
         }, {
             key: 'handleNewInitiator',
-            value: function handleNewInitiator(msg) {
+            value: function handleNewInitiator() {
                 this.initiator = new Initiator(this.initiator.permanentSharedKey.remotePublicKeyBytes, this.permanentKey);
                 this.initiator.connected = true;
                 this.initPeerHandshake();
@@ -2729,7 +2725,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
             value: function sendToken() {
                 var message = {
                     type: 'token',
-                    key: this.permanentKey.publicKeyBytes.buffer
+                    key: arrayToBuffer(this.permanentKey.publicKeyBytes)
                 };
                 var packet = this.buildPacket(message, this.initiator);
                 this.log.debug(this.logTag, 'Sending token');
@@ -2742,7 +2738,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                 this.initiator.setLocalSessionKey(new KeyStore(undefined, this.log));
                 var replyMessage = {
                     type: 'key',
-                    key: this.initiator.localSessionKey.publicKeyBytes.buffer
+                    key: arrayToBuffer(this.initiator.localSessionKey.publicKeyBytes)
                 };
                 var packet = this.buildPacket(replyMessage, this.initiator);
                 this.log.debug(this.logTag, 'Sending key');
@@ -2792,7 +2788,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                 });
                 var message = {
                     type: 'auth',
-                    your_cookie: nonce.cookie.asArrayBuffer(),
+                    your_cookie: arrayToBuffer(nonce.cookie.bytes),
                     tasks: taskNames,
                     data: taskData
                 };
@@ -2804,7 +2800,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }, {
             key: 'handleAuth',
             value: function handleAuth(msg, nonce) {
-                this.validateRepeatedCookie(this.initiator, msg.your_cookie);
+                this.validateRepeatedCookie(this.initiator, new Uint8Array(msg.your_cookie));
                 try {
                     ResponderSignaling.validateTaskInfo(msg.task, msg.data);
                 } catch (e) {
@@ -2896,16 +2892,6 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }
 
         createClass(SaltyRTCBuilder, [{
-            key: 'validateHost',
-            value: function validateHost(host) {
-                if (host.endsWith('/')) {
-                    throw new Error('SaltyRTC host may not end with a slash');
-                }
-                if (host.indexOf('//') !== -1) {
-                    throw new Error('SaltyRTC host should not contain protocol');
-                }
-            }
-        }, {
             key: 'requireKeyStore',
             value: function requireKeyStore() {
                 if (!this.hasKeyStore) {
@@ -2938,7 +2924,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
             value: function connectTo(host) {
                 var port = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 8765;
 
-                this.validateHost(host);
+                SaltyRTCBuilder.validateHost(host);
                 this.host = host;
                 this.port = port;
                 this.hasConnectionInfo = true;
@@ -3047,6 +3033,16 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                         this.processServerInfo(this.serverInfoFactory, this.initiatorPublicKey);
                     }
                     return new SaltyRTC(new Log(this.logLevel), this.keyStore, this.host, this.port, this.serverPublicKey, this.tasks, this.pingInterval).asResponder(this.initiatorPublicKey, this.authToken);
+                }
+            }
+        }], [{
+            key: 'validateHost',
+            value: function validateHost(host) {
+                if (host.endsWith('/')) {
+                    throw new Error('SaltyRTC host may not end with a slash');
+                }
+                if (host.indexOf('//') !== -1) {
+                    throw new Error('SaltyRTC host should not contain protocol');
                 }
             }
         }]);
