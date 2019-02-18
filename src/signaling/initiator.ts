@@ -10,7 +10,7 @@ import { ProtocolError, SignalingError, ValidationError } from '../exceptions';
 import { AuthToken, KeyStore } from '../keystore';
 import { Nonce } from '../nonce';
 import { Responder, Server } from '../peers';
-import { byteToHex } from '../utils';
+import { arrayToBuffer, byteToHex } from '../utils';
 import { Signaling } from './common';
 import { isResponderId } from './helpers';
 
@@ -309,12 +309,12 @@ export class InitiatorSignaling extends Signaling {
         this.address = Signaling.SALTYRTC_ADDR_INITIATOR;
 
         // Validate repeated cookie
-        this.validateRepeatedCookie(this.server, msg.your_cookie);
+        this.validateRepeatedCookie(this.server, new Uint8Array(msg.your_cookie));
 
         // Validate server public key
         if (this.serverPublicKey != null) {
             try {
-                this.validateSignedKeys(msg.signed_keys, nonce, this.serverPublicKey);
+                this.validateSignedKeys(new Uint8Array(msg.signed_keys), nonce, this.serverPublicKey);
             } catch (e) {
                 if (e.name === 'ValidationError') {
                     throw new ProtocolError('Verification of signed_keys failed: ' + e.message);
@@ -379,7 +379,7 @@ export class InitiatorSignaling extends Signaling {
     private sendKey(responder: Responder): void {
         const message: saltyrtc.messages.Key = {
             type: 'key',
-            key: responder.localSessionKey.publicKeyBytes.buffer,
+            key: arrayToBuffer(responder.localSessionKey.publicKeyBytes),
         };
         const packet: Uint8Array = this.buildPacket(message, responder);
         this.log.debug(this.logTag, 'Sending key');
@@ -403,7 +403,7 @@ export class InitiatorSignaling extends Signaling {
         // Send auth
         const message: saltyrtc.messages.InitiatorAuth = {
             type: 'auth',
-            your_cookie: nonce.cookie.asArrayBuffer(),
+            your_cookie: arrayToBuffer(nonce.cookie.bytes),
             task: this.task.getName(),
             data: taskData,
         };
@@ -422,7 +422,7 @@ export class InitiatorSignaling extends Signaling {
      */
     private handleAuth(msg: saltyrtc.messages.ResponderAuth, responder: Responder, nonce: Nonce): void {
         // Validate repeated cookie
-        this.validateRepeatedCookie(responder, msg.your_cookie);
+        this.validateRepeatedCookie(responder, new Uint8Array(msg.your_cookie));
 
         // Validate task info
         try {

@@ -10,7 +10,7 @@ import { ProtocolError, SignalingError, ValidationError } from '../exceptions';
 import { KeyStore } from '../keystore';
 import { Nonce } from '../nonce';
 import { Initiator, Server } from '../peers';
-import { byteToHex } from '../utils';
+import { arrayToBuffer, byteToHex } from '../utils';
 import { Signaling } from './common';
 import { isResponderId } from './helpers';
 
@@ -126,7 +126,7 @@ export class ResponderSignaling extends Signaling {
             switch (msg.type) {
                 case 'new-initiator':
                     this.log.debug(this.logTag, 'Received new-initiator');
-                    this.handleNewInitiator(msg as saltyrtc.messages.NewInitiator);
+                    this.handleNewInitiator();
                     break;
                 case 'send-error':
                     this.log.debug(this.logTag, 'Received send-error message');
@@ -224,7 +224,7 @@ export class ResponderSignaling extends Signaling {
     protected sendClientHello(): void {
         const message: saltyrtc.messages.ClientHello = {
             type: 'client-hello',
-            key: this.permanentKey.publicKeyBytes.buffer,
+            key: arrayToBuffer(this.permanentKey.publicKeyBytes),
         };
         const packet: Uint8Array = this.buildPacket(message, this.server, false);
         this.log.debug(this.logTag, 'Sending client-hello');
@@ -242,12 +242,12 @@ export class ResponderSignaling extends Signaling {
         this.logTag = '[SaltyRTC.Responder.' + byteToHex(this.address) + ']';
 
         // Validate repeated cookie
-        this.validateRepeatedCookie(this.server, msg.your_cookie);
+        this.validateRepeatedCookie(this.server, new Uint8Array(msg.your_cookie));
 
         // Validate server public key
         if (this.serverPublicKey != null) {
             try {
-                this.validateSignedKeys(msg.signed_keys, nonce, this.serverPublicKey);
+                this.validateSignedKeys(new Uint8Array(msg.signed_keys), nonce, this.serverPublicKey);
             } catch (e) {
                 if (e.name === 'ValidationError') {
                     throw new ProtocolError('Verification of signed_keys failed: ' + e.message);
@@ -267,7 +267,7 @@ export class ResponderSignaling extends Signaling {
     /**
      * Handle an incoming new-initiator message.
      */
-    private handleNewInitiator(msg: saltyrtc.messages.NewInitiator): void {
+    private handleNewInitiator(): void {
         this.initiator = new Initiator(
             this.initiator.permanentSharedKey.remotePublicKeyBytes, this.permanentKey);
         this.initiator.connected = true;
@@ -296,7 +296,7 @@ export class ResponderSignaling extends Signaling {
     protected sendToken(): void {
         const message: saltyrtc.messages.Token = {
             type: 'token',
-            key: this.permanentKey.publicKeyBytes.buffer,
+            key: arrayToBuffer(this.permanentKey.publicKeyBytes),
         };
         const packet: Uint8Array = this.buildPacket(message, this.initiator);
         this.log.debug(this.logTag, 'Sending token');
@@ -314,7 +314,7 @@ export class ResponderSignaling extends Signaling {
         // Send public key to initiator
         const replyMessage: saltyrtc.messages.Key = {
             type: 'key',
-            key: this.initiator.localSessionKey.publicKeyBytes.buffer,
+            key: arrayToBuffer(this.initiator.localSessionKey.publicKeyBytes),
         };
         const packet: Uint8Array = this.buildPacket(replyMessage, this.initiator);
         this.log.debug(this.logTag, 'Sending key');
@@ -350,7 +350,7 @@ export class ResponderSignaling extends Signaling {
         // Send auth
         const message: saltyrtc.messages.ResponderAuth = {
             type: 'auth',
-            your_cookie: nonce.cookie.asArrayBuffer(),
+            your_cookie: arrayToBuffer(nonce.cookie.bytes),
             tasks: taskNames,
             data: taskData,
         };
@@ -365,7 +365,7 @@ export class ResponderSignaling extends Signaling {
      */
     private handleAuth(msg: saltyrtc.messages.InitiatorAuth, nonce: Nonce): void {
         // Validate repeated cookie
-        this.validateRepeatedCookie(this.initiator, msg.your_cookie);
+        this.validateRepeatedCookie(this.initiator, new Uint8Array(msg.your_cookie));
 
         // Validate task data
         try {

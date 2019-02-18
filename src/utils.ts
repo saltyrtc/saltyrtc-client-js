@@ -104,7 +104,7 @@ export function concat(...arrays: Uint8Array[]): Uint8Array {
  * Wait for a condition.
  *
  * @param test a function that tests whether the condition has been met.
- * @param delay_ms wait duration between retries.
+ * @param delayMs wait duration between retries.
  * @param retries number of times to retry.
  * @param success the success callback.
  * @param error the error callback.
@@ -135,6 +135,7 @@ export function isString(value: any): value is string {
  * Validate a 32 byte key. Return the validated key as a Uint8Array instance.
  *
  * @param key Either an Uint8Array or a hex string.
+ * @param name Name of the key for the exception.
  * @throws ValidationError if key is invalid.
  */
 export function validateKey(key: Uint8Array | string, name = 'Key'): Uint8Array {
@@ -169,4 +170,18 @@ export function arraysAreEqual(a1: Uint8Array, a2: Uint8Array): boolean {
         }
     }
     return true;
+}
+
+/**
+ * Convert a TypedArray to an ArrayBuffer.
+ *
+ * **Important:** If the source array's data occupies the underlying buffer
+ *   completely, the underlying buffer will be returned directly. Thus, the
+ *   caller may not assume that the data has been copied.
+ */
+export function arrayToBuffer(array: ArrayBufferView): ArrayBuffer {
+    if (array.byteOffset === 0 && array.byteLength === array.buffer.byteLength) {
+        return array.buffer;
+    }
+    return array.buffer.slice(array.byteOffset, array.byteOffset + array.byteLength);
 }

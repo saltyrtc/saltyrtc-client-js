@@ -111,7 +111,7 @@ export default () => { describe('utils', function() {
 
     describe('waitFor', function() {
 
-        it('retries until the condition is met', async (done) => {
+        it('retries until the condition is met', (done: any) => {
             let i = 3;
             // To test, this condition has a side effect.
             // It will return true the 4th time it is called.
@@ -125,7 +125,7 @@ export default () => { describe('utils', function() {
             }, done.fail);
         });
 
-        it('fails if the condition is not met', async (done) => {
+        it('fails if the condition is not met', (done: any) => {
             let tries = 0;
             const test = () => {
                 tries += 1;
@@ -143,6 +143,7 @@ export default () => { describe('utils', function() {
         it('detects strings', () => {
             expect(isString('hello')).toEqual(true);
             // tslint:disable-next-line:no-construct
+            // noinspection JSPrimitiveTypeWrapperUsage
             expect(isString(new String('hello'))).toEqual(true);
             expect(isString(String)).toEqual(false);
             expect(isString(1232)).toEqual(false);

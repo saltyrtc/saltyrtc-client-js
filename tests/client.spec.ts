@@ -163,7 +163,7 @@ export default () => { describe('client', function() {
                     .asInitiator();
             });
 
-            it('can emit events', async (done) => {
+            it('can emit events', (done: any) => {
                 this.sc.on('connected', () => {
                     expect(true).toBe(true);
                     done();
@@ -171,7 +171,7 @@ export default () => { describe('client', function() {
                 this.sc.emit({type: 'connected'});
             });
 
-            it('only calls handlers for specified events', async (done) => {
+            it('only calls handlers for specified events', async (done: any) => {
                 let counter = 0;
                 this.sc.on(['connected', 'data'], () => {
                     counter += 1;
@@ -185,7 +185,7 @@ export default () => { describe('client', function() {
                 done();
             });
 
-            it('only adds a handler once', async (done) => {
+            it('only adds a handler once', async (done: any) => {
                 let counter = 0;
                 let handler = () => {counter += 1;};
                 this.sc.on('data', handler);
@@ -196,7 +196,7 @@ export default () => { describe('client', function() {
                 done();
             });
 
-            it('can call multiple handlers', async (done) => {
+            it('can call multiple handlers', async (done: any) => {
                 let counter = 0;
                 let handler1 = () => {counter += 1;};
                 let handler2 = () => {counter += 1;};
@@ -209,7 +209,7 @@ export default () => { describe('client', function() {
                 done();
             });
 
-            it('can cancel handlers', async (done) => {
+            it('can cancel handlers', async (done: any) => {
                 let counter = 0;
                 let handler = () => {counter += 1;};
                 this.sc.on(['data', 'connected'], handler);
@@ -223,7 +223,7 @@ export default () => { describe('client', function() {
                 done();
             });
 
-            it('can cancel handlers for multiple events', async (done) => {
+            it('can cancel handlers for multiple events', async (done: any) => {
                 let counter = 0;
                 let handler = () => {counter += 1;};
                 this.sc.on(['data', 'connected'], handler);
@@ -237,7 +237,7 @@ export default () => { describe('client', function() {
                 done();
             });
 
-            it('can register one-time handlers', async (done) => {
+            it('can register one-time handlers', async (done: any) => {
                 let counter = 0;
                 let handler = () => {counter += 1;};
                 this.sc.once('data', handler);
@@ -248,7 +248,7 @@ export default () => { describe('client', function() {
                 done();
             });
 
-            it('can register one-time handlers that throw', async (done) => {
+            it('can register one-time handlers that throw', async (done: any) => {
                 let counter = 0;
                 let handler = () => {counter += 1; throw 'oh noes';};
                 this.sc.once('data', handler);
@@ -259,7 +259,7 @@ export default () => { describe('client', function() {
                 done();
             });
 
-            it('removes handlers that return false', async (done) => {
+            it('removes handlers that return false', async (done: any) => {
                 let counter = 0;
                 let handler = () => {
                     if (counter <= 4) {
