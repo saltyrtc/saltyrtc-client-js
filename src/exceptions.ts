@@ -12,8 +12,8 @@ import { CloseCode } from './closecode';
  *
  * It will result in the connection closing with the specified error code.
  */
-export class SignalingError extends Error {
-    public closeCode: number;
+export class SignalingError extends Error implements saltyrtc.SignalingError {
+    public readonly closeCode: number;
     constructor(closeCode: number, message: string) {
         super(message);
         this.message = message;
@@ -25,7 +25,7 @@ export class SignalingError extends Error {
 /**
  * A signaling error with the close code hardcoded to ProtocolError.
  */
-export class ProtocolError extends SignalingError {
+export class ProtocolError extends SignalingError implements saltyrtc.ProtocolError {
     constructor(message: string) {
         super(CloseCode.ProtocolError, message);
     }
@@ -34,7 +34,7 @@ export class ProtocolError extends SignalingError {
 /**
  * Errors related to the network connection state.
  */
-export class ConnectionError extends Error {
+export class ConnectionError extends Error implements saltyrtc.ConnectionError {
     constructor(message: string) {
         super(message);
         this.message = message;
@@ -45,10 +45,10 @@ export class ConnectionError extends Error {
 /**
  * Errors related to validation.
  */
-export class ValidationError extends Error {
+export class ValidationError extends Error implements saltyrtc.ValidationError {
     // If this flag is set, then the validation error
     // will be converted to a protocol error.
-    public critical: boolean;
+    public readonly critical: boolean;
 
     constructor(message: string, critical: boolean = true) {
         super(message);
@@ -61,19 +61,15 @@ export class ValidationError extends Error {
 /**
  * Crypto related errors.
  */
-export class CryptoError extends Error {
+export class CryptoError extends Error implements saltyrtc.CryptoError {
     // A short string used to identify the exception
     // independently from the error message.
-    private _code: string;
+    public readonly code: saltyrtc.CryptoErrorCode;
 
-    constructor(code: string, message: string) {
+    constructor(code: saltyrtc.CryptoErrorCode, message: string) {
         super(message);
         this.name = 'CryptoError';
         this.message = message;
-        this._code = code;
-    }
-
-    public get code(): string {
-        return this._code;
+        this.code = code;
     }
 }
