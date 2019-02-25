@@ -12,6 +12,10 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.14.2 (2019-02-25)
+
+- [fixed] Actually expose all exception classes
+
 ### v0.14.1 (2019-02-25)
 
 - [added] Expose all exception classes

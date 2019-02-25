@@ -7,6 +7,10 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
+// Exceptions
+import * as exceptions from './exceptions';
+export {exceptions};
+
 // Main API
 export {SaltyRTCBuilder} from './client';
 export {KeyStore} from './keystore';

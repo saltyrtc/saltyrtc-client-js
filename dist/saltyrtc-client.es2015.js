@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.14.1
+ * saltyrtc-client-js v0.14.2
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -30,76 +30,6 @@
 
 import { box, randomBytes, secretbox } from 'tweetnacl';
 import { createCodec, encode, decode } from 'msgpack-lite';
-
-class EventRegistry {
-    constructor() {
-        this.map = new Map();
-    }
-    register(eventType, handler) {
-        if (typeof eventType === 'string') {
-            this.set(eventType, handler);
-        }
-        else {
-            for (const et of eventType) {
-                this.set(et, handler);
-            }
-        }
-    }
-    unregister(eventType, handler) {
-        if (typeof eventType === 'string') {
-            if (!this.map.has(eventType)) {
-                return;
-            }
-            if (typeof handler === 'undefined') {
-                this.map.delete(eventType);
-            }
-            else {
-                const list = this.map.get(eventType);
-                const index = list.indexOf(handler);
-                if (index !== -1) {
-                    list.splice(index, 1);
-                }
-            }
-        }
-        else {
-            for (const et of eventType) {
-                this.unregister(et, handler);
-            }
-        }
-    }
-    unregisterAll() {
-        this.map.clear();
-    }
-    set(key, value) {
-        if (this.map.has(key)) {
-            const list = this.map.get(key);
-            if (list.indexOf(value) === -1) {
-                list.push(value);
-            }
-        }
-        else {
-            this.map.set(key, [value]);
-        }
-    }
-    get(eventType) {
-        const handlers = [];
-        if (typeof eventType === 'string') {
-            if (this.map.has(eventType)) {
-                handlers.push.apply(handlers, this.map.get(eventType));
-            }
-        }
-        else {
-            for (const et of eventType) {
-                for (const handler of this.get(et)) {
-                    if (handlers.indexOf(handler) === -1) {
-                        handlers.push(handler);
-                    }
-                }
-            }
-        }
-        return handlers;
-    }
-}
 
 var CloseCode;
 (function (CloseCode) {
@@ -181,6 +111,84 @@ class CryptoError extends Error {
         this.name = 'CryptoError';
         this.message = message;
         this.code = code;
+    }
+}
+
+var exceptions = /*#__PURE__*/Object.freeze({
+    SignalingError: SignalingError,
+    ProtocolError: ProtocolError,
+    ConnectionError: ConnectionError,
+    ValidationError: ValidationError,
+    CryptoError: CryptoError
+});
+
+class EventRegistry {
+    constructor() {
+        this.map = new Map();
+    }
+    register(eventType, handler) {
+        if (typeof eventType === 'string') {
+            this.set(eventType, handler);
+        }
+        else {
+            for (const et of eventType) {
+                this.set(et, handler);
+            }
+        }
+    }
+    unregister(eventType, handler) {
+        if (typeof eventType === 'string') {
+            if (!this.map.has(eventType)) {
+                return;
+            }
+            if (typeof handler === 'undefined') {
+                this.map.delete(eventType);
+            }
+            else {
+                const list = this.map.get(eventType);
+                const index = list.indexOf(handler);
+                if (index !== -1) {
+                    list.splice(index, 1);
+                }
+            }
+        }
+        else {
+            for (const et of eventType) {
+                this.unregister(et, handler);
+            }
+        }
+    }
+    unregisterAll() {
+        this.map.clear();
+    }
+    set(key, value) {
+        if (this.map.has(key)) {
+            const list = this.map.get(key);
+            if (list.indexOf(value) === -1) {
+                list.push(value);
+            }
+        }
+        else {
+            this.map.set(key, [value]);
+        }
+    }
+    get(eventType) {
+        const handlers = [];
+        if (typeof eventType === 'string') {
+            if (this.map.has(eventType)) {
+                handlers.push.apply(handlers, this.map.get(eventType));
+            }
+        }
+        else {
+            for (const et of eventType) {
+                for (const handler of this.get(et)) {
+                    if (handlers.indexOf(handler) === -1) {
+                        handlers.push(handler);
+                    }
+                }
+            }
+        }
+        return handlers;
     }
 }
 
@@ -2370,4 +2378,4 @@ class SaltyRTC {
     }
 }
 
-export { SaltyRTCBuilder, KeyStore, Box, Cookie, CookiePair, CombinedSequence, CombinedSequencePair, EventRegistry, CloseCode, explainCloseCode, SignalingError, ConnectionError, Log };
+export { exceptions, SaltyRTCBuilder, KeyStore, Box, Cookie, CookiePair, CombinedSequence, CombinedSequencePair, EventRegistry, CloseCode, explainCloseCode, SignalingError, ConnectionError, Log };

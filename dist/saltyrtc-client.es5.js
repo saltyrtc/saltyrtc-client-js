@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.14.1
+ * saltyrtc-client-js v0.14.2
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -30,6 +30,51 @@
 
 var saltyrtcClient = (function (exports,nacl,msgpack) {
     'use strict';
+
+    (function (CloseCode) {
+        CloseCode[CloseCode["ClosingNormal"] = 1000] = "ClosingNormal";
+        CloseCode[CloseCode["GoingAway"] = 1001] = "GoingAway";
+        CloseCode[CloseCode["NoSharedSubprotocol"] = 1002] = "NoSharedSubprotocol";
+        CloseCode[CloseCode["PathFull"] = 3000] = "PathFull";
+        CloseCode[CloseCode["ProtocolError"] = 3001] = "ProtocolError";
+        CloseCode[CloseCode["InternalError"] = 3002] = "InternalError";
+        CloseCode[CloseCode["Handover"] = 3003] = "Handover";
+        CloseCode[CloseCode["DroppedByInitiator"] = 3004] = "DroppedByInitiator";
+        CloseCode[CloseCode["InitiatorCouldNotDecrypt"] = 3005] = "InitiatorCouldNotDecrypt";
+        CloseCode[CloseCode["NoSharedTask"] = 3006] = "NoSharedTask";
+        CloseCode[CloseCode["InvalidKey"] = 3007] = "InvalidKey";
+        CloseCode[CloseCode["Timeout"] = 3008] = "Timeout";
+    })(exports.CloseCode || (exports.CloseCode = {}));
+    function explainCloseCode(code) {
+        switch (code) {
+            case exports.CloseCode.ClosingNormal:
+                return 'Normal closing';
+            case exports.CloseCode.GoingAway:
+                return 'The endpoint is going away';
+            case exports.CloseCode.NoSharedSubprotocol:
+                return 'No shared subprotocol could be found';
+            case exports.CloseCode.PathFull:
+                return 'No free responder byte';
+            case exports.CloseCode.ProtocolError:
+                return 'Protocol error';
+            case exports.CloseCode.InternalError:
+                return 'Internal error';
+            case exports.CloseCode.Handover:
+                return 'Handover finished';
+            case exports.CloseCode.DroppedByInitiator:
+                return 'Dropped by initiator';
+            case exports.CloseCode.InitiatorCouldNotDecrypt:
+                return 'Initiator could not decrypt a message';
+            case exports.CloseCode.NoSharedTask:
+                return 'No shared task was found';
+            case exports.CloseCode.InvalidKey:
+                return 'Invalid key';
+            case exports.CloseCode.Timeout:
+                return 'Timeout';
+            default:
+                return 'Unknown';
+        }
+    }
 
     var classCallCheck = function (instance, Constructor) {
       if (!(instance instanceof Constructor)) {
@@ -103,6 +148,93 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
 
       return call && (typeof call === "object" || typeof call === "function") ? call : self;
     };
+
+    var SignalingError = function (_Error) {
+        inherits(SignalingError, _Error);
+
+        function SignalingError(closeCode, message) {
+            classCallCheck(this, SignalingError);
+
+            var _this = possibleConstructorReturn(this, (SignalingError.__proto__ || Object.getPrototypeOf(SignalingError)).call(this, message));
+
+            _this.message = message;
+            _this.closeCode = closeCode;
+            _this.name = 'SignalingError';
+            return _this;
+        }
+
+        return SignalingError;
+    }(Error);
+
+    var ProtocolError = function (_SignalingError) {
+        inherits(ProtocolError, _SignalingError);
+
+        function ProtocolError(message) {
+            classCallCheck(this, ProtocolError);
+            return possibleConstructorReturn(this, (ProtocolError.__proto__ || Object.getPrototypeOf(ProtocolError)).call(this, exports.CloseCode.ProtocolError, message));
+        }
+
+        return ProtocolError;
+    }(SignalingError);
+
+    var ConnectionError = function (_Error2) {
+        inherits(ConnectionError, _Error2);
+
+        function ConnectionError(message) {
+            classCallCheck(this, ConnectionError);
+
+            var _this3 = possibleConstructorReturn(this, (ConnectionError.__proto__ || Object.getPrototypeOf(ConnectionError)).call(this, message));
+
+            _this3.message = message;
+            _this3.name = 'ConnectionError';
+            return _this3;
+        }
+
+        return ConnectionError;
+    }(Error);
+
+    var ValidationError = function (_Error3) {
+        inherits(ValidationError, _Error3);
+
+        function ValidationError(message) {
+            var critical = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
+            classCallCheck(this, ValidationError);
+
+            var _this4 = possibleConstructorReturn(this, (ValidationError.__proto__ || Object.getPrototypeOf(ValidationError)).call(this, message));
+
+            _this4.message = message;
+            _this4.name = 'ValidationError';
+            _this4.critical = critical;
+            return _this4;
+        }
+
+        return ValidationError;
+    }(Error);
+
+    var CryptoError = function (_Error4) {
+        inherits(CryptoError, _Error4);
+
+        function CryptoError(code, message) {
+            classCallCheck(this, CryptoError);
+
+            var _this5 = possibleConstructorReturn(this, (CryptoError.__proto__ || Object.getPrototypeOf(CryptoError)).call(this, message));
+
+            _this5.name = 'CryptoError';
+            _this5.message = message;
+            _this5.code = code;
+            return _this5;
+        }
+
+        return CryptoError;
+    }(Error);
+
+    var exceptions = /*#__PURE__*/Object.freeze({
+        SignalingError: SignalingError,
+        ProtocolError: ProtocolError,
+        ConnectionError: ConnectionError,
+        ValidationError: ValidationError,
+        CryptoError: CryptoError
+    });
 
     var EventRegistry = function () {
         function EventRegistry() {
@@ -266,130 +398,6 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         }]);
         return EventRegistry;
     }();
-
-    (function (CloseCode) {
-        CloseCode[CloseCode["ClosingNormal"] = 1000] = "ClosingNormal";
-        CloseCode[CloseCode["GoingAway"] = 1001] = "GoingAway";
-        CloseCode[CloseCode["NoSharedSubprotocol"] = 1002] = "NoSharedSubprotocol";
-        CloseCode[CloseCode["PathFull"] = 3000] = "PathFull";
-        CloseCode[CloseCode["ProtocolError"] = 3001] = "ProtocolError";
-        CloseCode[CloseCode["InternalError"] = 3002] = "InternalError";
-        CloseCode[CloseCode["Handover"] = 3003] = "Handover";
-        CloseCode[CloseCode["DroppedByInitiator"] = 3004] = "DroppedByInitiator";
-        CloseCode[CloseCode["InitiatorCouldNotDecrypt"] = 3005] = "InitiatorCouldNotDecrypt";
-        CloseCode[CloseCode["NoSharedTask"] = 3006] = "NoSharedTask";
-        CloseCode[CloseCode["InvalidKey"] = 3007] = "InvalidKey";
-        CloseCode[CloseCode["Timeout"] = 3008] = "Timeout";
-    })(exports.CloseCode || (exports.CloseCode = {}));
-    function explainCloseCode(code) {
-        switch (code) {
-            case exports.CloseCode.ClosingNormal:
-                return 'Normal closing';
-            case exports.CloseCode.GoingAway:
-                return 'The endpoint is going away';
-            case exports.CloseCode.NoSharedSubprotocol:
-                return 'No shared subprotocol could be found';
-            case exports.CloseCode.PathFull:
-                return 'No free responder byte';
-            case exports.CloseCode.ProtocolError:
-                return 'Protocol error';
-            case exports.CloseCode.InternalError:
-                return 'Internal error';
-            case exports.CloseCode.Handover:
-                return 'Handover finished';
-            case exports.CloseCode.DroppedByInitiator:
-                return 'Dropped by initiator';
-            case exports.CloseCode.InitiatorCouldNotDecrypt:
-                return 'Initiator could not decrypt a message';
-            case exports.CloseCode.NoSharedTask:
-                return 'No shared task was found';
-            case exports.CloseCode.InvalidKey:
-                return 'Invalid key';
-            case exports.CloseCode.Timeout:
-                return 'Timeout';
-            default:
-                return 'Unknown';
-        }
-    }
-
-    var SignalingError = function (_Error) {
-        inherits(SignalingError, _Error);
-
-        function SignalingError(closeCode, message) {
-            classCallCheck(this, SignalingError);
-
-            var _this = possibleConstructorReturn(this, (SignalingError.__proto__ || Object.getPrototypeOf(SignalingError)).call(this, message));
-
-            _this.message = message;
-            _this.closeCode = closeCode;
-            _this.name = 'SignalingError';
-            return _this;
-        }
-
-        return SignalingError;
-    }(Error);
-
-    var ProtocolError = function (_SignalingError) {
-        inherits(ProtocolError, _SignalingError);
-
-        function ProtocolError(message) {
-            classCallCheck(this, ProtocolError);
-            return possibleConstructorReturn(this, (ProtocolError.__proto__ || Object.getPrototypeOf(ProtocolError)).call(this, exports.CloseCode.ProtocolError, message));
-        }
-
-        return ProtocolError;
-    }(SignalingError);
-
-    var ConnectionError = function (_Error2) {
-        inherits(ConnectionError, _Error2);
-
-        function ConnectionError(message) {
-            classCallCheck(this, ConnectionError);
-
-            var _this3 = possibleConstructorReturn(this, (ConnectionError.__proto__ || Object.getPrototypeOf(ConnectionError)).call(this, message));
-
-            _this3.message = message;
-            _this3.name = 'ConnectionError';
-            return _this3;
-        }
-
-        return ConnectionError;
-    }(Error);
-
-    var ValidationError = function (_Error3) {
-        inherits(ValidationError, _Error3);
-
-        function ValidationError(message) {
-            var critical = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
-            classCallCheck(this, ValidationError);
-
-            var _this4 = possibleConstructorReturn(this, (ValidationError.__proto__ || Object.getPrototypeOf(ValidationError)).call(this, message));
-
-            _this4.message = message;
-            _this4.name = 'ValidationError';
-            _this4.critical = critical;
-            return _this4;
-        }
-
-        return ValidationError;
-    }(Error);
-
-    var CryptoError = function (_Error4) {
-        inherits(CryptoError, _Error4);
-
-        function CryptoError(code, message) {
-            classCallCheck(this, CryptoError);
-
-            var _this5 = possibleConstructorReturn(this, (CryptoError.__proto__ || Object.getPrototypeOf(CryptoError)).call(this, message));
-
-            _this5.name = 'CryptoError';
-            _this5.message = message;
-            _this5.code = code;
-            return _this5;
-        }
-
-        return CryptoError;
-    }(Error);
 
     var Log = function () {
         function Log(level) {
@@ -3262,6 +3270,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
         return SaltyRTC;
     }();
 
+    exports.exceptions = exceptions;
     exports.SaltyRTCBuilder = SaltyRTCBuilder;
     exports.KeyStore = KeyStore;
     exports.Box = Box;
