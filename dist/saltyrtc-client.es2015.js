@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.14.0
+ * saltyrtc-client-js v0.14.1
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -180,10 +180,7 @@ class CryptoError extends Error {
         super(message);
         this.name = 'CryptoError';
         this.message = message;
-        this._code = code;
-    }
-    get code() {
-        return this._code;
+        this.code = code;
     }
 }
 

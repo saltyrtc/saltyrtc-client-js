@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.14.0
+ * saltyrtc-client-js v0.14.1
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -384,16 +384,10 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
 
             _this5.name = 'CryptoError';
             _this5.message = message;
-            _this5._code = code;
+            _this5.code = code;
             return _this5;
         }
 
-        createClass(CryptoError, [{
-            key: 'code',
-            get: function get$$1() {
-                return this._code;
-            }
-        }]);
         return CryptoError;
     }(Error);
 
