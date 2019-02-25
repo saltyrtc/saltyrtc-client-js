@@ -6,6 +6,24 @@
  */
 
 declare namespace saltyrtc {
+    type CryptoErrorCode = 'bad-message-length' | 'bad-token-length' | 'decryption-failed'
+
+    interface SignalingError extends Error {
+        readonly closeCode: number;
+    }
+
+    interface ProtocolError extends SignalingError {}
+
+    interface ConnectionError extends Error {}
+
+    interface ValidationError extends Error {
+        readonly critical: boolean;
+    }
+
+    interface CryptoError extends Error {
+        readonly code: CryptoErrorCode;
+    }
+
     interface Box {
         readonly length: number;
         readonly data: Uint8Array;
@@ -295,13 +313,6 @@ declare namespace saltyrtc {
         theirs: number;
     }
 
-    interface SignalingError extends Error {
-        closeCode: number;
-    }
-
-    interface ConnectionError extends Error {
-    }
-
     type LogLevel = 'none' | 'debug' | 'info' | 'warn' | 'error';
 
     interface Log {
@@ -428,6 +439,25 @@ declare namespace saltyrtc.messages {
 }
 
 declare namespace saltyrtc.static {
+    interface SignalingError {
+        new(closeCode: number, message: string): saltyrtc.SignalingError;
+    }
+
+    interface ProtocolError {
+        new(message: string): saltyrtc.ProtocolError;
+    }
+
+    interface ConnectionError {
+        new(message: string): saltyrtc.ConnectionError;
+    }
+
+    interface ValidationError {
+        new(message: string, critical?: boolean): saltyrtc.ValidationError;
+    }
+
+    interface CryptoError {
+        new(code: CryptoErrorCode, message: string): saltyrtc.CryptoError;
+    }
 
     interface SaltyRTCBuilder {
         new(): saltyrtc.SaltyRTCBuilder;
@@ -465,14 +495,6 @@ declare namespace saltyrtc.static {
         new(): saltyrtc.EventRegistry;
     }
 
-    interface SignalingError {
-        new(closeCode: number, message: string): saltyrtc.SignalingError;
-    }
-
-    interface ConnectionError {
-        new(message: string): saltyrtc.ConnectionError;
-    }
-
     interface Log {
         new(level: saltyrtc.LogLevel): saltyrtc.Log;
     }
@@ -496,6 +518,13 @@ declare namespace saltyrtc.static {
 }
 
 declare var saltyrtcClient: {
+    exceptions: {
+        SignalingError: saltyrtc.static.SignalingError,
+        ProtocolError: saltyrtc.static.ProtocolError,
+        ConnectionError: saltyrtc.static.ConnectionError,
+        ValidationError: saltyrtc.static.ValidationError,
+        CryptoError: saltyrtc.static.CryptoError,
+    },
     SaltyRTCBuilder: saltyrtc.static.SaltyRTCBuilder;
     KeyStore: saltyrtc.static.KeyStore;
     Box: saltyrtc.static.Box;
