@@ -464,7 +464,7 @@ declare namespace saltyrtc.static {
     }
 
     interface KeyStore {
-        new(publicKey?: Uint8Array | string, secretKey?: Uint8Array | string): saltyrtc.KeyStore;
+        new(secretKey?: Uint8Array | string, log?: saltyrtc.Log): saltyrtc.KeyStore;
     }
 
     interface Box {
