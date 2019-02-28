@@ -12,6 +12,10 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.14.3 (2019-02-28)
+
+- [fixed] Signature of `KeyStore`'s constructor was incorrect
+
 ### v0.14.2 (2019-02-25)
 
 - [fixed] Actually expose all exception classes
