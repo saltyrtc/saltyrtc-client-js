@@ -23,6 +23,7 @@ export default () => { describe('Integration Tests', function() {
     beforeEach(() => {
         this.initiator = new SaltyRTCBuilder()
             .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+            .withLoggingLevel('warn')
             .withKeyStore(new KeyStore())
             .usingTasks([new DummyTask()])
             .asInitiator() as saltyrtc.SaltyRTC;
@@ -31,6 +32,7 @@ export default () => { describe('Integration Tests', function() {
         const authToken = this.initiator.authTokenBytes;
         this.responder = new SaltyRTCBuilder()
             .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+            .withLoggingLevel('warn')
             .withKeyStore(new KeyStore())
             .initiatorInfo(pubKey, authToken)
             .usingTasks([new DummyTask()])
@@ -148,12 +150,14 @@ export default () => { describe('Integration Tests', function() {
             const authToken = this.initiator.authTokenBytes;
             const responder1 = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .initiatorInfo(pubKey, authToken)
                 .usingTasks([new DummyTask()])
                 .asResponder();
             const responder2 = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .initiatorInfo(pubKey, authToken)
                 .usingTasks([new DummyTask()])
@@ -219,11 +223,13 @@ export default () => { describe('Integration Tests', function() {
             // Generate keys
             const oldInitiator = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .usingTasks([new DummyTask()])
                 .asInitiator();
             const oldResponder = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .initiatorInfo(oldInitiator.permanentKeyBytes, oldInitiator.authTokenBytes)
                 .usingTasks([new DummyTask()])
@@ -234,12 +240,14 @@ export default () => { describe('Integration Tests', function() {
             // Use trusted keys to connect
             const initiator = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(oldInitiator.keyStore)
                 .withTrustedPeerKey(responderPublicKey)
                 .usingTasks([new DummyTask()])
                 .asInitiator();
             const responder = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(oldResponder.keyStore)
                 .withTrustedPeerKey(initiatorPublicKey)
                 .usingTasks([new DummyTask()])
@@ -259,6 +267,7 @@ export default () => { describe('Integration Tests', function() {
             console.info('===> TEST NAME:', spec.getFullName());
             const initiator = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .usingTasks([new DummyTask()])
                 .withServerKey(Config.SALTYRTC_SERVER_PUBLIC_KEY)
@@ -272,6 +281,7 @@ export default () => { describe('Integration Tests', function() {
             console.info('===> TEST NAME:', spec.getFullName());
             const initiator = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .usingTasks([new DummyTask()])
                 .withServerKey('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
@@ -290,6 +300,7 @@ export default () => { describe('Integration Tests', function() {
             console.info('===> TEST NAME:', spec.getFullName());
             const responder = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .usingTasks([new DummyTask()])
                 .withServerKey(Config.SALTYRTC_SERVER_PUBLIC_KEY)
@@ -309,6 +320,7 @@ export default () => { describe('Integration Tests', function() {
                         port: Config.SALTYRTC_PORT,
                     };
                 })
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .usingTasks([new DummyTask()])
                 .withServerKey(Config.SALTYRTC_SERVER_PUBLIC_KEY)
@@ -323,6 +335,7 @@ export default () => { describe('Integration Tests', function() {
             console.info('===> TEST NAME:', spec.getFullName());
             const responder = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .usingTasks([new DummyTask()])
                 .withServerKey('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
@@ -342,6 +355,7 @@ export default () => { describe('Integration Tests', function() {
             console.info('===> TEST NAME:', spec.getFullName());
             const initiator = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .usingTasks([new DummyTask()])
                 .withServerKey(Config.SALTYRTC_SERVER_PUBLIC_KEY)
@@ -403,6 +417,7 @@ export default () => { describe('Integration Tests', function() {
                     for (let i = 0x02; i <= 0xff; i++) {
                         const r = new SaltyRTCBuilder()
                             .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                            .withLoggingLevel('warn')
                             .withKeyStore(new KeyStore())
                             .usingTasks([new DummyTask()])
                             .initiatorInfo(this.initiator.permanentKeyBytes, this.initiator.authTokenBytes)
@@ -430,6 +445,7 @@ export default () => { describe('Integration Tests', function() {
                 console.debug('====== Connecting real responder ======');
                 const responder = new SaltyRTCBuilder()
                     .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                    .withLoggingLevel('warn')
                     .withKeyStore(new KeyStore())
                     .usingTasks([new DummyTask()])
                     .initiatorInfo(this.initiator.permanentKeyBytes, this.initiator.authTokenBytes)
@@ -453,11 +469,13 @@ export default () => { describe('Integration Tests', function() {
             // Create peers
             const initiator = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .usingTasks([new PingPongTask()])
                 .asInitiator();
             const responder = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .initiatorInfo(initiator.permanentKeyBytes, initiator.authTokenBytes)
                 .usingTasks([new PingPongTask()])
