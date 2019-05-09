@@ -131,7 +131,7 @@ export default () => { describe('Integration Tests', function() {
             this.initiator.disconnect();
         });
 
-        it('new-responder event (responder first)', async (done: any) => {
+        it('new-responder event (responders first, parallel)', async (done: any) => {
             expect(this.initiator.state).toEqual('new');
             expect(this.responder.state).toEqual('new');
 
@@ -175,7 +175,7 @@ export default () => { describe('Integration Tests', function() {
             done();
         });
 
-        it('new-responder event (initiator first)', async (done: any) => {
+        it('new-responder event (initiator first, single responder)', async (done: any) => {
             expect(this.initiator.state).toEqual('new');
             expect(this.responder.state).toEqual('new');
 
@@ -194,6 +194,60 @@ export default () => { describe('Integration Tests', function() {
             await sleep(1000);
             expect(eventCounter).toBe(1);
 
+            done();
+        });
+
+        it('new-responder event (initiator first, multiple responders)', async (done: any) => {
+            // Create two responders
+            const pubKey = this.initiator.permanentKeyBytes;
+            const authToken = this.initiator.authTokenBytes;
+            const responder1 = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
+                .withKeyStore(new KeyStore())
+                .initiatorInfo(pubKey, authToken)
+                .usingTasks([new DummyTask()])
+                .asResponder();
+            const responder2 = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
+                .withKeyStore(new KeyStore())
+                .initiatorInfo(pubKey, authToken)
+                .usingTasks([new DummyTask()])
+                .asResponder();
+            expect(responder1.state).toEqual('new');
+            expect(responder2.state).toEqual('new');
+
+            // Register event handler
+            const firstResponderConnectedPromise = new Promise((resolve) => {
+                this.initiator.on('new-responder', resolve);
+            });
+
+            // Connect initiator
+            this.initiator.on('connection-closed', () =>
+                done.fail('Connection closed before all responders have been connected'));
+            await new Promise((resolve) => {
+                this.initiator.on('state-change:peer-handshake', resolve);
+                this.initiator.connect();
+            });
+
+            // Connect responders
+            // Note: We wait until the task kicked in as that has resulted in
+            //       an exception in the past.
+            await new Promise((resolve) => {
+                responder1.on('state-change:task', resolve);
+                responder1.connect();
+            });
+            const secondResponderDroppedPromise = new Promise((resolve) => {
+                responder2.on('state-change:closed', resolve);
+                responder2.connect();
+            });
+
+            // Ensure the first responder has been connected and the second
+            // responder has been dropped.
+            await Promise.all([firstResponderConnectedPromise, secondResponderDroppedPromise]);
+            expect(responder1.state).toEqual('task');
+            expect(responder2.state).toEqual('closed');
             done();
         });
 
