@@ -314,6 +314,13 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
             // Parse and validate nonce
             nonce = Nonce.fromUint8Array(box.nonce);
+            const peer = this.getPeerWithId(nonce.source);
+            if (peer === null) {
+                // Note: This can happen when a responder has been dropped
+                //       but a message was still in flight.
+                this.log.debug(this.logTag, 'Ignoring message from unknown id: ' + nonce.source);
+                return;
+            }
             try {
                 this.validateNonce(nonce);
             } catch (e) {
@@ -471,9 +478,14 @@ export abstract class Signaling implements saltyrtc.Signaling {
                 this.handleDisconnected(msg as saltyrtc.messages.Disconnected);
                 break;
             default:
-                this.log.warn(this.logTag, 'Invalid server message type:', msg.type);
+                this.onUnhandledSignalingServerMessage(msg);
         }
     }
+
+    /**
+     * Handle messages received from the server *after* the handshake is done.
+     */
+    protected abstract onUnhandledSignalingServerMessage(msg: saltyrtc.Message): void;
 
     /**
      * Signaling message received from peer *after* the handshake is done.

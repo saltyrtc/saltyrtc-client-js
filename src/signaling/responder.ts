@@ -221,6 +221,23 @@ export class ResponderSignaling extends Signaling {
         }
     }
 
+    /**
+     * Close when a new initiator has connected.
+     *
+     * Note: This deviates from the intention of the specification to allow
+     *       for more than one connection towards an initiator over the same
+     *       WebSocket connection.
+     */
+    protected onUnhandledSignalingServerMessage(msg: saltyrtc.Message): void {
+        if (msg.type === 'new-initiator') {
+            this.log.debug(this.logTag, 'Received new-initiator after peer handshake completed, ' +
+                'closing');
+            this.resetConnection(CloseCode.ClosingNormal);
+        } else {
+            this.log.warn(this.logTag, 'Unknown server message type:', msg.type);
+        }
+    }
+
     protected sendClientHello(): void {
         const message: saltyrtc.messages.ClientHello = {
             type: 'client-hello',
