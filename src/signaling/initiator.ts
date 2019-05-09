@@ -117,8 +117,10 @@ export class InitiatorSignaling extends Signaling {
      * @throws SignalingError
      */
     protected processNewResponder(responderId: number): void {
-        // Drop responder if it's already known
+        // Discard previous responder (if any)
         if (this.responders.has(responderId)) {
+            this.log.warn(this.logTag, 'Previous responder discarded (server ' +
+                `should have sent 'disconnected' message): ${responderId}`);
             this.responders.delete(responderId);
         }
 
