@@ -10,7 +10,7 @@
 /// <reference path='../saltyrtc-client.d.ts' />
 
 import * as nacl from 'tweetnacl';
-import { explainCloseCode } from '../src/closecode';
+import { CloseCode, explainCloseCode } from '../src/closecode';
 import { KeyStore, SaltyRTCBuilder } from '../src/main';
 import { Config } from './config';
 import { DummyTask, PingPongTask } from './testtasks';
@@ -249,6 +249,77 @@ export default () => { describe('Integration Tests', function() {
             expect(responder1.state).toEqual('task');
             expect(responder2.state).toEqual('closed');
             done();
+        });
+
+        it('new-initiator event', async () => {
+            // Create two initiators
+            const keyStore = new KeyStore();
+            const initiator1 = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
+                .withKeyStore(keyStore)
+                .usingTasks([new DummyTask()])
+                .asInitiator() as saltyrtc.SaltyRTC;
+            const initiator2 = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
+                .withKeyStore(keyStore)
+                .usingTasks([new DummyTask()])
+                .asInitiator() as saltyrtc.SaltyRTC;
+
+            // Create single responder
+            const responder = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
+                .withKeyStore(new KeyStore())
+                .initiatorInfo(initiator1.permanentKeyBytes, initiator1.authTokenBytes)
+                .usingTasks([new DummyTask()])
+                .asResponder();
+
+            // Bind closed events
+            const responderClosedPromise = new Promise((resolve) => {
+                responder.on('connection-closed', (event) => resolve(event.data));
+            });
+            const initiator1ClosedPromise = new Promise((resolve) => {
+                initiator1.on('connection-closed', (event) => resolve(event.data));
+            });
+            const initiator2ClosedPromise = new Promise((resolve) => {
+                initiator2.on('connection-closed', (event) => resolve(event.data));
+            });
+
+            // Connect responder
+            await new Promise((resolve) => {
+                responder.on('state-change:peer-handshake', resolve);
+                responder.connect();
+            });
+
+            // Connect first initiator
+            // Note: We wait until the task kicked in as that has resulted in
+            //       an exception in the past.
+            await new Promise((resolve) => {
+                initiator1.connect();
+                responder.on('state-change:task', resolve);
+            });
+
+            // Connect second initiator and disconnect after the responder
+            // disconnected.
+            initiator2.connect();
+            initiator2.on('peer-disconnected', () => {
+                initiator2.disconnect();
+            });
+
+            // Ensure...
+            //
+            // - the responder closed normally,
+            // - the first initiator has been dropped by the second initiator,
+            //   and
+            // - the second initiator closed normally.
+            const [responderCloseCode, initiator1CloseCode, initiator2CloseCode] = await Promise.all([
+                responderClosedPromise, initiator1ClosedPromise, initiator2ClosedPromise
+            ]);
+            expect(responderCloseCode).toBe(CloseCode.ClosingNormal);
+            expect(initiator1CloseCode).toBe(CloseCode.DroppedByInitiator);
+            expect(initiator2CloseCode).toBe(CloseCode.ClosingNormal);
         });
 
         it('getting peer permanent key', async () => {
