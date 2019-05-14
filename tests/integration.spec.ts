@@ -18,6 +18,8 @@ import { sleep } from './utils';
 
 export default () => { describe('Integration Tests', function() {
 
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
+
     beforeEach(() => {
         this.initiator = new SaltyRTCBuilder()
             .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)

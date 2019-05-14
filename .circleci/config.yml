@@ -1,61 +1,81 @@
 version: 2
 
-references:
-  docker-config: &docker-config
-      - image: quay.io/saltyrtc/circleci-image-js:latest
-        environment:
-          FIREFOX_BIN: xvfb-firefox
 
-jobs:
-  test:
-    docker: *docker-config
+shared:
+  lint: &lint-config
     steps:
       - checkout
 
       # Install dependencies
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "package.json" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
       - run: npm install
-      - save_cache:
-          paths:
-            - node_modules
-          key: v1-dependencies-{{ checksum "package.json" }}
+
+      # Run linter
+      - run:
+          name: Run linter
+          command: npm run lint
+
+  test: &test-config
+    steps:
+      - checkout
+
+      # Install dependencies
+      - run: npm install
 
       # Start SaltyRTC server
       - run: saltyrtc-server-launcher > /saltyrtc/server.pid && sleep 2
 
+      # Show browser version
+      - run: if which firefox >/dev/null; then firefox --version; fi
+      - run: if which chrome >/dev/null; then chrome --version; fi
+      - run: if which chromium >/dev/null; then chromium --version; fi
+
       # Run tests
-      - run: npm run rollup_tests && npm test
-      - run: node_modules/.bin/tsc --noEmit
+      - run:
+          name: Run tests
+          command: npm run rollup_tests && npm test -- --browsers $BROWSER
+      - run:
+          name: Run type checks
+          command: node_modules/.bin/tsc --noEmit
 
       # Stop SaltyRTC server
       - run: kill -INT $(cat /saltyrtc/server.pid)
+
+
+jobs:
   lint:
-    docker: *docker-config
-    steps:
-      - checkout
+    <<: *lint-config
+    docker:
+      - image: circleci/node:10-browsers
 
-      # Install dependencies
-      - restore_cache:
-          keys:
-          - v1-dependencies-{{ checksum "package.json" }}
-          # fallback to using the latest cache if no exact match is found
-          - v1-dependencies-
-      - run: npm install
-      - save_cache:
-          paths:
-            - node_modules
-          key: v1-dependencies-{{ checksum "package.json" }}
+  test-chromium-latest:
+    <<: *test-config
+    docker:
+      - image: saltyrtc/circleci-image-js:chromium-latest
+    environment:
+      - BROWSER: ChromiumHeadless
 
-      # Run linter
-      - run: npm run lint
+  test-firefox-stable:
+    <<: *test-config
+    docker:
+      - image: saltyrtc/circleci-image-js:firefox-60.6.3esr
+    environment:
+      BROWSER: Firefox_circle_ci
+      FIREFOX_BIN: xvfb-firefox
+
+  test-firefox-esr:
+    <<: *test-config
+    docker:
+      - image: saltyrtc/circleci-image-js:firefox-66.0.5
+    environment:
+      BROWSER: Firefox_circle_ci
+      FIREFOX_BIN: xvfb-firefox
+
 
 workflows:
   version: 2
   build:
     jobs:
-      - test
       - lint
+      - test-chromium-latest
+      - test-firefox-stable
+      - test-firefox-esr
