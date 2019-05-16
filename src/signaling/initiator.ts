@@ -313,14 +313,10 @@ export class InitiatorSignaling extends Signaling {
      */
     protected onUnhandledSignalingServerMessage(msg: saltyrtc.Message): void {
         if (msg.type === 'new-responder') {
-            try {
-                this.log.debug(this.logTag, 'Received new-responder message');
-                this.handleNewResponder(msg as saltyrtc.messages.NewResponder);
-            } catch (error) {
-                this.log.warn(this.logTag, 'Ignoring invalid new-responder message');
-            }
+            this.log.debug(this.logTag, 'Received new-responder message');
+            this.handleNewResponder(msg as saltyrtc.messages.NewResponder);
         } else {
-            this.log.warn(this.logTag, 'Unknown server message type:', msg.type);
+            this.log.warn(this.logTag, 'Unexpected server message type:', msg.type);
         }
     }
 

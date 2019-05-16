@@ -234,7 +234,7 @@ export class ResponderSignaling extends Signaling {
                 'closing');
             this.resetConnection(CloseCode.ClosingNormal);
         } else {
-            this.log.warn(this.logTag, 'Unknown server message type:', msg.type);
+            this.log.warn(this.logTag, 'Unexpected server message type:', msg.type);
         }
     }
 
