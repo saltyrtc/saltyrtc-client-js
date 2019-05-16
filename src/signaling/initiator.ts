@@ -316,7 +316,7 @@ export class InitiatorSignaling extends Signaling {
             this.log.debug(this.logTag, 'Received new-responder message');
             this.handleNewResponder(msg as saltyrtc.messages.NewResponder);
         } else {
-            this.log.warn(this.logTag, 'Unknown server message type:', msg.type);
+            this.log.warn(this.logTag, 'Unexpected server message type:', msg.type);
         }
     }
 
