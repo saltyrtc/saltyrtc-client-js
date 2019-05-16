@@ -194,7 +194,7 @@ export class InitiatorSignaling extends Signaling {
             const msg: saltyrtc.Message = this.decodeMessage(payload, 'server');
             switch (msg.type) {
                 case 'new-responder':
-                    this.log.debug(this.logTag, 'Received new-responder',
+                    this.log.debug(this.logTag, 'Received new-responder message',
                         byteToHex((msg as saltyrtc.messages.NewResponder).id));
                     this.handleNewResponder(msg as saltyrtc.messages.NewResponder);
                     break;
@@ -314,7 +314,7 @@ export class InitiatorSignaling extends Signaling {
     protected onUnhandledSignalingServerMessage(msg: saltyrtc.Message): void {
         if (msg.type === 'new-responder') {
             try {
-                this.log.debug(this.logTag, 'Received new-responder');
+                this.log.debug(this.logTag, 'Received new-responder message');
                 this.handleNewResponder(msg as saltyrtc.messages.NewResponder);
             } catch (error) {
                 this.log.warn(this.logTag, 'Ignoring invalid new-responder message');

@@ -125,7 +125,7 @@ export class ResponderSignaling extends Signaling {
             const msg: saltyrtc.Message = this.decodeMessage(payload, 'server');
             switch (msg.type) {
                 case 'new-initiator':
-                    this.log.debug(this.logTag, 'Received new-initiator');
+                    this.log.debug(this.logTag, 'Received new-initiator message');
                     this.handleNewInitiator();
                     break;
                 case 'send-error':
@@ -230,7 +230,7 @@ export class ResponderSignaling extends Signaling {
      */
     protected onUnhandledSignalingServerMessage(msg: saltyrtc.Message): void {
         if (msg.type === 'new-initiator') {
-            this.log.debug(this.logTag, 'Received new-initiator after peer handshake completed, ' +
+            this.log.debug(this.logTag, 'Received new-initiator message after peer handshake completed, ' +
                 'closing');
             this.resetConnection(CloseCode.ClosingNormal);
         } else {
