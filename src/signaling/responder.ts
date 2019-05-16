@@ -125,7 +125,7 @@ export class ResponderSignaling extends Signaling {
             const msg: saltyrtc.Message = this.decodeMessage(payload, 'server');
             switch (msg.type) {
                 case 'new-initiator':
-                    this.log.debug(this.logTag, 'Received new-initiator');
+                    this.log.debug(this.logTag, 'Received new-initiator message');
                     this.handleNewInitiator();
                     break;
                 case 'send-error':
@@ -218,6 +218,23 @@ export class ResponderSignaling extends Signaling {
                 }
             default:
                 throw new ProtocolError('Invalid handshake state: ' + this.initiator.handshakeState);
+        }
+    }
+
+    /**
+     * Close when a new initiator has connected.
+     *
+     * Note: This deviates from the intention of the specification to allow
+     *       for more than one connection towards an initiator over the same
+     *       WebSocket connection.
+     */
+    protected onUnhandledSignalingServerMessage(msg: saltyrtc.Message): void {
+        if (msg.type === 'new-initiator') {
+            this.log.debug(this.logTag, 'Received new-initiator message after peer handshake completed, ' +
+                'closing');
+            this.resetConnection(CloseCode.ClosingNormal);
+        } else {
+            this.log.warn(this.logTag, 'Unknown server message type:', msg.type);
         }
     }
 

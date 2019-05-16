@@ -10,19 +10,20 @@
 /// <reference path='../saltyrtc-client.d.ts' />
 
 import * as nacl from 'tweetnacl';
-import { explainCloseCode } from '../src/closecode';
+import { CloseCode, explainCloseCode } from '../src/closecode';
 import { KeyStore, SaltyRTCBuilder } from '../src/main';
 import { Config } from './config';
 import { DummyTask, PingPongTask } from './testtasks';
 import { sleep } from './utils';
 
-let spec: any;
-
 export default () => { describe('Integration Tests', function() {
+
+    jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
 
     beforeEach(() => {
         this.initiator = new SaltyRTCBuilder()
             .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+            .withLoggingLevel('warn')
             .withKeyStore(new KeyStore())
             .usingTasks([new DummyTask()])
             .asInitiator() as saltyrtc.SaltyRTC;
@@ -31,6 +32,7 @@ export default () => { describe('Integration Tests', function() {
         const authToken = this.initiator.authTokenBytes;
         this.responder = new SaltyRTCBuilder()
             .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+            .withLoggingLevel('warn')
             .withKeyStore(new KeyStore())
             .initiatorInfo(pubKey, authToken)
             .usingTasks([new DummyTask()])
@@ -46,13 +48,12 @@ export default () => { describe('Integration Tests', function() {
                 a.connect();
                 b.connect();
             });
-        }
+        };
     });
 
     describe('SaltyRTC', () => {
 
-        spec = it('connect (initiator first)', async (done: any) => {
-            console.info('===> TEST NAME:', spec.getFullName());
+        it('connect (initiator first)', async () => {
             expect(this.initiator.state).toEqual('new');
             expect(this.responder.state).toEqual('new');
             this.initiator.connect();
@@ -65,11 +66,9 @@ export default () => { describe('Integration Tests', function() {
             await sleep(1000);
             expect(this.initiator.state).toBe('task');
             expect(this.responder.state).toBe('task');
-            done();
         });
 
-        spec = it('connect (responder first)', async (done: any) => {
-            console.info('===> TEST NAME:', spec.getFullName());
+        it('connect (responder first)', async () => {
             expect(this.initiator.state).toEqual('new');
             expect(this.responder.state).toEqual('new');
             this.responder.connect();
@@ -82,11 +81,9 @@ export default () => { describe('Integration Tests', function() {
             await sleep(1000);
             expect(this.initiator.state).toBe('task');
             expect(this.responder.state).toBe('task');
-            done();
         });
 
-        spec = it('connect speed', (done: any) => {
-            console.info('===> TEST NAME:', spec.getFullName());
+        it('connect speed', (done: any) => {
             expect(this.initiator.state).toEqual('new');
             expect(this.responder.state).toEqual('new');
             let t1: Date;
@@ -109,8 +106,7 @@ export default () => { describe('Integration Tests', function() {
             this.responder.connect();
         });
 
-        spec = it('disconnect before peer handshake', async (done: any) => {
-            console.info('===> TEST NAME:', spec.getFullName());
+        it('disconnect before peer handshake', async (done: any) => {
             expect(this.initiator.state).toEqual('new');
             expect(this.responder.state).toEqual('new');
             this.initiator.connect();
@@ -125,8 +121,7 @@ export default () => { describe('Integration Tests', function() {
             this.initiator.disconnect();
         });
 
-        spec = it('disconnect after peer handshake', async (done: any) => {
-            console.info('===> TEST NAME:', spec.getFullName());
+        it('disconnect after peer handshake', async (done: any) => {
             expect(this.initiator.state).toEqual('new');
             expect(this.responder.state).toEqual('new');
             await this.connectBoth(this.initiator, this.responder);
@@ -138,8 +133,7 @@ export default () => { describe('Integration Tests', function() {
             this.initiator.disconnect();
         });
 
-        spec = it('new-responder event (responder first)', async (done: any) => {
-            console.info('===> TEST NAME:', spec.getFullName());
+        it('new-responder event (responders first, parallel)', async (done: any) => {
             expect(this.initiator.state).toEqual('new');
             expect(this.responder.state).toEqual('new');
 
@@ -148,12 +142,14 @@ export default () => { describe('Integration Tests', function() {
             const authToken = this.initiator.authTokenBytes;
             const responder1 = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .initiatorInfo(pubKey, authToken)
                 .usingTasks([new DummyTask()])
                 .asResponder();
             const responder2 = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .initiatorInfo(pubKey, authToken)
                 .usingTasks([new DummyTask()])
@@ -181,8 +177,7 @@ export default () => { describe('Integration Tests', function() {
             done();
         });
 
-        spec = it('new-responder event (initiator first)', async (done: any) => {
-            console.info('===> TEST NAME:', spec.getFullName());
+        it('new-responder event (initiator first, single responder)', async (done: any) => {
             expect(this.initiator.state).toEqual('new');
             expect(this.responder.state).toEqual('new');
 
@@ -204,26 +199,150 @@ export default () => { describe('Integration Tests', function() {
             done();
         });
 
-        spec = it('getting peer permanent key', async (done: any) => {
-            console.info('===> TEST NAME:', spec.getFullName());
+        it('new-responder event (initiator first, multiple responders)', async (done: any) => {
+            // Create two responders
+            const pubKey = this.initiator.permanentKeyBytes;
+            const authToken = this.initiator.authTokenBytes;
+            const responder1 = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
+                .withKeyStore(new KeyStore())
+                .initiatorInfo(pubKey, authToken)
+                .usingTasks([new DummyTask()])
+                .asResponder();
+            const responder2 = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
+                .withKeyStore(new KeyStore())
+                .initiatorInfo(pubKey, authToken)
+                .usingTasks([new DummyTask()])
+                .asResponder();
+            expect(responder1.state).toEqual('new');
+            expect(responder2.state).toEqual('new');
+
+            // Register event handler
+            const firstResponderConnectedPromise = new Promise((resolve) => {
+                this.initiator.on('new-responder', resolve);
+            });
+
+            // Connect initiator
+            this.initiator.on('connection-closed', () =>
+                done.fail('Connection closed before all responders have been connected'));
+            await new Promise((resolve) => {
+                this.initiator.on('state-change:peer-handshake', resolve);
+                this.initiator.connect();
+            });
+
+            // Connect responders
+            // Note: We wait until the task kicked in as that has resulted in
+            //       an exception in the past.
+            await new Promise((resolve) => {
+                responder1.on('state-change:task', resolve);
+                responder1.connect();
+            });
+            const secondResponderDroppedPromise = new Promise((resolve) => {
+                responder2.on('state-change:closed', resolve);
+                responder2.connect();
+            });
+
+            // Ensure the first responder has been connected and the second
+            // responder has been dropped.
+            await Promise.all([firstResponderConnectedPromise, secondResponderDroppedPromise]);
+            expect(responder1.state).toEqual('task');
+            expect(responder2.state).toEqual('closed');
+            done();
+        });
+
+        it('new-initiator event', async () => {
+            // Create two initiators
+            const keyStore = new KeyStore();
+            const initiator1 = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
+                .withKeyStore(keyStore)
+                .usingTasks([new DummyTask()])
+                .asInitiator() as saltyrtc.SaltyRTC;
+            const initiator2 = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
+                .withKeyStore(keyStore)
+                .usingTasks([new DummyTask()])
+                .asInitiator() as saltyrtc.SaltyRTC;
+
+            // Create single responder
+            const responder = new SaltyRTCBuilder()
+                .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
+                .withKeyStore(new KeyStore())
+                .initiatorInfo(initiator1.permanentKeyBytes, initiator1.authTokenBytes)
+                .usingTasks([new DummyTask()])
+                .asResponder();
+
+            // Bind closed events
+            const responderClosedPromise = new Promise((resolve) => {
+                responder.on('connection-closed', (event) => resolve(event.data));
+            });
+            const initiator1ClosedPromise = new Promise((resolve) => {
+                initiator1.on('connection-closed', (event) => resolve(event.data));
+            });
+            const initiator2ClosedPromise = new Promise((resolve) => {
+                initiator2.on('connection-closed', (event) => resolve(event.data));
+            });
+
+            // Connect responder
+            await new Promise((resolve) => {
+                responder.on('state-change:peer-handshake', resolve);
+                responder.connect();
+            });
+
+            // Connect first initiator
+            // Note: We wait until the task kicked in as that has resulted in
+            //       an exception in the past.
+            await new Promise((resolve) => {
+                initiator1.connect();
+                responder.on('state-change:task', resolve);
+            });
+
+            // Connect second initiator and disconnect after the responder
+            // disconnected.
+            initiator2.connect();
+            initiator2.on('peer-disconnected', () => {
+                initiator2.disconnect();
+            });
+
+            // Ensure...
+            //
+            // - the responder closed normally,
+            // - the first initiator has been dropped by the second initiator,
+            //   and
+            // - the second initiator closed normally.
+            const [responderCloseCode, initiator1CloseCode, initiator2CloseCode] = await Promise.all([
+                responderClosedPromise, initiator1ClosedPromise, initiator2ClosedPromise
+            ]);
+            expect(responderCloseCode).toBe(CloseCode.ClosingNormal);
+            expect(initiator1CloseCode).toBe(CloseCode.DroppedByInitiator);
+            expect(initiator2CloseCode).toBe(CloseCode.ClosingNormal);
+        });
+
+        it('getting peer permanent key', async () => {
             await this.connectBoth(this.initiator, this.responder);
             expect(this.initiator.peerPermanentKeyBytes).toEqual(this.responder.permanentKeyBytes);
             expect(this.responder.peerPermanentKeyBytes).toEqual(this.initiator.permanentKeyBytes);
             expect(this.initiator.peerPermanentKeyHex).toEqual(this.responder.permanentKeyHex);
             expect(this.responder.peerPermanentKeyHex).toEqual(this.initiator.permanentKeyHex);
-            done();
         });
 
-        spec = it('using trusted keys to connect', async (done: any) => {
-            console.info('===> TEST NAME:', spec.getFullName());
+        it('using trusted keys to connect', async () => {
             // Generate keys
             const oldInitiator = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .usingTasks([new DummyTask()])
                 .asInitiator();
             const oldResponder = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .initiatorInfo(oldInitiator.permanentKeyBytes, oldInitiator.authTokenBytes)
                 .usingTasks([new DummyTask()])
@@ -234,12 +353,14 @@ export default () => { describe('Integration Tests', function() {
             // Use trusted keys to connect
             const initiator = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(oldInitiator.keyStore)
                 .withTrustedPeerKey(responderPublicKey)
                 .usingTasks([new DummyTask()])
                 .asInitiator();
             const responder = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(oldResponder.keyStore)
                 .withTrustedPeerKey(initiatorPublicKey)
                 .usingTasks([new DummyTask()])
@@ -252,13 +373,12 @@ export default () => { describe('Integration Tests', function() {
 
             expect(initiator.state).toEqual('task');
             expect(responder.state).toEqual('task');
-            done();
         });
 
-        spec = it('validate server auth success (initiator)', (done: any) => {
-            console.info('===> TEST NAME:', spec.getFullName());
+        it('validate server auth success (initiator)', (done: any) => {
             const initiator = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .usingTasks([new DummyTask()])
                 .withServerKey(Config.SALTYRTC_SERVER_PUBLIC_KEY)
@@ -268,10 +388,10 @@ export default () => { describe('Integration Tests', function() {
             initiator.once('state-change:peer-handshake', done);
         });
 
-        spec = it('validate server auth validation fail (initiator)', (done: any) => {
-            console.info('===> TEST NAME:', spec.getFullName());
+        it('validate server auth validation fail (initiator)', (done: any) => {
             const initiator = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .usingTasks([new DummyTask()])
                 .withServerKey('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
@@ -286,10 +406,10 @@ export default () => { describe('Integration Tests', function() {
             });
         });
 
-        spec = it('validate server auth success (responder)', (done: any) => {
-            console.info('===> TEST NAME:', spec.getFullName());
+        it('validate server auth success (responder)', (done: any) => {
             const responder = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .usingTasks([new DummyTask()])
                 .withServerKey(Config.SALTYRTC_SERVER_PUBLIC_KEY)
@@ -300,8 +420,7 @@ export default () => { describe('Integration Tests', function() {
             responder.once('state-change:peer-handshake', done);
         });
 
-        spec = it('connect dynamically using factory function', (done: any) => {
-            console.info('===> TEST NAME:', spec.getFullName());
+        it('connect dynamically using factory function', (done: any) => {
             const responder = new SaltyRTCBuilder()
                 .connectWith(() => {
                     return {
@@ -309,6 +428,7 @@ export default () => { describe('Integration Tests', function() {
                         port: Config.SALTYRTC_PORT,
                     };
                 })
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .usingTasks([new DummyTask()])
                 .withServerKey(Config.SALTYRTC_SERVER_PUBLIC_KEY)
@@ -319,10 +439,10 @@ export default () => { describe('Integration Tests', function() {
             responder.once('state-change:peer-handshake', done);
         });
 
-        spec = it('validate server auth validation fail (responder)', (done: any) => {
-            console.info('===> TEST NAME:', spec.getFullName());
+        it('validate server auth validation fail (responder)', (done: any) => {
             const responder = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .usingTasks([new DummyTask()])
                 .withServerKey('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
@@ -338,10 +458,10 @@ export default () => { describe('Integration Tests', function() {
             });
         });
 
-        spec = it('send connection-closed event only once', async (done: any) => {
-            console.info('===> TEST NAME:', spec.getFullName());
+        it('send connection-closed event only once', async () => {
             const initiator = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .usingTasks([new DummyTask()])
                 .withServerKey(Config.SALTYRTC_SERVER_PUBLIC_KEY)
@@ -355,11 +475,9 @@ export default () => { describe('Integration Tests', function() {
             (initiator as any).signaling.closeWebsocket(3001);
             await sleep(100);
             expect(count).toEqual(1);
-            done();
         });
 
-        spec = it('can send application messages', async (done: any) => {
-            console.info('===> TEST NAME:', spec.getFullName());
+        it('can send application messages', async (done: any) => {
             await this.connectBoth(this.initiator, this.responder);
             expect(this.initiator.state).toEqual('task');
             expect(this.responder.state).toEqual('task');
@@ -391,8 +509,7 @@ export default () => { describe('Integration Tests', function() {
              * - Firefox: about:config -> network.websocket.max-connections
              * - Chrome: Not possible.
              */
-            spec = it('drops inactive responders when the path gets full', async (done: any) => {
-                console.info('===> TEST NAME:', spec.getFullName());
+            it('drops inactive responders when the path gets full', async (done: any) => {
                 this.initiator.connect();
                 await new Promise((resolve) => this.initiator.once('state-change:peer-handshake', resolve));
 
@@ -403,6 +520,7 @@ export default () => { describe('Integration Tests', function() {
                     for (let i = 0x02; i <= 0xff; i++) {
                         const r = new SaltyRTCBuilder()
                             .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                            .withLoggingLevel('warn')
                             .withKeyStore(new KeyStore())
                             .usingTasks([new DummyTask()])
                             .initiatorInfo(this.initiator.permanentKeyBytes, this.initiator.authTokenBytes)
@@ -430,6 +548,7 @@ export default () => { describe('Integration Tests', function() {
                 console.debug('====== Connecting real responder ======');
                 const responder = new SaltyRTCBuilder()
                     .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                    .withLoggingLevel('warn')
                     .withKeyStore(new KeyStore())
                     .usingTasks([new DummyTask()])
                     .initiatorInfo(this.initiator.permanentKeyBytes, this.initiator.authTokenBytes)
@@ -448,16 +567,17 @@ export default () => { describe('Integration Tests', function() {
     });
 
     describe('Tasks', () => {
-        spec = it('can send a ping pong task message', async (done: any) => {
-            console.info('===> TEST NAME:', spec.getFullName());
+        it('can send a ping pong task message', async () => {
             // Create peers
             const initiator = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .usingTasks([new PingPongTask()])
                 .asInitiator();
             const responder = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
+                .withLoggingLevel('warn')
                 .withKeyStore(new KeyStore())
                 .initiatorInfo(initiator.permanentKeyBytes, initiator.authTokenBytes)
                 .usingTasks([new PingPongTask()])
@@ -495,7 +615,6 @@ export default () => { describe('Integration Tests', function() {
             await sleep(300);
             expect(initiator.state).toEqual('closed');
             expect(responder.state).toEqual('closed');
-            done();
         })
     });
 

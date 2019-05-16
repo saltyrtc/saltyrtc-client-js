@@ -117,8 +117,10 @@ export class InitiatorSignaling extends Signaling {
      * @throws SignalingError
      */
     protected processNewResponder(responderId: number): void {
-        // Drop responder if it's already known
+        // Discard previous responder (if any)
         if (this.responders.has(responderId)) {
+            this.log.warn(this.logTag, 'Previous responder discarded (server ' +
+                `should have sent 'disconnected' message): ${responderId}`);
             this.responders.delete(responderId);
         }
 
@@ -192,7 +194,7 @@ export class InitiatorSignaling extends Signaling {
             const msg: saltyrtc.Message = this.decodeMessage(payload, 'server');
             switch (msg.type) {
                 case 'new-responder':
-                    this.log.debug(this.logTag, 'Received new-responder',
+                    this.log.debug(this.logTag, 'Received new-responder message',
                         byteToHex((msg as saltyrtc.messages.NewResponder).id));
                     this.handleNewResponder(msg as saltyrtc.messages.NewResponder);
                     break;
@@ -301,6 +303,27 @@ export class InitiatorSignaling extends Signaling {
         }
     }
 
+    /**
+     * Drop a new responder after a handshake with one responder has already
+     * completed.
+     *
+     * Note: This deviates from the intention of the specification to allow
+     *       for more than one connection towards a responder over the same
+     *       WebSocket connection.
+     */
+    protected onUnhandledSignalingServerMessage(msg: saltyrtc.Message): void {
+        if (msg.type === 'new-responder') {
+            try {
+                this.log.debug(this.logTag, 'Received new-responder message');
+                this.handleNewResponder(msg as saltyrtc.messages.NewResponder);
+            } catch (error) {
+                this.log.warn(this.logTag, 'Ignoring invalid new-responder message');
+            }
+        } else {
+            this.log.warn(this.logTag, 'Unknown server message type:', msg.type);
+        }
+    }
+
     protected sendClientHello(): void {
         // No-op as initiator.
     }
@@ -351,8 +374,13 @@ export class InitiatorSignaling extends Signaling {
             throw new ProtocolError('Responder id ' + msg.id + ' must be in the range 0x02-0xff');
         }
 
-        // Process responder
-        this.processNewResponder(msg.id);
+        // Process or ignore responder
+        if (this.state === 'peer-handshake') {
+            this.processNewResponder(msg.id);
+        } else {
+            this.log.debug(this.logTag, `Dropping responder ${msg.id} in '${this.state}' state`);
+            this.dropResponder(msg.id, CloseCode.DroppedByInitiator);
+        }
     }
 
     /**
