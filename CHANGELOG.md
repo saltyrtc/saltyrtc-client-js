@@ -12,6 +12,11 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.14.4 (2019-06-12)
+
+- [fixed] Avoid protocol errors when handling 'new-initiator' and
+  'new-responder' messages
+
 ### v0.14.3 (2019-02-28)
 
 - [fixed] Signature of `KeyStore`'s constructor was incorrect

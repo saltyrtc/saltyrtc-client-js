@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.14.3
+ * saltyrtc-client-js v0.14.4
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -909,6 +909,11 @@ class Signaling {
         try {
             const box$$1 = Box.fromUint8Array(new Uint8Array(ev.data), Nonce.TOTAL_LENGTH);
             nonce = Nonce.fromUint8Array(box$$1.nonce);
+            const peer = this.getPeerWithId(nonce.source);
+            if (peer === null) {
+                this.log.debug(this.logTag, 'Ignoring message from unknown id: ' + nonce.source);
+                return;
+            }
             try {
                 this.validateNonce(nonce);
             }
@@ -1039,7 +1044,7 @@ class Signaling {
                 this.handleDisconnected(msg);
                 break;
             default:
-                this.log.warn(this.logTag, 'Invalid server message type:', msg.type);
+                this.onUnhandledSignalingServerMessage(msg);
         }
     }
     onSignalingPeerMessage(decrypted) {
@@ -1488,6 +1493,8 @@ class InitiatorSignaling extends Signaling {
     }
     processNewResponder(responderId) {
         if (this.responders.has(responderId)) {
+            this.log.warn(this.logTag, 'Previous responder discarded (server ' +
+                `should have sent 'disconnected' message): ${responderId}`);
             this.responders.delete(responderId);
         }
         const responder = new Responder(responderId, this.responderCounter++);
@@ -1538,7 +1545,7 @@ class InitiatorSignaling extends Signaling {
             const msg = this.decodeMessage(payload, 'server');
             switch (msg.type) {
                 case 'new-responder':
-                    this.log.debug(this.logTag, 'Received new-responder', byteToHex(msg.id));
+                    this.log.debug(this.logTag, 'Received new-responder message', byteToHex(msg.id));
                     this.handleNewResponder(msg);
                     break;
                 case 'send-error':
@@ -1626,6 +1633,15 @@ class InitiatorSignaling extends Signaling {
             throw new SignalingError(CloseCode.InternalError, 'Message source is neither the server nor a responder');
         }
     }
+    onUnhandledSignalingServerMessage(msg) {
+        if (msg.type === 'new-responder') {
+            this.log.debug(this.logTag, 'Received new-responder message');
+            this.handleNewResponder(msg);
+        }
+        else {
+            this.log.warn(this.logTag, 'Unexpected server message type:', msg.type);
+        }
+    }
     sendClientHello() {
     }
     handleServerAuth(msg, nonce) {
@@ -1661,7 +1677,13 @@ class InitiatorSignaling extends Signaling {
         if (!isResponderId(msg.id)) {
             throw new ProtocolError('Responder id ' + msg.id + ' must be in the range 0x02-0xff');
         }
-        this.processNewResponder(msg.id);
+        if (this.state === 'peer-handshake') {
+            this.processNewResponder(msg.id);
+        }
+        else {
+            this.log.debug(this.logTag, `Dropping responder ${msg.id} in '${this.state}' state`);
+            this.dropResponder(msg.id, CloseCode.DroppedByInitiator);
+        }
     }
     handleToken(msg, responder) {
         responder.setPermanentSharedKey(new Uint8Array(msg.key), this.permanentKey);
@@ -1874,7 +1896,7 @@ class ResponderSignaling extends Signaling {
             const msg = this.decodeMessage(payload, 'server');
             switch (msg.type) {
                 case 'new-initiator':
-                    this.log.debug(this.logTag, 'Received new-initiator');
+                    this.log.debug(this.logTag, 'Received new-initiator message');
                     this.handleNewInitiator();
                     break;
                 case 'send-error':
@@ -1949,6 +1971,16 @@ class ResponderSignaling extends Signaling {
                 }
             default:
                 throw new ProtocolError('Invalid handshake state: ' + this.initiator.handshakeState);
+        }
+    }
+    onUnhandledSignalingServerMessage(msg) {
+        if (msg.type === 'new-initiator') {
+            this.log.debug(this.logTag, 'Received new-initiator message after peer handshake completed, ' +
+                'closing');
+            this.resetConnection(CloseCode.ClosingNormal);
+        }
+        else {
+            this.log.warn(this.logTag, 'Unexpected server message type:', msg.type);
         }
     }
     sendClientHello() {

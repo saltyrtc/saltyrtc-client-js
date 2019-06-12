@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.14.3
+ * saltyrtc-client-js v0.14.4
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -1425,6 +1425,11 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                 try {
                     var box = Box.fromUint8Array(new Uint8Array(ev.data), Nonce.TOTAL_LENGTH);
                     nonce = Nonce.fromUint8Array(box.nonce);
+                    var peer = this.getPeerWithId(nonce.source);
+                    if (peer === null) {
+                        this.log.debug(this.logTag, 'Ignoring message from unknown id: ' + nonce.source);
+                        return;
+                    }
                     try {
                         this.validateNonce(nonce);
                     } catch (e) {
@@ -1553,7 +1558,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                         this.handleDisconnected(msg);
                         break;
                     default:
-                        this.log.warn(this.logTag, 'Invalid server message type:', msg.type);
+                        this.onUnhandledSignalingServerMessage(msg);
                 }
             }
         }, {
@@ -2069,6 +2074,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
             key: 'processNewResponder',
             value: function processNewResponder(responderId) {
                 if (this.responders.has(responderId)) {
+                    this.log.warn(this.logTag, 'Previous responder discarded (server ' + ('should have sent \'disconnected\' message): ' + responderId));
                     this.responders.delete(responderId);
                 }
                 var responder = new Responder(responderId, this.responderCounter++);
@@ -2142,7 +2148,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     var msg = this.decodeMessage(payload, 'server');
                     switch (msg.type) {
                         case 'new-responder':
-                            this.log.debug(this.logTag, 'Received new-responder', byteToHex(msg.id));
+                            this.log.debug(this.logTag, 'Received new-responder message', byteToHex(msg.id));
                             this.handleNewResponder(msg);
                             break;
                         case 'send-error':
@@ -2224,6 +2230,16 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                 }
             }
         }, {
+            key: 'onUnhandledSignalingServerMessage',
+            value: function onUnhandledSignalingServerMessage(msg) {
+                if (msg.type === 'new-responder') {
+                    this.log.debug(this.logTag, 'Received new-responder message');
+                    this.handleNewResponder(msg);
+                } else {
+                    this.log.warn(this.logTag, 'Unexpected server message type:', msg.type);
+                }
+            }
+        }, {
             key: 'sendClientHello',
             value: function sendClientHello() {}
         }, {
@@ -2284,7 +2300,12 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                 if (!isResponderId(msg.id)) {
                     throw new ProtocolError('Responder id ' + msg.id + ' must be in the range 0x02-0xff');
                 }
-                this.processNewResponder(msg.id);
+                if (this.state === 'peer-handshake') {
+                    this.processNewResponder(msg.id);
+                } else {
+                    this.log.debug(this.logTag, 'Dropping responder ' + msg.id + ' in \'' + this.state + '\' state');
+                    this.dropResponder(msg.id, exports.CloseCode.DroppedByInitiator);
+                }
             }
         }, {
             key: 'handleToken',
@@ -2593,7 +2614,7 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                     var msg = this.decodeMessage(payload, 'server');
                     switch (msg.type) {
                         case 'new-initiator':
-                            this.log.debug(this.logTag, 'Received new-initiator');
+                            this.log.debug(this.logTag, 'Received new-initiator message');
                             this.handleNewInitiator();
                             break;
                         case 'send-error':
@@ -2664,6 +2685,16 @@ var saltyrtcClient = (function (exports,nacl,msgpack) {
                         }
                     default:
                         throw new ProtocolError('Invalid handshake state: ' + this.initiator.handshakeState);
+                }
+            }
+        }, {
+            key: 'onUnhandledSignalingServerMessage',
+            value: function onUnhandledSignalingServerMessage(msg) {
+                if (msg.type === 'new-initiator') {
+                    this.log.debug(this.logTag, 'Received new-initiator message after peer handshake completed, ' + 'closing');
+                    this.resetConnection(exports.CloseCode.ClosingNormal);
+                } else {
+                    this.log.warn(this.logTag, 'Unexpected server message type:', msg.type);
                 }
             }
         }, {
