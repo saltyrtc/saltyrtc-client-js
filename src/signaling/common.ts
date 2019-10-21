@@ -205,8 +205,8 @@ export abstract class Signaling implements saltyrtc.Signaling {
      *
      * @param code The close code.
      * @param reason The close reason.
-     * @param unbind Whether to unbind all events. This will move the Signaling
-     *   instance into the `closed` state.
+     * @param unbind Whether to unbind all events. Note that this will not move
+     *   the instance into the `closed` state!
      */
     private closeWebsocket(code?: number, reason?: string, unbind = false): void {
         if (this.ws !== null) {
@@ -216,25 +216,20 @@ export abstract class Signaling implements saltyrtc.Signaling {
                 code = CloseCode.ClosingNormal;
             }
 
+            // Unbind events (if necessary)
+            if (unbind) {
+                this.ws.onopen = undefined;
+                this.ws.onerror = undefined;
+                this.ws.onclose = undefined;
+                this.ws.onmessage = undefined;
+            }
+
             // Disconnect
             this.log.debug(this.logTag, `Disconnecting WebSocket, close code: ${code}`);
             this.ws.close(code, reason);
 
-            // Unbind events?
-            if (unbind) {
-                this.ws.removeEventListener('open', this.onOpen.bind(this));
-                this.ws.removeEventListener('error', this.onError.bind(this));
-                this.ws.removeEventListener('close', this.onClose.bind(this));
-                this.ws.removeEventListener('message', this.onMessage.bind(this));
-            }
-
             // Forget instance
             this.ws = null;
-
-            // Move into closed state (if necessary)
-            if (unbind) {
-                this.setState('closed');
-            }
         }
     }
 
@@ -255,10 +250,10 @@ export abstract class Signaling implements saltyrtc.Signaling {
         this.ws.binaryType = 'arraybuffer';
 
         // Set event handlers
-        this.ws.addEventListener('open', this.onOpen.bind(this));
-        this.ws.addEventListener('error', this.onError.bind(this));
-        this.ws.addEventListener('close', this.onClose.bind(this));
-        this.ws.addEventListener('message', this.onMessage.bind(this));
+        this.ws.onopen = this.onOpen.bind(this);
+        this.ws.onerror = this.onError.bind(this);
+        this.ws.onclose = this.onClose.bind(this);
+        this.ws.onmessage = this.onMessage.bind(this);
 
         // Store connection on instance
         this.setState('ws-connecting');
