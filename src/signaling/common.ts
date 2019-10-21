@@ -167,7 +167,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Open a connection to the signaling server and do the handshake.
      */
     public connect(): void {
-        this.resetConnection();
+        this.resetConnection(undefined, true);
         this.initWebsocket();
     }
 
@@ -188,7 +188,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
         }
 
         // Close WebSocket instance and unbind all events
-        this.closeWebsocket(reason, undefined, unbind);
+        this.closeWebsocket(reason, undefined, unbind, true);
 
         // Close task connections
         if (this.task !== null) {
@@ -205,10 +205,11 @@ export abstract class Signaling implements saltyrtc.Signaling {
      *
      * @param code The close code.
      * @param reason The close reason.
-     * @param unbind Whether to unbind all events. Note that this will not move
-     *   the instance into the `closed` state!
+     * @param unbind Whether to unbind all events.
+     * @param silent Whether the instance should be explicitly moved into the
+     *   `closed` state. Only effective when `unbind` is `true`.
      */
-    private closeWebsocket(code?: number, reason?: string, unbind = false): void {
+    private closeWebsocket(code?: number, reason?: string, unbind = false, silent = false): void {
         if (this.ws !== null) {
             // Drop internal close codes
             // see: https://github.com/saltyrtc/saltyrtc-meta/issues/110
@@ -227,6 +228,11 @@ export abstract class Signaling implements saltyrtc.Signaling {
             // Disconnect
             this.log.debug(this.logTag, `Disconnecting WebSocket, close code: ${code}`);
             this.ws.close(code, reason);
+
+            // Move into closed state (if necessary)
+            if (unbind && !silent) {
+                this.setState('closed');
+            }
 
             // Forget instance
             this.ws = null;
@@ -942,9 +948,9 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * - Reset the server combined sequence
      * - Unbind all events
      */
-    public resetConnection(reason?: number): void {
+    public resetConnection(reason?: number, silent = false): void {
         // Close WebSocket instance
-        this.closeWebsocket(reason, undefined, true);
+        this.closeWebsocket(reason, undefined, true, silent);
 
         // Reset
         this.server = new Server();
