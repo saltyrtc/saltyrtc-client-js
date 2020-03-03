@@ -51,9 +51,9 @@
     "rollup-plugin-babel": "^3.0.7",
     "rollup-plugin-typescript": "^0.8.1",
     "rollup-plugin-uglify": "^4",
-    "tslint": "^5.11",
+    "tslint": "^6",
     "tweetnacl": "^1.0.3",
-    "typescript": "^3.3.1"
+    "typescript": "^3.8.3"
   },
   "peerDependencies": {
     "msgpack-lite": "^0.1.x",
