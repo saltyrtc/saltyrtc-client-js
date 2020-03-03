@@ -142,6 +142,9 @@ export function validateKey(key: Uint8Array | string, name = 'Key'): Uint8Array 
     // Validate type
     let out: Uint8Array;
     if (isString(key)) {
+        if (key.length !== 64) {
+            throw new ValidationError(name + ' must be 32 bytes long');
+        }
         out = hexToU8a(key);
     } else if (key instanceof Uint8Array) {
         out = key;
