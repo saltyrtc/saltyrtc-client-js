@@ -5,6 +5,7 @@
 import * as nacl from 'tweetnacl';
 
 import { SaltyRTCBuilder } from '../src/client';
+import { ConnectionError } from '../src/exceptions';
 import { Box, KeyStore } from '../src/keystore';
 import { u8aToHex } from '../src/utils';
 import { DummyTask } from './testtasks';
@@ -269,6 +270,23 @@ export default () => { describe('client', function() {
                 expect(counter).toEqual(5);
             });
 
+        });
+
+        describe('client', function() {
+            it('cannot be reused', () => {
+                const salty = new SaltyRTCBuilder()
+                    .connectTo('localhost')
+                    .withKeyStore(new KeyStore())
+                    .usingTasks([new DummyTask()])
+                    .asInitiator();
+                // First connection should be fine
+                expect(() => salty.connect()).not.toThrowError();
+                // Second connection attempt should throw an error
+                expect(() => salty.connect())
+                    .toThrow(new ConnectionError(
+                        'Signaling instance cannot be reused. Please create a new client instance.'
+                    ));
+            });
         });
 
         describe('application messages', function() {

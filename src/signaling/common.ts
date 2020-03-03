@@ -54,6 +54,7 @@ export abstract class Signaling implements saltyrtc.Signaling {
     // Connection state
     protected state: saltyrtc.SignalingState = 'new';
     public handoverState = new HandoverState();
+    private neverConnected: boolean = true;
 
     // Main class
     protected client: saltyrtc.SaltyRTC;
@@ -167,6 +168,10 @@ export abstract class Signaling implements saltyrtc.Signaling {
      * Open a connection to the signaling server and do the handshake.
      */
     public connect(): void {
+        if (this.neverConnected !== true) {
+            throw new ConnectionError('Signaling instance cannot be reused. Please create a new client instance.');
+        }
+        this.neverConnected = false;
         this.resetConnection();
         this.initWebsocket();
     }
