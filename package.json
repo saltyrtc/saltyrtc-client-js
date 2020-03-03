@@ -52,7 +52,7 @@
     "rollup-plugin-typescript": "^0.8.1",
     "rollup-plugin-uglify": "^4",
     "tslint": "^5.11",
-    "tweetnacl": "^1.0.0",
+    "tweetnacl": "^1.0.3",
     "typescript": "^3.3.1"
   },
   "peerDependencies": {
