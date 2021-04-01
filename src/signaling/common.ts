@@ -45,10 +45,10 @@ export abstract class Signaling implements saltyrtc.Signaling {
 
     // Msgpack
     protected msgpackEncodeOptions: msgpack.EncoderOptions = {
-        codec: msgpack.createCodec({binarraybuffer: true}),
+        codec: msgpack.createCodec({binarraybuffer: true, int64: true}),
     };
     protected msgpackDecodeOptions: msgpack.DecoderOptions = {
-        codec: msgpack.createCodec({binarraybuffer: true}),
+        codec: msgpack.createCodec({binarraybuffer: true, int64: true}),
     };
 
     // Connection state
