@@ -123,7 +123,7 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
      *     hex string or Uint8Array.
      */
     public withTrustedPeerKey(peerTrustedKey: Uint8Array | string): SaltyRTCBuilder {
-        this.peerTrustedKey = validateKey(peerTrustedKey, 'Peer key');
+        this.peerTrustedKey = validateKey(peerTrustedKey, 'SaltyRTC peer key');
         this.hasTrustedPeerKey = true;
         return this;
     }
@@ -165,7 +165,7 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
      * @param serverKey The public permanent key of the server.
      */
     public withServerKey(serverKey: Uint8Array | string): SaltyRTCBuilder {
-        this.serverPublicKey = validateKey(serverKey, 'Server public key');
+        this.serverPublicKey = validateKey(serverKey, 'SaltyRTC server public key');
         return this;
     }
 
@@ -187,8 +187,8 @@ export class SaltyRTCBuilder implements saltyrtc.SaltyRTCBuilder {
      * @param authToken The secret auth token as hex string or Uint8Array.
      */
     public initiatorInfo(initiatorPublicKey: Uint8Array | string, authToken: Uint8Array | string): SaltyRTCBuilder {
-        this.initiatorPublicKey = validateKey(initiatorPublicKey, 'Initiator public key');
-        this.authToken = validateKey(authToken, 'Auth token');
+        this.initiatorPublicKey = validateKey(initiatorPublicKey, 'SaltyRTC initiator public key');
+        this.authToken = validateKey(authToken, 'SaltyRTC auth token');
         this.hasInitiatorInfo = true;
         return this;
     }
