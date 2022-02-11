@@ -8,10 +8,9 @@
   "types": "saltyrtc-client.d.ts",
   "scripts": {
     "test": "karma start --single-run --log-level=debug --colors",
-    "dist": "npm run dist_es5 && npm run dist_es5_min && npm run dist_es5_min_polyfill && npm run dist_es2015",
+    "dist": "npm run dist_es5 && npm run dist_es5_min && npm run dist_es2015",
     "dist_es5": "rollup -c rollup/es5.js",
     "dist_es5_min": "rollup -c rollup/es5.min.js",
-    "dist_es5_min_polyfill": "rollup -c rollup/es5.min.polyfill.js",
     "dist_es2015": "rollup -c rollup/es2015.js",
     "rollup_tests": "rollup -c rollup/testing.js && rollup -c rollup/performance.js",
     "validate": "tsc --noEmit",
