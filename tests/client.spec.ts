@@ -116,7 +116,7 @@ export default () => { describe('client', function() {
 
         it('validates websocket ping interval', () => {
             const builder = new SaltyRTCBuilder();
-            expect(() => builder.withPingInterval(-10)).toThrowError("Ping interval may not be negative");
+            expect(() => builder.withPingInterval(-10)).toThrowError('Ping interval may not be negative');
         });
 
         it('cannot encrypt/decrypt before the remote peer is established', () => {
@@ -189,7 +189,7 @@ export default () => { describe('client', function() {
 
             it('only adds a handler once', async () => {
                 let counter = 0;
-                let handler: Runnable = () => {counter += 1;};
+                const handler: Runnable = () => { counter += 1; };
                 sc.on('data', handler);
                 sc.on('data', handler);
                 sc.emit({type: 'data'});
@@ -199,8 +199,8 @@ export default () => { describe('client', function() {
 
             it('can call multiple handlers', async () => {
                 let counter = 0;
-                let handler1: Runnable = () => {counter += 1;};
-                let handler2: Runnable = () => {counter += 1;};
+                const handler1: Runnable = () => { counter += 1; };
+                const handler2: Runnable = () => { counter += 1; };
                 sc.on(['connected', 'data'], handler1);
                 sc.on(['connected'], handler2);
                 sc.emit({type: 'connected'});
@@ -211,7 +211,7 @@ export default () => { describe('client', function() {
 
             it('can cancel handlers', async () => {
                 let counter = 0;
-                let handler: Runnable = () => {counter += 1;};
+                const handler: Runnable = () => { counter += 1; };
                 sc.on(['data', 'connected'], handler);
                 sc.emit({type: 'connected'});
                 sc.emit({type: 'data'});
@@ -224,7 +224,7 @@ export default () => { describe('client', function() {
 
             it('can cancel handlers for multiple events', async () => {
                 let counter = 0;
-                let handler: Runnable = () => {counter += 1;};
+                const handler: Runnable = () => { counter += 1; };
                 sc.on(['data', 'connected'], handler);
                 sc.emit({type: 'connected'});
                 sc.emit({type: 'data'});
@@ -237,7 +237,7 @@ export default () => { describe('client', function() {
 
             it('can register one-time handlers', async () => {
                 let counter = 0;
-                let handler: Runnable = () => {counter += 1;};
+                const handler: Runnable = () => { counter += 1; };
                 sc.once('data', handler);
                 sc.emit({type: 'data'});
                 sc.emit({type: 'data'});
@@ -247,7 +247,7 @@ export default () => { describe('client', function() {
 
             it('can register one-time handlers that throw', async () => {
                 let counter = 0;
-                let handler: Runnable = () => {counter += 1; throw 'oh noes';};
+                const handler: Runnable = () => { counter += 1; throw new Error('oh noes'); };
                 sc.once('data', handler);
                 sc.emit({type: 'data'});
                 sc.emit({type: 'data'});
@@ -257,7 +257,7 @@ export default () => { describe('client', function() {
 
             it('removes handlers that return false', async () => {
                 let counter = 0;
-                let handler: Runnable = () => {
+                const handler: Runnable = () => {
                     if (counter <= 4) {
                         counter += 1;
                     } else {
@@ -300,7 +300,7 @@ export default () => { describe('client', function() {
                     .usingTasks([new DummyTask()])
                     .asInitiator();
 
-                const send = () => salty.sendApplicationMessage("hello");
+                const send = () => salty.sendApplicationMessage('hello');
                 (salty as any).signaling.state = 'peer-handshake';
                 expect(send).toThrowError('Cannot send application message in "peer-handshake" state');
                 (salty as any).signaling.state = 'closing';

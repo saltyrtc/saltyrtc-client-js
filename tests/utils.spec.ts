@@ -143,7 +143,6 @@ export default () => { describe('utils', function() {
         it('detects strings', () => {
             expect(isString('hello')).toEqual(true);
             // tslint:disable-next-line:no-construct
-            // noinspection JSPrimitiveTypeWrapperUsage
             expect(isString(new String('hello'))).toEqual(true);
             expect(isString(String)).toEqual(false);
             expect(isString(1232)).toEqual(false);

@@ -1,3 +1,5 @@
+// tslint:disable:file-header
+// tslint:disable:no-reference
 /// <reference path="../jasmine.d.ts" />
 
 import { KeyStore } from '../../src/keystore';
@@ -173,13 +175,13 @@ export default () => {
                     const start = performance.now();
 
                     // Enqueue encryption tasks
-                    for (const testData_ of testDataArray) {
-                        expect(testData_.buffer.byteLength).toBeGreaterThan(0);
+                    for (const testData1 of testDataArray) {
+                        expect(testData1.buffer.byteLength).toBeGreaterThan(0);
                         worker.postMessage({
-                            bytes: testData_,
+                            bytes: testData1,
                             nonce: testData.nonce,
-                        }, [testData_.buffer]);
-                        expect(testData_.buffer.byteLength).toBe(0);
+                        }, [testData1.buffer]);
+                        expect(testData1.buffer.byteLength).toBe(0);
                         expect(testData.nonce.buffer.byteLength).toBeGreaterThan(0);
                     }
                 }, 60000);
