@@ -14,7 +14,7 @@ export default {
     external: ['msgpack-lite', 'tweetnacl'],
     output: {
         file: 'dist/saltyrtc-client.es2015.js',
-        sourceMap: false,
+        sourcemap: false,
         format: 'es',
         banner: "/**\n" +
                 " * saltyrtc-client-js v" + p.version + "\n" +
