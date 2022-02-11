@@ -1,2 +1,2 @@
-mkdocs==0.16.0
+mkdocs==1.2.3
 Pygments==2.7.4
