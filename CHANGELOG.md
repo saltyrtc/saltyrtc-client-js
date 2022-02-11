@@ -12,6 +12,12 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.15.0 (2022-02-11)
+
+- [fixed] Prevent client reuse (#123)
+- [fixed] Validate length of server public key hexstring (#122)
+- [removed] Removed the polyfilled ES5 bundle from the distribution files
+
 ### v0.14.4 (2019-06-12)
 
 - [fixed] Avoid protocol errors when handling 'new-initiator' and
