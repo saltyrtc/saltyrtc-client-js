@@ -14,7 +14,7 @@ import { CloseCode, explainCloseCode } from '../src/closecode';
 import { KeyStore, SaltyRTCBuilder } from '../src/main';
 import { Config } from './config';
 import { DummyTask, PingPongTask } from './testtasks';
-import { sleep } from './utils';
+import { sleep, ResolvablePromise } from './utils';
 
 export default () => { describe('Integration Tests', function() {
 
@@ -87,7 +87,8 @@ export default () => { describe('Integration Tests', function() {
             expect(responder.state).toBe('task');
         });
 
-        it('connect speed', (done: any) => {
+        it('connect speed', async () => {
+            const done = new ResolvablePromise();
             expect(initiator.state).toEqual('new');
             expect(responder.state).toEqual('new');
             let t1: Date;
@@ -100,7 +101,7 @@ export default () => { describe('Integration Tests', function() {
                     const diffMs = t2.valueOf() - t1.valueOf();
                     console.info('Full handshake took', diffMs, 'milliseconds');
                     expect(diffMs).toBeLessThan(1000);
-                    done();
+                    done.resolve(true);
                 }
             };
             initiator.on('state-change:task', callback);
@@ -108,36 +109,41 @@ export default () => { describe('Integration Tests', function() {
             t1 = new Date();
             initiator.connect();
             responder.connect();
+            await done;
         });
 
-        it('disconnect before peer handshake', async (done: any) => {
+        it('disconnect before peer handshake', async () => {
             expect(initiator.state).toEqual('new');
             expect(responder.state).toEqual('new');
             initiator.connect();
             await sleep(1000);
             expect(initiator.state).toEqual('peer-handshake');
             expect(responder.state).toEqual('new');
+            const done = new ResolvablePromise();
             initiator.once('connection-closed', (ev: saltyrtc.SaltyRTCEvent) => {
                 expect(ev.data).toEqual(1000);
                 expect(initiator.state).toEqual('closed');
-                done();
+                done.resolve(true);
             });
             initiator.disconnect();
+            await done;
         });
 
-        it('disconnect after peer handshake', async (done: any) => {
+        it('disconnect after peer handshake', async () => {
             expect(initiator.state).toEqual('new');
             expect(responder.state).toEqual('new');
             await connectBoth(initiator, responder);
+            const done = new ResolvablePromise();
             initiator.once('connection-closed', (ev: saltyrtc.SaltyRTCEvent) => {
                 expect(ev.data).toEqual(1000);
                 expect(initiator.state).toEqual('closed');
-                done();
+                done.resolve(true);
             });
             initiator.disconnect();
+            await done;
         });
 
-        it('new-responder event (responders first, parallel)', async (done: any) => {
+        it('new-responder event (responders first, parallel)', async () => {
             expect(initiator.state).toEqual('new');
             expect(responder.state).toEqual('new');
 
@@ -163,9 +169,10 @@ export default () => { describe('Integration Tests', function() {
 
             // Register event handler
             let eventCounter = 0;
+            const done = new ResolvablePromise();
             initiator.on('new-responder', () => { eventCounter += 1; });
-            responder1.on('new-responder', () => { done.fail(); });
-            responder2.on('new-responder', () => { done.fail(); });
+            responder1.on('new-responder', () => { done.reject(new Error('responder1 new-responder')); });
+            responder2.on('new-responder', () => { done.reject(new Error('responder2 new-responder')); });
 
             // Connect responders
             responder1.connect();
@@ -178,17 +185,21 @@ export default () => { describe('Integration Tests', function() {
             await sleep(1000);
             expect(eventCounter).toBe(2);
 
-            done();
+            // Catch errors
+            if (done.done) {
+                await done;
+            }
         });
 
-        it('new-responder event (initiator first, single responder)', async (done: any) => {
+        it('new-responder event (initiator first, single responder)', async () => {
             expect(initiator.state).toEqual('new');
             expect(responder.state).toEqual('new');
 
             // Register event handler
             let eventCounter = 0;
+            const done = new ResolvablePromise();
             initiator.on('new-responder', () => { eventCounter += 1; });
-            responder.on('new-responder', () => { done.fail(); });
+            responder.on('new-responder', () => { done.reject(new Error('responder new-responder')); });
 
             // Connect initiator
             initiator.connect();
@@ -200,10 +211,15 @@ export default () => { describe('Integration Tests', function() {
             await sleep(1000);
             expect(eventCounter).toBe(1);
 
-            done();
+            // Catch errors
+            if (done.done) {
+                await done;
+            }
         });
 
-        it('new-responder event (initiator first, multiple responders)', async (done: any) => {
+        it('new-responder event (initiator first, multiple responders)', async () => {
+            const done = new ResolvablePromise();
+
             // Create two responders
             const pubKey = initiator.permanentKeyBytes;
             const authToken = initiator.authTokenBytes;
@@ -230,8 +246,9 @@ export default () => { describe('Integration Tests', function() {
             });
 
             // Connect initiator
-            initiator.on('connection-closed', () =>
-                done.fail('Connection closed before all responders have been connected'));
+            initiator.on('connection-closed', () => {
+                done.reject(new Error('Connection closed before all responders have been connected'));
+            });
             await new Promise((resolve) => {
                 initiator.on('state-change:peer-handshake', resolve);
                 initiator.connect();
@@ -254,7 +271,11 @@ export default () => { describe('Integration Tests', function() {
             await Promise.all([firstResponderConnectedPromise, secondResponderDroppedPromise]);
             expect(responder1.state).toEqual('task');
             expect(responder2.state).toEqual('closed');
-            done();
+
+            // Catch errors
+            if (done.done) {
+                await done;
+            }
         });
 
         it('new-initiator event', async () => {
@@ -379,7 +400,8 @@ export default () => { describe('Integration Tests', function() {
             expect(newResponder.state).toEqual('task');
         });
 
-        it('validate server auth success (initiator)', (done: any) => {
+        it('validate server auth success (initiator)', async () => {
+            const done = new ResolvablePromise();
             const initiator1 = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
                 .withLoggingLevel('warn')
@@ -389,10 +411,12 @@ export default () => { describe('Integration Tests', function() {
                 .asInitiator();
             expect(initiator1.state).toEqual('new');
             initiator1.connect();
-            initiator1.once('state-change:peer-handshake', done);
+            initiator1.once('state-change:peer-handshake', () => done.resolve(true));
+            await done;
         });
 
-        it('validate server auth validation fail (initiator)', (done: any) => {
+        it('validate server auth validation fail (initiator)', async () => {
+            const done = new ResolvablePromise();
             const initiator1 = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
                 .withLoggingLevel('warn')
@@ -402,15 +426,17 @@ export default () => { describe('Integration Tests', function() {
                 .asInitiator();
                 initiator1.connect();
                 initiator1.once('state-change:peer-handshake', () => {
-                done.fail('Invalid server public key was not detected');
+                done.reject(new Error('Invalid server public key was not detected'));
             });
             initiator1.once('state-change:closed', () => {
                 expect(initiator1.state).toEqual('closed');
-                done();
+                done.resolve(true);
             });
+            await done;
         });
 
-        it('validate server auth success (responder)', (done: any) => {
+        it('validate server auth success (responder)', async () => {
+            const done = new ResolvablePromise();
             const responder1 = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
                 .withLoggingLevel('warn')
@@ -421,10 +447,12 @@ export default () => { describe('Integration Tests', function() {
                 .asResponder();
             expect(responder1.state).toEqual('new');
             responder1.connect();
-            responder1.once('state-change:peer-handshake', done);
+            responder1.once('state-change:peer-handshake', () => done.resolve(true));
+            await done;
         });
 
-        it('connect dynamically using factory function', (done: any) => {
+        it('connect dynamically using factory function', async () => {
+            const done = new ResolvablePromise();
             const responder1 = new SaltyRTCBuilder()
                 .connectWith(() => {
                     return {
@@ -440,10 +468,12 @@ export default () => { describe('Integration Tests', function() {
                 .asResponder();
             expect(responder1.state).toEqual('new');
             responder1.connect();
-            responder1.once('state-change:peer-handshake', done);
+            responder1.once('state-change:peer-handshake', () => done.resolve(true));
+            await done;
         });
 
-        it('validate server auth validation fail (responder)', (done: any) => {
+        it('validate server auth validation fail (responder)', async () => {
+            const done = new ResolvablePromise();
             const responder1 = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
                 .withLoggingLevel('warn')
@@ -454,12 +484,13 @@ export default () => { describe('Integration Tests', function() {
                 .asResponder();
                 responder1.connect();
                 responder1.once('state-change:peer-handshake', () => {
-                done.fail('Invalid server public key was not detected');
+                done.reject(new Error('Invalid server public key was not detected'));
             });
             responder1.once('state-change:closed', () => {
                 expect(responder1.state).toEqual('closed');
-                done();
+                done.resolve(true);
             });
+            await done;
         });
 
         it('send connection-closed event only once', async () => {
@@ -481,7 +512,8 @@ export default () => { describe('Integration Tests', function() {
             expect(count).toEqual(1);
         });
 
-        it('can send application messages', async (done: any) => {
+        it('can send application messages', async () => {
+            const done = new ResolvablePromise();
             await connectBoth(initiator, responder);
             expect(initiator.state).toEqual('task');
             expect(responder.state).toEqual('task');
@@ -491,9 +523,10 @@ export default () => { describe('Integration Tests', function() {
             });
             responder.once('application', (ev: saltyrtc.SaltyRTCEvent) => {
                 expect(ev.data).toEqual('saluton!');
-                done();
+                done.resolve(true);
             });
             responder.sendApplicationMessage('bonan tagon.');
+            await done;
         });
 
         const slowdescribe = Config.RUN_LOAD_TESTS ? describe : xdescribe;
@@ -513,7 +546,9 @@ export default () => { describe('Integration Tests', function() {
              * - Firefox: about:config -> network.websocket.max-connections
              * - Chrome: Not possible.
              */
-            it('drops inactive responders when the path gets full', async (done: any) => {
+            it('drops inactive responders when the path gets full', async () => {
+                const done = new ResolvablePromise();
+
                 initiator.connect();
                 await new Promise((resolve) => initiator.once('state-change:peer-handshake', resolve));
 
@@ -558,12 +593,14 @@ export default () => { describe('Integration Tests', function() {
                     .initiatorInfo(initiator.permanentKeyBytes, initiator.authTokenBytes)
                     .asResponder();
                 responder1.once('state-change:task', () => {
-                    done();
+                    done.resolve(true);
                 });
                 responder1.once('connection-closed', (ev) => {
-                    done.fail('Real responder could not connect: ' + explainCloseCode(ev.data));
+                    done.reject(new Error('Real responder could not connect: ' + explainCloseCode(ev.data)));
                 });
                 responder1.connect();
+
+                await done;
             });
 
         });
