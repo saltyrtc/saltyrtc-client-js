@@ -93,6 +93,9 @@ You can import this file into your browser certificate store. For Chrome/Chromiu
 
     certutil -d sql:$HOME/.pki/nssdb -A -t "P,," -n saltyrtc-test-ca -i saltyrtc.crt
 
+Additionally, you need to open `chrome://flags/#allow-insecure-localhost` and
+enable it.
+
 In Firefox the easiest way to add your certificate to the browser is to start
 the SaltyRTC server (e.g. on `localhost` port 8765), then to visit the
 corresponding URL via https (e.g. `https://localhost:8765`). Then, in the
