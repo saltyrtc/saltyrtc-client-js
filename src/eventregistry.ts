@@ -6,7 +6,7 @@
  */
 
 export class EventRegistry {
-    private map: Map<string, saltyrtc.SaltyRTCEventHandler[]>;
+    protected map: Map<string, saltyrtc.SaltyRTCEventHandler[]>;
 
     constructor() {
         this.map = new Map();

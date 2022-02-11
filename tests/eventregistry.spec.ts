@@ -4,17 +4,25 @@
 /// <reference path='../saltyrtc-client.d.ts' />
 
 import { EventRegistry } from '../src/eventregistry';
+import { Runnable } from './utils';
+
+/**
+ * Wrapper around the EventRegistry that makes the `map` public.
+ */
+class TestEventRegistry extends EventRegistry {
+    public map: Map<string, saltyrtc.SaltyRTCEventHandler[]>;
+}
 
 export default () => { describe('eventregistry', function() {
 
     describe('EventRegistry', function() {
 
-        let registry: EventRegistry;
-        let handler1;
-        let handler2;
+        let registry: TestEventRegistry;
+        let handler1: Runnable;
+        let handler2: Runnable;
 
         beforeEach(() => {
-            registry = new EventRegistry();
+            registry = new TestEventRegistry();
             handler1 = () => { console.log('Event 1 occurred'); };
             handler2 = () => { console.log('Event 2 occurred'); };
         });

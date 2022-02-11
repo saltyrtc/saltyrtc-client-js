@@ -9,7 +9,7 @@ import { ConnectionError } from '../src/exceptions';
 import { Box, KeyStore } from '../src/keystore';
 import { u8aToHex } from '../src/utils';
 import { DummyTask } from './testtasks';
-import { sleep } from './utils';
+import { Runnable, sleep } from './utils';
 
 export default () => { describe('client', function() {
 
@@ -156,7 +156,7 @@ export default () => { describe('client', function() {
 
         describe('events', function() {
 
-            let sc: SaltyRTC;
+            let sc: saltyrtc.SaltyRTC;
 
             beforeEach(() => {
                 sc = new SaltyRTCBuilder()
@@ -189,7 +189,7 @@ export default () => { describe('client', function() {
 
             it('only adds a handler once', async () => {
                 let counter = 0;
-                let handler = () => {counter += 1;};
+                let handler: Runnable = () => {counter += 1;};
                 sc.on('data', handler);
                 sc.on('data', handler);
                 sc.emit({type: 'data'});
@@ -199,8 +199,8 @@ export default () => { describe('client', function() {
 
             it('can call multiple handlers', async () => {
                 let counter = 0;
-                let handler1 = () => {counter += 1;};
-                let handler2 = () => {counter += 1;};
+                let handler1: Runnable = () => {counter += 1;};
+                let handler2: Runnable = () => {counter += 1;};
                 sc.on(['connected', 'data'], handler1);
                 sc.on(['connected'], handler2);
                 sc.emit({type: 'connected'});
@@ -211,7 +211,7 @@ export default () => { describe('client', function() {
 
             it('can cancel handlers', async () => {
                 let counter = 0;
-                let handler = () => {counter += 1;};
+                let handler: Runnable = () => {counter += 1;};
                 sc.on(['data', 'connected'], handler);
                 sc.emit({type: 'connected'});
                 sc.emit({type: 'data'});
@@ -224,7 +224,7 @@ export default () => { describe('client', function() {
 
             it('can cancel handlers for multiple events', async () => {
                 let counter = 0;
-                let handler = () => {counter += 1;};
+                let handler: Runnable = () => {counter += 1;};
                 sc.on(['data', 'connected'], handler);
                 sc.emit({type: 'connected'});
                 sc.emit({type: 'data'});
@@ -237,7 +237,7 @@ export default () => { describe('client', function() {
 
             it('can register one-time handlers', async () => {
                 let counter = 0;
-                let handler = () => {counter += 1;};
+                let handler: Runnable = () => {counter += 1;};
                 sc.once('data', handler);
                 sc.emit({type: 'data'});
                 sc.emit({type: 'data'});
@@ -247,7 +247,7 @@ export default () => { describe('client', function() {
 
             it('can register one-time handlers that throw', async () => {
                 let counter = 0;
-                let handler = () => {counter += 1; throw 'oh noes';};
+                let handler: Runnable = () => {counter += 1; throw 'oh noes';};
                 sc.once('data', handler);
                 sc.emit({type: 'data'});
                 sc.emit({type: 'data'});
@@ -257,7 +257,7 @@ export default () => { describe('client', function() {
 
             it('removes handlers that return false', async () => {
                 let counter = 0;
-                let handler = () => {
+                let handler: Runnable = () => {
                     if (counter <= 4) {
                         counter += 1;
                     } else {

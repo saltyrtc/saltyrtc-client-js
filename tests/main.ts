@@ -7,7 +7,8 @@ const jasmineIt = window.it;
 // @ts-ignore
 window.it = (description: string, callback: Callback, ...args) => {
     const handler = (invoker: () => any) => {
-        console.group(spec.getFullName());
+        // Ugly type hack, sorry :(
+        console.group((spec as any as jasmine.Spec).getFullName());
         let result: any;
         try {
             result = invoker();

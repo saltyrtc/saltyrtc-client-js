@@ -22,7 +22,7 @@ export default () => { describe('Integration Tests', function() {
 
     let initiator: saltyrtc.SaltyRTC;
     let responder: saltyrtc.SaltyRTC;
-    let connectBoth;
+    let connectBoth: (a: saltyrtc.SaltyRTC, b: saltyrtc.SaltyRTC) => Promise<void>;
 
     beforeEach(() => {
         initiator = new SaltyRTCBuilder()
@@ -163,9 +163,9 @@ export default () => { describe('Integration Tests', function() {
 
             // Register event handler
             let eventCounter = 0;
-            initiator.on('new-responder', () => eventCounter += 1);
-            responder1.on('new-responder', () => done.fail());
-            responder2.on('new-responder', () => done.fail());
+            initiator.on('new-responder', () => { eventCounter += 1; });
+            responder1.on('new-responder', () => { done.fail(); });
+            responder2.on('new-responder', () => { done.fail(); });
 
             // Connect responders
             responder1.connect();
@@ -187,8 +187,8 @@ export default () => { describe('Integration Tests', function() {
 
             // Register event handler
             let eventCounter = 0;
-            initiator.on('new-responder', () => eventCounter += 1);
-            responder.on('new-responder', () => done.fail());
+            initiator.on('new-responder', () => { eventCounter += 1; });
+            responder.on('new-responder', () => { done.fail(); });
 
             // Connect initiator
             initiator.connect();
@@ -519,7 +519,7 @@ export default () => { describe('Integration Tests', function() {
 
                 // Create 254 responders to fill all available slots
                 let connected = 0;
-                await new Promise((resolve) => {
+                await new Promise<void>((resolve) => {
                     const responders = [];
                     for (let i = 0x02; i <= 0xff; i++) {
                         const r = new SaltyRTCBuilder()
@@ -532,7 +532,7 @@ export default () => { describe('Integration Tests', function() {
 
                         // Make sure that these responders don't initiate the peer handshake
                         (r as any).signaling.initPeerHandshake = function() {
-                            console.debug(logTag, 'Not starting peer handshake');
+                            console.debug('Not starting peer handshake');
                         };
 
                         // Wait for all responders to connect

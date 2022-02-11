@@ -13,3 +13,4 @@ export function sleep(milliseconds: number): Promise<{}> {
     });
 }
 
+export type Runnable = () => void;
