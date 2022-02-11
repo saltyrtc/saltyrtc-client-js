@@ -57,7 +57,7 @@ jobs:
   test-firefox-stable:
     <<: *test-config
     docker:
-      - image: saltyrtc/circleci-image-js:firefox-60.6.3esr
+      - image: saltyrtc/circleci-image-js:firefox-97
     environment:
       BROWSER: Firefox_circle_ci
       FIREFOX_BIN: xvfb-firefox
@@ -65,7 +65,7 @@ jobs:
   test-firefox-esr:
     <<: *test-config
     docker:
-      - image: saltyrtc/circleci-image-js:firefox-66.0.5
+      - image: saltyrtc/circleci-image-js:firefox-91esr
     environment:
       BROWSER: Firefox_circle_ci
       FIREFOX_BIN: xvfb-firefox
