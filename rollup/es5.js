@@ -1,5 +1,5 @@
 import config from './es2015.js';
-import babel from 'rollup-plugin-babel';
+import babel from '@rollup/plugin-babel';
 
 config.output.file = 'dist/saltyrtc-client.es5.js';
 config.output.name = 'saltyrtcClient';
@@ -17,7 +17,7 @@ config.plugins.push(
             // Use ES2015 but don't transpile modules since Rollup does that
             ['es2015', {modules: false}]
         ],
-        plugins: ['external-helpers']
+        babelHelpers: 'bundled',
     })
 );
 

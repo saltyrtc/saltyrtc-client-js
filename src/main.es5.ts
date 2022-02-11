@@ -5,5 +5,4 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-import '../node_modules/babel-es6-polyfill/browser-polyfill';
 export * from './main';

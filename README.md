@@ -57,12 +57,6 @@ To compile the TypeScript sources to a single JavaScript (ES5 / Minified ES5 / E
 
 The resulting files will be located in `dist/`.
 
-Due to a bug (https://github.com/rollup/rollup-plugin-typescript/issues/43),
-rollup does not currently output non-fatal errors from TypeScript. To see
-those, simply issue `npm run validate` in your main directory.
-
-    $ npm run validate
-
 ## Testing
 
 ### 1. Preparing the Server

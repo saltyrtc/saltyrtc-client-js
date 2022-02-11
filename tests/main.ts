@@ -7,8 +7,6 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-import '../node_modules/babel-es6-polyfill/browser-polyfill';
-
 // Apply log groups to Jasmine tests
 type Callback = (...args: any) => any;
 // @ts-ignore
