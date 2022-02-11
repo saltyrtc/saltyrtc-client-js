@@ -1,4 +1,11 @@
-import '../node_modules/babel-es6-polyfill/browser-polyfill';
+/**
+ * Test entry point.
+ *
+ * Copyright (C) 2016-2022 Threema GmbH
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the `LICENSE.md` file for details.
+ */
 
 // Apply log groups to Jasmine tests
 type Callback = (...args: any) => any;
@@ -7,7 +14,8 @@ const jasmineIt = window.it;
 // @ts-ignore
 window.it = (description: string, callback: Callback, ...args) => {
     const handler = (invoker: () => any) => {
-        console.group(spec.getFullName());
+        // Ugly type hack, sorry :(
+        console.group((spec as any as jasmine.Spec).getFullName());
         let result: any;
         try {
             result = invoker();

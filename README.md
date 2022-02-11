@@ -34,7 +34,6 @@ Alternatively, copy one of the following files to your project directly:
 - ES2015: `dist/saltyrtc-client.es2015.js`
 - ES5: `dist/saltyrtc-client.es5.js`
 - ES5 minified: `dist/saltyrtc-client.es5.min.js`
-- ES5 minified polyfilled: `dist/saltyrtc-client.es5.min.polyfill.js`
 
 Make sure to manually add the following external dependencies to your project:
 
@@ -56,12 +55,6 @@ To compile the TypeScript sources to a single JavaScript (ES5 / Minified ES5 / E
     $ npm run dist
 
 The resulting files will be located in `dist/`.
-
-Due to a bug (https://github.com/rollup/rollup-plugin-typescript/issues/43),
-rollup does not currently output non-fatal errors from TypeScript. To see
-those, simply issue `npm run validate` in your main directory.
-
-    $ npm run validate
 
 ## Testing
 
@@ -92,6 +85,9 @@ Then create a test certificate for localhost, valid for 5 years.
 You can import this file into your browser certificate store. For Chrome/Chromium, use this command:
 
     certutil -d sql:$HOME/.pki/nssdb -A -t "P,," -n saltyrtc-test-ca -i saltyrtc.crt
+
+Additionally, you need to open `chrome://flags/#allow-insecure-localhost` and
+enable it.
 
 In Firefox the easiest way to add your certificate to the browser is to start
 the SaltyRTC server (e.g. on `localhost` port 8765), then to visit the

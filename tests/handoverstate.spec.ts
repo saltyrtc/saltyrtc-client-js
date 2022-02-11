@@ -6,58 +6,60 @@ import { HandoverState } from '../src/signaling/handoverstate';
 
 export default () => { describe('HandoverState', function() {
 
+    let state: HandoverState;
+
     beforeEach(() => {
-        this.state = new HandoverState();
+        state = new HandoverState();
     });
 
     it('is initialized to false / false', () => {
-        expect(this.state.local).toBeFalsy();
-        expect(this.state.peer).toBeFalsy();
+        expect(state.local).toBeFalsy();
+        expect(state.peer).toBeFalsy();
     });
 
     it('can determine whether any peer has finished the handover', () => {
         // None
-        expect(this.state.any).toBeFalsy();
+        expect(state.any).toBeFalsy();
 
         // Local
-        this.state.local = true;
-        expect(this.state.any).toBeTruthy();
+        state.local = true;
+        expect(state.any).toBeTruthy();
 
         // Peer
-        this.state.reset();
-        this.state.peer = true;
-        expect(this.state.any).toBeTruthy();
+        state.reset();
+        state.peer = true;
+        expect(state.any).toBeTruthy();
 
         // Both
-        this.state.local = true;
-        expect(this.state.any).toBeTruthy();
+        state.local = true;
+        expect(state.any).toBeTruthy();
     });
 
     it('can determine whether both peers have finished the handover', () => {
         // None
-        expect(this.state.both).toBeFalsy();
+        expect(state.both).toBeFalsy();
 
         // Local
-        this.state.local = true;
-        expect(this.state.both).toBeFalsy();
+        state.local = true;
+        expect(state.both).toBeFalsy();
 
         // Peer
-        this.state.reset();
-        this.state.peer = true;
-        expect(this.state.both).toBeFalsy();
+        state.reset();
+        state.peer = true;
+        expect(state.both).toBeFalsy();
 
         // Both
-        this.state.local = true;
-        expect(this.state.both).toBeTruthy();
+        state.local = true;
+        expect(state.both).toBeTruthy();
     });
 
     it('calls the callback when handover is done', () => {
         let onBothCalled = false;
-        this.state.onBoth = () => { onBothCalled = true; };
+        state.onBoth = () => { onBothCalled = true; };
         expect(onBothCalled).toBeFalsy();
-        this.state.local = true;
+        state.local = true;
         expect(onBothCalled).toBeFalsy();
-        this.state.peer = true;
+        state.peer = true;
         expect(onBothCalled).toBeTruthy();
     });
 }); };

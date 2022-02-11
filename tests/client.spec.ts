@@ -9,7 +9,7 @@ import { ConnectionError } from '../src/exceptions';
 import { Box, KeyStore } from '../src/keystore';
 import { u8aToHex } from '../src/utils';
 import { DummyTask } from './testtasks';
-import { sleep } from './utils';
+import { Runnable, sleep } from './utils';
 
 export default () => { describe('client', function() {
 
@@ -116,7 +116,7 @@ export default () => { describe('client', function() {
 
         it('validates websocket ping interval', () => {
             const builder = new SaltyRTCBuilder();
-            expect(() => builder.withPingInterval(-10)).toThrowError("Ping interval may not be negative");
+            expect(() => builder.withPingInterval(-10)).toThrowError('Ping interval may not be negative');
         });
 
         it('cannot encrypt/decrypt before the remote peer is established', () => {
@@ -156,8 +156,10 @@ export default () => { describe('client', function() {
 
         describe('events', function() {
 
+            let sc: saltyrtc.SaltyRTC;
+
             beforeEach(() => {
-                this.sc = new SaltyRTCBuilder()
+                sc = new SaltyRTCBuilder()
                     .connectTo('localhost')
                     .withKeyStore(new KeyStore())
                     .usingTasks([new DummyTask()])
@@ -165,106 +167,106 @@ export default () => { describe('client', function() {
             });
 
             it('can emit events', (done: any) => {
-                this.sc.on('connected', () => {
+                sc.on('connected', () => {
                     expect(true).toBe(true);
                     done();
                 });
-                this.sc.emit({type: 'connected'});
+                sc.emit({type: 'connected'});
             });
 
             it('only calls handlers for specified events', async () => {
                 let counter = 0;
-                this.sc.on(['connected', 'data'], () => {
+                sc.on(['connected', 'data'], () => {
                     counter += 1;
                 });
-                this.sc.emit({type: 'connected'});
-                this.sc.emit({type: 'data'});
-                this.sc.emit({type: 'connection-error'});
-                this.sc.emit({type: 'connected'});
+                sc.emit({type: 'connected'});
+                sc.emit({type: 'data'});
+                sc.emit({type: 'connection-error'});
+                sc.emit({type: 'connected'});
                 await sleep(20);
                 expect(counter).toEqual(3);
             });
 
             it('only adds a handler once', async () => {
                 let counter = 0;
-                let handler = () => {counter += 1;};
-                this.sc.on('data', handler);
-                this.sc.on('data', handler);
-                this.sc.emit({type: 'data'});
+                const handler: Runnable = () => { counter += 1; };
+                sc.on('data', handler);
+                sc.on('data', handler);
+                sc.emit({type: 'data'});
                 await sleep(20);
                 expect(counter).toEqual(1);
             });
 
             it('can call multiple handlers', async () => {
                 let counter = 0;
-                let handler1 = () => {counter += 1;};
-                let handler2 = () => {counter += 1;};
-                this.sc.on(['connected', 'data'], handler1);
-                this.sc.on(['connected'], handler2);
-                this.sc.emit({type: 'connected'});
-                this.sc.emit({type: 'data'});
+                const handler1: Runnable = () => { counter += 1; };
+                const handler2: Runnable = () => { counter += 1; };
+                sc.on(['connected', 'data'], handler1);
+                sc.on(['connected'], handler2);
+                sc.emit({type: 'connected'});
+                sc.emit({type: 'data'});
                 await sleep(20);
                 expect(counter).toEqual(3);
             });
 
             it('can cancel handlers', async () => {
                 let counter = 0;
-                let handler = () => {counter += 1;};
-                this.sc.on(['data', 'connected'], handler);
-                this.sc.emit({type: 'connected'});
-                this.sc.emit({type: 'data'});
-                this.sc.off('data', handler);
-                this.sc.emit({type: 'connected'});
-                this.sc.emit({type: 'data'});
+                const handler: Runnable = () => { counter += 1; };
+                sc.on(['data', 'connected'], handler);
+                sc.emit({type: 'connected'});
+                sc.emit({type: 'data'});
+                sc.off('data', handler);
+                sc.emit({type: 'connected'});
+                sc.emit({type: 'data'});
                 await sleep(20);
                 expect(counter).toEqual(3);
             });
 
             it('can cancel handlers for multiple events', async () => {
                 let counter = 0;
-                let handler = () => {counter += 1;};
-                this.sc.on(['data', 'connected'], handler);
-                this.sc.emit({type: 'connected'});
-                this.sc.emit({type: 'data'});
-                this.sc.off(['data', 'connected'], handler);
-                this.sc.emit({type: 'connected'});
-                this.sc.emit({type: 'data'});
+                const handler: Runnable = () => { counter += 1; };
+                sc.on(['data', 'connected'], handler);
+                sc.emit({type: 'connected'});
+                sc.emit({type: 'data'});
+                sc.off(['data', 'connected'], handler);
+                sc.emit({type: 'connected'});
+                sc.emit({type: 'data'});
                 await sleep(20);
                 expect(counter).toEqual(2);
             });
 
             it('can register one-time handlers', async () => {
                 let counter = 0;
-                let handler = () => {counter += 1;};
-                this.sc.once('data', handler);
-                this.sc.emit({type: 'data'});
-                this.sc.emit({type: 'data'});
+                const handler: Runnable = () => { counter += 1; };
+                sc.once('data', handler);
+                sc.emit({type: 'data'});
+                sc.emit({type: 'data'});
                 await sleep(20);
                 expect(counter).toEqual(1);
             });
 
             it('can register one-time handlers that throw', async () => {
                 let counter = 0;
-                let handler = () => {counter += 1; throw 'oh noes';};
-                this.sc.once('data', handler);
-                this.sc.emit({type: 'data'});
-                this.sc.emit({type: 'data'});
+                const handler: Runnable = () => { counter += 1; throw new Error('oh noes'); };
+                sc.once('data', handler);
+                sc.emit({type: 'data'});
+                sc.emit({type: 'data'});
                 await sleep(20);
                 expect(counter).toEqual(1);
             });
 
             it('removes handlers that return false', async () => {
                 let counter = 0;
-                let handler = () => {
+                const handler: Runnable = () => {
                     if (counter <= 4) {
                         counter += 1;
                     } else {
                         return false;
                     }
                 };
-                this.sc.on('data', handler);
+                sc.on('data', handler);
                 for (let i = 0; i < 7; i++) {
-                    this.sc.emit({type: 'data'});
+                    sc.emit({type: 'data'});
                 }
                 await sleep(20);
                 expect(counter).toEqual(5);
@@ -298,7 +300,7 @@ export default () => { describe('client', function() {
                     .usingTasks([new DummyTask()])
                     .asInitiator();
 
-                const send = () => salty.sendApplicationMessage("hello");
+                const send = () => salty.sendApplicationMessage('hello');
                 (salty as any).signaling.state = 'peer-handshake';
                 expect(send).toThrowError('Cannot send application message in "peer-handshake" state');
                 (salty as any).signaling.state = 'closing';

@@ -255,9 +255,9 @@ export default () => { describe('keystore', function() {
                 3, 3, 3, 3, 3, 3, 3, 3,
                 4, 4, 4, 4, 4, 4, 4, 4,
             ]);
-            const ks = new KeyStore(skLocal);
+            const ks1 = new KeyStore(skLocal);
             const plaintext = new Uint8Array(0);
-            const nonce = new TextEncoder().encode('connectionidconnectionid');
+            const nonce1 = new TextEncoder().encode('connectionidconnectionid');
             const expected = Uint8Array.from([
                 253, 142, 84, 143,
                 118, 139, 224, 253,
@@ -265,7 +265,7 @@ export default () => { describe('keystore', function() {
                 22, 73, 234, 94
             ]);
 
-            const encrypted = ks.encryptRaw(plaintext, nonce, new KeyStore(skRemote).publicKeyBytes);
+            const encrypted = ks1.encryptRaw(plaintext, nonce1, new KeyStore(skRemote).publicKeyBytes);
             expect(encrypted).toEqual(expected);
         });
 

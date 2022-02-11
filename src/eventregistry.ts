@@ -1,12 +1,12 @@
 /**
- * Copyright (C) 2016-2020 Threema GmbH
+ * Copyright (C) 2016-2022 Threema GmbH
  *
  * This software may be modified and distributed under the terms
  * of the MIT license. See the `LICENSE.md` file for details.
  */
 
 export class EventRegistry {
-    private map: Map<string, saltyrtc.SaltyRTCEventHandler[]>;
+    protected map: Map<string, saltyrtc.SaltyRTCEventHandler[]>;
 
     constructor() {
         this.map = new Map();

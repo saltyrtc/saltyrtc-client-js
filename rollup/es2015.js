@@ -1,4 +1,4 @@
-import typescript from 'rollup-plugin-typescript';
+import typescript from '@rollup/plugin-typescript';
 import fs from 'fs';
 
 let p = JSON.parse(fs.readFileSync('package.json'));
@@ -14,14 +14,14 @@ export default {
     external: ['msgpack-lite', 'tweetnacl'],
     output: {
         file: 'dist/saltyrtc-client.es2015.js',
-        sourceMap: false,
+        sourcemap: false,
         format: 'es',
         banner: "/**\n" +
                 " * saltyrtc-client-js v" + p.version + "\n" +
                 " * " + p.description + "\n" +
                 " * " + p.homepage + "\n" +
                 " *\n" +
-                " * Copyright (C) 2016-2020 " + p.author + "\n" +
+                " * Copyright (C) 2016-2022 " + p.author + "\n" +
                 " *\n" +
                 " * This software may be modified and distributed under the terms\n" +
                 " * of the MIT license:\n" +

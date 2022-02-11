@@ -1,3 +1,12 @@
+/**
+ * Performance test entry point.
+ *
+ * Copyright (C) 2016-2022 Threema GmbH
+ *
+ * This software may be modified and distributed under the terms
+ * of the MIT license.  See the `LICENSE.md` file for details.
+ */
+// tslint:disable:no-reference
 /// <reference path="../saltyrtc-client.d.ts" />
 
 export class DummyTask implements saltyrtc.Task {
@@ -22,15 +31,16 @@ export class DummyTask implements saltyrtc.Task {
     }
 
     public onPeerHandshakeDone(): void {
+        // Nothing
     }
 
     public onTaskMessage(message: saltyrtc.messages.TaskMessage): void {
-        console.log("Got new task message");
+        console.log('Got new task message');
     }
 
     // noinspection JSMethodCanBeStatic
     public sendSignalingMessage(payload: Uint8Array) {
-        console.log("Sending signaling message (" + payload.byteLength + " bytes)");
+        console.log(`Sending signaling message (${payload.byteLength} bytes)`);
     }
 
     public getName(): string {
@@ -66,7 +76,7 @@ export class PingPongTask extends DummyTask {
     }
 
     public onPeerHandshakeDone(): void {
-        if (this.signaling.role == 'initiator') {
+        if (this.signaling.role === 'initiator') {
             this.sendPing();
         }
     }
