@@ -9,8 +9,10 @@ export default () => { describe('nonce', function() {
 
     describe('Nonce', function() {
 
+        let array: Uint8Array;
+
         beforeEach(() => {
-            this.array = new Uint8Array([
+            array = new Uint8Array([
                 // Cookie
                 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16,
                 // Source: 17
@@ -25,7 +27,7 @@ export default () => { describe('nonce', function() {
         });
 
         it('parses correctly', () => {
-            const nonce = Nonce.fromUint8Array(this.array);
+            const nonce = Nonce.fromUint8Array(array);
             expect(nonce.cookie.bytes).toEqual(Uint8Array.of(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16));
             expect(nonce.source).toEqual(17);
             expect(nonce.destination).toEqual(18);
@@ -40,11 +42,11 @@ export default () => { describe('nonce', function() {
             const overflow = 258;
             const sequenceNumber = 50595078;
             const nonce = new Nonce(cookie, overflow, sequenceNumber, source, destination);
-            expect(nonce.toUint8Array()).toEqual(this.array);
+            expect(nonce.toUint8Array()).toEqual(array);
         });
 
         it('returns the correct combined sequence number', () => {
-            const nonce = Nonce.fromUint8Array(this.array);
+            const nonce = Nonce.fromUint8Array(array);
             expect(nonce.combinedSequenceNumber).toEqual((258 * (2 ** 32)) + 50595078);
         });
 

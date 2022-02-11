@@ -20,26 +20,30 @@ export default () => { describe('Integration Tests', function() {
 
     jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
 
+    let initiator: saltyrtc.SaltyRTC;
+    let responder: saltyrtc.SaltyRTC;
+    let connectBoth;
+
     beforeEach(() => {
-        this.initiator = new SaltyRTCBuilder()
+        initiator = new SaltyRTCBuilder()
             .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
             .withLoggingLevel('warn')
             .withKeyStore(new KeyStore())
             .usingTasks([new DummyTask()])
-            .asInitiator() as saltyrtc.SaltyRTC;
+            .asInitiator();
 
-        const pubKey = this.initiator.permanentKeyBytes;
-        const authToken = this.initiator.authTokenBytes;
-        this.responder = new SaltyRTCBuilder()
+        const pubKey = initiator.permanentKeyBytes;
+        const authToken = initiator.authTokenBytes;
+        responder = new SaltyRTCBuilder()
             .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
             .withLoggingLevel('warn')
             .withKeyStore(new KeyStore())
             .initiatorInfo(pubKey, authToken)
             .usingTasks([new DummyTask()])
-            .asResponder() as saltyrtc.SaltyRTC;
+            .asResponder();
 
         // Helper function. Connect both clients and resolve once they both finished the peer handshake.
-        this.connectBoth = (a: saltyrtc.SaltyRTC, b: saltyrtc.SaltyRTC) => {
+        connectBoth = (a: saltyrtc.SaltyRTC, b: saltyrtc.SaltyRTC) => {
             let ready = 0;
             return new Promise((resolve) => {
                 const handler = () => { if (++ready == 2) resolve() };
@@ -54,38 +58,38 @@ export default () => { describe('Integration Tests', function() {
     describe('SaltyRTC', () => {
 
         it('connect (initiator first)', async () => {
-            expect(this.initiator.state).toEqual('new');
-            expect(this.responder.state).toEqual('new');
-            this.initiator.connect();
-            expect(this.initiator.state).toEqual('ws-connecting');
+            expect(initiator.state).toEqual('new');
+            expect(responder.state).toEqual('new');
+            initiator.connect();
+            expect(initiator.state).toEqual('ws-connecting');
             await sleep(1000);
-            expect(this.initiator.state === 'server-handshake' ||
-                   this.initiator.state === 'peer-handshake').toBe(true);
-            this.responder.connect();
-            expect(this.responder.state).toEqual('ws-connecting');
+            expect(initiator.state === 'server-handshake' ||
+                   initiator.state === 'peer-handshake').toBe(true);
+            responder.connect();
+            expect(responder.state).toEqual('ws-connecting');
             await sleep(1000);
-            expect(this.initiator.state).toBe('task');
-            expect(this.responder.state).toBe('task');
+            expect(initiator.state).toBe('task');
+            expect(responder.state).toBe('task');
         });
 
         it('connect (responder first)', async () => {
-            expect(this.initiator.state).toEqual('new');
-            expect(this.responder.state).toEqual('new');
-            this.responder.connect();
-            expect(this.responder.state).toEqual('ws-connecting');
+            expect(initiator.state).toEqual('new');
+            expect(responder.state).toEqual('new');
+            responder.connect();
+            expect(responder.state).toEqual('ws-connecting');
             await sleep(1000);
-            expect(this.responder.state === 'server-handshake' ||
-                   this.responder.state === 'peer-handshake').toBe(true);
-            this.initiator.connect();
-            expect(this.initiator.state).toEqual('ws-connecting');
+            expect(responder.state === 'server-handshake' ||
+                   responder.state === 'peer-handshake').toBe(true);
+            initiator.connect();
+            expect(initiator.state).toEqual('ws-connecting');
             await sleep(1000);
-            expect(this.initiator.state).toBe('task');
-            expect(this.responder.state).toBe('task');
+            expect(initiator.state).toBe('task');
+            expect(responder.state).toBe('task');
         });
 
         it('connect speed', (done: any) => {
-            expect(this.initiator.state).toEqual('new');
-            expect(this.responder.state).toEqual('new');
+            expect(initiator.state).toEqual('new');
+            expect(responder.state).toEqual('new');
             let t1: Date;
             let t2;
             let ready = 0;
@@ -99,47 +103,47 @@ export default () => { describe('Integration Tests', function() {
                     done();
                 }
             };
-            this.initiator.on('state-change:task', callback);
-            this.responder.on('state-change:task', callback);
+            initiator.on('state-change:task', callback);
+            responder.on('state-change:task', callback);
             t1 = new Date();
-            this.initiator.connect();
-            this.responder.connect();
+            initiator.connect();
+            responder.connect();
         });
 
         it('disconnect before peer handshake', async (done: any) => {
-            expect(this.initiator.state).toEqual('new');
-            expect(this.responder.state).toEqual('new');
-            this.initiator.connect();
+            expect(initiator.state).toEqual('new');
+            expect(responder.state).toEqual('new');
+            initiator.connect();
             await sleep(1000);
-            expect(this.initiator.state).toEqual('peer-handshake');
-            expect(this.responder.state).toEqual('new');
-            this.initiator.once('connection-closed', (ev: saltyrtc.SaltyRTCEvent) => {
+            expect(initiator.state).toEqual('peer-handshake');
+            expect(responder.state).toEqual('new');
+            initiator.once('connection-closed', (ev: saltyrtc.SaltyRTCEvent) => {
                 expect(ev.data).toEqual(1000);
-                expect(this.initiator.state).toEqual('closed');
+                expect(initiator.state).toEqual('closed');
                 done();
             });
-            this.initiator.disconnect();
+            initiator.disconnect();
         });
 
         it('disconnect after peer handshake', async (done: any) => {
-            expect(this.initiator.state).toEqual('new');
-            expect(this.responder.state).toEqual('new');
-            await this.connectBoth(this.initiator, this.responder);
-            this.initiator.once('connection-closed', (ev: saltyrtc.SaltyRTCEvent) => {
+            expect(initiator.state).toEqual('new');
+            expect(responder.state).toEqual('new');
+            await connectBoth(initiator, responder);
+            initiator.once('connection-closed', (ev: saltyrtc.SaltyRTCEvent) => {
                 expect(ev.data).toEqual(1000);
-                expect(this.initiator.state).toEqual('closed');
+                expect(initiator.state).toEqual('closed');
                 done();
             });
-            this.initiator.disconnect();
+            initiator.disconnect();
         });
 
         it('new-responder event (responders first, parallel)', async (done: any) => {
-            expect(this.initiator.state).toEqual('new');
-            expect(this.responder.state).toEqual('new');
+            expect(initiator.state).toEqual('new');
+            expect(responder.state).toEqual('new');
 
             // Create two responders
-            const pubKey = this.initiator.permanentKeyBytes;
-            const authToken = this.initiator.authTokenBytes;
+            const pubKey = initiator.permanentKeyBytes;
+            const authToken = initiator.authTokenBytes;
             const responder1 = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
                 .withLoggingLevel('warn')
@@ -159,7 +163,7 @@ export default () => { describe('Integration Tests', function() {
 
             // Register event handler
             let eventCounter = 0;
-            this.initiator.on('new-responder', () => eventCounter += 1);
+            initiator.on('new-responder', () => eventCounter += 1);
             responder1.on('new-responder', () => done.fail());
             responder2.on('new-responder', () => done.fail());
 
@@ -170,7 +174,7 @@ export default () => { describe('Integration Tests', function() {
             expect(eventCounter).toBe(0);
 
             // Connect initiator
-            this.initiator.connect();
+            initiator.connect();
             await sleep(1000);
             expect(eventCounter).toBe(2);
 
@@ -178,21 +182,21 @@ export default () => { describe('Integration Tests', function() {
         });
 
         it('new-responder event (initiator first, single responder)', async (done: any) => {
-            expect(this.initiator.state).toEqual('new');
-            expect(this.responder.state).toEqual('new');
+            expect(initiator.state).toEqual('new');
+            expect(responder.state).toEqual('new');
 
             // Register event handler
             let eventCounter = 0;
-            this.initiator.on('new-responder', () => eventCounter += 1);
-            this.responder.on('new-responder', () => done.fail());
+            initiator.on('new-responder', () => eventCounter += 1);
+            responder.on('new-responder', () => done.fail());
 
             // Connect initiator
-            this.initiator.connect();
+            initiator.connect();
             await sleep(1000);
             expect(eventCounter).toBe(0);
 
             // Connect responder
-            this.responder.connect();
+            responder.connect();
             await sleep(1000);
             expect(eventCounter).toBe(1);
 
@@ -201,8 +205,8 @@ export default () => { describe('Integration Tests', function() {
 
         it('new-responder event (initiator first, multiple responders)', async (done: any) => {
             // Create two responders
-            const pubKey = this.initiator.permanentKeyBytes;
-            const authToken = this.initiator.authTokenBytes;
+            const pubKey = initiator.permanentKeyBytes;
+            const authToken = initiator.authTokenBytes;
             const responder1 = new SaltyRTCBuilder()
                 .connectTo(Config.SALTYRTC_HOST, Config.SALTYRTC_PORT)
                 .withLoggingLevel('warn')
@@ -222,15 +226,15 @@ export default () => { describe('Integration Tests', function() {
 
             // Register event handler
             const firstResponderConnectedPromise = new Promise((resolve) => {
-                this.initiator.on('new-responder', resolve);
+                initiator.on('new-responder', resolve);
             });
 
             // Connect initiator
-            this.initiator.on('connection-closed', () =>
+            initiator.on('connection-closed', () =>
                 done.fail('Connection closed before all responders have been connected'));
             await new Promise((resolve) => {
-                this.initiator.on('state-change:peer-handshake', resolve);
-                this.initiator.connect();
+                initiator.on('state-change:peer-handshake', resolve);
+                initiator.connect();
             });
 
             // Connect responders
@@ -325,11 +329,11 @@ export default () => { describe('Integration Tests', function() {
         });
 
         it('getting peer permanent key', async () => {
-            await this.connectBoth(this.initiator, this.responder);
-            expect(this.initiator.peerPermanentKeyBytes).toEqual(this.responder.permanentKeyBytes);
-            expect(this.responder.peerPermanentKeyBytes).toEqual(this.initiator.permanentKeyBytes);
-            expect(this.initiator.peerPermanentKeyHex).toEqual(this.responder.permanentKeyHex);
-            expect(this.responder.peerPermanentKeyHex).toEqual(this.initiator.permanentKeyHex);
+            await connectBoth(initiator, responder);
+            expect(initiator.peerPermanentKeyBytes).toEqual(responder.permanentKeyBytes);
+            expect(responder.peerPermanentKeyBytes).toEqual(initiator.permanentKeyBytes);
+            expect(initiator.peerPermanentKeyHex).toEqual(responder.permanentKeyHex);
+            expect(responder.peerPermanentKeyHex).toEqual(initiator.permanentKeyHex);
         });
 
         it('using trusted keys to connect', async () => {
@@ -369,7 +373,7 @@ export default () => { describe('Integration Tests', function() {
             expect(initiator.state).toEqual('new');
             expect(responder.state).toEqual('new');
 
-            await this.connectBoth(initiator, responder);
+            await connectBoth(initiator, responder);
 
             expect(initiator.state).toEqual('task');
             expect(responder.state).toEqual('task');
@@ -478,18 +482,18 @@ export default () => { describe('Integration Tests', function() {
         });
 
         it('can send application messages', async (done: any) => {
-            await this.connectBoth(this.initiator, this.responder);
-            expect(this.initiator.state).toEqual('task');
-            expect(this.responder.state).toEqual('task');
-            this.initiator.once('application', (ev: saltyrtc.SaltyRTCEvent) => {
+            await connectBoth(initiator, responder);
+            expect(initiator.state).toEqual('task');
+            expect(responder.state).toEqual('task');
+            initiator.once('application', (ev: saltyrtc.SaltyRTCEvent) => {
                 expect(ev.data).toEqual('bonan tagon.');
-                this.initiator.sendApplicationMessage('saluton!');
+                initiator.sendApplicationMessage('saluton!');
             });
-            this.responder.once('application', (ev: saltyrtc.SaltyRTCEvent) => {
+            responder.once('application', (ev: saltyrtc.SaltyRTCEvent) => {
                 expect(ev.data).toEqual('saluton!');
                 done();
             });
-            this.responder.sendApplicationMessage('bonan tagon.');
+            responder.sendApplicationMessage('bonan tagon.');
         });
 
         const slowdescribe = Config.RUN_LOAD_TESTS ? describe : xdescribe;
@@ -510,8 +514,8 @@ export default () => { describe('Integration Tests', function() {
              * - Chrome: Not possible.
              */
             it('drops inactive responders when the path gets full', async (done: any) => {
-                this.initiator.connect();
-                await new Promise((resolve) => this.initiator.once('state-change:peer-handshake', resolve));
+                initiator.connect();
+                await new Promise((resolve) => initiator.once('state-change:peer-handshake', resolve));
 
                 // Create 254 responders to fill all available slots
                 let connected = 0;
@@ -523,12 +527,12 @@ export default () => { describe('Integration Tests', function() {
                             .withLoggingLevel('warn')
                             .withKeyStore(new KeyStore())
                             .usingTasks([new DummyTask()])
-                            .initiatorInfo(this.initiator.permanentKeyBytes, this.initiator.authTokenBytes)
+                            .initiatorInfo(initiator.permanentKeyBytes, initiator.authTokenBytes)
                             .asResponder();
 
                         // Make sure that these responders don't initiate the peer handshake
                         (r as any).signaling.initPeerHandshake = function() {
-                            console.debug(this.logTag, 'Not starting peer handshake');
+                            console.debug(logTag, 'Not starting peer handshake');
                         };
 
                         // Wait for all responders to connect
@@ -551,7 +555,7 @@ export default () => { describe('Integration Tests', function() {
                     .withLoggingLevel('warn')
                     .withKeyStore(new KeyStore())
                     .usingTasks([new DummyTask()])
-                    .initiatorInfo(this.initiator.permanentKeyBytes, this.initiator.authTokenBytes)
+                    .initiatorInfo(initiator.permanentKeyBytes, initiator.authTokenBytes)
                     .asResponder();
                 responder.once('state-change:task', () => {
                     done();
@@ -590,7 +594,7 @@ export default () => { describe('Integration Tests', function() {
             // Connect
             expect(initiator.state).toEqual('new');
             expect(responder.state).toEqual('new');
-            await this.connectBoth(initiator, responder);
+            await connectBoth(initiator, responder);
             expect(initiator.state).toEqual('task');
             expect(responder.state).toEqual('task');
 

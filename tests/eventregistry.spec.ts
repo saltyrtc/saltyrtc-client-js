@@ -9,93 +9,96 @@ export default () => { describe('eventregistry', function() {
 
     describe('EventRegistry', function() {
 
+        let registry: EventRegistry;
+        let handler1;
+        let handler2;
+
         beforeEach(() => {
-            this.registry = new EventRegistry();
-            this.handler1 = () => { console.log('Event 1 occurred'); };
-            this.handler2 = () => { console.log('Event 2 occurred'); };
+            registry = new EventRegistry();
+            handler1 = () => { console.log('Event 1 occurred'); };
+            handler2 = () => { console.log('Event 2 occurred'); };
         });
 
         it('can register a new event', () => {
-            expect(this.registry.map.get('boo')).toBeUndefined();
-            this.registry.register('boo', this.handler1);
-            const registered: saltyrtc.SaltyRTCEventHandler[] = this.registry.map.get('boo');
+            expect(registry.map.get('boo')).toBeUndefined();
+            registry.register('boo', handler1);
+            const registered: saltyrtc.SaltyRTCEventHandler[] = registry.map.get('boo');
             expect(registered.length).toEqual(1);
-            expect(registered[0]).toBe(this.handler1);
+            expect(registered[0]).toBe(handler1);
         });
 
         it('can register multiple handlers', () => {
-            expect(this.registry.map.get('boo')).toBeUndefined();
-            this.registry.register('boo', this.handler1);
-            this.registry.register('boo', this.handler2);
-            const registered: saltyrtc.SaltyRTCEventHandler[] = this.registry.map.get('boo');
+            expect(registry.map.get('boo')).toBeUndefined();
+            registry.register('boo', handler1);
+            registry.register('boo', handler2);
+            const registered: saltyrtc.SaltyRTCEventHandler[] = registry.map.get('boo');
             expect(registered.length).toEqual(2);
-            expect(registered).toContain(this.handler1);
-            expect(registered).toContain(this.handler2);
+            expect(registered).toContain(handler1);
+            expect(registered).toContain(handler2);
         });
 
         it('can register multiple events', () => {
-            expect(this.registry.map.get('boo')).toBeUndefined();
-            expect(this.registry.map.get('far')).toBeUndefined();
-            this.registry.register('boo', this.handler1);
-            this.registry.register('boo', this.handler2);
-            this.registry.register('far', this.handler1);
-            expect(this.registry.map.get('boo').length).toEqual(2);
-            expect(this.registry.map.get('far').length).toEqual(1);
+            expect(registry.map.get('boo')).toBeUndefined();
+            expect(registry.map.get('far')).toBeUndefined();
+            registry.register('boo', handler1);
+            registry.register('boo', handler2);
+            registry.register('far', handler1);
+            expect(registry.map.get('boo').length).toEqual(2);
+            expect(registry.map.get('far').length).toEqual(1);
         });
 
         it('can retrieve handlers correctly', () => {
-            this.registry.map.set('boo', [this.handler1]);
-            this.registry.map.set('far', [this.handler1, this.handler2]);
-            expect(this.registry.get('boo')).toEqual([this.handler1]);
-            expect(this.registry.get('far')).toEqual([this.handler1, this.handler2]);
-            expect(this.registry.get(['boo', 'far'])).toEqual([this.handler1, this.handler2]);
-            expect(this.registry.get('baz')).toEqual([]);
-            expect(this.registry.get(['boo', 'far', 'baz'])).toEqual([this.handler1, this.handler2]);
+            registry.map.set('boo', [handler1]);
+            registry.map.set('far', [handler1, handler2]);
+            expect(registry.get('boo')).toEqual([handler1]);
+            expect(registry.get('far')).toEqual([handler1, handler2]);
+            expect(registry.get(['boo', 'far'])).toEqual([handler1, handler2]);
+            expect(registry.get('baz')).toEqual([]);
+            expect(registry.get(['boo', 'far', 'baz'])).toEqual([handler1, handler2]);
         });
 
         it('can unregister handlers correctly', () => {
-            this.registry.map.set('boo', [this.handler1]);
-            this.registry.map.set('far', [this.handler1, this.handler2]);
+            registry.map.set('boo', [handler1]);
+            registry.map.set('far', [handler1, handler2]);
 
             // Unknown handler
-            this.registry.unregister('far', () => { /* do nothing */ });
-            expect(this.registry.get('far')).toEqual([this.handler1, this.handler2]);
+            registry.unregister('far', () => { /* do nothing */ });
+            expect(registry.get('far')).toEqual([handler1, handler2]);
 
             // Unknown event
-            this.registry.unregister('baz', this.handler1);
-            expect(this.registry.get('boo')).toEqual([this.handler1]);
-            expect(this.registry.get('far')).toEqual([this.handler1, this.handler2]);
+            registry.unregister('baz', handler1);
+            expect(registry.get('boo')).toEqual([handler1]);
+            expect(registry.get('far')).toEqual([handler1, handler2]);
 
             // Success
-            this.registry.unregister('boo', this.handler1);
-            expect(this.registry.get('boo')).toEqual([]);
-            this.registry.unregister('far', this.handler2);
-            expect(this.registry.get('far')).toEqual([this.handler1]);
+            registry.unregister('boo', handler1);
+            expect(registry.get('boo')).toEqual([]);
+            registry.unregister('far', handler2);
+            expect(registry.get('far')).toEqual([handler1]);
 
             // Clear
-            this.registry.map.set('far', [this.handler1, this.handler2]);
-            this.registry.unregister('far');
-            expect(this.registry.get('far')).toEqual([]);
+            registry.map.set('far', [handler1, handler2]);
+            registry.unregister('far');
+            expect(registry.get('far')).toEqual([]);
 
             // Multiple events
-            this.registry.map.set('boo', [this.handler1]);
-            this.registry.map.set('far', [this.handler1, this.handler2]);
-            this.registry.unregister(['boo', 'far', 'baz'], this.handler1);
-            expect(this.registry.get('boo')).toEqual([]);
-            expect(this.registry.get('far')).toEqual([this.handler2]);
+            registry.map.set('boo', [handler1]);
+            registry.map.set('far', [handler1, handler2]);
+            registry.unregister(['boo', 'far', 'baz'], handler1);
+            expect(registry.get('boo')).toEqual([]);
+            expect(registry.get('far')).toEqual([handler2]);
         });
 
         it('can unregister all handlers', () => {
-            this.registry.map.set('boo', [this.handler1]);
-            this.registry.map.set('far', [this.handler1, this.handler2]);
-            expect(this.registry.get('boo')).toEqual([this.handler1]);
-            expect(this.registry.get('far')).toEqual([this.handler1, this.handler2]);
+            registry.map.set('boo', [handler1]);
+            registry.map.set('far', [handler1, handler2]);
+            expect(registry.get('boo')).toEqual([handler1]);
+            expect(registry.get('far')).toEqual([handler1, handler2]);
 
-            this.registry.unregisterAll();
+            registry.unregisterAll();
 
-            expect(this.registry.get('boo')).toEqual([]);
-            expect(this.registry.get('far')).toEqual([]);
-
+            expect(registry.get('boo')).toEqual([]);
+            expect(registry.get('far')).toEqual([]);
         });
 
     });
