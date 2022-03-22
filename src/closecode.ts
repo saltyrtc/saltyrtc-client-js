@@ -5,19 +5,21 @@
  * of the MIT license.  See the `LICENSE.md` file for details.
  */
 
-export const enum CloseCode {
-    ClosingNormal = 1000,
-    GoingAway = 1001,
-    NoSharedSubprotocol = 1002,
-    PathFull = 3000,
-    ProtocolError = 3001,
-    InternalError = 3002,
-    Handover = 3003,
-    DroppedByInitiator = 3004,
-    InitiatorCouldNotDecrypt = 3005,
-    NoSharedTask = 3006,
-    InvalidKey = 3007,
-    Timeout = 3008,
+export class CloseCode {
+    // tslint:disable:variable-name
+    public static readonly ClosingNormal = 1000;
+    public static readonly GoingAway = 1001;
+    public static readonly NoSharedSubprotocol = 1002;
+    public static readonly PathFull = 3000;
+    public static readonly ProtocolError = 3001;
+    public static readonly InternalError = 3002;
+    public static readonly Handover = 3003;
+    public static readonly DroppedByInitiator = 3004;
+    public static readonly InitiatorCouldNotDecrypt = 3005;
+    public static readonly NoSharedTask = 3006;
+    public static readonly InvalidKey = 3007;
+    public static readonly Timeout = 3008;
+    // tslint:enable:variable-name
 }
 
 export function explainCloseCode(code: CloseCode): string {
