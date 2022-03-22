@@ -4,7 +4,8 @@
         "module": "es2015",
         "moduleResolution": "node",
         "removeComments": true,
-        "noImplicitAny": true
+        "noImplicitAny": true,
+        "isolatedModules": true
     },
     "exclude": [
         "node_modules",
