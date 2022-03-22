@@ -1,3 +1,4 @@
 *.log
 site/
+venv/
 VENV/
