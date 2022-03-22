@@ -12,6 +12,10 @@ Possible log types:
 - `[security]` to invite users to upgrade in case of vulnerabilities.
 
 
+### v0.15.1 (2022-03-22)
+
+- [fixed] Change exported CloseCode from const enum to class (#138)
+
 ### v0.15.0 (2022-02-11)
 
 - [fixed] Prevent client reuse (#123)

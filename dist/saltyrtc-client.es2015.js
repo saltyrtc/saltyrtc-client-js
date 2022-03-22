@@ -1,5 +1,5 @@
 /**
- * saltyrtc-client-js v0.15.0
+ * saltyrtc-client-js v0.15.1
  * SaltyRTC JavaScript implementation
  * https://github.com/saltyrtc/saltyrtc-client-js
  *
@@ -31,6 +31,51 @@
 import * as nacl from 'tweetnacl';
 import * as msgpack from 'msgpack-lite';
 
+class CloseCode {
+}
+CloseCode.ClosingNormal = 1000;
+CloseCode.GoingAway = 1001;
+CloseCode.NoSharedSubprotocol = 1002;
+CloseCode.PathFull = 3000;
+CloseCode.ProtocolError = 3001;
+CloseCode.InternalError = 3002;
+CloseCode.Handover = 3003;
+CloseCode.DroppedByInitiator = 3004;
+CloseCode.InitiatorCouldNotDecrypt = 3005;
+CloseCode.NoSharedTask = 3006;
+CloseCode.InvalidKey = 3007;
+CloseCode.Timeout = 3008;
+function explainCloseCode(code) {
+    switch (code) {
+        case CloseCode.ClosingNormal:
+            return 'Normal closing';
+        case CloseCode.GoingAway:
+            return 'The endpoint is going away';
+        case CloseCode.NoSharedSubprotocol:
+            return 'No shared subprotocol could be found';
+        case CloseCode.PathFull:
+            return 'No free responder byte';
+        case CloseCode.ProtocolError:
+            return 'Protocol error';
+        case CloseCode.InternalError:
+            return 'Internal error';
+        case CloseCode.Handover:
+            return 'Handover finished';
+        case CloseCode.DroppedByInitiator:
+            return 'Dropped by initiator';
+        case CloseCode.InitiatorCouldNotDecrypt:
+            return 'Initiator could not decrypt a message';
+        case CloseCode.NoSharedTask:
+            return 'No shared task was found';
+        case CloseCode.InvalidKey:
+            return 'Invalid key';
+        case CloseCode.Timeout:
+            return 'Timeout';
+        default:
+            return 'Unknown';
+    }
+}
+
 class SignalingError extends Error {
     constructor(closeCode, message) {
         super(message);
@@ -41,7 +86,7 @@ class SignalingError extends Error {
 }
 class ProtocolError extends SignalingError {
     constructor(message) {
-        super(3001, message);
+        super(CloseCode.ProtocolError, message);
     }
 }
 class ConnectionError extends Error {
@@ -424,37 +469,6 @@ class AuthToken {
     }
 }
 
-function explainCloseCode(code) {
-    switch (code) {
-        case 1000:
-            return 'Normal closing';
-        case 1001:
-            return 'The endpoint is going away';
-        case 1002:
-            return 'No shared subprotocol could be found';
-        case 3000:
-            return 'No free responder byte';
-        case 3001:
-            return 'Protocol error';
-        case 3002:
-            return 'Internal error';
-        case 3003:
-            return 'Handover finished';
-        case 3004:
-            return 'Dropped by initiator';
-        case 3005:
-            return 'Initiator could not decrypt a message';
-        case 3006:
-            return 'No shared task was found';
-        case 3007:
-            return 'Invalid key';
-        case 3008:
-            return 'Timeout';
-        default:
-            return 'Unknown';
-    }
-}
-
 class Cookie {
     constructor(bytes) {
         if (bytes !== undefined) {
@@ -789,7 +803,7 @@ class Signaling {
         }
         this.handoverState.onBoth = () => {
             this.client.emit({ type: 'handover' });
-            this.closeWebsocket(3003);
+            this.closeWebsocket(CloseCode.Handover);
         };
     }
     setState(newState) {
@@ -827,7 +841,7 @@ class Signaling {
         this.initWebsocket();
     }
     disconnect(unbind = false) {
-        const reason = 1000;
+        const reason = CloseCode.ClosingNormal;
         this.setState('closing');
         if (this.state === 'task') {
             this.sendClose(reason);
@@ -842,7 +856,7 @@ class Signaling {
     closeWebsocket(code, reason, unbind = false) {
         if (this.ws !== null) {
             if (code === undefined || code <= 3000) {
-                code = 1000;
+                code = CloseCode.ClosingNormal;
             }
             this.log.debug(this.logTag, `Disconnecting WebSocket, close code: ${code}`);
             this.ws.close(code, reason);
@@ -879,7 +893,7 @@ class Signaling {
         this.client.emit({ type: 'connection-error' });
     }
     onClose(ev) {
-        if (ev.code === 3003) {
+        if (ev.code === CloseCode.Handover) {
             this.log.info(this.logTag, 'Closed WebSocket connection due to handover');
         }
         else {
@@ -894,7 +908,7 @@ class Signaling {
         if (this.handoverState.peer) {
             this.log.error(this.logTag, 'Protocol error: Received WebSocket message from peer ' +
                 'even though it has already handed over to task.');
-            this.resetConnection(3001);
+            this.resetConnection(CloseCode.ProtocolError);
             return;
         }
         let nonce;
@@ -955,13 +969,13 @@ class Signaling {
                         break;
                     case 'task':
                         this.sendClose(e.closeCode);
-                        this.resetConnection(1000);
+                        this.resetConnection(CloseCode.ClosingNormal);
                         break;
                 }
             }
             else if (e.name === 'ConnectionError') {
                 this.log.warn(this.logTag, 'Connection error. Resetting connection.');
-                this.resetConnection(3002);
+                this.resetConnection(CloseCode.InternalError);
             }
             else {
                 if (e.hasOwnProperty('stack')) {
@@ -1001,9 +1015,9 @@ class Signaling {
                 this.handleServerAuth(msg, nonce);
                 break;
             case 'done':
-                throw new SignalingError(3002, 'Received server handshake message even though server handshake state is set to \'done\'');
+                throw new SignalingError(CloseCode.InternalError, 'Received server handshake message even though server handshake state is set to \'done\'');
             default:
-                throw new SignalingError(3002, 'Unknown server handshake state: ' + this.server.handshakeState);
+                throw new SignalingError(CloseCode.InternalError, 'Unknown server handshake state: ' + this.server.handshakeState);
         }
         if (this.server.handshakeState === 'done') {
             this.setState('peer-handshake');
@@ -1054,7 +1068,7 @@ class Signaling {
             }
             else {
                 this.log.error(this.logTag, 'Received', msg.type, 'message which is not supported by the', this.task.getName(), 'task');
-                this.resetConnection(3001);
+                this.resetConnection(CloseCode.ProtocolError);
             }
         }
         else {
@@ -1111,7 +1125,7 @@ class Signaling {
     handleClose(msg) {
         this.log.warn(this.logTag, 'Received close message. Reason:', msg.reason, '(' + explainCloseCode(msg.reason) + ')');
         this.task.close(msg.reason);
-        this.resetConnection(1001);
+        this.resetConnection(CloseCode.GoingAway);
     }
     handleDisconnected(msg) {
         this.client.emit({ type: 'peer-disconnected', data: msg.id });
@@ -1355,11 +1369,11 @@ class Signaling {
     }
     sendPostClientHandshakeMessage(msg, name) {
         if (this.state !== 'task') {
-            throw new SignalingError(3001, 'Cannot send ' + name + ' message in "' + this.state + '" state');
+            throw new SignalingError(CloseCode.ProtocolError, 'Cannot send ' + name + ' message in "' + this.state + '" state');
         }
         const receiver = this.getPeer();
         if (receiver === null) {
-            throw new SignalingError(3002, 'No peer address could be found');
+            throw new SignalingError(CloseCode.InternalError, 'No peer address could be found');
         }
         if (this.handoverState.local === true) {
             this.log.debug(this.logTag, 'Sending', name, 'message through dc');
@@ -1397,10 +1411,10 @@ class Signaling {
         catch (e) {
             if (e.name === 'CryptoError' && e.code === 'decryption-failed') {
                 if (this.state === 'task') {
-                    this.sendClose(3002);
+                    this.sendClose(CloseCode.InternalError);
                 }
-                this.resetConnection(3002);
-                throw new SignalingError(3002, 'Decryption of peer message failed. This should not happen.');
+                this.resetConnection(CloseCode.InternalError);
+                throw new SignalingError(CloseCode.InternalError, 'Decryption of peer message failed. This should not happen.');
             }
             else {
                 throw e;
@@ -1511,7 +1525,7 @@ class InitiatorSignaling extends Signaling {
             }
         }
         if (drop !== null) {
-            this.dropResponder(drop.id, 3004);
+            this.dropResponder(drop.id, CloseCode.DroppedByInitiator);
         }
     }
     onPeerHandshakeMessage(box, nonce) {
@@ -1525,7 +1539,7 @@ class InitiatorSignaling extends Signaling {
             }
             catch (e) {
                 if (e.name === 'CryptoError' && e.code === 'decryption-failed') {
-                    throw new SignalingError(3001, 'Could not decrypt server message.');
+                    throw new SignalingError(CloseCode.ProtocolError, 'Could not decrypt server message.');
                 }
                 else {
                     throw e;
@@ -1558,14 +1572,14 @@ class InitiatorSignaling extends Signaling {
             switch (responder.handshakeState) {
                 case 'new':
                     if (this.peerTrustedKey !== null) {
-                        throw new SignalingError(3002, 'Handshake state is "new" even though a trusted key is available');
+                        throw new SignalingError(CloseCode.InternalError, 'Handshake state is "new" even though a trusted key is available');
                     }
                     try {
                         payload = this.authToken.decrypt(box);
                     }
                     catch (e) {
                         this.log.warn(this.logTag, 'Could not decrypt token message: ', e);
-                        this.dropResponder(responder.id, 3005);
+                        this.dropResponder(responder.id, CloseCode.InitiatorCouldNotDecrypt);
                         return;
                     }
                     msg = this.decodeMessage(payload, 'token', true);
@@ -1579,7 +1593,7 @@ class InitiatorSignaling extends Signaling {
                         }
                         catch (e) {
                             this.log.warn(this.logTag, 'Could not decrypt key message');
-                            this.dropResponder(responder.id, 3005);
+                            this.dropResponder(responder.id, CloseCode.InitiatorCouldNotDecrypt);
                             return;
                         }
                     }
@@ -1597,7 +1611,7 @@ class InitiatorSignaling extends Signaling {
                     }
                     catch (e) {
                         if (e.name === 'CryptoError' && e.code === 'decryption-failed') {
-                            throw new SignalingError(3001, 'Could not decrypt auth message.');
+                            throw new SignalingError(CloseCode.ProtocolError, 'Could not decrypt auth message.');
                         }
                         else {
                             throw e;
@@ -1609,17 +1623,17 @@ class InitiatorSignaling extends Signaling {
                     this.sendAuth(responder, nonce);
                     this.responder = this.responders.get(responder.id);
                     this.responders.delete(responder.id);
-                    this.dropResponders(3004);
+                    this.dropResponders(CloseCode.DroppedByInitiator);
                     this.setState('task');
                     this.log.info(this.logTag, 'Peer handshake done');
                     this.task.onPeerHandshakeDone();
                     break;
                 default:
-                    throw new SignalingError(3002, 'Unknown responder handshake state');
+                    throw new SignalingError(CloseCode.InternalError, 'Unknown responder handshake state');
             }
         }
         else {
-            throw new SignalingError(3002, 'Message source is neither the server nor a responder');
+            throw new SignalingError(CloseCode.InternalError, 'Message source is neither the server nor a responder');
         }
     }
     onUnhandledSignalingServerMessage(msg) {
@@ -1671,7 +1685,7 @@ class InitiatorSignaling extends Signaling {
         }
         else {
             this.log.debug(this.logTag, `Dropping responder ${msg.id} in '${this.state}' state`);
-            this.dropResponder(msg.id, 3004);
+            this.dropResponder(msg.id, CloseCode.DroppedByInitiator);
         }
     }
     handleToken(msg, responder) {
@@ -1727,7 +1741,7 @@ class InitiatorSignaling extends Signaling {
             const offered = msg.tasks;
             this.log.debug(this.logTag, 'We requested:', requested, 'Peer offered:', offered);
             this.client.emit({ type: 'no-shared-task', data: { requested: requested, offered: offered } });
-            throw new SignalingError(3006, 'No shared task could be found');
+            throw new SignalingError(CloseCode.NoSharedTask, 'No shared task could be found');
         }
         else {
             this.log.debug(this.logTag, 'Task', task.getName(), 'has been selected');
@@ -1779,7 +1793,7 @@ class InitiatorSignaling extends Signaling {
         else {
             if (this.responder.id === receiver) {
                 notify = true;
-                this.resetConnection(3001);
+                this.resetConnection(CloseCode.ProtocolError);
             }
             else {
                 this.log.warn(this.logTag, 'Got send-error message for unknown responder', receiver);
@@ -1876,7 +1890,7 @@ class ResponderSignaling extends Signaling {
             }
             catch (e) {
                 if (e.name === 'CryptoError' && e.code === 'decryption-failed') {
-                    throw new SignalingError(3001, 'Could not decrypt server message.');
+                    throw new SignalingError(CloseCode.ProtocolError, 'Could not decrypt server message.');
                 }
                 else {
                     throw e;
@@ -1920,11 +1934,11 @@ class ResponderSignaling extends Signaling {
                     this.log.info(this.logTag, 'Peer handshake done');
                     break;
                 default:
-                    throw new SignalingError(3002, 'Unknown initiator handshake state');
+                    throw new SignalingError(CloseCode.InternalError, 'Unknown initiator handshake state');
             }
         }
         else {
-            throw new SignalingError(3002, 'Message source is neither the server nor the initiator');
+            throw new SignalingError(CloseCode.InternalError, 'Message source is neither the server nor the initiator');
         }
     }
     decryptInitiatorMessage(box) {
@@ -1939,7 +1953,7 @@ class ResponderSignaling extends Signaling {
                 }
                 catch (e) {
                     if (e.name === 'CryptoError' && e.code === 'decryption-failed') {
-                        throw new SignalingError(3001, 'Could not decrypt key message.');
+                        throw new SignalingError(CloseCode.ProtocolError, 'Could not decrypt key message.');
                     }
                     else {
                         throw e;
@@ -1952,7 +1966,7 @@ class ResponderSignaling extends Signaling {
                 }
                 catch (e) {
                     if (e.name === 'CryptoError' && e.code === 'decryption-failed') {
-                        throw new SignalingError(3001, 'Could not decrypt initiator session message.');
+                        throw new SignalingError(CloseCode.ProtocolError, 'Could not decrypt initiator session message.');
                     }
                     else {
                         throw e;
@@ -1966,7 +1980,7 @@ class ResponderSignaling extends Signaling {
         if (msg.type === 'new-initiator') {
             this.log.debug(this.logTag, 'Received new-initiator message after peer handshake completed, ' +
                 'closing');
-            this.resetConnection(1000);
+            this.resetConnection(CloseCode.ClosingNormal);
         }
         else {
             this.log.warn(this.logTag, 'Unexpected server message type:', msg.type);
@@ -2087,7 +2101,7 @@ class ResponderSignaling extends Signaling {
             }
         }
         if (selectedTask === null) {
-            throw new SignalingError(3001, 'Initiator selected unknown task');
+            throw new SignalingError(CloseCode.ProtocolError, 'Initiator selected unknown task');
         }
         else {
             this.initTask(selectedTask, msg.data[selectedTask.getName()]);
@@ -2115,7 +2129,7 @@ class ResponderSignaling extends Signaling {
             throw new ProtocolError('Outgoing c2c messages must have been sent to the initiator');
         }
         this.client.emit({ type: 'signaling-connection-lost', data: receiver });
-        this.resetConnection(3001);
+        this.resetConnection(CloseCode.ProtocolError);
     }
 }
 
@@ -2399,4 +2413,4 @@ class SaltyRTC {
     }
 }
 
-export { Box, CombinedSequence, CombinedSequencePair, ConnectionError, Cookie, CookiePair, EventRegistry, KeyStore, Log, SaltyRTCBuilder, SignalingError, exceptions, explainCloseCode };
+export { Box, CloseCode, CombinedSequence, CombinedSequencePair, ConnectionError, Cookie, CookiePair, EventRegistry, KeyStore, Log, SaltyRTCBuilder, SignalingError, exceptions, explainCloseCode };
